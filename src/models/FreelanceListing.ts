@@ -1,0 +1,55 @@
+import mongoose, { Schema, Document } from 'mongoose';
+
+export interface IFreelanceListing extends Document {
+  studentId: mongoose.Types.ObjectId;
+  title: string;
+  description: string;
+  category:
+    | 'web-dev'
+    | 'graphic-design'
+    | 'content-writing'
+    | 'data-analysis'
+    | 'video-editing'
+    | 'other';
+  skills: string[];
+  priceType: 'fixed' | 'hourly';
+  priceBDT: number; // BDT integer
+  deliveryDays: number;
+  sampleFiles: string[]; // Uploadthing URLs
+  averageRating: number;
+  totalOrdersCompleted: number;
+  isActive: boolean;
+}
+
+const FreelanceListingSchema = new Schema<IFreelanceListing>(
+  {
+    studentId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    title: { type: String, required: true, trim: true },
+    description: { type: String, required: true, maxlength: 2000 },
+    category: {
+      type: String,
+      enum: [
+        'web-dev',
+        'graphic-design',
+        'content-writing',
+        'data-analysis',
+        'video-editing',
+        'other',
+      ],
+      required: true,
+    },
+    skills: [{ type: String }],
+    priceType: { type: String, enum: ['fixed', 'hourly'], required: true },
+    priceBDT: { type: Number, required: true, min: 0 },
+    deliveryDays: { type: Number, required: true, min: 1 },
+    sampleFiles: [{ type: String }],
+    averageRating: { type: Number, default: 0, min: 0, max: 5 },
+    totalOrdersCompleted: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
+  },
+  { timestamps: true }
+);
+
+export const FreelanceListing =
+  mongoose.models.FreelanceListing ||
+  mongoose.model<IFreelanceListing>('FreelanceListing', FreelanceListingSchema);
