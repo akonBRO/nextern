@@ -1,3 +1,3 @@
-export default function EmployerDashboardPage() {
+export default function EmployerDashboard() {
   return <div>Employer Dashboard</div>;
 }
