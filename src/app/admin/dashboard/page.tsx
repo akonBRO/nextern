@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import React from 'react';
 
 type User = {
@@ -17,6 +17,13 @@ type User = {
   tradeLicenseNo?: string;
   createdAt: string;
   isVerified: boolean;
+};
+
+type Summary = {
+  pendingEmployers: number;
+  pendingAdvisors: number;
+  totalStudents: number;
+  approvedCompanies: number;
 };
 
 /* ── ICONS ─────────────────────────────────────────────────────────── */
@@ -409,6 +416,12 @@ export default function AdminDashboard() {
   const [note, setNote] = useState('');
   const [noteTarget, setNoteTarget] = useState<string | null>(null);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [summary, setSummary] = useState<Summary>({
+    pendingEmployers: 0,
+    pendingAdvisors: 0,
+    totalStudents: 0,
+    approvedCompanies: 0,
+  });
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -419,6 +432,12 @@ export default function AdminDashboard() {
       const data = await res.json();
       setUsers(data.users ?? []);
       setTotal(data.pagination?.total ?? 0);
+      setSummary({
+        pendingEmployers: data.summary?.pendingEmployers ?? 0,
+        pendingAdvisors: data.summary?.pendingAdvisors ?? 0,
+        totalStudents: data.summary?.totalStudents ?? 0,
+        approvedCompanies: data.summary?.approvedCompanies ?? 0,
+      });
     } finally {
       setLoading(false);
     }
@@ -443,10 +462,10 @@ export default function AdminDashboard() {
         body: JSON.stringify({ action, note: noteTarget === userId ? note : undefined }),
       });
       if (res.ok) {
-        setUsers((prev) => prev.filter((u) => u._id !== userId));
         setNoteTarget(null);
         setNote('');
         setExpandedUser(null);
+        await fetchUsers();
       }
     } finally {
       setActionLoading(null);
@@ -557,6 +576,7 @@ export default function AdminDashboard() {
               {(session?.user?.name?.[0] ?? 'A').toUpperCase()}
             </div>
             <button
+              onClick={() => signOut({ callbackUrl: '/' })}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -655,7 +675,7 @@ export default function AdminDashboard() {
         >
           <StatCard
             label="Pending Employers"
-            value="—"
+            value={summary.pendingEmployers.toString()}
             Icon={BuildingIcon}
             accent="#7C3AED"
             bg="#EDE9FE"
@@ -663,7 +683,7 @@ export default function AdminDashboard() {
           />
           <StatCard
             label="Pending Advisors"
-            value="—"
+            value={summary.pendingAdvisors.toString()}
             Icon={UsersIcon}
             accent="#0284C7"
             bg="#E0F2FE"
@@ -671,7 +691,7 @@ export default function AdminDashboard() {
           />
           <StatCard
             label="Total Students"
-            value="—"
+            value={summary.totalStudents.toString()}
             Icon={GradCapIcon}
             accent="#059669"
             bg="#DCFCE7"
@@ -679,7 +699,7 @@ export default function AdminDashboard() {
           />
           <StatCard
             label="Approved Companies"
-            value="—"
+            value={summary.approvedCompanies.toString()}
             Icon={CheckCircleIcon}
             accent="#D97706"
             bg="#FEF3C7"
@@ -1339,7 +1359,7 @@ export default function AdminDashboard() {
                         boxShadow: '0 0 5px #F59E0B',
                       }}
                     />
-                    {users.filter((u) => u.verificationStatus === 'pending').length} pending review
+                    {total} pending review
                   </span>
                 )}
               </div>

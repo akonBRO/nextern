@@ -18,13 +18,9 @@ interface SendEmailParams {
   devOtp?: string;
 }
 
-export async function sendEmail({ to, subject, html, devOtp }: SendEmailParams): Promise<void> {
-  // Always print OTP in terminal during development for convenience
-  if (process.env.NODE_ENV === 'development' && devOtp) {
-    console.log('\n========================================');
-    console.log(`📧 OTP: ${devOtp}  →  ${to}`);
-    console.log('========================================\n');
-  }
+async function sendViaResend({ to, subject, html }: SendEmailParams): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error('RESEND_API_KEY is not set in environment variables');
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -40,6 +36,50 @@ export async function sendEmail({ to, subject, html, devOtp }: SendEmailParams):
     subject,
     html,
   });
+}
+
+async function sendViaGmail({ to, subject, html }: SendEmailParams): Promise<void> {
+  const gmailUser = process.env.GMAIL_USER;
+  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
+
+  if (!gmailUser || !gmailAppPassword) {
+    throw new Error('GMAIL_USER or GMAIL_APP_PASSWORD is not set in environment variables');
+  }
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: gmailUser,
+      pass: gmailAppPassword,
+    },
+  });
+
+  await transporter.sendMail({
+    from: `Nextern <${gmailUser}>`,
+    to,
+    subject,
+    html,
+  });
+}
+
+export async function sendEmail({ to, subject, html }: SendEmailParams): Promise<void> {
+  const errors: string[] = [];
+
+  try {
+    await sendViaResend({ to, subject, html });
+    return;
+  } catch (error) {
+    errors.push(`Resend: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  try {
+    await sendViaGmail({ to, subject, html });
+    return;
+  } catch (error) {
+    errors.push(`Gmail: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  throw new Error(errors.join(' | '));
 }
 
 // ── Email templates ────────────────────────────────────────────────────────

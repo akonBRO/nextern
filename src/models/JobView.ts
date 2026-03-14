@@ -1,15 +1,16 @@
-import mongoose, { Schema, Document } from 'mongoose';
+// src/models/JobView.ts
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IJobView extends Document {
   studentId: mongoose.Types.ObjectId;
   jobId: mongoose.Types.ObjectId;
-  viewCount: number; // incremented on repeat views
+  viewCount: number;
   firstViewedAt: Date;
   lastViewedAt: Date;
   isSaved: boolean;
   savedAt?: Date;
-  isApplied: boolean; // denormalized — avoids cross-collection lookup
-  googleCalendarEventId?: string; // calendar event for this job's deadline
+  isApplied: boolean;
+  googleCalendarEventId?: string;
 }
 
 const JobViewSchema = new Schema<IJobView>(
@@ -30,5 +31,5 @@ const JobViewSchema = new Schema<IJobView>(
 JobViewSchema.index({ studentId: 1, jobId: 1 }, { unique: true });
 JobViewSchema.index({ studentId: 1, isSaved: 1 });
 
-export const JobView =
+export const JobView: Model<IJobView> =
   mongoose.models.JobView || mongoose.model<IJobView>('JobView', JobViewSchema);

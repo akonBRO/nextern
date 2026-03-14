@@ -34,18 +34,29 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    const [users, total] = await Promise.all([
-      User.find(query)
-        .select('-password')
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit),
-      User.countDocuments(query),
-    ]);
+    const [users, total, pendingEmployers, pendingAdvisors, totalStudents, approvedCompanies] =
+      await Promise.all([
+        User.find(query)
+          .select('-password')
+          .sort({ createdAt: -1 })
+          .skip((page - 1) * limit)
+          .limit(limit),
+        User.countDocuments(query),
+        User.countDocuments({ role: 'employer', verificationStatus: 'pending' }),
+        User.countDocuments({ role: 'advisor', verificationStatus: 'pending' }),
+        User.countDocuments({ role: 'student' }),
+        User.countDocuments({ role: 'employer', verificationStatus: 'approved' }),
+      ]);
 
     return NextResponse.json({
       users,
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      summary: {
+        pendingEmployers,
+        pendingAdvisors,
+        totalStudents,
+        approvedCompanies,
+      },
     });
   } catch (error) {
     console.error('[ADMIN USERS ERROR]', error);
