@@ -69,7 +69,10 @@ export default async function AdvisorDashboard() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
-  const data = await getAdvisorDashboardData(session.user.id);
+  const data = await getAdvisorDashboardData({
+    userId: session.user.id,
+    email: session.user.email ?? undefined,
+  });
   const roleSubtitle = [data.advisor.designation, data.advisor.institutionName]
     .filter(Boolean)
     .join(' at ');

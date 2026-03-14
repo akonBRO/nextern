@@ -69,7 +69,10 @@ export default async function DeptDashboard() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
-  const data = await getDeptDashboardData(session.user.id);
+  const data = await getDeptDashboardData({
+    userId: session.user.id,
+    email: session.user.email ?? undefined,
+  });
   const benchmark = data.department.benchmark;
 
   return (

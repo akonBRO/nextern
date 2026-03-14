@@ -198,16 +198,64 @@ async function getChromeCounts(userId: mongoose.Types.ObjectId) {
   return { unreadNotifications, unreadMessages };
 }
 
-export async function getEmployerDashboardData(userId: string): Promise<EmployerDashboardData> {
-  await connectDB();
-  const oid = new mongoose.Types.ObjectId(userId);
+function normalizeDashboardIdentity(identity: string | { userId?: string; email?: string }) {
+  if (typeof identity === 'string') {
+    return { userId: identity, email: undefined };
+  }
 
-  const [user, jobs, applications, chromeCounts] = await Promise.all([
-    User.findById(oid)
-      .select(
-        'name email image companyName industry headquartersCity companyWebsite companyDescription'
-      )
-      .lean(),
+  return identity;
+}
+
+async function resolveRoleUser<TSelected extends { _id: mongoose.Types.ObjectId }>(
+  identity: string | { userId?: string; email?: string },
+  role: 'employer' | 'advisor' | 'dept_head',
+  select: string
+) {
+  const { userId, email } = normalizeDashboardIdentity(identity);
+  let user: TSelected | null = null;
+  let oid: mongoose.Types.ObjectId | null = null;
+
+  if (typeof userId === 'string' && mongoose.Types.ObjectId.isValid(userId)) {
+    oid = new mongoose.Types.ObjectId(userId);
+    user = (await User.findOne({ _id: oid, role }).select(select).lean()) as TSelected | null;
+  }
+
+  if (!user && email) {
+    user = (await User.findOne({ email: email.toLowerCase().trim(), role })
+      .select(select)
+      .lean()) as TSelected | null;
+
+    if (user) {
+      oid = new mongoose.Types.ObjectId(user._id.toString());
+    }
+  }
+
+  return { user, oid };
+}
+
+export async function getEmployerDashboardData(
+  identity: string | { userId?: string; email?: string }
+): Promise<EmployerDashboardData> {
+  await connectDB();
+  const { user, oid } = await resolveRoleUser<{
+    _id: mongoose.Types.ObjectId;
+    name: string;
+    email: string;
+    image?: string;
+    companyName?: string;
+    industry?: string;
+    headquartersCity?: string;
+    companyWebsite?: string;
+    companyDescription?: string;
+  }>(
+    identity,
+    'employer',
+    'name email image companyName industry headquartersCity companyWebsite companyDescription'
+  );
+
+  if (!user || !oid) throw new Error('Employer not found');
+
+  const [jobs, applications, chromeCounts] = await Promise.all([
     Job.find({ employerId: oid })
       .select('title type locationType city isActive applicationCount applicationDeadline')
       .sort({ createdAt: -1 })
@@ -218,8 +266,6 @@ export async function getEmployerDashboardData(userId: string): Promise<Employer
       .lean(),
     getChromeCounts(oid),
   ]);
-
-  if (!user) throw new Error('Employer not found');
 
   const studentIds = Array.from(
     new Set(applications.map((application) => application.studentId.toString()))
@@ -319,14 +365,23 @@ export async function getEmployerDashboardData(userId: string): Promise<Employer
   };
 }
 
-export async function getAdvisorDashboardData(userId: string): Promise<AdvisorDashboardData> {
+export async function getAdvisorDashboardData(
+  identity: string | { userId?: string; email?: string }
+): Promise<AdvisorDashboardData> {
   await connectDB();
-  const oid = new mongoose.Types.ObjectId(userId);
+  const { user, oid } = await resolveRoleUser<{
+    _id: mongoose.Types.ObjectId;
+    name: string;
+    email: string;
+    image?: string;
+    institutionName?: string;
+    advisoryDepartment?: string;
+    designation?: string;
+  }>(identity, 'advisor', 'name email image institutionName advisoryDepartment designation');
 
-  const [user, students, actions, chromeCounts] = await Promise.all([
-    User.findById(oid)
-      .select('name email image institutionName advisoryDepartment designation')
-      .lean(),
+  if (!user || !oid) throw new Error('Advisor not found');
+
+  const [students, actions, chromeCounts] = await Promise.all([
     User.find({ assignedAdvisorId: oid, role: 'student' })
       .select('name university department opportunityScore profileCompleteness cgpa')
       .sort({ opportunityScore: 1, profileCompleteness: 1 })
@@ -337,8 +392,6 @@ export async function getAdvisorDashboardData(userId: string): Promise<AdvisorDa
       .lean(),
     getChromeCounts(oid),
   ]);
-
-  if (!user) throw new Error('Advisor not found');
 
   const studentIds = students.map((student) => student._id);
   const [applications, interviewJobs] = await Promise.all([
@@ -437,19 +490,26 @@ export async function getAdvisorDashboardData(userId: string): Promise<AdvisorDa
   };
 }
 
-export async function getDeptDashboardData(userId: string): Promise<DepartmentDashboardData> {
+export async function getDeptDashboardData(
+  identity: string | { userId?: string; email?: string }
+): Promise<DepartmentDashboardData> {
   await connectDB();
-  const oid = new mongoose.Types.ObjectId(userId);
+  const { user, oid } = await resolveRoleUser<{
+    _id: mongoose.Types.ObjectId;
+    name: string;
+    email: string;
+    image?: string;
+    institutionName?: string;
+    advisoryDepartment?: string;
+    designation?: string;
+  }>(identity, 'dept_head', 'name email image institutionName advisoryDepartment designation');
 
-  const [user, benchmark, chromeCounts] = await Promise.all([
-    User.findById(oid)
-      .select('name email image institutionName advisoryDepartment designation')
-      .lean(),
+  if (!user || !oid) throw new Error('Department head not found');
+
+  const [benchmark, chromeCounts] = await Promise.all([
     DepartmentBenchmark.findOne({ deptHeadId: oid, isActive: true }).sort({ updatedAt: -1 }).lean(),
     getChromeCounts(oid),
   ]);
-
-  if (!user) throw new Error('Department head not found');
 
   const students = await User.find({
     role: 'student',

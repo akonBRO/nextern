@@ -79,7 +79,10 @@ export default async function EmployerDashboard() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
-  const data = await getEmployerDashboardData(session.user.id);
+  const data = await getEmployerDashboardData({
+    userId: session.user.id,
+    email: session.user.email ?? undefined,
+  });
 
   return (
     <DashboardShell
