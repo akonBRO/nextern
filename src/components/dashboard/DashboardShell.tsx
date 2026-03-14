@@ -147,6 +147,11 @@ export default function DashboardShell({
     return normalized === pathname && !href.includes('#');
   };
 
+  async function handleSignOut() {
+    await signOut({ redirect: false });
+    window.location.assign('/');
+  }
+
   return (
     <div
       ref={shellRef}
@@ -383,7 +388,7 @@ export default function DashboardShell({
                       </div>
                     </div>
                     <button
-                      onClick={() => signOut({ callbackUrl: '/' })}
+                      onClick={handleSignOut}
                       style={{
                         width: '100%',
                         display: 'flex',
