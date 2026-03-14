@@ -11,8 +11,6 @@
 
 import nodemailer from 'nodemailer';
 
-import nodemailer from 'nodemailer';
-
 interface SendEmailParams {
   to: string;
   subject: string;
