@@ -1,14 +1,10 @@
 // src/app/api/auth/register/route.ts
-// POST /api/auth/register
-// Creates a new user account, sends OTP verification email.
-// All roles supported. Employer/Advisor/DeptHead marked pending for admin approval.
-
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 import { generateOTP } from '@/lib/otp';
-import { sendEmail, otpEmailTemplate, welcomeEmailTemplate } from '@/lib/email';
+import { sendEmail, otpEmailTemplate } from '@/lib/email';
 import { RegisterSchema } from '@/lib/validations';
 import { rateLimit, rateLimits } from '@/lib/rate-limit';
 
@@ -16,7 +12,7 @@ const BCRYPT_ROUNDS = 12;
 
 export async function POST(req: NextRequest) {
   try {
-    // ── Rate limiting ────────────────────────────────────────────────────
+    // ── Rate limiting ─────────────────────────────────────────────────
     const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? 'unknown';
     const rl = rateLimit(`register:${ip}`, rateLimits.register);
     if (!rl.allowed) {
@@ -26,7 +22,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Parse & validate ─────────────────────────────────────────────────
+    // ── Parse & validate ──────────────────────────────────────────────
     const body = await req.json();
     const parsed = RegisterSchema.safeParse(body);
     if (!parsed.success) {
@@ -39,7 +35,7 @@ export async function POST(req: NextRequest) {
     const data = parsed.data;
     await connectDB();
 
-    // ── Duplicate email check ─────────────────────────────────────────────
+    // ── Duplicate email check ─────────────────────────────────────────
     const existing = await User.findOne({ email: data.email });
     if (existing) {
       return NextResponse.json(
@@ -48,18 +44,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Hash password ─────────────────────────────────────────────────────
+    // ── Hash password ─────────────────────────────────────────────────
     const hashedPassword = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
 
-    // ── Build user object based on role ───────────────────────────────────
+    // ── Build user object based on role ───────────────────────────────
     const userPayload: Record<string, unknown> = {
       name: data.name,
       email: data.email,
       password: hashedPassword,
       role: data.role,
-      isVerified: false, // requires email OTP verification
+      isVerified: false,
       verificationStatus: data.role === 'student' ? 'approved' : 'pending',
-      // Students are auto-approved; others require admin approval
     };
 
     if (data.role === 'student') {
@@ -68,7 +63,7 @@ export async function POST(req: NextRequest) {
       userPayload.yearOfStudy = data.yearOfStudy;
       userPayload.studentId = data.studentId;
       userPayload.opportunityScore = 0;
-      userPayload.profileCompleteness = 20; // Basic info filled
+      userPayload.profileCompleteness = 20;
     }
 
     if (data.role === 'employer') {
@@ -85,19 +80,25 @@ export async function POST(req: NextRequest) {
       userPayload.advisoryDepartment = data.advisoryDepartment;
     }
 
-    // ── Create user ───────────────────────────────────────────────────────
+    // ── Create user ───────────────────────────────────────────────────
     const user = await User.create(userPayload);
 
-    // ── Generate & send OTP ───────────────────────────────────────────────
+    // ── Generate OTP (saved to DB before email is attempted) ──────────
     const otp = await generateOTP(data.email, 'email_verify');
 
-    await sendEmail({
-      to: data.email,
-      subject: 'Verify your Nextern email address',
-      html: otpEmailTemplate(otp, data.name),
-    });
+    // ── Send email (non-blocking) ─────────────────────────────────────
+    try {
+      await sendEmail({
+        to: data.email,
+        subject: 'Verify your Nextern email address',
+        html: otpEmailTemplate(otp, data.name),
+        devOtp: otp,
+      });
+    } catch (emailError) {
+      console.error('[EMAIL SEND ERROR]', emailError);
+    }
 
-    // ── Return (never return password or sensitive fields) ─────────────────
+    // ── Return success ────────────────────────────────────────────────
     return NextResponse.json(
       {
         message: 'Account created. Please check your email for the verification code.',
