@@ -2465,8 +2465,9 @@ export default async function LandingPage() {
             }}
           >
             <p style={{ color: '#334155', fontSize: 13 }}>
-              © {CURRENT_YEAR} Nextern. Built by Group 05, CSE471, BRAC University.
+              © {new Date().getFullYear()} Nextern. Built by Group 05, CSE471, BRAC University.
             </p>
+            <p style={{ color: '#334155', fontSize: 13 }}>Made with care for Bangladesh students</p>
           </div>
         </div>
       </footer>
