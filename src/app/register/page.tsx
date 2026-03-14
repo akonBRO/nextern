@@ -579,7 +579,14 @@ export default function RegisterPage() {
         }
         return;
       }
-      router.push(`/verify-email?email=${encodeURIComponent(form.email)}&role=${role}`);
+      const params = new URLSearchParams({
+        email: form.email.trim().toLowerCase(),
+        role,
+      });
+      if (data.emailSent === false) {
+        params.set('delivery', 'failed');
+      }
+      router.push(`/verify-email?${params.toString()}`);
     } catch {
       setErrors({ _form: 'Network error. Please try again.' });
     } finally {

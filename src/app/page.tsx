@@ -6,15 +6,7 @@ import Link from 'next/link';
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import React from 'react';
-
-const CURRENT_YEAR = 2026;
-const ROLE_DASHBOARDS: Record<string, string> = {
-  student: '/student/dashboard',
-  employer: '/employer/dashboard',
-  advisor: '/advisor/dashboard',
-  dept_head: '/dept/dashboard',
-  admin: '/admin/dashboard',
-};
+import { getDefaultAuthenticatedRoute } from '@/lib/role-routing';
 
 /* ─── INLINE SVG ICONS ──────────────────────────────────────────────── */
 const Icons = {
@@ -626,7 +618,14 @@ function CheckPoint({ text }: { text: string }) {
 /* ─── MAIN PAGE ─────────────────────────────────────────────────────── */
 export default async function LandingPage() {
   const session = await auth();
-  if (session?.user) redirect(ROLE_DASHBOARDS[session.user.role] ?? '/student/dashboard');
+  if (session?.user) {
+    redirect(
+      getDefaultAuthenticatedRoute({
+        role: session.user.role,
+        verificationStatus: session.user.verificationStatus,
+      })
+    );
+  }
 
   return (
     <div style={{ fontFamily: 'var(--font-body)', background: '#F8FAFC', overflowX: 'hidden' }}>

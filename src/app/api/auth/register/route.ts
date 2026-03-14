@@ -33,11 +33,12 @@ export async function POST(req: NextRequest) {
     }
 
     const data = parsed.data;
+    const normalizedEmail = data.email.toLowerCase().trim();
     await connectDB();
 
-    // ── Duplicate email check ─────────────────────────────────────────
-    const existing = await User.findOne({ email: data.email });
-    if (existing) {
+    // ── Duplicate email check ─────────────────────────────────────────────
+    const existing = await User.findOne({ email: normalizedEmail });
+    if (existing?.isVerified) {
       return NextResponse.json(
         { error: 'An account with this email already exists.' },
         { status: 409 }
@@ -50,11 +51,13 @@ export async function POST(req: NextRequest) {
     // ── Build user object based on role ───────────────────────────────
     const userPayload: Record<string, unknown> = {
       name: data.name,
-      email: data.email,
+      email: normalizedEmail,
       password: hashedPassword,
       role: data.role,
       isVerified: false,
       verificationStatus: data.role === 'student' ? 'approved' : 'pending',
+      verificationNote: '',
+      // Students are auto-approved; others require admin approval
     };
 
     if (data.role === 'student') {
@@ -80,35 +83,49 @@ export async function POST(req: NextRequest) {
       userPayload.advisoryDepartment = data.advisoryDepartment;
     }
 
-    // ── Create user ───────────────────────────────────────────────────
-    const user = await User.create(userPayload);
+    // ── Create user ───────────────────────────────────────────────────────
+    const user = existing
+      ? await User.findByIdAndUpdate(existing._id, userPayload, {
+          new: true,
+          runValidators: true,
+        })
+      : await User.create(userPayload);
 
-    // ── Generate OTP (saved to DB before email is attempted) ──────────
-    const otp = await generateOTP(data.email, 'email_verify');
+    if (!user) {
+      throw new Error('User creation failed');
+    }
 
-    // ── Send email (non-blocking) ─────────────────────────────────────
+    // ── Generate & send OTP ───────────────────────────────────────────────
+    const otp = await generateOTP(normalizedEmail, 'email_verify');
+
+    let emailSent = true;
     try {
       await sendEmail({
-        to: data.email,
+        to: normalizedEmail,
         subject: 'Verify your Nextern email address',
         html: otpEmailTemplate(otp, data.name),
-        devOtp: otp,
       });
     } catch (emailError) {
-      console.error('[EMAIL SEND ERROR]', emailError);
+      emailSent = false;
+      console.error('[REGISTER EMAIL ERROR]', emailError);
     }
 
     // ── Return success ────────────────────────────────────────────────
     return NextResponse.json(
       {
-        message: 'Account created. Please check your email for the verification code.',
+        message: emailSent
+          ? existing
+            ? 'Account updated. Please check your email for a fresh verification code.'
+            : 'Account created. Please check your email for the verification code.'
+          : 'Account saved, but we could not send the verification code. Please use resend code on the next screen.',
         userId: user._id.toString(),
         email: user.email,
         role: user.role,
+        emailSent,
         requiresEmailVerification: true,
         requiresAdminApproval: data.role !== 'student',
       },
-      { status: 201 }
+      { status: existing ? 200 : 201 }
     );
   } catch (error) {
     console.error('[REGISTER ERROR]', error);

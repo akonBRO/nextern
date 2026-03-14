@@ -102,6 +102,7 @@ export default function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') ?? '';
+  const deliveryFailed = searchParams.get('delivery') === 'failed';
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
@@ -476,6 +477,27 @@ export default function VerifyEmailPage() {
                 >
                   <AlertIcon />
                   <span>{error}</span>
+                </div>
+              )}
+              {deliveryFailed && !error && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    background: '#FFF7ED',
+                    border: '1px solid #FED7AA',
+                    borderRadius: 10,
+                    padding: '11px 14px',
+                    color: '#9A3412',
+                    fontSize: 14,
+                    marginBottom: 20,
+                  }}
+                >
+                  <AlertIcon />
+                  <span>
+                    We saved your account, but the first OTP email did not send. Use resend code.
+                  </span>
                 </div>
               )}
               {success && !verified && (
