@@ -2,7 +2,7 @@
 import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI!;
-if (!MONGODB_URI) throw new Error('MONGODB_URI is not defined in environment variables');
+if (!MONGODB_URI) throw new Error('nextern2026@nextern.ovadmml.mongodb.net/?appName=nextern');
 
 interface MongooseCache {
   conn: typeof mongoose | null;

@@ -1,8 +1,4 @@
 // src/app/api/auth/register/route.ts
-// POST /api/auth/register
-// Creates a new user account, sends OTP verification email.
-// All roles supported. Employer/Advisor/DeptHead marked pending for admin approval.
-
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { connectDB } from '@/lib/db';
@@ -16,7 +12,7 @@ const BCRYPT_ROUNDS = 12;
 
 export async function POST(req: NextRequest) {
   try {
-    // ── Rate limiting ────────────────────────────────────────────────────
+    // ── Rate limiting ─────────────────────────────────────────────────
     const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? 'unknown';
     const rl = rateLimit(`register:${ip}`, rateLimits.register);
     if (!rl.allowed) {
@@ -26,7 +22,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Parse & validate ─────────────────────────────────────────────────
+    // ── Parse & validate ──────────────────────────────────────────────
     const body = await req.json();
     const parsed = RegisterSchema.safeParse(body);
     if (!parsed.success) {
@@ -49,16 +45,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Hash password ─────────────────────────────────────────────────────
+    // ── Hash password ─────────────────────────────────────────────────
     const hashedPassword = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
 
-    // ── Build user object based on role ───────────────────────────────────
+    // ── Build user object based on role ───────────────────────────────
     const userPayload: Record<string, unknown> = {
       name: data.name,
       email: normalizedEmail,
       password: hashedPassword,
       role: data.role,
-      isVerified: false, // requires email OTP verification
+      isVerified: false,
       verificationStatus: data.role === 'student' ? 'approved' : 'pending',
       verificationNote: '',
       // Students are auto-approved; others require admin approval
@@ -70,7 +66,7 @@ export async function POST(req: NextRequest) {
       userPayload.yearOfStudy = data.yearOfStudy;
       userPayload.studentId = data.studentId;
       userPayload.opportunityScore = 0;
-      userPayload.profileCompleteness = 20; // Basic info filled
+      userPayload.profileCompleteness = 20;
     }
 
     if (data.role === 'employer') {
@@ -114,7 +110,7 @@ export async function POST(req: NextRequest) {
       console.error('[REGISTER EMAIL ERROR]', emailError);
     }
 
-    // ── Return (never return password or sensitive fields) ─────────────────
+    // ── Return success ────────────────────────────────────────────────
     return NextResponse.json(
       {
         message: emailSent

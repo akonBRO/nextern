@@ -1,7 +1,15 @@
 // src/lib/email.ts
-// Uses Resend REST API directly via fetch — no npm package required.
-// Free tier: 100 emails/day, 3,000/month. Sign up at resend.com.
-// Add RESEND_API_KEY to .env.local
+// Uses Gmail SMTP via nodemailer — works for any email address immediately.
+// Setup: npm install nodemailer && npm install -D @types/nodemailer
+// Add GMAIL_USER and GMAIL_APP_PASSWORD to .env.local
+//
+// How to get GMAIL_APP_PASSWORD:
+// 1. Enable 2-Step Verification on your Gmail account
+// 2. Go to myaccount.google.com/apppasswords
+// 3. Type "Nextern" → click Create → copy the 16-character password
+// 4. Paste into .env.local as GMAIL_APP_PASSWORD=abcdefghijklmnop (no spaces)
+
+import nodemailer from 'nodemailer';
 
 import nodemailer from 'nodemailer';
 
@@ -9,30 +17,27 @@ interface SendEmailParams {
   to: string;
   subject: string;
   html: string;
+  devOtp?: string;
 }
 
 async function sendViaResend({ to, subject, html }: SendEmailParams): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error('RESEND_API_KEY is not set in environment variables');
 
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
     },
-    body: JSON.stringify({
-      from: 'Nextern <noreply@nextern.app>',
-      to,
-      subject,
-      html,
-    }),
   });
 
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(`Email send failed: ${JSON.stringify(error)}`);
-  }
+  await transporter.sendMail({
+    from: `Nextern <${process.env.GMAIL_USER}>`,
+    to,
+    subject,
+    html,
+  });
 }
 
 async function sendViaGmail({ to, subject, html }: SendEmailParams): Promise<void> {
@@ -130,7 +135,7 @@ export function otpEmailTemplate(otp: string, name: string): string {
               <tr>
                 <td style="background:#F8FAFC;padding:24px 40px;border-top:1px solid #E2E8F0;text-align:center;">
                   <p style="margin:0;color:#94A3B8;font-size:12px;">
-                    © ${new Date().getFullYear()} Nextern. All rights reserved.
+                    © 2026 Nextern. All rights reserved.
                   </p>
                 </td>
               </tr>
