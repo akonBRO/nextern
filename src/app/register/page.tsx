@@ -304,12 +304,13 @@ const BD_UNIVERSITIES = [
   'Daffodil International University (DIU)',
   'ULAB',
   'United International University (UIU)',
-  'RUET',
-  'CUET',
-  'BUET',
-  'SUST',
+  'Bangladesh University of Engineering & Technology (BUET)',
+  'Khulna University of Engineering & Technology (KUET)',
+  'Rajshahi University of Engineering & Technology (RUET)',
+  'Chittagong University of Engineering & Technology (CUET)',
+  'Shahjalal University of Science and Technology (SUST)',
   'Dhaka University (DU)',
-  'IUT',
+  'Islamic University of Technology (IUT)',
 ];
 const BD_INDUSTRIES = [
   'IT/Software',
