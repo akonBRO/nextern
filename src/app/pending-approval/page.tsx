@@ -3,6 +3,7 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { getDefaultAuthenticatedRoute } from '@/lib/role-routing';
 
 const ROLE_LABELS: Record<string, string> = {
   employer: 'employer account',
@@ -267,8 +268,14 @@ function StepItem({
 export default async function PendingApprovalPage() {
   const session = await auth();
   if (!session?.user) redirect('/login');
-  if (session.user.verificationStatus === 'approved') {
-    redirect(`/${session.user.role === 'dept_head' ? 'dept' : session.user.role}/dashboard`);
+
+  const redirectTarget = getDefaultAuthenticatedRoute({
+    role: session.user.role,
+    verificationStatus: session.user.verificationStatus,
+  });
+
+  if (redirectTarget !== '/pending-approval') {
+    redirect(redirectTarget);
   }
 
   const isRejected = session.user.verificationStatus === 'rejected';

@@ -2,9 +2,10 @@
 // src/app/(auth)/login/page.tsx — Premium redesign
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { getSession, signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { getPostLoginRedirect } from '@/lib/role-routing';
 
 const ERROR_MESSAGES: Record<string, string> = {
   EMAIL_NOT_VERIFIED: 'Please verify your email before logging in.',
@@ -235,8 +236,10 @@ export default function LoginPage() {
           return;
         }
       } else {
+        const session = await getSession();
+        const redirectTarget = getPostLoginRedirect(session?.user ?? {}, callbackUrl);
         router.refresh();
-        router.push(callbackUrl || '/student/dashboard');
+        router.push(redirectTarget);
       }
     } catch {
       setError('Something went wrong. Please try again.');

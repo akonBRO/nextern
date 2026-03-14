@@ -6,8 +6,13 @@ import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
+
+function isValidObjectId(value: unknown): value is string {
+  return typeof value === 'string' && mongoose.Types.ObjectId.isValid(value);
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // ── Providers ──────────────────────────────────────────────────────────
@@ -94,13 +99,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.verificationStatus = user.verificationStatus;
       }
 
+      // Heal stale or provider-derived tokens that do not carry our MongoDB user id.
+      if ((!isValidObjectId(token.id) || !token.role) && token.email) {
+        await connectDB();
+        const dbUser = await User.findOne({
+          email: token.email.toLowerCase().trim(),
+        }).select('_id role isVerified verificationStatus');
+
+        if (dbUser) {
+          token.id = dbUser._id.toString();
+          token.role = dbUser.role;
+          token.isVerified = dbUser.isVerified;
+          token.isEmailVerified = dbUser.isVerified;
+          token.verificationStatus = dbUser.verificationStatus;
+        }
+      }
+
       // On session update (e.g. after profile change), refresh from DB
       if (trigger === 'update' && session) {
         await connectDB();
-        const freshUser = await User.findById(token.id);
+        const freshUser = isValidObjectId(token.id) ? await User.findById(token.id) : null;
         if (freshUser) {
+          token.id = freshUser._id.toString();
           token.role = freshUser.role;
           token.isVerified = freshUser.isVerified;
+          token.isEmailVerified = freshUser.isVerified;
           token.verificationStatus = freshUser.verificationStatus;
         }
       }
@@ -114,7 +137,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      */
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string;
+        session.user.id = (token.id ?? token.sub) as string;
         session.user.role = token.role as
           | 'student'
           | 'employer'
@@ -144,7 +167,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!existingUser) {
           // New Google user — create with student role by default
           // They will be prompted to complete their profile on first login
-          await User.create({
+          const createdUser = await User.create({
             name: user.name,
             email: user.email?.toLowerCase(),
             image: user.image,
@@ -152,6 +175,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             isVerified: true, // Google email is already verified
             verificationStatus: 'approved',
           });
+          user.id = createdUser._id.toString();
+          user.role = createdUser.role;
+          user.isVerified = createdUser.isVerified;
+          user.verificationStatus = createdUser.verificationStatus;
         } else {
           // Existing user — update their Google profile picture if needed
           if (user.image && !existingUser.image) {

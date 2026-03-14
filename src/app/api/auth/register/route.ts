@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 import { generateOTP } from '@/lib/otp';
-import { sendEmail, otpEmailTemplate, welcomeEmailTemplate } from '@/lib/email';
+import { sendEmail, otpEmailTemplate } from '@/lib/email';
 import { RegisterSchema } from '@/lib/validations';
 import { rateLimit, rateLimits } from '@/lib/rate-limit';
 
@@ -37,11 +37,12 @@ export async function POST(req: NextRequest) {
     }
 
     const data = parsed.data;
+    const normalizedEmail = data.email.toLowerCase().trim();
     await connectDB();
 
     // ── Duplicate email check ─────────────────────────────────────────────
-    const existing = await User.findOne({ email: data.email });
-    if (existing) {
+    const existing = await User.findOne({ email: normalizedEmail });
+    if (existing?.isVerified) {
       return NextResponse.json(
         { error: 'An account with this email already exists.' },
         { status: 409 }
@@ -54,11 +55,12 @@ export async function POST(req: NextRequest) {
     // ── Build user object based on role ───────────────────────────────────
     const userPayload: Record<string, unknown> = {
       name: data.name,
-      email: data.email,
+      email: normalizedEmail,
       password: hashedPassword,
       role: data.role,
       isVerified: false, // requires email OTP verification
       verificationStatus: data.role === 'student' ? 'approved' : 'pending',
+      verificationNote: '',
       // Students are auto-approved; others require admin approval
     };
 
@@ -86,28 +88,48 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Create user ───────────────────────────────────────────────────────
-    const user = await User.create(userPayload);
+    const user = existing
+      ? await User.findByIdAndUpdate(existing._id, userPayload, {
+          new: true,
+          runValidators: true,
+        })
+      : await User.create(userPayload);
+
+    if (!user) {
+      throw new Error('User creation failed');
+    }
 
     // ── Generate & send OTP ───────────────────────────────────────────────
-    const otp = await generateOTP(data.email, 'email_verify');
+    const otp = await generateOTP(normalizedEmail, 'email_verify');
 
-    await sendEmail({
-      to: data.email,
-      subject: 'Verify your Nextern email address',
-      html: otpEmailTemplate(otp, data.name),
-    });
+    let emailSent = true;
+    try {
+      await sendEmail({
+        to: normalizedEmail,
+        subject: 'Verify your Nextern email address',
+        html: otpEmailTemplate(otp, data.name),
+      });
+    } catch (emailError) {
+      emailSent = false;
+      console.error('[REGISTER EMAIL ERROR]', emailError);
+    }
 
     // ── Return (never return password or sensitive fields) ─────────────────
     return NextResponse.json(
       {
-        message: 'Account created. Please check your email for the verification code.',
+        message: emailSent
+          ? existing
+            ? 'Account updated. Please check your email for a fresh verification code.'
+            : 'Account created. Please check your email for the verification code.'
+          : 'Account saved, but we could not send the verification code. Please use resend code on the next screen.',
         userId: user._id.toString(),
         email: user.email,
         role: user.role,
+        emailSent,
         requiresEmailVerification: true,
         requiresAdminApproval: data.role !== 'student',
       },
-      { status: 201 }
+      { status: existing ? 200 : 201 }
     );
   } catch (error) {
     console.error('[REGISTER ERROR]', error);
