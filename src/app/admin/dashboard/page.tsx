@@ -453,6 +453,11 @@ export default function AdminDashboard() {
     return () => clearTimeout(t);
   }, [searchInput]);
 
+  async function handleSignOut() {
+    await signOut({ redirect: false });
+    window.location.assign('/');
+  }
+
   async function handleAction(userId: string, action: 'approve' | 'reject') {
     setActionLoading(userId);
     try {
@@ -576,7 +581,7 @@ export default function AdminDashboard() {
               {(session?.user?.name?.[0] ?? 'A').toUpperCase()}
             </div>
             <button
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={handleSignOut}
               style={{
                 display: 'flex',
                 alignItems: 'center',

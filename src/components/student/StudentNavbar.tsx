@@ -26,6 +26,11 @@ export default function StudentNavbar({ user }: NavbarProps) {
     .slice(0, 2)
     .toUpperCase();
 
+  async function handleSignOut() {
+    await signOut({ redirect: false });
+    window.location.assign('/');
+  }
+
   return (
     <nav
       style={{
@@ -212,7 +217,7 @@ export default function StudentNavbar({ user }: NavbarProps) {
                     {user.profileCompleteness}% complete
                   </div>
                   <button
-                    onClick={() => signOut({ callbackUrl: '/' })}
+                    onClick={handleSignOut}
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
