@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getDefaultAuthenticatedRoute } from '@/lib/role-routing';
+import SignOutRedirectButton from '@/components/auth/SignOutRedirectButton';
 
 const ROLE_LABELS: Record<string, string> = {
   employer: 'employer account',
@@ -391,8 +392,8 @@ export default async function PendingApprovalPage() {
               nextern<span style={{ color: '#22D3EE' }}>.</span>
             </span>
           </Link>
-          <Link
-            href="/login"
+          <SignOutRedirectButton
+            redirectTo="/"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -401,12 +402,16 @@ export default async function PendingApprovalPage() {
               fontSize: 14,
               fontWeight: 500,
               textDecoration: 'none',
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
               transition: 'color 0.15s',
             }}
           >
             <LogoutIcon />
             Sign out
-          </Link>
+          </SignOutRedirectButton>
         </div>
       </nav>
 
@@ -741,12 +746,22 @@ export default async function PendingApprovalPage() {
           {!isRejected && (
             <div style={{ textAlign: 'center', marginTop: 24, color: '#94A3B8', fontSize: 13 }}>
               Already approved?{' '}
-              <Link
-                href="/login"
-                style={{ color: '#2563EB', fontWeight: 600, textDecoration: 'none' }}
+              <SignOutRedirectButton
+                redirectTo="/login"
+                style={{
+                  color: '#2563EB',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  fontSize: 'inherit',
+                  fontFamily: 'inherit',
+                }}
               >
                 Sign in here
-              </Link>
+              </SignOutRedirectButton>
             </div>
           )}
         </div>
