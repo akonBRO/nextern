@@ -1,8 +1,8 @@
 'use client';
 // src/app/(auth)/login/page.tsx — Premium redesign
 
-import { useState } from 'react';
-import { getSession, signIn } from 'next-auth/react';
+import { useEffect, useState } from 'react';
+import { getSession, signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getPostLoginRedirect } from '@/lib/role-routing';
@@ -203,10 +203,24 @@ function GoogleLogo() {
   );
 }
 
+async function waitForSession(maxAttempts = 6, delayMs = 150) {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const session = await getSession();
+    if (session?.user) {
+      return session;
+    }
+
+    await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+  }
+
+  return null;
+}
+
 /* ── MAIN ──────────────────────────────────────────────────────────── */
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
   const callbackUrl = searchParams.get('callbackUrl') ?? '';
   const urlError = searchParams.get('error');
 
@@ -219,6 +233,15 @@ export default function LoginPage() {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passFocused, setPassFocused] = useState(false);
 
+  useEffect(() => {
+    if (status !== 'authenticated' || !session?.user) {
+      return;
+    }
+
+    const redirectTarget = getPostLoginRedirect(session.user, callbackUrl);
+    window.location.replace(redirectTarget);
+  }, [callbackUrl, session, status]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
@@ -228,6 +251,7 @@ export default function LoginPage() {
         email: form.email.trim().toLowerCase(),
         password: form.password,
         redirect: false,
+        callbackUrl: callbackUrl || '/',
       });
       if (result?.error) {
         setError(ERROR_MESSAGES[result.error] ?? 'Invalid email or password.');
@@ -236,10 +260,13 @@ export default function LoginPage() {
           return;
         }
       } else {
-        const session = await getSession();
-        const redirectTarget = getPostLoginRedirect(session?.user ?? {}, callbackUrl);
-        router.refresh();
-        router.push(redirectTarget);
+        const freshSession = await waitForSession();
+        const redirectTarget = freshSession?.user
+          ? getPostLoginRedirect(freshSession.user, callbackUrl)
+          : '/';
+
+        window.location.replace(redirectTarget);
+        return;
       }
     } catch {
       setError('Something went wrong. Please try again.');

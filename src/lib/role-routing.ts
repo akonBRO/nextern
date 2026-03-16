@@ -16,6 +16,13 @@ type RoutedUser = {
 
 const PENDING_APPROVAL_ROLES: UserRole[] = ['employer', 'advisor', 'dept_head'];
 const AUTH_ONLY_ROUTES = ['/login', '/register', '/verify-email'];
+const ROLE_ROUTE_PREFIXES: { prefix: string; roles: UserRole[] }[] = [
+  { prefix: '/student', roles: ['student'] },
+  { prefix: '/employer', roles: ['employer'] },
+  { prefix: '/advisor', roles: ['advisor'] },
+  { prefix: '/dept', roles: ['dept_head'] },
+  { prefix: '/admin', roles: ['admin'] },
+];
 
 export function getDashboardForRole(role?: UserRole) {
   return role ? ROLE_DASHBOARDS[role] : '/';
@@ -42,6 +49,18 @@ function isAuthOnlyRoute(path: string) {
   return AUTH_ONLY_ROUTES.some((route) => path === route || path.startsWith(`${route}/`));
 }
 
+function canAccessCallbackPath(role: UserRole | undefined, path: string) {
+  const matchedRoute = ROLE_ROUTE_PREFIXES.find(
+    ({ prefix }) => path === prefix || path.startsWith(`${prefix}/`)
+  );
+
+  if (!matchedRoute) {
+    return true;
+  }
+
+  return !!role && matchedRoute.roles.includes(role);
+}
+
 export function getPostLoginRedirect(user: RoutedUser, callbackUrl?: string | null) {
   const defaultRoute = getDefaultAuthenticatedRoute(user);
   const safeCallbackUrl = isSafeInternalPath(callbackUrl) ? callbackUrl : null;
@@ -50,7 +69,11 @@ export function getPostLoginRedirect(user: RoutedUser, callbackUrl?: string | nu
     return defaultRoute;
   }
 
-  if (safeCallbackUrl && !isAuthOnlyRoute(safeCallbackUrl)) {
+  if (
+    safeCallbackUrl &&
+    !isAuthOnlyRoute(safeCallbackUrl) &&
+    canAccessCallbackPath(user.role, safeCallbackUrl)
+  ) {
     return safeCallbackUrl;
   }
 
