@@ -51,7 +51,20 @@ export type DashboardNavItem = {
   }[];
 };
 
+type DashboardRole = 'student' | 'employer' | 'advisor' | 'departmentHead';
+
+const profileConfig: Record<
+  DashboardRole,
+  { label: string; href: string; icon: 'users' | 'building' }
+> = {
+  student: { label: 'My Profile', href: '/student/profile', icon: 'users' },
+  employer: { label: 'Company Profile', href: '/employer/profile', icon: 'building' },
+  advisor: { label: 'My Profile', href: '/advisor/profile', icon: 'users' },
+  departmentHead: { label: 'My Profile', href: '/departmentHead/profile', icon: 'users' },
+};
+
 type DashboardShellProps = {
+  role: DashboardRole;
   roleLabel: string;
   homeHref: string;
   navItems: DashboardNavItem[];
@@ -111,12 +124,14 @@ function CounterChip({ label, value, icon }: { label: string; value: number; ico
 }
 
 export default function DashboardShell({
+  role,
   roleLabel,
   homeHref,
   navItems,
   user,
   children,
 }: DashboardShellProps) {
+  const profile = profileConfig[role];
   const pathname = usePathname();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -368,6 +383,7 @@ export default function DashboardShell({
                       padding: 10,
                     }}
                   >
+                    {/* ── User info header ── */}
                     <div
                       style={{
                         padding: '10px 12px 14px',
@@ -381,12 +397,59 @@ export default function DashboardShell({
                       <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
                         {user.email}
                       </div>
-                      <div
-                        style={{ marginTop: 8, fontSize: 12, color: '#2563EB', fontWeight: 700 }}
-                      >
-                        {roleLabel}
-                      </div>
                     </div>
+
+                    {/* ── My Profile link ── */}
+                    <Link
+                      href={profile.href}
+                      onClick={() => setUserMenuOpen(false)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        padding: '11px 12px',
+                        borderRadius: 12,
+                        textDecoration: 'none',
+                        color: '#1E293B',
+                        marginBottom: 6,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#F1F5F9';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 10,
+                          background: '#EFF6FF',
+                          color: '#2563EB',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {profile.icon === 'building' ? (
+                          <Building2 size={15} strokeWidth={2} />
+                        ) : (
+                          <Users size={15} strokeWidth={2} />
+                        )}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                          {profile.label}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                          View and edit your profile
+                        </div>
+                      </div>
+                    </Link>
+
+                    {/* ── Sign out ── */}
                     <button
                       onClick={handleSignOut}
                       style={{

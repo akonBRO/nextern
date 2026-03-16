@@ -81,7 +81,8 @@ const JobSchema = new Schema<IJob>(
 
 JobSchema.index({ employerId: 1 });
 JobSchema.index({ type: 1, isActive: 1, applicationDeadline: 1 });
-JobSchema.index({ targetUniversities: 1, targetDepartments: 1 });
+JobSchema.index({ targetUniversities: 1 });
+JobSchema.index({ targetDepartments: 1 });
 JobSchema.index({ requiredSkills: 1 });
 
 export const Job = mongoose.models.Job || mongoose.model<IJob>('Job', JobSchema);
