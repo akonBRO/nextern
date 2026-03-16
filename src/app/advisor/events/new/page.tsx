@@ -201,6 +201,7 @@ const BD_UNIS = [
   'Daffodil International University (DIU)',
   'ULAB',
   'United International University (UIU)',
+  'KUET',
   'RUET',
   'CUET',
   'BUET',

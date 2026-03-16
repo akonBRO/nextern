@@ -2,7 +2,16 @@
 
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
-import { Bell, ChevronDown, Home, LogOut, Mail, UserCircle2 } from 'lucide-react';
+import {
+  Bell,
+  BriefcaseBusiness,
+  ChevronDown,
+  ClipboardList,
+  Home,
+  LogOut,
+  Mail,
+  UserCircle2,
+} from 'lucide-react';
 import { useState } from 'react';
 
 interface NavbarProps {
@@ -53,6 +62,7 @@ export default function StudentNavbar({ user }: NavbarProps) {
           flexWrap: 'wrap',
         }}
       >
+        {/* ── Logo ── */}
         <Link
           href="/student/dashboard"
           style={{
@@ -86,7 +96,9 @@ export default function StudentNavbar({ user }: NavbarProps) {
           </div>
         </Link>
 
+        {/* ── Nav links + user menu ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          {/* Nav links */}
           <Link
             href="/student/dashboard"
             style={{
@@ -102,6 +114,40 @@ export default function StudentNavbar({ user }: NavbarProps) {
             <Home size={15} strokeWidth={2} />
             Overview
           </Link>
+
+          <Link
+            href="/student/jobs"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              color: '#CBD5E1',
+              textDecoration: 'none',
+              fontSize: 13,
+              fontWeight: 700,
+            }}
+          >
+            <BriefcaseBusiness size={15} strokeWidth={2} />
+            Jobs
+          </Link>
+
+          <Link
+            href="/student/applications"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              color: '#CBD5E1',
+              textDecoration: 'none',
+              fontSize: 13,
+              fontWeight: 700,
+            }}
+          >
+            <ClipboardList size={15} strokeWidth={2} />
+            Applications
+          </Link>
+
+          {/* Messages chip */}
           <div
             style={{
               display: 'inline-flex',
@@ -118,6 +164,8 @@ export default function StudentNavbar({ user }: NavbarProps) {
             <Mail size={14} strokeWidth={2} color="#22D3EE" />
             {user.unreadMessages}
           </div>
+
+          {/* Alerts chip */}
           <div
             style={{
               display: 'inline-flex',
@@ -134,6 +182,8 @@ export default function StudentNavbar({ user }: NavbarProps) {
             <Bell size={14} strokeWidth={2} color="#22D3EE" />
             {user.unreadNotifications}
           </div>
+
+          {/* User menu */}
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setMenuOpen((value) => !value)}
@@ -176,15 +226,23 @@ export default function StudentNavbar({ user }: NavbarProps) {
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{user.name}</div>
                 <div style={{ fontSize: 11, color: '#94A3B8' }}>{user.opportunityScore} score</div>
               </div>
-              <ChevronDown size={14} strokeWidth={2} />
+              <ChevronDown
+                size={14}
+                strokeWidth={2}
+                style={{
+                  transform: menuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease',
+                }}
+              />
             </button>
-            {menuOpen ? (
+
+            {menuOpen && (
               <div
                 style={{
                   position: 'absolute',
                   right: 0,
                   top: 'calc(100% + 8px)',
-                  width: 220,
+                  width: 240,
                   background: '#FFFFFF',
                   borderRadius: 18,
                   border: '1px solid #D9E2EC',
@@ -192,41 +250,175 @@ export default function StudentNavbar({ user }: NavbarProps) {
                   padding: 10,
                 }}
               >
+                {/* User info */}
                 <div
                   style={{
-                    padding: '10px 12px',
+                    padding: '10px 12px 14px',
                     borderBottom: '1px solid #E2E8F0',
                     marginBottom: 8,
                   }}
                 >
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#1E293B' }}>{user.name}</div>
-                  <div style={{ marginTop: 4, fontSize: 12, color: '#64748B' }}>{user.email}</div>
-                </div>
-                <div style={{ display: 'grid', gap: 8 }}>
+                  <div style={{ marginTop: 3, fontSize: 12, color: '#64748B' }}>{user.email}</div>
                   <div
                     style={{
-                      display: 'inline-flex',
+                      marginTop: 6,
+                      display: 'flex',
                       alignItems: 'center',
-                      gap: 8,
-                      fontSize: 13,
-                      color: '#1E293B',
+                      gap: 6,
+                      fontSize: 12,
+                      color: '#2563EB',
                       fontWeight: 700,
                     }}
                   >
-                    <UserCircle2 size={15} strokeWidth={2} />
-                    {user.profileCompleteness}% complete
+                    <UserCircle2 size={13} />
+                    {user.profileCompleteness}% profile complete
                   </div>
+                </div>
+
+                <div style={{ display: 'grid', gap: 6 }}>
+                  {/* My Profile */}
+                  <Link
+                    href="/student/profile"
+                    onClick={() => setMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '11px 12px',
+                      borderRadius: 12,
+                      textDecoration: 'none',
+                      color: '#1E293B',
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                    }}
+                    onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
+                    onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
+                  >
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 10,
+                        background: '#EFF6FF',
+                        color: '#2563EB',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <UserCircle2 size={15} strokeWidth={2} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                        My Profile
+                      </div>
+                      <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                        View and edit your profile
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Browse Jobs */}
+                  <Link
+                    href="/student/jobs"
+                    onClick={() => setMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '11px 12px',
+                      borderRadius: 12,
+                      textDecoration: 'none',
+                      color: '#1E293B',
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                    }}
+                    onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
+                    onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
+                  >
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 10,
+                        background: '#EFF6FF',
+                        color: '#2563EB',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <BriefcaseBusiness size={15} strokeWidth={2} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                        Browse Jobs
+                      </div>
+                      <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                        Find internships and roles
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* My Applications */}
+                  <Link
+                    href="/student/applications"
+                    onClick={() => setMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '11px 12px',
+                      borderRadius: 12,
+                      textDecoration: 'none',
+                      color: '#1E293B',
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                    }}
+                    onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
+                    onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
+                  >
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 10,
+                        background: '#EFF6FF',
+                        color: '#2563EB',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <ClipboardList size={15} strokeWidth={2} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                        My Applications
+                      </div>
+                      <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                        Track your pipeline
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Sign out */}
                   <button
                     onClick={handleSignOut}
                     style={{
-                      display: 'inline-flex',
+                      display: 'flex',
                       alignItems: 'center',
-                      gap: 8,
+                      gap: 10,
+                      width: '100%',
                       border: 'none',
                       borderRadius: 12,
                       background: '#EFF6FF',
                       color: '#2563EB',
-                      padding: '12px 12px',
+                      padding: '12px',
                       fontSize: 14,
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -237,7 +429,7 @@ export default function StudentNavbar({ user }: NavbarProps) {
                   </button>
                 </div>
               </div>
-            ) : null}
+            )}
           </div>
         </div>
       </div>
