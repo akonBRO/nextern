@@ -10,6 +10,8 @@ import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 
+const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+
 function isValidObjectId(value: unknown): value is string {
   return typeof value === 'string' && mongoose.Types.ObjectId.isValid(value);
 }
@@ -202,7 +204,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   // ── Secret ───────────────────────────────────────────────────────────────
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: authSecret,
+  trustHost: true,
 
   // ── Debug (disable in production) ────────────────────────────────────────
   debug: process.env.NODE_ENV === 'development',

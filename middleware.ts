@@ -19,6 +19,7 @@ const PUBLIC_ROUTES = ['/', '/login', '/register', '/verify-email', '/api/auth']
 const AUTH_ONLY_ROUTES = ['/login', '/register', '/verify-email'];
 
 type MiddlewareToken = {
+  id?: string;
   sub?: string;
   email?: string | null;
   role?: UserRole;
@@ -53,7 +54,7 @@ export default async function middleware(req: NextRequest) {
     secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   })) as MiddlewareToken | null;
 
-  const isAuthenticated = !!token?.sub;
+  const isAuthenticated = !!(token?.sub ?? token?.id);
 
   // Redirect logged-in users away from auth pages
   if (isAuthenticated && AUTH_ONLY_ROUTES.some((route) => pathname.startsWith(route))) {
