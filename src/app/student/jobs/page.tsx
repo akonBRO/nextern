@@ -10,6 +10,7 @@ import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { User } from '@/models/User';
 import mongoose from 'mongoose';
+import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
   DashboardPage,
@@ -19,23 +20,6 @@ import {
 } from '@/components/dashboard/DashboardContent';
 import JobFeedClient from './JobFeedClient';
 
-const navItems = [
-  { label: 'Dashboard', href: '/student/dashboard', icon: 'dashboard' as const },
-  { label: 'Jobs', href: '/student/jobs', icon: 'briefcase' as const },
-  {
-    label: 'Track',
-    icon: 'file' as const,
-    items: [
-      {
-        label: 'My Applications',
-        href: '/student/applications',
-        description: 'Track your submitted applications and their status.',
-        icon: 'file' as const,
-      },
-    ],
-  },
-];
-
 async function getJobFeedData(userId: string) {
   await connectDB();
   const oid = new mongoose.Types.ObjectId(userId);
@@ -43,7 +27,7 @@ async function getJobFeedData(userId: string) {
   const [student, unreadNotifs, unreadMsgs] = await Promise.all([
     User.findById(oid)
       .select(
-        'name email image university department yearOfStudy skills cgpa opportunityScore profileCompleteness'
+        'name email image university department yearOfStudy skills cgpa opportunityScore profileCompleteness isPremium'
       )
       .lean(),
     Notification.countDocuments({ userId: oid, isRead: false }),
@@ -106,9 +90,20 @@ async function getJobFeedData(userId: string) {
     };
   });
 
+  const sortedJobs = [...enrichedJobs].sort((a, b) => {
+    if (student.isPremium) {
+      return (
+        (b.fitScore ?? -1) - (a.fitScore ?? -1) ||
+        Number(b.isPremiumListing) - Number(a.isPremiumListing)
+      );
+    }
+
+    return Number(b.isPremiumListing) - Number(a.isPremiumListing);
+  });
+
   return {
     student,
-    jobs: enrichedJobs,
+    jobs: sortedJobs,
     totalJobs: jobs.length,
     appliedCount: appliedJobIds.size,
     chrome: { unreadNotifications: unreadNotifs, unreadMessages: unreadMsgs },
@@ -130,7 +125,7 @@ export default async function StudentJobsPage() {
       role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
-      navItems={navItems}
+      navItems={STUDENT_NAV_ITEMS}
       user={{
         name: student.name,
         email: student.email,

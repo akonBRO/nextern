@@ -208,35 +208,42 @@ export async function getStudentDashboardData(userId: string): Promise<Dashboard
 
   const userSkillSet = new Set((user.skills ?? []).map((s: string) => s.toLowerCase()));
 
-  const recommendedJobs: JobCard[] = rawJobs.map((j) => {
-    const matched = (j.requiredSkills ?? []).filter((s: string) =>
-      userSkillSet.has(s.toLowerCase())
-    ).length;
-    const total = (j.requiredSkills ?? []).length;
-    const fitScore = total > 0 ? Math.round((matched / total) * 100) : 0;
+  const recommendedJobs: JobCard[] = rawJobs
+    .map((j) => {
+      const matched = (j.requiredSkills ?? []).filter((s: string) =>
+        userSkillSet.has(s.toLowerCase())
+      ).length;
+      const total = (j.requiredSkills ?? []).length;
+      const fitScore = total > 0 ? Math.round((matched / total) * 100) : 0;
 
-    let whyRecommended = 'Matches your profile';
-    if (fitScore >= 80) whyRecommended = `${matched} skills match`;
-    else if (user.department && (j.targetDepartments ?? []).includes(user.department))
-      whyRecommended = `Perfect for ${user.department}`;
-    else if (j.type === 'internship') whyRecommended = 'Top internship match';
+      let whyRecommended = 'Matches your profile';
+      if (fitScore >= 80) whyRecommended = `${matched} skills match`;
+      else if (user.department && (j.targetDepartments ?? []).includes(user.department))
+        whyRecommended = `Perfect for ${user.department}`;
+      else if (j.type === 'internship') whyRecommended = 'Top internship match';
 
-    return {
-      _id: j._id.toString(),
-      title: j.title,
-      companyName: j.companyName,
-      companyLogo: j.companyLogo,
-      type: j.type,
-      locationType: j.locationType,
-      city: j.city,
-      stipendBDT: j.stipendBDT,
-      requiredSkills: (j.requiredSkills ?? []).slice(0, 4),
-      applicationDeadline: j.applicationDeadline?.toISOString(),
-      fitScore,
-      whyRecommended,
-      applicationCount: j.applicationCount ?? 0,
-    };
-  });
+      return {
+        _id: j._id.toString(),
+        title: j.title,
+        companyName: j.companyName,
+        companyLogo: j.companyLogo,
+        type: j.type,
+        locationType: j.locationType,
+        city: j.city,
+        stipendBDT: j.stipendBDT,
+        requiredSkills: (j.requiredSkills ?? []).slice(0, 4),
+        applicationDeadline: j.applicationDeadline?.toISOString(),
+        fitScore,
+        whyRecommended,
+        applicationCount: j.applicationCount ?? 0,
+      };
+    })
+    .sort((a, b) => {
+      if (user.isPremium) {
+        return (b.fitScore ?? 0) - (a.fitScore ?? 0);
+      }
+      return 0;
+    });
 
   // ── Badges ─────────────────────────────────────────────────────────
   const recentBadges: BadgeData[] = badges.slice(0, 4).map((b) => ({

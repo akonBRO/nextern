@@ -2,6 +2,8 @@
 // Student job detail page — full description, requirements, apply button
 
 import { auth } from '@/lib/auth';
+import { buildUnknownAIMeta } from '@/lib/ai-meta';
+import { getUsageSummary } from '@/lib/premium';
 import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
 import { Job } from '@/models/Job';
@@ -11,6 +13,7 @@ import { Message } from '@/models/Message';
 import { User } from '@/models/User';
 import mongoose from 'mongoose';
 import Link from 'next/link';
+import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
   DashboardPage,
@@ -30,12 +33,8 @@ import {
   Wrench,
 } from 'lucide-react';
 import JobApplyButton from './JobApplyButton';
-
-const navItems = [
-  { label: 'Dashboard', href: '/student/dashboard', icon: 'dashboard' as const },
-  { label: 'Jobs', href: '/student/jobs', icon: 'briefcase' as const },
-  { label: 'Applications', href: '/student/applications', icon: 'file' as const },
-];
+import AISkillAnalysisCard from './AISkillAnalysisCard';
+import JobFitScoreCard from './JobFitScoreCard';
 
 const TYPE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   internship: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE' },
@@ -85,6 +84,17 @@ async function getJobData(jobId: string, userId: string) {
     job,
     hasApplied: !!existingApp,
     applicationStatus: existingApp?.status ?? null,
+    savedAnalysis: existingApp?.fitScoreComputedAt
+      ? {
+          fitScore: existingApp.fitScore ?? 0,
+          hardGaps: existingApp.hardGaps ?? [],
+          softGaps: existingApp.softGaps ?? [],
+          metRequirements: existingApp.metRequirements ?? [],
+          suggestedPath: existingApp.suggestedPath ?? [],
+          summary: existingApp.fitSummary ?? '',
+          meta: existingApp.fitAnalysisMeta ?? buildUnknownAIMeta('gemini'),
+        }
+      : null,
     fitScore,
     daysLeft,
     isExpired,
@@ -103,7 +113,10 @@ export default async function StudentJobDetailPage({
   if (session.user.role !== 'student') redirect('/student/dashboard');
 
   const { jobId } = await params;
-  const data = await getJobData(jobId, session.user.id);
+  const [data, usage] = await Promise.all([
+    getJobData(jobId, session.user.id),
+    getUsageSummary(session.user.id),
+  ]);
   if (!data) redirect('/student/jobs');
 
   const {
@@ -111,6 +124,7 @@ export default async function StudentJobDetailPage({
     job,
     hasApplied,
     applicationStatus,
+    savedAnalysis,
     fitScore,
     daysLeft,
     isExpired,
@@ -124,7 +138,7 @@ export default async function StudentJobDetailPage({
       role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
-      navItems={navItems}
+      navItems={STUDENT_NAV_ITEMS}
       user={{
         name: student?.name ?? 'Student',
         email: student?.email ?? '',
@@ -354,31 +368,12 @@ export default async function StudentJobDetailPage({
                 flexShrink: 0,
               }}
             >
-              {fitScore !== null && (
-                <div
-                  style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 16,
-                    padding: '14px 20px',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 32,
-                      fontWeight: 900,
-                      color: fitScore >= 70 ? '#10B981' : fitScore >= 40 ? '#2563EB' : '#F59E0B',
-                      fontFamily: 'var(--font-display)',
-                      lineHeight: 1,
-                    }}
-                  >
-                    {fitScore}%
-                  </div>
-                  <div style={{ color: '#9FB4D0', fontSize: 12, marginTop: 4, fontWeight: 600 }}>
-                    Your fit score
-                  </div>
-                </div>
+              {(fitScore !== null || savedAnalysis) && (
+                <JobFitScoreCard
+                  jobId={job._id.toString()}
+                  estimatedFitScore={fitScore}
+                  aiFitScore={savedAnalysis?.fitScore ?? null}
+                />
               )}
               <JobApplyButton
                 jobId={job._id.toString()}
@@ -396,6 +391,16 @@ export default async function StudentJobDetailPage({
               </Link>
             </div>
           </div>
+        </div>
+
+        <div style={{ marginTop: 24 }}>
+          <AISkillAnalysisCard
+            jobId={job._id.toString()}
+            jobTitle={job.title}
+            hasApplied={hasApplied}
+            initialAnalysis={savedAnalysis}
+            initialUsage={JSON.parse(JSON.stringify(usage))}
+          />
         </div>
 
         {/* Content grid */}

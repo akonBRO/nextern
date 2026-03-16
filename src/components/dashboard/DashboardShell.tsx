@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import {
   Bell,
   BookOpen,
@@ -136,6 +137,7 @@ export default function DashboardShell({
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const shellRef = useRef<HTMLDivElement>(null);
+  const resolvedNavItems = role === 'student' ? STUDENT_NAV_ITEMS : navItems;
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -375,6 +377,7 @@ export default function DashboardShell({
                       position: 'absolute',
                       right: 0,
                       top: 'calc(100% + 10px)',
+                      zIndex: 120,
                       width: 248,
                       background: '#FFFFFF',
                       border: '1px solid #D9E2EC',
@@ -486,12 +489,14 @@ export default function DashboardShell({
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              overflowX: 'auto',
+              flexWrap: 'wrap',
             }}
             className="dashboard-shell-nav"
           >
-            {navItems.map((item) => {
-              const active = isActiveHref(item.href) || openDropdown === item.label;
+            {resolvedNavItems.map((item) => {
+              const hasActiveChild = item.items?.some((entry) => isActiveHref(entry.href)) ?? false;
+              const active =
+                isActiveHref(item.href) || hasActiveChild || openDropdown === item.label;
               return (
                 <div key={item.label} style={{ position: 'relative' }}>
                   {item.items ? (
@@ -551,6 +556,7 @@ export default function DashboardShell({
                         position: 'absolute',
                         top: 'calc(100% + 8px)',
                         left: 0,
+                        zIndex: 110,
                         minWidth: 292,
                         background: '#FFFFFF',
                         borderRadius: 18,
@@ -561,7 +567,7 @@ export default function DashboardShell({
                     >
                       {item.items.map((entry) => (
                         <Link
-                          key={entry.href}
+                          key={`${item.label}:${entry.label}:${entry.href}`}
                           href={entry.href}
                           onClick={() => setOpenDropdown(null)}
                           style={{

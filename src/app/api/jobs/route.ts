@@ -8,6 +8,7 @@ import { connectDB } from '@/lib/db';
 import { Job } from '@/models/Job';
 import { User } from '@/models/User';
 import { CreateJobSchema } from '@/lib/validations';
+import { checkFeatureAccess, syncPremiumStatus } from '@/lib/premium';
 
 // ── GET ───────────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
@@ -131,6 +132,17 @@ export async function POST(req: NextRequest) {
     // ── STEP 5: DB operations ─────────────────────────────────────────────
     await connectDB();
 
+    const premiumStatus = await syncPremiumStatus(session.user.id);
+    if (isEmployer) {
+      const access = await checkFeatureAccess(session.user.id, 'jobPosting');
+      if (!access.allowed) {
+        return NextResponse.json(
+          { error: access.reason, requiresPremium: true, usage: access.usage },
+          { status: 403 }
+        );
+      }
+    }
+
     const poster = await User.findById(session.user.id)
       .select('companyName companyLogo institutionName image role')
       .lean();
@@ -170,6 +182,7 @@ export async function POST(req: NextRequest) {
       isBatchHiring: data.isBatchHiring ?? false,
       batchUniversities: data.batchUniversities ?? [],
       isActive: data.isActive ?? true,
+      isPremiumListing: isEmployer ? premiumStatus.isPremium : false,
       academicSession: data.academicSession,
       employerId: session.user.id,
       companyName: displayName,
