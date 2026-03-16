@@ -77,6 +77,7 @@ export default async function DeptDashboard() {
 
   return (
     <DashboardShell
+      role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
       navItems={navItems}

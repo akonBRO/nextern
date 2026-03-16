@@ -91,6 +91,7 @@ export default async function AdvisorDashboard() {
 
   return (
     <DashboardShell
+      role="advisor"
       roleLabel="Advisor dashboard"
       homeHref="/advisor/dashboard"
       navItems={navItems}
