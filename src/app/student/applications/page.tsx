@@ -121,7 +121,6 @@ export default async function StudentApplicationsPage() {
 
   return (
     <DashboardShell
-      role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
       navItems={navItems}
