@@ -111,7 +111,6 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
 
   return (
     <DashboardShell
-      role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
       navItems={navItems}
