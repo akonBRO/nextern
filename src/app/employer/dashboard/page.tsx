@@ -27,6 +27,7 @@ import {
 
 const navItems = [
   { label: 'Overview', href: '/employer/dashboard', icon: 'dashboard' as const },
+  { label: 'Job Listings', href: '/employer/jobs', icon: 'briefcase' as const },
   {
     label: 'Hiring',
     icon: 'briefcase' as const,
@@ -84,8 +85,21 @@ export default async function EmployerDashboard() {
     email: session.user.email ?? undefined,
   });
 
+  const quickStats = [
+    {
+      label: 'Active jobs',
+      value: data.stats.activeJobs,
+      color: '#10B981',
+      Icon: BriefcaseBusiness,
+    },
+    { label: 'Applications', value: data.stats.totalApplications, color: '#22D3EE', Icon: Users },
+    { label: 'Shortlisted', value: data.stats.shortlisted, color: '#F59E0B', Icon: CheckCircle2 },
+    { label: 'Hired', value: data.stats.hired, color: '#F8FAFC', Icon: Sparkles },
+  ];
+
   return (
     <DashboardShell
+      role="employer"
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"
       navItems={navItems}
@@ -94,53 +108,72 @@ export default async function EmployerDashboard() {
       <DashboardPage>
         <HeroCard
           eyebrow="Employer workspace"
-          title={`${data.company.companyName} hiring command center`}
+          title={data.company.companyName}
+          subtitle={[data.company.industry, data.company.headquartersCity]
+            .filter(Boolean)
+            .join(' · ')}
+          websiteUrl={data.company.companyWebsite ?? undefined}
           description={
             data.company.companyDescription ||
-            'Monitor role performance, applicant quality, and hiring momentum from one premium workspace built around your live database activity.'
+            'No company description added yet — go to Company Profile to write one.'
           }
           actions={
             <>
-              <ActionLink href="#applications" label="Review applicants" />
-              <ActionLink href="#jobs" label="Open roles" tone="ghost" />
+              <ActionLink href="/employer/jobs/new" label="Post new job" />
+              <ActionLink href="/employer/jobs" label="View listings" tone="ghost" />
             </>
           }
           aside={
             <Panel
-              title="Company profile"
-              description="A quick view of the employer identity currently reflected in the system."
+              title="Quick stats"
               style={{
                 background: 'rgba(255,255,255,0.12)',
                 border: '1px solid rgba(255,255,255,0.16)',
               }}
             >
-              <div style={{ display: 'grid', gap: 12 }}>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {data.company.industry ? <Tag label={data.company.industry} tone="info" /> : null}
-                  {data.company.headquartersCity ? (
-                    <Tag label={data.company.headquartersCity} tone="neutral" />
-                  ) : null}
-                  {data.company.companyWebsite ? (
-                    <Tag label="Website added" tone="success" />
-                  ) : (
-                    <Tag label="Website missing" tone="warning" />
-                  )}
-                </div>
-                {data.company.companyWebsite ? (
-                  <a
-                    href={data.company.companyWebsite}
-                    target="_blank"
-                    rel="noreferrer"
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {quickStats.map((s) => (
+                  <div
+                    key={s.label}
                     style={{
-                      color: '#FFFFFF',
-                      fontSize: 14,
-                      fontWeight: 700,
-                      textDecoration: 'underline',
+                      background: 'rgba(255,255,255,0.08)',
+                      borderRadius: 14,
+                      padding: '14px 16px',
+                      border: '1px solid rgba(255,255,255,0.1)',
                     }}
                   >
-                    {data.company.companyWebsite}
-                  </a>
-                ) : null}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 7,
+                        lineHeight: 1,
+                      }}
+                    >
+                      <s.Icon size={18} strokeWidth={2.5} color={s.color} />
+                      <span
+                        style={{
+                          fontSize: 26,
+                          fontWeight: 900,
+                          color: s.color,
+                          fontFamily: 'var(--font-display)',
+                        }}
+                      >
+                        {formatCompactNumber(s.value)}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        color: '#9FB4D0',
+                        fontSize: 12,
+                        marginTop: 7,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {s.label}
+                    </div>
+                  </div>
+                ))}
               </div>
             </Panel>
           }
@@ -264,6 +297,41 @@ export default async function EmployerDashboard() {
                       </div>
                     </div>
                   </div>
+
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {data.company.industry ? (
+                      <Tag label={data.company.industry} tone="info" />
+                    ) : null}
+                    {data.company.headquartersCity ? (
+                      <Tag label={data.company.headquartersCity} tone="neutral" />
+                    ) : null}
+                    {data.company.companyWebsite ? (
+                      <Tag label="Website added" tone="success" />
+                    ) : (
+                      <Tag label="Website missing" tone="warning" />
+                    )}
+                  </div>
+
+                  {data.company.companyWebsite ? (
+                    <a
+                      href={data.company.companyWebsite}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        color: '#2563EB',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                        wordBreak: 'break-all',
+                      }}
+                    >
+                      {data.company.companyWebsite}
+                    </a>
+                  ) : null}
+
                   {data.company.companyDescription ? (
                     <div style={{ fontSize: 14, lineHeight: 1.7, color: '#64748B' }}>
                       {data.company.companyDescription}

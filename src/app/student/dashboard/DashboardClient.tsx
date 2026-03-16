@@ -53,26 +53,27 @@ function getStatusTone(status: string): 'info' | 'success' | 'warning' | 'neutra
 
 const navItems = [
   { label: 'Overview', href: '/student/dashboard', icon: 'dashboard' as const },
+  { label: 'Browse Jobs', href: '/student/jobs', icon: 'briefcase' as const },
   {
     label: 'Career',
-    icon: 'briefcase' as const,
+    icon: 'file' as const,
     items: [
       {
         label: 'Applications',
-        href: '/student/dashboard#applications',
+        href: '/student/applications',
         description: 'Review your active application pipeline and latest submissions.',
         icon: 'file' as const,
       },
       {
         label: 'Recommended roles',
-        href: '/student/dashboard#recommended',
+        href: '/student/jobs',
         description: 'See the best current matches based on your skills and profile.',
         icon: 'sparkles' as const,
       },
       {
         label: 'Deadlines',
-        href: '/student/dashboard#deadlines',
-        description: 'Stay ahead of closing application windows and upcoming actions.',
+        href: '/student/applications',
+        description: 'Stay ahead of closing application windows.',
         icon: 'calendar' as const,
       },
     ],
@@ -90,13 +91,13 @@ const navItems = [
       {
         label: 'Skill gaps',
         href: '/student/dashboard#skills',
-        description: 'Focus on the hard and soft skills that impact your readiness.',
+        description: 'Focus on the skills that impact your readiness.',
         icon: 'target' as const,
       },
       {
         label: 'Badges',
         href: '/student/dashboard#badges',
-        description: 'Review the badges and milestones you have earned recently.',
+        description: 'Review the badges and milestones you have earned.',
         icon: 'shield' as const,
       },
     ],
@@ -110,6 +111,7 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
 
   return (
     <DashboardShell
+      role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
       navItems={navItems}
@@ -125,12 +127,18 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
       <DashboardPage>
         <HeroCard
           eyebrow="Student workspace"
-          title={`Build momentum, ${data.profile.name.split(' ')[0]}.`}
-          description="Your dashboard is centered around live application activity, profile readiness, and the opportunities that best fit your current trajectory."
+          title={data.profile.name}
+          subtitle={[
+            data.profile.department,
+            data.profile.yearOfStudy ? `Year ${data.profile.yearOfStudy}` : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+          description={data.profile.bio || 'No bio added yet — go to My Profile to write one.'}
           actions={
             <>
-              <ActionLink href="#recommended" label="Explore matched roles" />
-              <ActionLink href="#applications" label="Review applications" tone="ghost" />
+              <ActionLink href="/student/jobs" label="Browse Jobs" />
+              <ActionLink href="/student/applications" label="My Applications" tone="ghost" />
             </>
           }
           aside={
