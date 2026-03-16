@@ -1,0 +1,532 @@
+'use client';
+// src/app/employer/profile/page.tsx
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Building2,
+  Globe,
+  MapPin,
+  Phone,
+  Save,
+  Users,
+  FileText,
+  Linkedin,
+} from 'lucide-react';
+
+const C = {
+  blue: '#2563EB',
+  indigo: '#1E293B',
+  bg: '#F1F5F9',
+  gray: '#64748B',
+  success: '#10B981',
+  white: '#fff',
+  dark: '#0F172A',
+  border: '#E2E8F0',
+  text: '#0F172A',
+  muted: '#374151',
+  light: '#94A3B8',
+  danger: '#EF4444',
+  dangerBg: '#FEF2F2',
+  dangerBorder: '#FECACA',
+  successBg: '#ECFDF5',
+  successBorder: '#A7F3D0',
+  blueBg: '#EFF6FF',
+  blueBorder: '#BFDBFE',
+};
+
+const inputBase: React.CSSProperties = {
+  width: '100%',
+  boxSizing: 'border-box',
+  padding: '10px 14px',
+  border: `1.5px solid ${C.border}`,
+  borderRadius: 10,
+  fontSize: 14,
+  fontFamily: 'var(--font-body)',
+  outline: 'none',
+  color: C.text,
+  background: C.white,
+};
+
+const BD_INDUSTRIES = [
+  'IT/Software',
+  'Banking & Finance',
+  'Telecom',
+  'E-Commerce',
+  'Healthcare',
+  'Education',
+  'NGO/Development',
+  'Manufacturing',
+  'Media & Marketing',
+  'Consulting',
+  'Real Estate',
+  'Logistics',
+  'Other',
+];
+
+const BD_CITIES = [
+  'Dhaka',
+  'Chittagong',
+  'Sylhet',
+  'Rajshahi',
+  'Khulna',
+  'Barishal',
+  'Mymensingh',
+  'Rangpur',
+];
+
+function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 20,
+        paddingBottom: 12,
+        borderBottom: `1px solid ${C.bg}`,
+      }}
+    >
+      <div style={{ color: C.blue }}>{icon}</div>
+      <div
+        style={{ fontSize: 15, fontWeight: 800, color: C.text, fontFamily: 'var(--font-display)' }}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label
+        style={{
+          display: 'block',
+          fontSize: 12,
+          fontWeight: 700,
+          color: C.muted,
+          marginBottom: 6,
+          textTransform: 'uppercase',
+          letterSpacing: 0.5,
+        }}
+      >
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+export default function EmployerProfilePage() {
+  const [user, setUser] = useState<Record<string, unknown> | null>(null);
+  const [fetching, setFetching] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
+
+  const [form, setForm] = useState({
+    name: '',
+    phone: '',
+    companyName: '',
+    industry: '',
+    companySize: '',
+    companyWebsite: '',
+    companyDescription: '',
+    headquartersCity: '',
+    tradeLicenseNo: '',
+  });
+
+  useEffect(() => {
+    fetch('/api/users/profile')
+      .then((r) => r.json())
+      .then((data) => {
+        const u = data.user;
+        setUser(u);
+        setForm({
+          name: u.name ?? '',
+          phone: u.phone ?? '',
+          companyName: u.companyName ?? '',
+          industry: u.industry ?? '',
+          companySize: u.companySize ?? '',
+          companyWebsite: u.companyWebsite ?? '',
+          companyDescription: u.companyDescription ?? '',
+          headquartersCity: u.headquartersCity ?? '',
+          tradeLicenseNo: u.tradeLicenseNo ?? '',
+        });
+      })
+      .catch(() => setError('Failed to load profile'))
+      .finally(() => setFetching(false));
+  }, []);
+
+  function set(field: string, value: string) {
+    setForm((p) => ({ ...p, [field]: value }));
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setError('');
+    setSaved(false);
+    try {
+      const res = await fetch('/api/users/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          phone: form.phone || undefined,
+          companyName: form.companyName,
+          industry: form.industry || undefined,
+          companySize: form.companySize || undefined,
+          companyWebsite: form.companyWebsite || undefined,
+          companyDescription: form.companyDescription || undefined,
+          headquartersCity: form.headquartersCity || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? 'Failed to save');
+        return;
+      }
+      setUser(data.user);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      setError('Network error.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (fetching)
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          background: C.bg,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: 'var(--font-body)',
+          color: C.gray,
+        }}
+      >
+        Loading profile…
+      </div>
+    );
+
+  const verificationStatus = user?.verificationStatus as string;
+
+  return (
+    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
+      {/* Header */}
+      <div
+        style={{
+          background: `linear-gradient(145deg, ${C.dark}, ${C.indigo})`,
+          padding: '0',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
+        <div style={{ maxWidth: 860, margin: '0 auto', padding: '20px 24px' }}>
+          <Link
+            href="/employer/dashboard"
+            style={{ color: C.gray, fontSize: 13, textDecoration: 'none', fontWeight: 500 }}
+          >
+            ← Back to Dashboard
+          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}>
+            <div
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: 18,
+                background: 'linear-gradient(135deg, #1E293B, #334155)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 26,
+                fontWeight: 900,
+                color: '#fff',
+                fontFamily: 'var(--font-display)',
+                border: '3px solid rgba(255,255,255,0.1)',
+                overflow: 'hidden',
+                flexShrink: 0,
+              }}
+            >
+              {user?.companyLogo ? (
+                <img
+                  src={user.companyLogo as string}
+                  alt=""
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                (form.companyName?.charAt(0) ?? 'E')
+              )}
+            </div>
+            <div>
+              <h1
+                style={{
+                  fontSize: 22,
+                  fontWeight: 900,
+                  color: '#F8FAFC',
+                  fontFamily: 'var(--font-display)',
+                  margin: 0,
+                }}
+              >
+                {form.companyName || 'Your Company'}
+              </h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5 }}>
+                <span style={{ fontSize: 13, color: C.gray }}>
+                  {form.industry || 'Industry not set'}
+                </span>
+                <span
+                  style={{
+                    background: verificationStatus === 'approved' ? '#ECFDF5' : '#FFFBEB',
+                    color: verificationStatus === 'approved' ? '#065F46' : '#92400E',
+                    border: `1px solid ${verificationStatus === 'approved' ? '#A7F3D0' : '#FDE68A'}`,
+                    padding: '2px 10px',
+                    borderRadius: 999,
+                    fontSize: 11,
+                    fontWeight: 700,
+                  }}
+                >
+                  {verificationStatus === 'approved'
+                    ? '✓ Verified'
+                    : verificationStatus === 'pending'
+                      ? '⏳ Pending'
+                      : '✗ Rejected'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          maxWidth: 860,
+          margin: '28px auto',
+          padding: '0 24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 20,
+        }}
+      >
+        {error && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              background: C.dangerBg,
+              border: `1px solid ${C.dangerBorder}`,
+              borderRadius: 12,
+              padding: '12px 16px',
+              color: '#991B1B',
+              fontSize: 14,
+            }}
+          >
+            <AlertCircle size={15} />
+            {error}
+          </div>
+        )}
+        {saved && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              background: C.successBg,
+              border: `1px solid ${C.successBorder}`,
+              borderRadius: 12,
+              padding: '12px 16px',
+              color: '#065F46',
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            <CheckCircle2 size={15} /> Profile saved successfully!
+          </div>
+        )}
+
+        {/* Section 1: Contact */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Phone size={18} />} label="Contact Information" />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <Field label="Contact Person Name">
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => set('name', e.target.value)}
+                style={inputBase}
+              />
+            </Field>
+            <Field label="Phone Number">
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={(e) => set('phone', e.target.value)}
+                placeholder="+8801XXXXXXXXX"
+                style={inputBase}
+              />
+            </Field>
+            <Field label="Email">
+              <input
+                type="email"
+                value={(user?.email as string) ?? ''}
+                disabled
+                style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
+              />
+            </Field>
+          </div>
+        </div>
+
+        {/* Section 2: Company Info */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Building2 size={18} />} label="Company Information" />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <Field label="Company Name">
+              <input
+                type="text"
+                value={form.companyName}
+                onChange={(e) => set('companyName', e.target.value)}
+                placeholder="Your company name"
+                style={inputBase}
+              />
+            </Field>
+            <Field label="Industry">
+              <select
+                value={form.industry}
+                onChange={(e) => set('industry', e.target.value)}
+                style={{ ...inputBase, appearance: 'none' as const }}
+              >
+                <option value="">Select industry</option>
+                {BD_INDUSTRIES.map((i) => (
+                  <option key={i} value={i}>
+                    {i}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Company Size">
+              <select
+                value={form.companySize}
+                onChange={(e) => set('companySize', e.target.value)}
+                style={{ ...inputBase, appearance: 'none' as const }}
+              >
+                <option value="">Select size</option>
+                {['1-10', '11-50', '51-200', '201-500', '500+'].map((s) => (
+                  <option key={s} value={s}>
+                    {s} employees
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Headquarters City">
+              <select
+                value={form.headquartersCity}
+                onChange={(e) => set('headquartersCity', e.target.value)}
+                style={{ ...inputBase, appearance: 'none' as const }}
+              >
+                <option value="">Select city</option>
+                {BD_CITIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Company Website">
+              <div style={{ position: 'relative' }}>
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 12,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: C.blue,
+                  }}
+                >
+                  <Globe size={15} />
+                </div>
+                <input
+                  type="url"
+                  value={form.companyWebsite}
+                  onChange={(e) => set('companyWebsite', e.target.value)}
+                  placeholder="https://yourcompany.com"
+                  style={{ ...inputBase, paddingLeft: 36 }}
+                />
+              </div>
+            </Field>
+            <Field label="Trade License No.">
+              <input
+                type="text"
+                value={form.tradeLicenseNo}
+                onChange={(e) => set('tradeLicenseNo', e.target.value)}
+                placeholder="BD Trade License number"
+                style={inputBase}
+              />
+            </Field>
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <Field label="Company Description">
+              <textarea
+                value={form.companyDescription}
+                onChange={(e) => set('companyDescription', e.target.value)}
+                placeholder="Describe your company — what you do, your culture, why students should work with you…"
+                rows={4}
+                style={{ ...inputBase, resize: 'vertical' }}
+              />
+              <div style={{ fontSize: 11, color: C.light, marginTop: 4 }}>
+                {form.companyDescription.length}/1000 characters
+              </div>
+            </Field>
+          </div>
+        </div>
+
+        {/* Save */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '13px 32px',
+              background: saving ? '#93C5FD' : `linear-gradient(135deg, ${C.blue}, #1D4ED8)`,
+              color: C.white,
+              border: 'none',
+              borderRadius: 12,
+              cursor: saving ? 'not-allowed' : 'pointer',
+              fontSize: 15,
+              fontWeight: 700,
+              fontFamily: 'var(--font-display)',
+              boxShadow: saving ? 'none' : '0 4px 16px rgba(37,99,235,0.35)',
+            }}
+          >
+            <Save size={16} />
+            {saving ? 'Saving…' : 'Save Profile'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -63,6 +63,18 @@ const navItems = [
       },
     ],
   },
+  {
+    label: 'Events',
+    icon: 'calendar' as const,
+    items: [
+      {
+        label: 'Post Event',
+        href: '/advisor/events/new',
+        description: 'Publish a webinar or workshop for students.',
+        icon: 'calendar' as const,
+      },
+    ],
+  },
 ];
 
 export default async function AdvisorDashboard() {
@@ -93,6 +105,7 @@ export default async function AdvisorDashboard() {
             <>
               <ActionLink href="#students" label="Review attention queue" />
               <ActionLink href="#interviews" label="Upcoming interviews" tone="ghost" />
+              <ActionLink href="/advisor/events/new" label="Post Event" />
             </>
           }
           aside={

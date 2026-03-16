@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 
-// ── Auth ──────────────────────────────────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────────────────
 
 export const RegisterSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(60),
@@ -53,7 +53,7 @@ export const ResendOTPSchema = z.object({
   type: z.enum(['email_verify', 'password_reset']),
 });
 
-// ── Profile ───────────────────────────────────────────────────────────────
+// ── Profile ───────────────────────────────────────────────────────────────────
 
 export const UpdateStudentProfileSchema = z.object({
   name: z.string().min(2).max(60).optional(),
@@ -106,7 +106,7 @@ export const ChangePasswordSchema = z
     path: ['newPassword'],
   });
 
-// ── Admin ─────────────────────────────────────────────────────────────────
+// ── Admin ─────────────────────────────────────────────────────────────────────
 
 export const AdminApproveSchema = z.object({
   userId: z.string().length(24, 'Invalid user ID'),
@@ -114,8 +114,83 @@ export const AdminApproveSchema = z.object({
   note: z.string().max(500).optional(),
 });
 
+// ── Module 1 — Job, Recruitment & Career Events System ───────────────────────
+// Used by: /api/jobs (POST, PATCH), /api/jobs/[jobId]/apply (POST),
+//          /api/applications (PATCH)
+// Feeds into: Module 2 AI Skill Gap & Fit Scoring Engine (Sabbir)
+//             Module 3 Calendar Integration (deadline stored on Job)
+
+export const CreateJobSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters').max(120),
+  type: z.enum(['internship', 'part-time', 'full-time', 'campus-drive', 'webinar', 'workshop']),
+  description: z.string().min(20, 'Description must be at least 20 characters').max(5000),
+  responsibilities: z.array(z.string().min(1)).max(20).optional().default([]),
+  locationType: z.enum(['onsite', 'remote', 'hybrid']),
+  city: z.string().max(80).optional(),
+
+  // Compensation
+  stipendBDT: z.number().int().min(0).optional(),
+  isStipendNegotiable: z.boolean().optional().default(false),
+
+  // Dates — stored as ISO strings, converted to Date in route handler
+  applicationDeadline: z.string().min(1, 'Deadline is required'),
+  startDate: z.string().optional(),
+  durationMonths: z.number().int().min(1).max(24).optional(),
+
+  // Targeting filters — empty arrays = open to all
+  targetUniversities: z.array(z.string()).optional().default([]),
+  targetDepartments: z.array(z.string()).optional().default([]),
+  targetYears: z.array(z.number().int().min(1).max(5)).optional().default([]),
+
+  // Internship Requirement Profile — read by Sabbir's M2 AI engine
+  requiredSkills: z.array(z.string()).optional().default([]),
+  minimumCGPA: z.number().min(0).max(4.0).optional(),
+  requiredCourses: z.array(z.string()).optional().default([]),
+  experienceExpectations: z.string().max(500).optional(),
+  preferredCertifications: z.array(z.string()).optional().default([]),
+
+  // Batch hiring
+  isBatchHiring: z.boolean().optional().default(false),
+  batchUniversities: z.array(z.string()).optional().default([]),
+
+  // Metadata
+  isActive: z.boolean().optional().default(true),
+  academicSession: z.string().max(20).optional(), // e.g. 'Spring 2026'
+});
+
+// Partial version of CreateJobSchema for PATCH — all fields optional
+// isActive extended to include 'closed' flow
+export const UpdateJobSchema = CreateJobSchema.partial().extend({
+  isActive: z.boolean().optional(),
+});
+
+// Used by POST /api/jobs/[jobId]/apply
+export const ApplyJobSchema = z.object({
+  coverLetter: z.string().max(2000).optional(),
+});
+
+// Used by PATCH /api/applications?id=[appId] — employer updates pipeline stage
+export const UpdateApplicationStatusSchema = z.object({
+  status: z.enum([
+    'applied',
+    'shortlisted',
+    'under_review',
+    'assessment_sent', // M3: Sabbir's assessment suite
+    'interview_scheduled', // M3: Sabbir's interview suite
+    'rejected',
+    'hired',
+    'withdrawn',
+  ]),
+  note: z.string().max(500).optional(), // stored in statusHistory
+});
+
+// ── Type exports ──────────────────────────────────────────────────────────────
+
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type VerifyEmailInput = z.infer<typeof VerifyEmailSchema>;
 export type UpdateStudentProfileInput = z.infer<typeof UpdateStudentProfileSchema>;
 export type UpdateEmployerProfileInput = z.infer<typeof UpdateEmployerProfileSchema>;
+export type CreateJobInput = z.infer<typeof CreateJobSchema>;
+export type UpdateJobInput = z.infer<typeof UpdateJobSchema>;
+export type ApplyJobInput = z.infer<typeof ApplyJobSchema>;
