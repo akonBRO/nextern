@@ -13,13 +13,16 @@ type StripeInitResponse = {
   amount: number;
   planName: string;
   method: CardMethod;
+  details?: string;
+};
+
+type StripeElement = {
+  mount: (selector: string | HTMLElement) => void;
+  destroy?: () => void;
 };
 
 type StripeElementsInstance = {
-  create: (
-    type: 'payment',
-    options?: Record<string, unknown>
-  ) => { mount: (selector: string | HTMLElement) => void; destroy?: () => void };
+  create: (type: 'payment', options?: Record<string, unknown>) => StripeElement;
 };
 
 type StripeInstance = {
@@ -74,6 +77,20 @@ async function ensureStripeScriptLoaded() {
   });
 }
 
+async function waitForMountNode(ref: { current: HTMLDivElement | null }, attempts = 8) {
+  for (let index = 0; index < attempts; index += 1) {
+    if (ref.current) {
+      return ref.current;
+    }
+
+    await new Promise<void>((resolve) => {
+      window.requestAnimationFrame(() => resolve());
+    });
+  }
+
+  return null;
+}
+
 export default function StripeCheckoutModal({
   open,
   role,
@@ -95,11 +112,10 @@ export default function StripeCheckoutModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [initialized, setInitialized] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const mountNodeRef = useRef<HTMLDivElement | null>(null);
   const stripeRef = useRef<StripeInstance | null>(null);
   const elementsRef = useRef<StripeElementsInstance | null>(null);
-  const paymentElementRef = useRef<{ destroy?: () => void } | null>(null);
+  const paymentElementRef = useRef<StripeElement | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -122,6 +138,7 @@ export default function StripeCheckoutModal({
     async function init() {
       try {
         setLoading(true);
+        setInitialized(false);
         setError('');
 
         await ensureStripeScriptLoaded();
@@ -142,7 +159,9 @@ export default function StripeCheckoutModal({
         const initData = (await initRes.json()) as StripeInitResponse & { error?: string };
 
         if (!initRes.ok) {
-          throw new Error(initData.error ?? 'Failed to initialize secure checkout.');
+          throw new Error(
+            initData.details ?? initData.error ?? 'Failed to initialize secure checkout.'
+          );
         }
 
         if (cancelled) {
@@ -176,12 +195,13 @@ export default function StripeCheckoutModal({
           },
         });
 
-        if (!mountNodeRef.current) {
+        const mountNode = await waitForMountNode(mountNodeRef);
+        if (!mountNode) {
           throw new Error('Payment form container is unavailable.');
         }
 
-        mountNodeRef.current.innerHTML = '';
-        paymentElement.mount(mountNodeRef.current);
+        mountNode.innerHTML = '';
+        paymentElement.mount(mountNode);
         paymentElementRef.current = paymentElement;
         elementsRef.current = elements;
         setInitialized(true);
@@ -201,7 +221,7 @@ export default function StripeCheckoutModal({
     return () => {
       cancelled = true;
     };
-  }, [amount, method, open, planId, planName, role]);
+  }, [method, open, planId]);
 
   async function handleConfirm() {
     if (!stripeRef.current || !elementsRef.current) {
@@ -252,7 +272,6 @@ export default function StripeCheckoutModal({
       }}
     >
       <div
-        ref={containerRef}
         style={{
           width: '100%',
           maxWidth: 560,
@@ -346,7 +365,7 @@ export default function StripeCheckoutModal({
                   marginTop: 2,
                 }}
               >
-                ৳{amount}
+                BDT {amount}
               </div>
             </div>
             <div
@@ -387,12 +406,23 @@ export default function StripeCheckoutModal({
               padding: 16,
               minHeight: 180,
               background: '#FFFFFF',
+              position: 'relative',
             }}
           >
+            <div
+              ref={mountNodeRef}
+              style={{
+                minHeight: 148,
+                opacity: loading && !initialized ? 0 : 1,
+                transition: 'opacity 0.2s ease',
+              }}
+            />
+
             {loading ? (
               <div
                 style={{
-                  minHeight: 148,
+                  position: 'absolute',
+                  inset: 16,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -400,14 +430,14 @@ export default function StripeCheckoutModal({
                   gap: 10,
                   color: COLORS.muted,
                   fontSize: 14,
+                  background: '#FFFFFF',
+                  borderRadius: 12,
                 }}
               >
                 <LoaderCircle size={22} className="stripe-loader" />
                 Preparing secure payment form...
               </div>
-            ) : (
-              <div ref={mountNodeRef} />
-            )}
+            ) : null}
           </div>
 
           <div
@@ -456,7 +486,7 @@ export default function StripeCheckoutModal({
                   Redirecting...
                 </>
               ) : (
-                <>Pay ৳{amount}</>
+                <>Pay BDT {amount}</>
               )}
             </button>
           </div>
