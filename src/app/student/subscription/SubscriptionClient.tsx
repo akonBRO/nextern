@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { AlertCircle, CheckCircle2, CreditCard, Crown, XCircle } from 'lucide-react';
 import { PLANS } from '@/lib/subscription-plans';
 
+const PREMIUM_STATUS_EVENT = 'nextern-premium-status-updated';
+
 interface Props {
   role: 'student' | 'employer';
   subscription: {
@@ -25,6 +27,7 @@ interface Props {
     status: string;
     createdAt: string;
     bkashTrxId?: string;
+    stripePaymentIntentId?: string;
   }[];
 }
 
@@ -77,6 +80,14 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
   const [error, setError] = useState('');
 
   useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent(PREMIUM_STATUS_EVENT, {
+        detail: { isPremium: Boolean(subscription) },
+      })
+    );
+  }, [subscription]);
+
+  useEffect(() => {
     if (!paymentIntentId || hasVerifiedRef.current) {
       return;
     }
@@ -99,6 +110,11 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
 
         if (data.status === 'succeeded') {
           setMessage('Payment successful! Your premium access is now active.');
+          window.dispatchEvent(
+            new CustomEvent(PREMIUM_STATUS_EVENT, {
+              detail: { isPremium: true },
+            })
+          );
           router.refresh();
           return;
         }
@@ -125,6 +141,11 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
       }
 
       setMessage(`Subscription cancelled. Access continues until ${formatDate(data.accessUntil)}.`);
+      window.dispatchEvent(
+        new CustomEvent(PREMIUM_STATUS_EVENT, {
+          detail: { isPremium: true },
+        })
+      );
       setShowCancelConfirm(false);
       router.refresh();
     } catch {
@@ -483,6 +504,8 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {payments.map((payment, index) => {
               const statusStyle = STATUS_STYLE[payment.status] ?? STATUS_STYLE.initiated;
+              const providerReference =
+                payment.method === 'bkash' ? payment.bkashTrxId : payment.stripePaymentIntentId;
               return (
                 <div
                   key={payment._id}
@@ -518,6 +541,19 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
                         {formatDate(payment.createdAt)} ·{' '}
                         {METHOD_LABEL[payment.method] ?? payment.method}
                       </div>
+                      {providerReference ? (
+                        <div
+                          style={{
+                            color: '#475569',
+                            fontSize: 11,
+                            marginTop: 4,
+                            wordBreak: 'break-all',
+                          }}
+                        >
+                          {payment.method === 'bkash' ? 'Transaction ID' : 'Payment Intent'}:{' '}
+                          <span style={{ fontWeight: 700 }}>{providerReference}</span>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

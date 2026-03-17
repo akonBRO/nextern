@@ -63,6 +63,8 @@ export default function StudentPremiumPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCardModal, setShowCardModal] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
+  const [premiumLoaded, setPremiumLoaded] = useState(false);
 
   useEffect(() => {
     if (paymentStatus === 'cancelled') {
@@ -76,7 +78,40 @@ export default function StudentPremiumPage() {
     }
   }, [paymentStatus]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPremiumStatus() {
+      try {
+        const res = await fetch('/api/premium/status', { cache: 'no-store' });
+        if (!res.ok) {
+          return;
+        }
+
+        const data = (await res.json()) as { isPremium?: boolean };
+        if (!cancelled) {
+          setIsPremium(Boolean(data.isPremium));
+        }
+      } catch {
+        // Keep the checkout screen usable even if the status endpoint is unavailable.
+      } finally {
+        if (!cancelled) {
+          setPremiumLoaded(true);
+        }
+      }
+    }
+
+    loadPremiumStatus();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   async function handlePay() {
+    if (isPremium) {
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -90,11 +125,16 @@ export default function StudentPremiumPage() {
         const data = await res.json();
 
         if (!res.ok) {
-          setError(data.error ?? 'Failed to initiate bKash payment.');
+          setError(data.details ?? data.error ?? 'Failed to initiate bKash payment.');
           return;
         }
 
-        window.location.href = data.bkashURL;
+        if (typeof data.bkashURL !== 'string' || !data.bkashURL.startsWith('http')) {
+          setError('bKash did not return a valid checkout URL.');
+          return;
+        }
+
+        window.location.assign(data.bkashURL);
         return;
       }
 
@@ -252,6 +292,65 @@ export default function StudentPremiumPage() {
           >
             <ShieldCheck size={16} />
             {error}
+          </div>
+        ) : null}
+
+        {premiumLoaded && isPremium ? (
+          <div
+            style={{
+              background: 'linear-gradient(135deg, #FEF3C7, #FFF7ED)',
+              border: '1px solid rgba(245,158,11,0.35)',
+              borderRadius: 18,
+              padding: '16px 18px',
+              marginBottom: 24,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 14,
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 14,
+                  background: '#FFF7ED',
+                  border: '1px solid rgba(245,158,11,0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Crown size={20} color="#D97706" />
+              </div>
+              <div>
+                <div style={{ color: '#92400E', fontSize: 15, fontWeight: 800 }}>
+                  Premium is already active on your account
+                </div>
+                <div style={{ color: '#9A3412', fontSize: 13, marginTop: 4 }}>
+                  Your unlimited AI tools and premium recommendations are unlocked.
+                </div>
+              </div>
+            </div>
+            <Link
+              href="/student/subscription"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 16px',
+                borderRadius: 12,
+                background: '#2563EB',
+                color: '#fff',
+                textDecoration: 'none',
+                fontSize: 13,
+                fontWeight: 800,
+              }}
+            >
+              Manage subscription
+            </Link>
           </div>
         ) : null}
 
@@ -635,27 +734,29 @@ export default function StudentPremiumPage() {
 
             <button
               onClick={handlePay}
-              disabled={loading}
+              disabled={loading || isPremium}
               style={{
                 width: '100%',
                 padding: '14px',
-                background: loading ? '#93C5FD' : C.blue,
+                background: loading || isPremium ? '#93C5FD' : C.blue,
                 color: '#fff',
                 border: 'none',
                 borderRadius: 14,
                 fontSize: 16,
                 fontWeight: 800,
                 fontFamily: 'var(--font-display)',
-                cursor: loading ? 'not-allowed' : 'pointer',
+                cursor: loading || isPremium ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
-                boxShadow: loading ? 'none' : '0 6px 20px rgba(37,99,235,0.35)',
+                boxShadow: loading || isPremium ? 'none' : '0 6px 20px rgba(37,99,235,0.35)',
                 marginBottom: 14,
               }}
             >
-              {loading ? (
+              {isPremium ? (
+                'Premium already active'
+              ) : loading ? (
                 'Processing...'
               ) : (
                 <>

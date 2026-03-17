@@ -63,6 +63,7 @@ export default async function StudentSkillsPage() {
         email: session.user.email ?? '',
         image: session.user.image ?? undefined,
         subtitle: session.user.email ?? '',
+        isPremium: usage.isPremium,
         unreadNotifications: 0,
         unreadMessages: 0,
       }}

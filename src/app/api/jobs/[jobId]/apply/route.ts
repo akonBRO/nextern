@@ -78,6 +78,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     await Job.findByIdAndUpdate(jobId, { $inc: { applicationCount: 1 } });
     await onJobApplied(session.user.id, jobId).catch(() => {});
 
+    let appliedFitScore: number | null = null;
+
     try {
       const access = await checkFeatureAccess(session.user.id, 'skillGapAnalysis');
       if (access.allowed && student) {
@@ -92,6 +94,8 @@ export async function POST(req: NextRequest, { params }: Params) {
           jobTitle: job.title,
           companyName: job.companyName,
         });
+
+        appliedFitScore = result.data.fitScore;
 
         await Application.findByIdAndUpdate(application._id, {
           fitScore: result.data.fitScore,
@@ -119,7 +123,11 @@ export async function POST(req: NextRequest, { params }: Params) {
     }
 
     return NextResponse.json(
-      { message: 'Application submitted successfully', application },
+      {
+        message: 'Application submitted successfully',
+        application,
+        fitScore: appliedFitScore,
+      },
       { status: 201 }
     );
   } catch (error: unknown) {

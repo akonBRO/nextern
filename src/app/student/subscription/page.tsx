@@ -18,7 +18,7 @@ export default async function StudentSubscriptionPage() {
   if (session.user.role !== 'student') redirect('/login');
 
   await connectDB();
-  await syncPremiumStatus(session.user.id);
+  const premiumStatus = await syncPremiumStatus(session.user.id);
 
   const subscription = await Subscription.findOne({
     userId: session.user.id,
@@ -34,7 +34,7 @@ export default async function StudentSubscriptionPage() {
   })
     .sort({ createdAt: -1 })
     .limit(10)
-    .select('-bkashPaymentId -stripePaymentIntentId')
+    .select('-bkashPaymentId')
     .lean();
 
   const now = new Date();
@@ -53,6 +53,7 @@ export default async function StudentSubscriptionPage() {
         email: session.user.email ?? '',
         image: session.user.image ?? undefined,
         subtitle: session.user.email ?? '',
+        isPremium: premiumStatus.isPremium,
         unreadNotifications: 0,
         unreadMessages: 0,
       }}

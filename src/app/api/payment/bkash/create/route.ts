@@ -61,16 +61,22 @@ export async function POST(req: NextRequest) {
     });
 
     // Build callback URL
-    const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000';
-    const callbackURL = `${baseUrl}/api/payment/bkash/callback?paymentDbId=${payment._id}&userId=${session.user.id}&plan=${plan.id}`;
+    const callbackUrl = new URL('/api/payment/bkash/callback', req.url);
+    callbackUrl.searchParams.set('paymentDbId', payment._id.toString());
+    callbackUrl.searchParams.set('userId', session.user.id);
+    callbackUrl.searchParams.set('plan', plan.id);
 
     // Initiate bKash payment
     const bkashResult = await createBkashPayment({
       amount: plan.price,
       orderId,
       intent: 'sale',
-      callbackURL,
+      callbackURL: callbackUrl.toString(),
     });
+
+    if (!bkashResult.bkashURL) {
+      throw new Error('bKash did not return a checkout URL.');
+    }
 
     // Store bKash paymentID on the Payment record for later execute step
     await Payment.findByIdAndUpdate(payment._id, {
@@ -85,7 +91,15 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('[BKASH CREATE ERROR]', error);
     return NextResponse.json(
-      { error: 'Failed to initiate bKash payment. Please try again.' },
+      {
+        error: 'Failed to initiate bKash payment. Please try again.',
+        details:
+          process.env.NODE_ENV === 'development'
+            ? error instanceof Error
+              ? error.message
+              : 'Unknown bKash error'
+            : undefined,
+      },
       { status: 500 }
     );
   }

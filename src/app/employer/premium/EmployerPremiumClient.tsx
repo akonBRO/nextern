@@ -91,11 +91,16 @@ export default function EmployerPremiumClient({ isPremium }: { isPremium: boolea
         const data = await res.json();
 
         if (!res.ok) {
-          setError(data.error ?? 'Failed to initiate payment.');
+          setError(data.details ?? data.error ?? 'Failed to initiate payment.');
           return;
         }
 
-        window.location.href = data.bkashURL;
+        if (typeof data.bkashURL !== 'string' || !data.bkashURL.startsWith('http')) {
+          setError('bKash did not return a valid checkout URL.');
+          return;
+        }
+
+        window.location.assign(data.bkashURL);
         return;
       }
 

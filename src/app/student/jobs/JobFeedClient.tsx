@@ -77,7 +77,7 @@ function ApplyModal({
 }: {
   job: Job;
   onClose: () => void;
-  onSuccess: (jobId: string) => void;
+  onSuccess: (jobId: string, fitScore: number | null) => void;
 }) {
   const [coverLetter, setCoverLetter] = useState('');
   const [loading, setLoading] = useState(false);
@@ -97,7 +97,7 @@ function ApplyModal({
         setError(data.error ?? 'Failed to apply');
         return;
       }
-      onSuccess(job._id);
+      onSuccess(job._id, typeof data.fitScore === 'number' ? data.fitScore : null);
       onClose();
     } catch {
       setError('Network error. Please try again.');
@@ -269,10 +269,17 @@ export default function JobFeedClient({ jobs: initialJobs }: { jobs: Job[] }) {
     });
   }, [jobs, search, typeFilter]);
 
-  function handleApplySuccess(jobId: string) {
+  function handleApplySuccess(jobId: string, fitScore: number | null) {
     setJobs((prev) =>
       prev.map((j) =>
-        j._id === jobId ? { ...j, hasApplied: true, applicationCount: j.applicationCount + 1 } : j
+        j._id === jobId
+          ? {
+              ...j,
+              hasApplied: true,
+              applicationCount: j.applicationCount + 1,
+              fitScore: fitScore ?? j.fitScore,
+            }
+          : j
       )
     );
     const job = jobs.find((j) => j._id === jobId);

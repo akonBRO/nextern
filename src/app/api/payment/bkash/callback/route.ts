@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   const userId = searchParams.get('userId');
   const planId = searchParams.get('plan') as 'student_premium' | 'employer_premium' | null;
 
-  const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000';
+  const baseUrl = new URL(req.url).origin;
   const premiumBase = getPremiumRedirectBase(planId);
 
   try {

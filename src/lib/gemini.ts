@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, SchemaType, type ResponseSchema } from '@google/generative-ai';
 import {
   buildAIFallbackMeta,
   buildAIProviderMeta,
@@ -12,7 +12,7 @@ const LOCAL_TRAINING_MODEL = 'local-training-path';
 const LOCAL_CAREER_MODEL = 'local-career-advice';
 const LOCAL_QUESTION_MODEL = 'local-interview-questions';
 
-function getGeminiModel() {
+function getGeminiModel(generationConfig?: Record<string, unknown>) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is not configured.');
@@ -21,7 +21,7 @@ function getGeminiModel() {
   const genAI = new GoogleGenerativeAI(apiKey);
   return genAI.getGenerativeModel({
     model: GEMINI_MODEL,
-    generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
+    generationConfig: { temperature: 0.4, maxOutputTokens: 2048, ...generationConfig },
   });
 }
 
@@ -38,6 +38,9 @@ function extractJsonPayload(raw: string): string {
   const clean = raw
     .replace(/```json\s*/gi, '')
     .replace(/```\s*/gi, '')
+    .replace(/^\uFEFF/, '')
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
     .trim();
   if (!clean) {
     throw new Error('Gemini returned an empty response.');
@@ -49,6 +52,74 @@ function extractJsonPayload(raw: string): string {
     return directCandidate;
   } catch {
     // Fall through to substring extraction.
+  }
+
+  const balancedCandidates: string[] = [];
+  for (let start = 0; start < directCandidate.length; start += 1) {
+    const opening = directCandidate[start];
+    if (opening !== '{' && opening !== '[') {
+      continue;
+    }
+
+    const stack: string[] = [opening];
+    let inString = false;
+    let escaped = false;
+
+    for (let end = start + 1; end < directCandidate.length; end += 1) {
+      const char = directCandidate[end];
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+          continue;
+        }
+
+        if (char === '\\') {
+          escaped = true;
+          continue;
+        }
+
+        if (char === '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (char === '"') {
+        inString = true;
+        continue;
+      }
+
+      if (char === '{' || char === '[') {
+        stack.push(char);
+        continue;
+      }
+
+      if (char === '}' || char === ']') {
+        const last = stack.at(-1);
+        const matches = (char === '}' && last === '{') || (char === ']' && last === '[');
+
+        if (!matches) {
+          break;
+        }
+
+        stack.pop();
+        if (stack.length === 0) {
+          balancedCandidates.push(directCandidate.slice(start, end + 1).trim());
+          break;
+        }
+      }
+    }
+  }
+
+  for (const candidate of balancedCandidates) {
+    const sanitized = candidate.replace(/,\s*([}\]])/g, '$1');
+    try {
+      JSON.parse(sanitized);
+      return sanitized;
+    } catch {
+      // Try the next balanced JSON candidate.
+    }
   }
 
   const candidates = [
@@ -105,7 +176,22 @@ function normalizeText(value: unknown) {
 }
 
 async function askGeminiJSON<T>(prompt: string): Promise<T> {
-  const raw = await askGemini(prompt);
+  return askGeminiJSONWithConfig<T>(prompt);
+}
+
+async function askGeminiJSONWithConfig<T>(
+  prompt: string,
+  generationConfig?: Record<string, unknown>
+): Promise<T> {
+  const result = await getGeminiModel({
+    responseMimeType: 'application/json',
+    ...generationConfig,
+  }).generateContent(prompt);
+  const raw = result.response.text().trim();
+  if (!raw) {
+    throw new Error('Gemini returned an empty response.');
+  }
+
   return JSON.parse(extractJsonPayload(raw)) as T;
 }
 
@@ -293,12 +379,47 @@ export interface TrainingStep {
   type: 'course' | 'project' | 'practice' | 'certification';
 }
 
+const TRAINING_PATH_RESPONSE_SCHEMA: ResponseSchema = {
+  type: SchemaType.ARRAY,
+  minItems: 4,
+  maxItems: 6,
+  items: {
+    type: SchemaType.OBJECT,
+    properties: {
+      order: { type: SchemaType.INTEGER },
+      action: { type: SchemaType.STRING },
+      resource: { type: SchemaType.STRING },
+      url: { type: SchemaType.STRING },
+      estimatedDays: { type: SchemaType.INTEGER },
+      isFree: { type: SchemaType.BOOLEAN },
+      type: {
+        type: SchemaType.STRING,
+        format: 'enum',
+        enum: ['course', 'project', 'practice', 'certification'],
+      },
+    },
+    required: ['order', 'action', 'resource', 'url', 'estimatedDays', 'isFree', 'type'],
+  },
+};
+
 function normalizeTrainingPath(value: unknown): TrainingStep[] {
-  if (!Array.isArray(value)) {
+  const candidateValue =
+    value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    ['steps', 'roadmap', 'trainingPath', 'learningPlan', 'plan', 'items']
+      .map((key) => (value as Record<string, unknown>)[key])
+      .find(Array.isArray)
+      ? ['steps', 'roadmap', 'trainingPath', 'learningPlan', 'plan', 'items']
+          .map((key) => (value as Record<string, unknown>)[key])
+          .find(Array.isArray)
+      : value;
+
+  if (!Array.isArray(candidateValue)) {
     throw new Error('Gemini did not return a training path array.');
   }
 
-  const normalized = value
+  const normalized = candidateValue
     .map((item, index) => {
       const candidate = item as Partial<TrainingStep>;
       const type =
@@ -436,10 +557,12 @@ Rules:
 - Prioritize free resources (Coursera audit, freeCodeCamp, YouTube, official docs)
 - Include at least one hands-on project step
 - Steps must be ordered from beginner to advanced
-`;
+  `;
 
   try {
-    const result = await askGeminiJSON<TrainingStep[]>(prompt);
+    const result = await askGeminiJSONWithConfig<TrainingStep[]>(prompt, {
+      responseSchema: TRAINING_PATH_RESPONSE_SCHEMA,
+    });
     return {
       data: normalizeTrainingPath(result),
       meta: buildAIProviderMeta('gemini', GEMINI_MODEL),

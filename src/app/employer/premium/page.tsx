@@ -29,6 +29,7 @@ export default async function EmployerPremiumPage() {
         email: session.user.email ?? '',
         image: session.user.image ?? undefined,
         subtitle: session.user.email ?? '',
+        isPremium: premiumStatus.isPremium,
         unreadNotifications: 0,
         unreadMessages: 0,
       }}
