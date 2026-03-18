@@ -1,5 +1,5 @@
 // src/app/advisor/events/[eventId]/registrants/[studentId]/page.tsx
-// Advisor view of a specific student's application for an event
+// Advisor view of a specific student's full application + profile
 
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -31,6 +31,14 @@ import {
   BookOpen,
   Lightbulb,
   Calendar,
+  Briefcase,
+  Award,
+  ExternalLink,
+  Github,
+  Globe,
+  Phone,
+  Link2,
+  Code2,
 } from 'lucide-react';
 
 const navItems = [
@@ -119,7 +127,7 @@ async function getApplicationDetail(eventId: string, studentId: string, advisorI
     Application.findOne({ jobId: eid, studentId: sid }).lean(),
     User.findById(sid)
       .select(
-        'name email image university department yearOfStudy cgpa skills bio linkedinUrl githubUrl portfolioUrl city phone resumeUrl opportunityScore profileCompleteness'
+        'name email image university department yearOfStudy cgpa skills bio linkedinUrl githubUrl portfolioUrl city phone resumeUrl opportunityScore profileCompleteness completedCourses projects certifications studentId currentSemester isGraduated'
       )
       .lean(),
     Notification.countDocuments({ userId: oid, isRead: false }),
@@ -137,6 +145,73 @@ async function getApplicationDetail(eventId: string, studentId: string, advisorI
   };
 }
 
+// ── Small reusable sidebar card ──
+function SideCard({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        background: '#fff',
+        borderRadius: 20,
+        border: '1px solid #E2E8F0',
+        padding: '20px 22px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        {icon}
+        <h3
+          style={{
+            fontSize: 14,
+            fontWeight: 800,
+            color: '#0F172A',
+            fontFamily: 'var(--font-display)',
+            margin: 0,
+          }}
+        >
+          {title}
+        </h3>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function SideIconBox({
+  bg,
+  color,
+  children,
+}: {
+  bg: string;
+  color: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        width: 30,
+        height: 30,
+        borderRadius: 8,
+        background: bg,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color,
+        flexShrink: 0,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default async function StudentApplicationPage({
   params,
 }: {
@@ -144,9 +219,8 @@ export default async function StudentApplicationPage({
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
-  if (session.user.role !== 'advisor' && session.user.role !== 'dept_head') {
+  if (session.user.role !== 'advisor' && session.user.role !== 'dept_head')
     redirect('/advisor/dashboard');
-  }
 
   const { eventId, studentId } = await params;
   const data = await getApplicationDetail(eventId, studentId, session.user.id);
@@ -158,6 +232,7 @@ export default async function StudentApplicationPage({
   const fitColor = fitScore >= 70 ? '#10B981' : fitScore >= 40 ? '#F59E0B' : '#EF4444';
   const fitBg = fitScore >= 70 ? '#DCFCE7' : fitScore >= 40 ? '#FFFBEB' : '#FEF2F2';
   const fitBorder = fitScore >= 70 ? '#BBF7D0' : fitScore >= 40 ? '#FDE68A' : '#FECACA';
+  const resumeUrl = application.resumeUrlSnapshot || student.resumeUrl || null;
 
   const initials = (student.name ?? 'S')
     .split(' ')
@@ -184,8 +259,8 @@ export default async function StudentApplicationPage({
       }}
     >
       <DashboardPage>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          {/* ── Back link ── */}
+        <div style={{ maxWidth: 980, margin: '0 auto' }}>
+          {/* Back link */}
           <Link
             href={`/advisor/events/${eventId}/registrants`}
             style={{
@@ -202,7 +277,7 @@ export default async function StudentApplicationPage({
             <ArrowLeft size={14} /> Back to registrants
           </Link>
 
-          {/* ── Profile hero card ── */}
+          {/* ── Hero ── */}
           <div
             style={{
               background: 'linear-gradient(145deg, #0F172A, #1E293B)',
@@ -225,7 +300,6 @@ export default async function StudentApplicationPage({
                 pointerEvents: 'none',
               }}
             />
-
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
               {/* Avatar */}
               <div
@@ -257,14 +331,14 @@ export default async function StudentApplicationPage({
               </div>
 
               {/* Name + meta */}
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 200 }}>
                 <div
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: 10,
                     flexWrap: 'wrap',
-                    marginBottom: 6,
+                    marginBottom: 8,
                   }}
                 >
                   <h1
@@ -278,7 +352,6 @@ export default async function StudentApplicationPage({
                   >
                     {student.name}
                   </h1>
-                  {/* Status badge */}
                   <span
                     style={{
                       display: 'inline-flex',
@@ -320,6 +393,11 @@ export default async function StudentApplicationPage({
                       <Mail size={13} /> {student.email}
                     </span>
                   )}
+                  {student.phone && (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <Phone size={13} /> {student.phone}
+                    </span>
+                  )}
                   {student.city && (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <MapPin size={13} /> {student.city}
@@ -334,8 +412,24 @@ export default async function StudentApplicationPage({
                   )}
                 </div>
 
-                {/* Quick stats row */}
-                <div style={{ display: 'flex', gap: 24, marginTop: 18 }}>
+                {/* Bio */}
+                {student.bio && (
+                  <p
+                    style={{
+                      fontSize: 13,
+                      color: '#94A3B8',
+                      marginTop: 10,
+                      lineHeight: 1.6,
+                      fontStyle: 'italic',
+                      maxWidth: 520,
+                    }}
+                  >
+                    {`"${student.bio}"`}
+                  </p>
+                )}
+
+                {/* Quick stats */}
+                <div style={{ display: 'flex', gap: 24, marginTop: 16, flexWrap: 'wrap' }}>
                   {[
                     {
                       label: 'Applied',
@@ -356,6 +450,11 @@ export default async function StudentApplicationPage({
                       label: 'Profile',
                       value: student.profileCompleteness ? `${student.profileCompleteness}%` : '—',
                       color: '#A78BFA',
+                    },
+                    {
+                      label: 'Opp. Score',
+                      value: student.opportunityScore ? `${student.opportunityScore}` : '—',
+                      color: '#F59E0B',
                     },
                   ].map((s) => (
                     <div key={s.label}>
@@ -379,32 +478,6 @@ export default async function StudentApplicationPage({
                   ))}
                 </div>
               </div>
-
-              {/* Resume button */}
-              {(application.resumeUrlSnapshot ?? student.resumeUrl) && (
-                <a
-                  href={application.resumeUrlSnapshot ?? student.resumeUrl ?? '#'}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 7,
-                    background: '#2563EB',
-                    color: '#fff',
-                    padding: '10px 18px',
-                    borderRadius: 12,
-                    fontSize: 13,
-                    fontWeight: 700,
-                    textDecoration: 'none',
-                    flexShrink: 0,
-                    alignSelf: 'flex-start',
-                    boxShadow: '0 4px 12px rgba(37,99,235,0.35)',
-                  }}
-                >
-                  <FileText size={14} /> View Resume
-                </a>
-              )}
             </div>
           </div>
 
@@ -418,9 +491,9 @@ export default async function StudentApplicationPage({
             }}
             className="app-detail-grid"
           >
-            {/* ── Left column ── */}
+            {/* ── LEFT: Application + Profile details ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {/* Cover letter */}
+              {/* Cover Letter */}
               <div
                 style={{
                   background: '#fff',
@@ -476,6 +549,286 @@ export default async function StudentApplicationPage({
                 )}
               </div>
 
+              {/* Projects */}
+              {student.projects && student.projects.length > 0 && (
+                <div
+                  style={{
+                    background: '#fff',
+                    borderRadius: 20,
+                    border: '1px solid #E2E8F0',
+                    padding: '24px 28px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+                    <div
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 10,
+                        background: '#FEF3C7',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#D97706',
+                      }}
+                    >
+                      <Briefcase size={16} />
+                    </div>
+                    <h2
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 800,
+                        color: '#0F172A',
+                        fontFamily: 'var(--font-display)',
+                        margin: 0,
+                      }}
+                    >
+                      Projects
+                    </h2>
+                    <span
+                      style={{
+                        background: '#FEF3C7',
+                        color: '#92400E',
+                        border: '1px solid #FDE68A',
+                        padding: '2px 9px',
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        marginLeft: 4,
+                      }}
+                    >
+                      {student.projects.length}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    {student.projects.map(
+                      (
+                        proj: {
+                          title: string;
+                          description: string;
+                          techStack?: string[];
+                          projectUrl?: string;
+                          repoUrl?: string;
+                        },
+                        i: number
+                      ) => (
+                        <div
+                          key={i}
+                          style={{
+                            background: '#FAFBFC',
+                            borderRadius: 14,
+                            border: '1px solid #E2E8F0',
+                            padding: '16px 18px',
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              justifyContent: 'space-between',
+                              gap: 12,
+                              marginBottom: 8,
+                            }}
+                          >
+                            <div style={{ fontSize: 15, fontWeight: 700, color: '#0F172A' }}>
+                              {proj.title}
+                            </div>
+                            <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                              {proj.projectUrl && (
+                                <a
+                                  href={proj.projectUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 4,
+                                    background: '#EFF6FF',
+                                    color: '#2563EB',
+                                    border: '1px solid #BFDBFE',
+                                    padding: '3px 9px',
+                                    borderRadius: 7,
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    textDecoration: 'none',
+                                  }}
+                                >
+                                  <Globe size={11} /> Live
+                                </a>
+                              )}
+                              {proj.repoUrl && (
+                                <a
+                                  href={proj.repoUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 4,
+                                    background: '#F1F5F9',
+                                    color: '#475569',
+                                    border: '1px solid #E2E8F0',
+                                    padding: '3px 9px',
+                                    borderRadius: 7,
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    textDecoration: 'none',
+                                  }}
+                                >
+                                  <Github size={11} /> Repo
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                          {proj.description && (
+                            <p
+                              style={{
+                                fontSize: 13,
+                                color: '#64748B',
+                                lineHeight: 1.65,
+                                margin: '0 0 10px',
+                              }}
+                            >
+                              {proj.description}
+                            </p>
+                          )}
+                          {proj.techStack && proj.techStack.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                              {proj.techStack.map((t: string) => (
+                                <span
+                                  key={t}
+                                  style={{
+                                    background: '#EDE9FE',
+                                    color: '#7C3AED',
+                                    border: '1px solid #DDD6FE',
+                                    padding: '2px 8px',
+                                    borderRadius: 999,
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {t}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Certifications */}
+              {student.certifications && student.certifications.length > 0 && (
+                <div
+                  style={{
+                    background: '#fff',
+                    borderRadius: 20,
+                    border: '1px solid #E2E8F0',
+                    padding: '24px 28px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+                    <div
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 10,
+                        background: '#ECFDF5',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#10B981',
+                      }}
+                    >
+                      <Award size={16} />
+                    </div>
+                    <h2
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 800,
+                        color: '#0F172A',
+                        fontFamily: 'var(--font-display)',
+                        margin: 0,
+                      }}
+                    >
+                      Certifications
+                    </h2>
+                    <span
+                      style={{
+                        background: '#ECFDF5',
+                        color: '#065F46',
+                        border: '1px solid #A7F3D0',
+                        padding: '2px 9px',
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        marginLeft: 4,
+                      }}
+                    >
+                      {student.certifications.length}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {student.certifications.map(
+                      (
+                        cert: { name: string; issuedBy: string; credentialUrl?: string },
+                        i: number
+                      ) => (
+                        <div
+                          key={i}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            background: '#F0FDF4',
+                            borderRadius: 12,
+                            border: '1px solid #A7F3D0',
+                            padding: '12px 16px',
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#065F46' }}>
+                              {cert.name}
+                            </div>
+                            <div style={{ fontSize: 12, color: '#16A34A', marginTop: 2 }}>
+                              Issued by {cert.issuedBy}
+                            </div>
+                          </div>
+                          {cert.credentialUrl && (
+                            <a
+                              href={cert.credentialUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 5,
+                                background: '#fff',
+                                color: '#16A34A',
+                                border: '1px solid #A7F3D0',
+                                padding: '5px 11px',
+                                borderRadius: 8,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                textDecoration: 'none',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <ExternalLink size={11} /> View
+                            </a>
+                          )}
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* AI Fit Analysis */}
               {fitScore > 0 && (
                 <div
@@ -523,7 +876,7 @@ export default async function StudentApplicationPage({
                         AI Fit Analysis
                       </h2>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <div
                         style={{
                           fontSize: 28,
@@ -540,8 +893,6 @@ export default async function StudentApplicationPage({
                       </div>
                     </div>
                   </div>
-
-                  {/* Fit score bar */}
                   <div
                     style={{
                       height: 10,
@@ -561,9 +912,7 @@ export default async function StudentApplicationPage({
                       }}
                     />
                   </div>
-
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                    {/* Hard gaps */}
                     {application.hardGaps?.length > 0 && (
                       <div
                         style={{
@@ -614,8 +963,6 @@ export default async function StudentApplicationPage({
                         </div>
                       </div>
                     )}
-
-                    {/* Soft gaps */}
                     {application.softGaps?.length > 0 && (
                       <div
                         style={{
@@ -667,8 +1014,6 @@ export default async function StudentApplicationPage({
                       </div>
                     )}
                   </div>
-
-                  {/* Suggested path */}
                   {application.suggestedPath?.length > 0 && (
                     <div
                       style={{
@@ -715,7 +1060,7 @@ export default async function StudentApplicationPage({
                 </div>
               )}
 
-              {/* Assessment results */}
+              {/* Assessment */}
               {(application.assessmentScore !== undefined ||
                 application.assessmentPassed !== undefined) && (
                 <div
@@ -812,7 +1157,7 @@ export default async function StudentApplicationPage({
                 </div>
               )}
 
-              {/* Interview info */}
+              {/* Interview */}
               {application.interviewScheduledAt && (
                 <div
                   style={{
@@ -967,54 +1312,85 @@ export default async function StudentApplicationPage({
               )}
             </div>
 
-            {/* ── Right sidebar ── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {/* Academic profile */}
-              <div
-                style={{
-                  background: '#fff',
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
-                  padding: '22px 24px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                  <div
+            {/* ── RIGHT SIDEBAR ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Resume */}
+              {resumeUrl && (
+                <SideCard
+                  title="Resume"
+                  icon={
+                    <SideIconBox bg="#ECFDF5" color="#10B981">
+                      <FileText size={14} />
+                    </SideIconBox>
+                  }
+                >
+                  <a
+                    href={resumeUrl}
+                    target="_blank"
+                    rel="noreferrer"
                     style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 10,
-                      background: '#EDE9FE',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#7C3AED',
+                      gap: 12,
+                      background: '#F0FDF4',
+                      border: '1px solid #A7F3D0',
+                      borderRadius: 12,
+                      padding: '12px 14px',
+                      textDecoration: 'none',
                     }}
                   >
-                    <GraduationCap size={15} />
-                  </div>
-                  <h3
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 800,
-                      color: '#0F172A',
-                      fontFamily: 'var(--font-display)',
-                      margin: 0,
-                    }}
-                  >
-                    Academic Profile
-                  </h3>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 9,
+                        background: '#DCFCE7',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#16A34A',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <FileText size={16} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#065F46' }}>
+                        View Resume
+                      </div>
+                      <div style={{ fontSize: 11, color: '#16A34A', marginTop: 2 }}>
+                        PDF · Opens in new tab
+                      </div>
+                    </div>
+                    <ExternalLink size={14} color="#16A34A" />
+                  </a>
+                </SideCard>
+              )}
+
+              {/* Academic Profile */}
+              <SideCard
+                title="Academic Profile"
+                icon={
+                  <SideIconBox bg="#EDE9FE" color="#7C3AED">
+                    <GraduationCap size={14} />
+                  </SideIconBox>
+                }
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
+                    { label: 'STUDENT ID', value: student.studentId },
                     { label: 'UNIVERSITY', value: student.university },
                     { label: 'DEPARTMENT', value: student.department },
                     {
-                      label: 'YEAR OF STUDY',
+                      label: 'YEAR',
                       value: student.yearOfStudy ? `Year ${student.yearOfStudy}` : undefined,
                     },
+                    { label: 'SEMESTER', value: student.currentSemester },
                     { label: 'CGPA', value: student.cgpa ? student.cgpa.toFixed(2) : undefined },
+                    {
+                      label: 'STATUS',
+                      value: student.isGraduated ? '🎓 Graduated' : 'Currently Enrolled',
+                    },
                   ]
                     .filter((item) => item.value)
                     .map((item) => (
@@ -1026,58 +1402,30 @@ export default async function StudentApplicationPage({
                             color: '#94A3B8',
                             textTransform: 'uppercase',
                             letterSpacing: 0.8,
-                            marginBottom: 2,
+                            marginBottom: 1,
                           }}
                         >
                           {item.label}
                         </div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: '#0F172A' }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>
                           {item.value}
                         </div>
                       </div>
                     ))}
                 </div>
-              </div>
+              </SideCard>
 
               {/* Skills */}
               {student.skills && student.skills.length > 0 && (
-                <div
-                  style={{
-                    background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
-                    padding: '22px 24px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                  }}
+                <SideCard
+                  title="Skills"
+                  icon={
+                    <SideIconBox bg="#EFF6FF" color="#2563EB">
+                      <Code2 size={14} />
+                    </SideIconBox>
+                  }
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                    <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 10,
-                        background: '#EFF6FF',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#2563EB',
-                      }}
-                    >
-                      <BookOpen size={15} />
-                    </div>
-                    <h3
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 800,
-                        color: '#0F172A',
-                        fontFamily: 'var(--font-display)',
-                        margin: 0,
-                      }}
-                    >
-                      Skills
-                    </h3>
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                     {student.skills.map((skill: string) => (
                       <span
                         key={skill}
@@ -1085,9 +1433,9 @@ export default async function StudentApplicationPage({
                           background: '#EFF6FF',
                           color: '#2563EB',
                           border: '1px solid #BFDBFE',
-                          padding: '3px 10px',
+                          padding: '3px 9px',
                           borderRadius: 999,
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: 600,
                         }}
                       >
@@ -1095,31 +1443,50 @@ export default async function StudentApplicationPage({
                       </span>
                     ))}
                   </div>
-                </div>
+                </SideCard>
+              )}
+
+              {/* Completed Courses */}
+              {student.completedCourses && student.completedCourses.length > 0 && (
+                <SideCard
+                  title="Completed Courses"
+                  icon={
+                    <SideIconBox bg="#F0F9FF" color="#0284C7">
+                      <BookOpen size={14} />
+                    </SideIconBox>
+                  }
+                >
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                    {student.completedCourses.map((course: string) => (
+                      <span
+                        key={course}
+                        style={{
+                          background: '#F0F9FF',
+                          color: '#0369A1',
+                          border: '1px solid #BAE6FD',
+                          padding: '3px 9px',
+                          borderRadius: 999,
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {course}
+                      </span>
+                    ))}
+                  </div>
+                </SideCard>
               )}
 
               {/* Links */}
               {(student.linkedinUrl || student.githubUrl || student.portfolioUrl) && (
-                <div
-                  style={{
-                    background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
-                    padding: '22px 24px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                  }}
+                <SideCard
+                  title="Links"
+                  icon={
+                    <SideIconBox bg="#F8FAFC" color="#64748B">
+                      <Link2 size={14} />
+                    </SideIconBox>
+                  }
                 >
-                  <h3
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 800,
-                      color: '#0F172A',
-                      fontFamily: 'var(--font-display)',
-                      margin: '0 0 14px',
-                    }}
-                  >
-                    Links
-                  </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {student.linkedinUrl && (
                       <a
@@ -1130,8 +1497,12 @@ export default async function StudentApplicationPage({
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 7,
+                          background: '#EFF6FF',
                           color: '#2563EB',
-                          fontSize: 13,
+                          border: '1px solid #BFDBFE',
+                          padding: '7px 12px',
+                          borderRadius: 9,
+                          fontSize: 12,
                           fontWeight: 600,
                           textDecoration: 'none',
                         }}
@@ -1148,8 +1519,12 @@ export default async function StudentApplicationPage({
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 7,
+                          background: '#F1F5F9',
                           color: '#0F172A',
-                          fontSize: 13,
+                          border: '1px solid #E2E8F0',
+                          padding: '7px 12px',
+                          borderRadius: 9,
+                          fontSize: 12,
                           fontWeight: 600,
                           textDecoration: 'none',
                         }}
@@ -1166,8 +1541,12 @@ export default async function StudentApplicationPage({
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 7,
+                          background: '#F5F3FF',
                           color: '#7C3AED',
-                          fontSize: 13,
+                          border: '1px solid #DDD6FE',
+                          padding: '7px 12px',
+                          borderRadius: 9,
+                          fontSize: 12,
                           fontWeight: 600,
                           textDecoration: 'none',
                         }}
@@ -1176,7 +1555,7 @@ export default async function StudentApplicationPage({
                       </a>
                     )}
                   </div>
-                </div>
+                </SideCard>
               )}
 
               {/* Event info */}
@@ -1185,30 +1564,30 @@ export default async function StudentApplicationPage({
                   background: '#F8FAFC',
                   borderRadius: 20,
                   border: '1px solid #E2E8F0',
-                  padding: '22px 24px',
+                  padding: '20px 22px',
                 }}
               >
                 <h3
                   style={{
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: 800,
-                    color: '#64748B',
+                    color: '#94A3B8',
                     fontFamily: 'var(--font-display)',
-                    margin: '0 0 12px',
+                    margin: '0 0 10px',
                     textTransform: 'uppercase',
-                    letterSpacing: 0.5,
+                    letterSpacing: 0.8,
                   }}
                 >
                   Event
                 </h3>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', marginBottom: 5 }}>
                   {event.title}
                 </div>
-                <div style={{ fontSize: 13, color: '#64748B' }}>
+                <div style={{ fontSize: 12, color: '#64748B' }}>
                   {formatStatusLabel(event.type)} · {formatStatusLabel(event.locationType)}
                 </div>
                 {event.applicationDeadline && (
-                  <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>
+                  <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
                     Deadline: {formatShortDate(event.applicationDeadline?.toISOString())}
                   </div>
                 )}

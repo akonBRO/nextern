@@ -19,6 +19,9 @@ import {
   Save,
   Plus,
   Trash2,
+  FileText,
+  Upload,
+  ExternalLink,
 } from 'lucide-react';
 
 const C = {
@@ -65,6 +68,7 @@ const BD_UNIS = [
   'Daffodil International University (DIU)',
   'ULAB',
   'United International University (UIU)',
+  'KUET',
   'RUET',
   'CUET',
   'BUET',
@@ -280,12 +284,19 @@ type UserData = {
 };
 
 export default function StudentProfilePage() {
-  // ✅ router removed — it was assigned but never used
   const [user, setUser] = useState<UserData | null>(null);
   const [fetching, setFetching] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+
+  // ── Resume upload state ──
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeUploading, setResumeUploading] = useState(false);
+  const [resumeError, setResumeError] = useState('');
+  const [resumeSaved, setResumeSaved] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [showUploadZone, setShowUploadZone] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -396,6 +407,50 @@ export default function StudentProfilePage() {
     });
   }
 
+  // ── Resume upload handler ──
+  function handleFileSelect(file: File) {
+    setResumeError('');
+    setResumeSaved(false);
+    if (file.type !== 'application/pdf') {
+      setResumeError('Only PDF files are allowed.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setResumeError('File size must be under 10MB.');
+      return;
+    }
+    setResumeFile(file);
+  }
+
+  async function handleResumeUpload() {
+    if (!resumeFile) return;
+    setResumeUploading(true);
+    setResumeError('');
+    setResumeSaved(false);
+    try {
+      const formData = new FormData();
+      formData.append('file', resumeFile);
+      const res = await fetch('/api/users/resume', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setResumeError(data.error ?? 'Upload failed. Please try again.');
+        return;
+      }
+      setUser((prev) => (prev ? { ...prev, resumeUrl: data.resumeUrl } : prev));
+      setResumeFile(null);
+      setResumeSaved(true);
+      setShowUploadZone(false);
+      setTimeout(() => setResumeSaved(false), 4000);
+    } catch {
+      setResumeError('Network error. Please try again.');
+    } finally {
+      setResumeUploading(false);
+    }
+  }
+
   async function handleSave() {
     setSaving(true);
     setError('');
@@ -484,7 +539,6 @@ export default function StudentProfilePage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              {/* ✅ Avatar: <Image> instead of <img> */}
               <div
                 style={{
                   width: 72,
@@ -534,6 +588,7 @@ export default function StudentProfilePage() {
                 </div>
               </div>
             </div>
+
             {/* Completeness */}
             <div
               style={{
@@ -818,7 +873,305 @@ export default function StudentProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 3: Skills ── */}
+        {/* ── Section 3: Resume Upload ── */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<FileText size={18} />} label="Resume" />
+
+          {/* Resume saved success toast */}
+          {resumeSaved && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                background: C.successBg,
+                border: `1px solid ${C.successBorder}`,
+                borderRadius: 12,
+                padding: '12px 16px',
+                color: '#065F46',
+                fontSize: 14,
+                fontWeight: 600,
+                marginBottom: 16,
+              }}
+            >
+              <CheckCircle2 size={15} /> Resume uploaded successfully!
+            </div>
+          )}
+
+          {/* Current resume banner */}
+          {user?.resumeUrl && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: '#F0FDF4',
+                border: '1px solid #A7F3D0',
+                borderRadius: 14,
+                padding: '14px 18px',
+                marginBottom: 18,
+                flexWrap: 'wrap',
+                gap: 12,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 10,
+                    background: '#DCFCE7',
+                    border: '1px solid #A7F3D0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#16A34A',
+                    flexShrink: 0,
+                  }}
+                >
+                  <FileText size={18} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#065F46' }}>
+                    Resume on file
+                  </div>
+                  <div style={{ fontSize: 12, color: '#16A34A', marginTop: 2 }}>
+                    PDF · Attached to all your job applications
+                  </div>
+                </div>
+              </div>
+              <a
+                href={user.resumeUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: '#16A34A',
+                  color: '#fff',
+                  padding: '8px 16px',
+                  borderRadius: 9,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  flexShrink: 0,
+                }}
+              >
+                <ExternalLink size={13} /> View Resume
+              </a>
+            </div>
+          )}
+
+          {/* Drag & drop upload zone */}
+          <label
+            htmlFor="resume-upload"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 12,
+              padding: '32px 24px',
+              border: `2px dashed ${dragOver ? C.blue : resumeFile ? C.blue : '#CBD5E1'}`,
+              borderRadius: 16,
+              background: dragOver ? C.blueBg : resumeFile ? '#F8FBFF' : '#FAFBFC',
+              cursor: resumeUploading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease',
+              textAlign: 'center',
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              const file = e.dataTransfer.files?.[0];
+              if (file) handleFileSelect(file);
+            }}
+          >
+            <input
+              id="resume-upload"
+              type="file"
+              accept="application/pdf"
+              disabled={resumeUploading}
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileSelect(file);
+                // reset input so same file can be reselected
+                e.target.value = '';
+              }}
+            />
+
+            {/* Icon */}
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 16,
+                background: resumeFile ? C.blueBg : '#F1F5F9',
+                border: `1.5px solid ${resumeFile ? C.blueBorder : C.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: resumeFile ? C.blue : C.light,
+                transition: 'all 0.2s',
+              }}
+            >
+              {resumeUploading ? (
+                <span
+                  style={{
+                    width: 22,
+                    height: 22,
+                    border: `3px solid ${C.blueBorder}`,
+                    borderTopColor: C.blue,
+                    borderRadius: '50%',
+                    display: 'inline-block',
+                    animation: 'spin 0.7s linear infinite',
+                  }}
+                />
+              ) : (
+                <FileText size={24} />
+              )}
+            </div>
+
+            {resumeFile ? (
+              <>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.blue }}>
+                    {resumeFile.name}
+                  </div>
+                  <div style={{ fontSize: 12, color: C.gray, marginTop: 3 }}>
+                    {(resumeFile.size / 1024 / 1024).toFixed(2)} MB · PDF · Ready to upload
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>
+                    {dragOver ? 'Drop your resume here' : 'Drag & drop your resume'}
+                  </div>
+                  <div style={{ fontSize: 13, color: C.light, marginTop: 4 }}>
+                    or{' '}
+                    <span style={{ color: C.blue, fontWeight: 700, textDecoration: 'underline' }}>
+                      click to browse
+                    </span>{' '}
+                    — PDF only, max 10MB
+                  </div>
+                </div>
+              </>
+            )}
+          </label>
+
+          {/* Error message */}
+          {resumeError && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                background: C.dangerBg,
+                border: `1px solid ${C.dangerBorder}`,
+                borderRadius: 10,
+                padding: '10px 14px',
+                color: '#991B1B',
+                fontSize: 13,
+                marginTop: 12,
+              }}
+            >
+              <AlertCircle size={14} /> {resumeError}
+            </div>
+          )}
+
+          {/* Action buttons — only shown when a file is selected */}
+          {resumeFile && (
+            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+              <button
+                type="button"
+                onClick={handleResumeUpload}
+                disabled={resumeUploading}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  background: resumeUploading
+                    ? '#93C5FD'
+                    : `linear-gradient(135deg, ${C.blue}, #1D4ED8)`,
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 10,
+                  padding: '10px 22px',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: resumeUploading ? 'not-allowed' : 'pointer',
+                  fontFamily: 'var(--font-display)',
+                  boxShadow: resumeUploading ? 'none' : '0 4px 12px rgba(37,99,235,0.3)',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {resumeUploading ? (
+                  <>
+                    <span
+                      style={{
+                        width: 13,
+                        height: 13,
+                        border: '2px solid rgba(255,255,255,0.3)',
+                        borderTopColor: '#fff',
+                        borderRadius: '50%',
+                        display: 'inline-block',
+                        animation: 'spin 0.7s linear infinite',
+                      }}
+                    />
+                    Uploading…
+                  </>
+                ) : (
+                  <>
+                    <Upload size={14} /> Upload Resume
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setResumeFile(null);
+                  setResumeError('');
+                }}
+                disabled={resumeUploading}
+                style={{
+                  padding: '10px 18px',
+                  background: C.white,
+                  border: `1.5px solid ${C.border}`,
+                  borderRadius: 10,
+                  color: C.gray,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: resumeUploading ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
+          <div style={{ fontSize: 12, color: C.light, marginTop: 12 }}>
+            📎 Your resume is automatically attached to every job application you submit on Nextern.
+            {user?.resumeUrl ? ' Upload a new file to replace the current one.' : ''}
+          </div>
+        </div>
+
+        {/* ── Section 4: Skills ── */}
         <div
           style={{
             background: C.white,
@@ -842,7 +1195,7 @@ export default function StudentProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 4: Projects ── */}
+        {/* ── Section 5: Projects ── */}
         <div
           style={{
             background: C.white,
@@ -996,7 +1349,7 @@ export default function StudentProfilePage() {
           ))}
         </div>
 
-        {/* ── Section 5: Certifications ── */}
+        {/* ── Section 6: Certifications ── */}
         <div
           style={{
             background: C.white,
@@ -1132,7 +1485,7 @@ export default function StudentProfilePage() {
           ))}
         </div>
 
-        {/* ── Section 6: Online Presence ── */}
+        {/* ── Section 7: Online Presence ── */}
         <div
           style={{
             background: C.white,
@@ -1239,6 +1592,10 @@ export default function StudentProfilePage() {
           </button>
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }
