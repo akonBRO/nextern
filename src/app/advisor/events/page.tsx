@@ -25,7 +25,7 @@ import {
   formatShortDate,
   formatStatusLabel,
 } from '@/components/dashboard/DashboardContent';
-import { CalendarDays, Users, Clock, PlusCircle } from 'lucide-react';
+import { CalendarDays, Users, Clock, PlusCircle, FileText } from 'lucide-react';
 import CloseJobButton from '@/app/employer/jobs/CloseJobButton';
 
 const navItems = [
@@ -104,6 +104,21 @@ async function getEventsData(userId: string) {
     ])
   );
 
+  // Get application counts per event (non-event registrations)
+  const appCounts = eventIds.length
+    ? await Application.aggregate([
+        { $match: { jobId: { $in: eventIds }, isEventRegistration: false } },
+        { $group: { _id: '$jobId', count: { $sum: 1 } } },
+      ])
+    : [];
+
+  const appMap = new Map(
+    appCounts.map((a: { _id: mongoose.Types.ObjectId; count: number }) => [
+      a._id.toString(),
+      a.count,
+    ])
+  );
+
   const stats = {
     total: events.length,
     active: events.filter((e) => e.isActive).length,
@@ -126,6 +141,7 @@ async function getEventsData(userId: string) {
       academicSession: e.academicSession,
       viewCount: e.viewCount ?? 0,
       registrationCount: regMap.get(e._id.toString()) ?? 0,
+      applicationCount: appMap.get(e._id.toString()) ?? 0,
     })),
     stats,
     chrome: {
@@ -504,6 +520,41 @@ export default async function AdvisorEventsPage() {
                         }}
                       >
                         <Users size={13} /> View Registrants
+                      </Link>
+
+                      {/* ── View Applications ── */}
+                      <Link
+                        href={`/advisor/events/${event._id}/applicants`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          background: '#EFF6FF',
+                          color: '#2563EB',
+                          padding: '8px 14px',
+                          borderRadius: 10,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          textDecoration: 'none',
+                          border: '1px solid #BFDBFE',
+                        }}
+                      >
+                        <FileText size={13} /> View Applications
+                        {event.applicationCount > 0 && (
+                          <span
+                            style={{
+                              background: '#2563EB',
+                              color: '#fff',
+                              borderRadius: 999,
+                              padding: '1px 7px',
+                              fontSize: 11,
+                              fontWeight: 700,
+                              marginLeft: 2,
+                            }}
+                          >
+                            {event.applicationCount}
+                          </span>
+                        )}
                       </Link>
 
                       {/* Edit */}

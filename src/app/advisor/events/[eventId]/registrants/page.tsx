@@ -10,6 +10,7 @@ import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { User } from '@/models/User';
 import mongoose from 'mongoose';
+import Link from 'next/link';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
   DashboardPage,
@@ -24,7 +25,7 @@ import {
   formatShortDate,
   formatStatusLabel,
 } from '@/components/dashboard/DashboardContent';
-import { Users, CheckCircle2, CalendarDays } from 'lucide-react';
+import { Users, CheckCircle2, CalendarDays, FileText } from 'lucide-react';
 
 const navItems = [
   { label: 'Overview', href: '/advisor/dashboard', icon: 'dashboard' as const },
@@ -122,7 +123,7 @@ export default async function EventRegistrantsPage({
         <HeroCard
           eyebrow={formatStatusLabel(event.type)}
           title={event.title}
-          description={`${event.companyName} · ${event.city ? `${event.city} · ` : ''}${formatStatusLabel(event.locationType)} · Deadline ${formatShortDate(event.applicationDeadline?.toISOString())}`}
+          description={`${event.city ? `${event.city} · ` : ''}${formatStatusLabel(event.locationType)} · Deadline ${formatShortDate(event.applicationDeadline?.toISOString())}`}
           actions={
             <>
               <ActionLink href={`/advisor/events/${eventId}/edit`} label="Edit event" />
@@ -253,7 +254,14 @@ export default async function EventRegistrantsPage({
                         boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 14,
+                          flexWrap: 'wrap',
+                        }}
+                      >
                         {/* Avatar */}
                         <div
                           style={{
@@ -288,7 +296,7 @@ export default async function EventRegistrantsPage({
                         </div>
 
                         {/* Info */}
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: 1, minWidth: 180 }}>
                           <div
                             style={{
                               display: 'flex',
@@ -347,6 +355,28 @@ export default async function EventRegistrantsPage({
                             </div>
                           )}
                         </div>
+
+                        {/* View Application button */}
+                        <Link
+                          href={`/advisor/events/${eventId}/registrants/${student?._id}`}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            background: '#EFF6FF',
+                            color: '#2563EB',
+                            border: '1px solid #BFDBFE',
+                            padding: '8px 14px',
+                            borderRadius: 10,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                            flexShrink: 0,
+                            alignSelf: 'center',
+                          }}
+                        >
+                          <FileText size={13} /> View Application
+                        </Link>
                       </div>
                     </div>
                   );
