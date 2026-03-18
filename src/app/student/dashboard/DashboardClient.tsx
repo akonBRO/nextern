@@ -52,6 +52,59 @@ function getStatusTone(status: string): 'info' | 'success' | 'warning' | 'neutra
   return 'neutral';
 }
 
+const navItems = [
+  { label: 'Overview', href: '/student/dashboard', icon: 'dashboard' as const },
+  { label: 'Browse Jobs', href: '/student/jobs', icon: 'briefcase' as const },
+  {
+    label: 'Career',
+    icon: 'file' as const,
+    items: [
+      {
+        label: 'Applications',
+        href: '/student/applications',
+        description: 'Review your active application pipeline and latest submissions.',
+        icon: 'file' as const,
+      },
+      {
+        label: 'Recommended roles',
+        href: '/student/jobs',
+        description: 'See the best current matches based on your skills and profile.',
+        icon: 'sparkles' as const,
+      },
+      {
+        label: 'Deadlines',
+        href: '/student/applications#deadlines',
+        description: 'Stay ahead of closing application windows.',
+        icon: 'calendar' as const,
+      },
+    ],
+  },
+  {
+    label: 'Growth',
+    icon: 'insights' as const,
+    items: [
+      {
+        label: 'Score trend',
+        href: '/student/dashboard#score',
+        description: 'Track how your opportunity score has changed over time.',
+        icon: 'insights' as const,
+      },
+      {
+        label: 'Skill gaps',
+        href: '/student/dashboard#skills',
+        description: 'Focus on the skills that impact your readiness.',
+        icon: 'target' as const,
+      },
+      {
+        label: 'Badges',
+        href: '/student/dashboard#badges',
+        description: 'Review the badges and milestones you have earned.',
+        icon: 'shield' as const,
+      },
+    ],
+  },
+];
+
 export default function DashboardClient({ data }: { data: DashboardData }) {
   const profileSubtitle = [data.profile.university, data.profile.department]
     .filter(Boolean)
