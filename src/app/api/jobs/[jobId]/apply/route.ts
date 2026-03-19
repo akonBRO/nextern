@@ -1,7 +1,3 @@
-// src/app/api/jobs/[jobId]/apply/route.ts
-// POST   /api/jobs/[jobId]/apply  — student applies to a job
-// DELETE /api/jobs/[jobId]/apply  — student withdraws application
-
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
@@ -10,10 +6,12 @@ import { Application } from '@/models/Application';
 import { User } from '@/models/User';
 import { ApplyJobSchema } from '@/lib/validations';
 import { onJobApplied } from '@/lib/events';
+import { analyzeSkillGap } from '@/lib/gemini';
+import { checkFeatureAccess } from '@/lib/premium';
+import { FeatureUsage } from '@/models/FeatureUsage';
 
 type Params = { params: Promise<{ jobId: string }> };
 
-// ── POST ──────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest, { params }: Params) {
   try {
     const session = await auth();
@@ -39,7 +37,6 @@ export async function POST(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: 'Application deadline has passed' }, { status: 400 });
     }
 
-    // Duplicate check
     const existing = await Application.findOne({ jobId, studentId: session.user.id });
     if (existing) {
       return NextResponse.json({ error: 'You have already applied to this job' }, { status: 409 });
@@ -54,8 +51,9 @@ export async function POST(req: NextRequest, { params }: Params) {
       );
     }
 
-    // Snapshot student's resume at time of application
-    const student = await User.findById(session.user.id).select('resumeUrl').lean();
+    const student = await User.findById(session.user.id)
+      .select('resumeUrl skills cgpa completedCourses')
+      .lean();
 
     const isEvent = job.type === 'webinar' || job.type === 'workshop';
 
@@ -77,14 +75,59 @@ export async function POST(req: NextRequest, { params }: Params) {
       ],
     });
 
-    // Increment application count
     await Job.findByIdAndUpdate(jobId, { $inc: { applicationCount: 1 } });
-
-    // Fire event hook for badge system (Jauad's module)
     await onJobApplied(session.user.id, jobId).catch(() => {});
 
+    let appliedFitScore: number | null = null;
+
+    try {
+      const access = await checkFeatureAccess(session.user.id, 'skillGapAnalysis');
+      if (access.allowed && student) {
+        const result = await analyzeSkillGap({
+          studentSkills: student.skills ?? [],
+          studentCGPA: student.cgpa ?? 0,
+          completedCourses: student.completedCourses ?? [],
+          jobRequiredSkills: job.requiredSkills ?? [],
+          jobMinCGPA: job.minimumCGPA ?? 0,
+          jobRequiredCourses: job.requiredCourses ?? [],
+          jobExperienceExpectations: job.experienceExpectations ?? '',
+          jobTitle: job.title,
+          companyName: job.companyName,
+        });
+
+        appliedFitScore = result.data.fitScore;
+
+        await Application.findByIdAndUpdate(application._id, {
+          fitScore: result.data.fitScore,
+          hardGaps: result.data.hardGaps,
+          softGaps: result.data.softGaps,
+          metRequirements: result.data.metRequirements,
+          suggestedPath: result.data.suggestedPath,
+          fitSummary: result.data.summary,
+          fitScoreComputedAt: new Date(),
+          fitAnalysisMeta: result.meta,
+        });
+
+        await FeatureUsage.create({
+          userId: session.user.id,
+          feature: 'skill_gap_analysis',
+          metadata: {
+            jobId,
+            source: 'application',
+            mode: result.meta.mode,
+          },
+        });
+      }
+    } catch (analysisError) {
+      console.error('[AUTO SKILL GAP ERROR]', analysisError);
+    }
+
     return NextResponse.json(
-      { message: 'Application submitted successfully', application },
+      {
+        message: 'Application submitted successfully',
+        application,
+        fitScore: appliedFitScore,
+      },
       { status: 201 }
     );
   } catch (error: unknown) {
@@ -96,7 +139,6 @@ export async function POST(req: NextRequest, { params }: Params) {
   }
 }
 
-// ── DELETE (withdraw) ─────────────────────────────────────────────────────────
 export async function DELETE(req: NextRequest, { params }: Params) {
   try {
     const session = await auth();

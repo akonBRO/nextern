@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import type { AIExecutionMeta } from '@/lib/ai-meta';
 
 interface IStatusHistoryEntry {
   status: string;
@@ -10,7 +11,7 @@ interface IStatusHistoryEntry {
 export interface IApplication extends Document {
   studentId: mongoose.Types.ObjectId;
   jobId: mongoose.Types.ObjectId;
-  employerId: mongoose.Types.ObjectId; // denormalized
+  employerId: mongoose.Types.ObjectId;
   status:
     | 'applied'
     | 'shortlisted'
@@ -22,34 +23,32 @@ export interface IApplication extends Document {
     | 'withdrawn';
   appliedAt: Date;
   coverLetter?: string;
-  resumeUrlSnapshot?: string; // resume at time of apply
-  isEventRegistration: boolean; // true for webinar/workshop
+  resumeUrlSnapshot?: string;
+  isEventRegistration: boolean;
 
-  // ── M2: AI Engine (Sabbir populates) ──────────────────
-  fitScore?: number; // 0–100
-  hardGaps: string[]; // missing required skills/courses
-  softGaps: string[]; // partially met expectations
-  suggestedPath: string[]; // Gemini-generated prep steps
+  fitScore?: number;
+  hardGaps: string[];
+  softGaps: string[];
+  metRequirements: string[];
+  suggestedPath: string[];
+  fitSummary?: string;
   fitScoreComputedAt?: Date;
+  fitAnalysisMeta?: AIExecutionMeta;
 
-  // ── M3: Assessment (Sabbir populates) ─────────────────
   assessmentId?: mongoose.Types.ObjectId;
   assessmentScore?: number;
   assessmentPassed?: boolean;
 
-  // ── M3: Interview (Sabbir populates) ──────────────────
   interviewScheduledAt?: Date;
   agoraChannelId?: string;
-  interviewNotes?: string; // select:false — never sent to student
+  interviewNotes?: string;
   interviewRecordingUrl?: string;
 
-  // ── History ───────────────────────────────────────────
   statusHistory: IStatusHistoryEntry[];
-  employerNotes?: string; // select:false — never sent to student
+  employerNotes?: string;
   isWithdrawn: boolean;
 
-  googleCalendarEventId?: string; // returned by Google Calendar API on event create
-  // required to update/delete event if deadline changes
+  googleCalendarEventId?: string;
 }
 
 const ApplicationSchema = new Schema<IApplication>(
@@ -78,8 +77,26 @@ const ApplicationSchema = new Schema<IApplication>(
     fitScore: { type: Number, min: 0, max: 100 },
     hardGaps: [{ type: String }],
     softGaps: [{ type: String }],
+    metRequirements: [{ type: String }],
     suggestedPath: [{ type: String }],
+    fitSummary: { type: String },
     fitScoreComputedAt: { type: Date },
+    fitAnalysisMeta: {
+      mode: {
+        type: String,
+        enum: ['ai', 'fallback', 'unknown'],
+      },
+      provider: {
+        type: String,
+        enum: ['gemini', 'groq', 'local'],
+      },
+      requestedProvider: {
+        type: String,
+        enum: ['gemini', 'groq'],
+      },
+      model: { type: String, default: null },
+      fallbackReason: { type: String, default: null },
+    },
     assessmentId: { type: Schema.Types.ObjectId, ref: 'Assessment' },
     assessmentScore: { type: Number },
     assessmentPassed: { type: Boolean },

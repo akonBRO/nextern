@@ -2,6 +2,7 @@
 
 import type { DashboardData } from '@/lib/student-dashboard';
 import DashboardShell from '@/components/dashboard/DashboardShell';
+import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import {
   ActionLink,
   DashboardPage,
@@ -114,7 +115,7 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
       role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
-      navItems={navItems}
+      navItems={STUDENT_NAV_ITEMS}
       user={{
         name: data.profile.name,
         email: data.profile.email,

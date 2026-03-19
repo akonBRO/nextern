@@ -10,6 +10,7 @@ import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { User } from '@/models/User';
 import mongoose from 'mongoose';
+import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
   DashboardPage,
@@ -19,23 +20,6 @@ import {
 } from '@/components/dashboard/DashboardContent';
 import JobFeedClient from './JobFeedClient';
 
-const navItems = [
-  { label: 'Dashboard', href: '/student/dashboard', icon: 'dashboard' as const },
-  { label: 'Jobs', href: '/student/jobs', icon: 'briefcase' as const },
-  {
-    label: 'Track',
-    icon: 'file' as const,
-    items: [
-      {
-        label: 'My Applications',
-        href: '/student/applications',
-        description: 'Track your submitted applications and their status.',
-        icon: 'file' as const,
-      },
-    ],
-  },
-];
-
 async function getJobFeedData(userId: string) {
   await connectDB();
   const oid = new mongoose.Types.ObjectId(userId);
@@ -43,7 +27,7 @@ async function getJobFeedData(userId: string) {
   const [student, unreadNotifs, unreadMsgs] = await Promise.all([
     User.findById(oid)
       .select(
-        'name email image university department yearOfStudy skills cgpa opportunityScore profileCompleteness'
+        'name email image university department yearOfStudy skills cgpa opportunityScore profileCompleteness isPremium'
       )
       .lean(),
     Notification.countDocuments({ userId: oid, isRead: false }),
@@ -69,13 +53,21 @@ async function getJobFeedData(userId: string) {
     ];
   }
 
-  const [jobs, appliedJobIds] = await Promise.all([
+  const [jobs, applications] = await Promise.all([
     Job.find(query).sort({ isPremiumListing: -1, createdAt: -1 }).limit(30).lean(),
     Application.find({ studentId: oid, isWithdrawn: { $ne: true } })
-      .select('jobId')
-      .lean()
-      .then((apps) => new Set(apps.map((a) => a.jobId.toString()))),
+      .select('jobId fitScore fitScoreComputedAt')
+      .lean(),
   ]);
+
+  const appliedJobIds = new Set(applications.map((application) => application.jobId.toString()));
+  const aiFitScores = new Map(
+    applications
+      .filter(
+        (application) => application.fitScoreComputedAt && typeof application.fitScore === 'number'
+      )
+      .map((application) => [application.jobId.toString(), application.fitScore as number])
+  );
 
   // Compute simple fit score for each job
   const userSkills = new Set((student.skills ?? []).map((s: string) => s.toLowerCase()));
@@ -85,7 +77,8 @@ async function getJobFeedData(userId: string) {
       userSkills.has(s.toLowerCase())
     ).length;
     const total = (job.requiredSkills ?? []).length;
-    const fitScore = total > 0 ? Math.round((matched / total) * 100) : null;
+    const estimatedFitScore = total > 0 ? Math.round((matched / total) * 100) : null;
+    const fitScore = aiFitScores.get(job._id.toString()) ?? estimatedFitScore;
     return {
       _id: job._id.toString(),
       title: job.title,
@@ -106,9 +99,20 @@ async function getJobFeedData(userId: string) {
     };
   });
 
+  const sortedJobs = [...enrichedJobs].sort((a, b) => {
+    if (student.isPremium) {
+      return (
+        (b.fitScore ?? -1) - (a.fitScore ?? -1) ||
+        Number(b.isPremiumListing) - Number(a.isPremiumListing)
+      );
+    }
+
+    return Number(b.isPremiumListing) - Number(a.isPremiumListing);
+  });
+
   return {
     student,
-    jobs: enrichedJobs,
+    jobs: sortedJobs,
     totalJobs: jobs.length,
     appliedCount: appliedJobIds.size,
     chrome: { unreadNotifications: unreadNotifs, unreadMessages: unreadMsgs },
@@ -130,7 +134,7 @@ export default async function StudentJobsPage() {
       role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
-      navItems={navItems}
+      navItems={STUDENT_NAV_ITEMS}
       user={{
         name: student.name,
         email: student.email,
@@ -138,6 +142,7 @@ export default async function StudentJobsPage() {
         subtitle:
           [student.university, student.department].filter(Boolean).join(' | ') ||
           'Student workspace',
+        isPremium: Boolean(student.isPremium),
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
       }}

@@ -10,6 +10,7 @@ import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { User } from '@/models/User';
 import mongoose from 'mongoose';
+import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
   DashboardPage,
@@ -26,12 +27,6 @@ import {
 } from '@/components/dashboard/DashboardContent';
 import { BriefcaseBusiness, CheckCircle2, Trophy, Clock3, CalendarDays } from 'lucide-react';
 import ApplicationsTabs from './ApplicationsTabs';
-
-const navItems = [
-  { label: 'Dashboard', href: '/student/dashboard', icon: 'dashboard' as const },
-  { label: 'Jobs', href: '/student/jobs', icon: 'briefcase' as const },
-  { label: 'Applications', href: '/student/applications', icon: 'file' as const },
-];
 
 async function getApplicationsData(userId: string) {
   await connectDB();
@@ -124,7 +119,7 @@ export default async function StudentApplicationsPage() {
       role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
-      navItems={navItems}
+      navItems={STUDENT_NAV_ITEMS}
       user={{
         name: student?.name ?? 'Student',
         email: student?.email ?? '',

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import {
   Bell,
   BookOpen,
@@ -11,6 +12,7 @@ import {
   Building2,
   CalendarDays,
   ChevronDown,
+  Crown,
   FileText,
   GraduationCap,
   LayoutDashboard,
@@ -73,6 +75,7 @@ type DashboardShellProps = {
     email: string;
     image?: string;
     subtitle: string;
+    isPremium?: boolean;
     unreadNotifications: number;
     unreadMessages: number;
   };
@@ -123,6 +126,8 @@ function CounterChip({ label, value, icon }: { label: string; value: number; ico
   );
 }
 
+const PREMIUM_STATUS_EVENT = 'nextern-premium-status-updated';
+
 export default function DashboardShell({
   role,
   roleLabel,
@@ -135,7 +140,9 @@ export default function DashboardShell({
   const pathname = usePathname();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [premiumActive, setPremiumActive] = useState(Boolean(user.isPremium));
   const shellRef = useRef<HTMLDivElement>(null);
+  const resolvedNavItems = role === 'student' ? STUDENT_NAV_ITEMS : navItems;
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -148,6 +155,45 @@ export default function DashboardShell({
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
+
+  useEffect(() => {
+    if (role !== 'student' && role !== 'employer') {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadPremiumStatus() {
+      try {
+        const res = await fetch('/api/premium/status', { cache: 'no-store' });
+        if (!res.ok) {
+          return;
+        }
+
+        const data = (await res.json()) as { isPremium?: boolean };
+        if (!cancelled && typeof data.isPremium === 'boolean') {
+          setPremiumActive(data.isPremium);
+        }
+      } catch {
+        // Keep the shell stable if the status endpoint is temporarily unavailable.
+      }
+    }
+
+    loadPremiumStatus();
+
+    function handlePremiumUpdate(event: Event) {
+      const customEvent = event as CustomEvent<{ isPremium?: boolean }>;
+      if (typeof customEvent.detail?.isPremium === 'boolean') {
+        setPremiumActive(customEvent.detail.isPremium);
+      }
+    }
+
+    window.addEventListener(PREMIUM_STATUS_EVENT, handlePremiumUpdate as EventListener);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(PREMIUM_STATUS_EVENT, handlePremiumUpdate as EventListener);
+    };
+  }, [pathname, role]);
 
   const initials = user.name
     .split(' ')
@@ -279,6 +325,24 @@ export default function DashboardShell({
                   {user.subtitle}
                 </span>
               </div>
+
+              {premiumActive ? (
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '8px 12px',
+                    borderRadius: 999,
+                    background: 'rgba(245,158,11,0.14)',
+                    border: '1px solid rgba(245,158,11,0.3)',
+                    color: '#FDE68A',
+                  }}
+                >
+                  <Crown size={14} />
+                  <span style={{ fontSize: 12, fontWeight: 800 }}>Premium active</span>
+                </div>
+              ) : null}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -358,6 +422,13 @@ export default function DashboardShell({
                     >
                       {user.email}
                     </div>
+                    {premiumActive ? (
+                      <div
+                        style={{ color: '#FDE68A', fontSize: 11, fontWeight: 700, marginTop: 2 }}
+                      >
+                        Premium active
+                      </div>
+                    ) : null}
                   </div>
                   <ChevronDown
                     size={14}
@@ -375,6 +446,7 @@ export default function DashboardShell({
                       position: 'absolute',
                       right: 0,
                       top: 'calc(100% + 10px)',
+                      zIndex: 120,
                       width: 248,
                       background: '#FFFFFF',
                       border: '1px solid #D9E2EC',
@@ -397,6 +469,25 @@ export default function DashboardShell({
                       <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
                         {user.email}
                       </div>
+                      {premiumActive ? (
+                        <div
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            marginTop: 10,
+                            padding: '4px 10px',
+                            borderRadius: 999,
+                            background: '#FEF3C7',
+                            color: '#92400E',
+                            fontSize: 11,
+                            fontWeight: 800,
+                          }}
+                        >
+                          <Crown size={12} />
+                          Premium active
+                        </div>
+                      ) : null}
                     </div>
 
                     {/* ── My Profile link ── */}
@@ -486,12 +577,14 @@ export default function DashboardShell({
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              overflowX: 'auto',
+              flexWrap: 'wrap',
             }}
             className="dashboard-shell-nav"
           >
-            {navItems.map((item) => {
-              const active = isActiveHref(item.href) || openDropdown === item.label;
+            {resolvedNavItems.map((item) => {
+              const hasActiveChild = item.items?.some((entry) => isActiveHref(entry.href)) ?? false;
+              const active =
+                isActiveHref(item.href) || hasActiveChild || openDropdown === item.label;
               return (
                 <div key={item.label} style={{ position: 'relative' }}>
                   {item.items ? (
@@ -551,6 +644,7 @@ export default function DashboardShell({
                         position: 'absolute',
                         top: 'calc(100% + 8px)',
                         left: 0,
+                        zIndex: 110,
                         minWidth: 292,
                         background: '#FFFFFF',
                         borderRadius: 18,
@@ -561,7 +655,7 @@ export default function DashboardShell({
                     >
                       {item.items.map((entry) => (
                         <Link
-                          key={entry.href}
+                          key={`${item.label}:${entry.label}:${entry.href}`}
                           href={entry.href}
                           onClick={() => setOpenDropdown(null)}
                           style={{
