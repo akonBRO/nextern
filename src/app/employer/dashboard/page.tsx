@@ -109,10 +109,13 @@ export default async function EmployerDashboard() {
         <HeroCard
           eyebrow="Employer workspace"
           title={data.company.companyName}
-          subtitle={[data.company.industry, data.company.headquartersCity]
+          subtitle={[
+            data.company.industry,
+            data.company.headquartersCity,
+            data.company.companyWebsite,
+          ]
             .filter(Boolean)
             .join(' · ')}
-          websiteUrl={data.company.companyWebsite ?? undefined}
           description={
             data.company.companyDescription ||
             'No company description added yet — go to Company Profile to write one.'
