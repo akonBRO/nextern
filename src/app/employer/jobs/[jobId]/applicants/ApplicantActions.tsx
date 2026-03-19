@@ -66,13 +66,13 @@ export default function ApplicantActions({
             display: 'block',
             textAlign: 'center',
             padding: '7px 14px',
-            border: '1.5px solid #E2E8F0',
+            border: '1.5px solid #A7F3D0',
             borderRadius: 8,
-            color: '#475569',
+            color: '#065F46',
             fontSize: 12,
             fontWeight: 600,
             textDecoration: 'none',
-            background: '#F8FAFC',
+            background: '#ECFDF5',
           }}
         >
           📄 View Resume

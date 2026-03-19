@@ -23,6 +23,7 @@ import {
   Upload,
   ExternalLink,
 } from 'lucide-react';
+import { useUploadThing } from '@/lib/uploadthing';
 
 const C = {
   blue: '#2563EB',
@@ -291,12 +292,15 @@ export default function StudentProfilePage() {
   const [error, setError] = useState('');
 
   // ── Resume upload state ──
+  const { startUpload, isUploading } = useUploadThing('resumeUploader');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeUploading, setResumeUploading] = useState(false);
+  const uploading = resumeUploading || isUploading;
   const [resumeError, setResumeError] = useState('');
   const [resumeSaved, setResumeSaved] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [showUploadZone, setShowUploadZone] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -422,24 +426,20 @@ export default function StudentProfilePage() {
     setResumeFile(file);
   }
 
+  // Entire handleResumeUpload function:
   async function handleResumeUpload() {
     if (!resumeFile) return;
     setResumeUploading(true);
     setResumeError('');
     setResumeSaved(false);
     try {
-      const formData = new FormData();
-      formData.append('file', resumeFile);
-      const res = await fetch('/api/users/resume', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setResumeError(data.error ?? 'Upload failed. Please try again.');
+      const res = await startUpload([resumeFile]);
+      if (!res || res.length === 0) {
+        setResumeError('Upload failed. Please try again.');
         return;
       }
-      setUser((prev) => (prev ? { ...prev, resumeUrl: data.resumeUrl } : prev));
+      const uploadedUrl = res[0].ufsUrl;
+      setUser((prev) => (prev ? { ...prev, resumeUrl: uploadedUrl } : prev));
       setResumeFile(null);
       setResumeSaved(true);
       setShowUploadZone(false);
@@ -448,6 +448,23 @@ export default function StudentProfilePage() {
       setResumeError('Network error. Please try again.');
     } finally {
       setResumeUploading(false);
+    }
+  }
+
+  async function handleResumeDelete() {
+    try {
+      const res = await fetch('/api/users/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeUrl: null }),
+      });
+      if (res.ok) {
+        setUser((prev) => (prev ? { ...prev, resumeUrl: undefined } : prev));
+        setShowDeleteConfirm(false);
+      }
+    } catch {
+      setResumeError('Failed to delete resume. Please try again.');
+      setShowDeleteConfirm(false);
     }
   }
 
@@ -907,7 +924,7 @@ export default function StudentProfilePage() {
           )}
 
           {/* Current resume banner */}
-          {user?.resumeUrl && (
+          {user?.resumeUrl ? (
             <div
               style={{
                 display: 'flex',
@@ -948,26 +965,84 @@ export default function StudentProfilePage() {
                   </div>
                 </div>
               </div>
-              <a
-                href={user.resumeUrl}
-                target="_blank"
-                rel="noreferrer"
+              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                <a
+                  href={user.resumeUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: '#16A34A',
+                    color: '#fff',
+                    padding: '8px 14px',
+                    borderRadius: 9,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <ExternalLink size={13} /> View
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: C.dangerBg,
+                    color: C.danger,
+                    border: `1px solid ${C.dangerBorder}`,
+                    padding: '8px 14px',
+                    borderRadius: 9,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Trash2 size={13} /> Delete
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                background: '#F8FAFC',
+                border: '1px dashed #CBD5E1',
+                borderRadius: 14,
+                padding: '14px 18px',
+                marginBottom: 18,
+              }}
+            >
+              <div
                 style={{
-                  display: 'inline-flex',
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: '#F1F5F9',
+                  border: '1px solid #E2E8F0',
+                  display: 'flex',
                   alignItems: 'center',
-                  gap: 6,
-                  background: '#16A34A',
-                  color: '#fff',
-                  padding: '8px 16px',
-                  borderRadius: 9,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  textDecoration: 'none',
+                  justifyContent: 'center',
+                  color: C.light,
                   flexShrink: 0,
                 }}
               >
-                <ExternalLink size={13} /> View Resume
-              </a>
+                <FileText size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
+                  No resume uploaded yet
+                </div>
+                <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>
+                  Upload a PDF to attach it automatically to your job applications
+                </div>
+              </div>
             </div>
           )}
 
@@ -984,7 +1059,7 @@ export default function StudentProfilePage() {
               border: `2px dashed ${dragOver ? C.blue : resumeFile ? C.blue : '#CBD5E1'}`,
               borderRadius: 16,
               background: dragOver ? C.blueBg : resumeFile ? '#F8FBFF' : '#FAFBFC',
-              cursor: resumeUploading ? 'not-allowed' : 'pointer',
+              cursor: uploading ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s ease',
               textAlign: 'center',
             }}
@@ -1004,7 +1079,7 @@ export default function StudentProfilePage() {
               id="resume-upload"
               type="file"
               accept="application/pdf"
-              disabled={resumeUploading}
+              disabled={uploading}
               style={{ display: 'none' }}
               onChange={(e) => {
                 const file = e.target.files?.[0];
@@ -1101,7 +1176,7 @@ export default function StudentProfilePage() {
               <button
                 type="button"
                 onClick={handleResumeUpload}
-                disabled={resumeUploading}
+                disabled={uploading}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1115,7 +1190,7 @@ export default function StudentProfilePage() {
                   padding: '10px 22px',
                   fontSize: 13,
                   fontWeight: 700,
-                  cursor: resumeUploading ? 'not-allowed' : 'pointer',
+                  cursor: uploading ? 'not-allowed' : 'pointer',
                   fontFamily: 'var(--font-display)',
                   boxShadow: resumeUploading ? 'none' : '0 4px 12px rgba(37,99,235,0.3)',
                   transition: 'all 0.15s',
@@ -1148,7 +1223,7 @@ export default function StudentProfilePage() {
                   setResumeFile(null);
                   setResumeError('');
                 }}
-                disabled={resumeUploading}
+                disabled={uploading}
                 style={{
                   padding: '10px 18px',
                   background: C.white,
@@ -1157,7 +1232,7 @@ export default function StudentProfilePage() {
                   color: C.gray,
                   fontSize: 13,
                   fontWeight: 600,
-                  cursor: resumeUploading ? 'not-allowed' : 'pointer',
+                  cursor: uploading ? 'not-allowed' : 'pointer',
                 }}
               >
                 Cancel
@@ -1592,6 +1667,122 @@ export default function StudentProfilePage() {
           </button>
         </div>
       </div>
+
+      {/* ── Delete Resume Confirmation Modal ── */}
+      {showDeleteConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 999,
+            background: 'rgba(15,23,42,0.55)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 24,
+          }}
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: 20,
+              padding: '32px 28px',
+              maxWidth: 400,
+              width: '100%',
+              boxShadow: '0 24px 60px rgba(15,23,42,0.18)',
+              border: '1px solid #E2E8F0',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Icon */}
+            <div
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 16,
+                background: C.dangerBg,
+                border: `1px solid ${C.dangerBorder}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: C.danger,
+                margin: '0 auto 18px',
+              }}
+            >
+              <Trash2 size={22} />
+            </div>
+
+            {/* Title */}
+            <h3
+              style={{
+                margin: 0,
+                fontSize: 18,
+                fontWeight: 800,
+                color: C.text,
+                fontFamily: 'var(--font-display)',
+                textAlign: 'center',
+              }}
+            >
+              Delete resume?
+            </h3>
+
+            {/* Description */}
+            <p
+              style={{
+                margin: '10px 0 24px',
+                fontSize: 14,
+                color: C.gray,
+                lineHeight: 1.6,
+                textAlign: 'center',
+              }}
+            >
+              Your resume will be removed from your profile and will no longer be attached to future
+              job applications. This cannot be undone.
+            </p>
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: '12px 0',
+                  background: C.white,
+                  border: `1.5px solid ${C.border}`,
+                  borderRadius: 12,
+                  color: C.gray,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleResumeDelete}
+                style={{
+                  flex: 1,
+                  padding: '12px 0',
+                  background: C.danger,
+                  border: 'none',
+                  borderRadius: 12,
+                  color: '#fff',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(239,68,68,0.3)',
+                }}
+              >
+                Yes, delete it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }

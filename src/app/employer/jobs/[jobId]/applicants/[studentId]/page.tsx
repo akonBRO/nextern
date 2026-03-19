@@ -213,7 +213,7 @@ export default async function EmployerApplicantDetailPage({
   const fitColor = fitScore >= 70 ? '#10B981' : fitScore >= 40 ? '#F59E0B' : '#EF4444';
   const fitBg = fitScore >= 70 ? '#DCFCE7' : fitScore >= 40 ? '#FFFBEB' : '#FEF2F2';
   const fitBorder = fitScore >= 70 ? '#BBF7D0' : fitScore >= 40 ? '#FDE68A' : '#FECACA';
-  const resumeUrl = application.resumeUrlSnapshot || student.resumeUrl || null;
+  const resumeUrl = (student as { resumeUrl?: string }).resumeUrl ?? null;
 
   const initials = (student.name ?? 'S')
     .split(' ')
@@ -485,7 +485,6 @@ export default async function EmployerApplicantDetailPage({
                   <ApplicantActions
                     appId={application._id.toString()}
                     currentStatus={application.status}
-                    resumeUrl={undefined}
                   />
                 </div>
               </div>
