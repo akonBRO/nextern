@@ -289,6 +289,7 @@ export default function StudentProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [badges, setBadges] = useState<{ badgeName: string; badgeIcon: string; awardedAt: string; badgeSlug: string }[]>([]);
 
   // ── Resume upload state ──
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -364,6 +365,13 @@ export default function StudentProfilePage() {
       })
       .catch(() => setError('Failed to load profile'))
       .finally(() => setFetching(false));
+
+    fetch('/api/badges')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.badges) setBadges(data.badges);
+      })
+      .catch(console.error);
   }, []);
 
   function set(field: string, value: unknown) {
@@ -539,6 +547,7 @@ export default function StudentProfilePage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              {/* ✅ Avatar: <Image> instead of <img> */}
               <div
                 style={{
                   width: 72,
@@ -1564,6 +1573,61 @@ export default function StudentProfilePage() {
               </div>
             </Field>
           </div>
+        </div>
+
+        {/* ── Section 7: Badges & Achievements ── */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Award size={18} />} label="Badges & Achievements" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16 }}>
+            Badges you earn on Nextern are permanently displayed here to showcase your verified achievements.
+          </div>
+          {badges.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '24px',
+                color: C.light,
+                fontSize: 14,
+                border: '1px dashed #CBD5E1',
+                borderRadius: 12,
+              }}
+            >
+              No badges earned yet. Keep engaging with the platform to unlock achievements!
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+              {badges.map((b) => (
+                <div
+                  key={`${b.badgeSlug}-${b.awardedAt}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '12px',
+                    background: '#F8FAFC',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                  }}
+                >
+                  <div style={{ fontSize: 24 }}>{b.badgeIcon}</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{b.badgeName}</div>
+                    <div style={{ fontSize: 11, color: C.gray }}>
+                      Earned {new Date(b.awardedAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Save button */}
