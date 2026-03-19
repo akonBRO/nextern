@@ -35,6 +35,24 @@ import {
 const navItems = [
   { label: 'Overview', href: '/dept/dashboard', icon: 'dashboard' as const },
   {
+    label: 'Events',
+    icon: 'calendar' as const,
+    items: [
+      {
+        label: 'Post Event',
+        href: '/dept/events/new',
+        description: 'Publish a webinar or workshop for students.',
+        icon: 'calendar' as const,
+      },
+      {
+        label: 'My Events',
+        href: '/dept/events',
+        description: 'View and manage all your posted events.',
+        icon: 'file' as const,
+      },
+    ],
+  },
+  {
     label: 'Cohort',
     icon: 'graduation' as const,
     items: [
@@ -123,7 +141,8 @@ export default async function DeptDashboard() {
           description="Live analytics on student readiness, skill gaps, industry alignment, and hiring pipeline — all drawn from real platform data."
           actions={
             <>
-              <ActionLink href="#students" label="View top students" />
+              <ActionLink href="/dept/events/new" label="Post event" />
+              <ActionLink href="#students" label="View top students" tone="ghost" />
               <ActionLink href="#heatmap" label="Skill heatmap" tone="ghost" />
             </>
           }
