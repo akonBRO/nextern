@@ -126,6 +126,7 @@ export type DepartmentDashboardData = {
   };
   stats: {
     totalStudents: number;
+    deptStudents: number;
     activeOpenings: number;
     totalApplications: number;
     hiredStudents: number;
@@ -133,9 +134,31 @@ export type DepartmentDashboardData = {
     avgCGPA: number;
   };
   pipeline: PipelineMetric[];
+  readinessDistribution: {
+    ready: { count: number; pct: number };
+    partial: { count: number; pct: number };
+    notReady: { count: number; pct: number };
+  };
+  skillHeatmap: { skill: string; count: number; pct: number }[];
+  industryAlignment: {
+    skill: string;
+    demand: number;
+    supply: number;
+    supplyPct: number;
+    demandPct: number;
+    gap: boolean;
+  }[];
+  semesterTrend: {
+    semester: string;
+    avgScore: number;
+    avgCGPA: number;
+    studentCount: number;
+  }[];
   topStudents: {
     id: string;
     name: string;
+    department?: string;
+    yearOfStudy?: number;
     opportunityScore: number;
     profileCompleteness: number;
     cgpa?: number;
@@ -511,14 +534,27 @@ export async function getDeptDashboardData(
     getChromeCounts(oid),
   ]);
 
-  const students = await User.find({
-    role: 'student',
-    university: user.institutionName,
-    department: user.advisoryDepartment,
-  })
-    .select('name opportunityScore profileCompleteness cgpa skills')
-    .sort({ opportunityScore: -1 })
-    .lean();
+  // ── Both views: dept students + all university students ──
+  const [students, allUniStudents] = await Promise.all([
+    User.find({
+      role: 'student',
+      university: user.institutionName,
+      department: user.advisoryDepartment,
+    })
+      .select(
+        'name department yearOfStudy currentSemester opportunityScore profileCompleteness cgpa skills'
+      )
+      .sort({ opportunityScore: -1 })
+      .lean(),
+    User.find({
+      role: 'student',
+      university: user.institutionName,
+    })
+      .select(
+        'name department yearOfStudy currentSemester opportunityScore profileCompleteness cgpa skills'
+      )
+      .lean(),
+  ]);
 
   const studentIds = students.map((student) => student._id);
   const applications = studentIds.length
@@ -532,7 +568,7 @@ export async function getDeptDashboardData(
     applicationDeadline: { $gte: new Date() },
   })
     .select(
-      'title companyName type applicationDeadline applicationCount targetUniversities targetDepartments'
+      'title companyName type applicationDeadline applicationCount targetUniversities targetDepartments requiredSkills'
     )
     .sort({ applicationDeadline: 1 })
     .lean();
@@ -544,13 +580,84 @@ export async function getDeptDashboardData(
     const matchesDepartment =
       !job.targetDepartments?.length ||
       job.targetDepartments.includes(user.advisoryDepartment ?? '');
-
     return matchesUniversity && matchesDepartment;
   });
 
+  // ── Readiness distribution (university-wide) ──
+  const uniTotal = allUniStudents.length || 1;
+  const readyCount = allUniStudents.filter((s) => (s.opportunityScore ?? 0) >= 70).length;
+  const partialCount = allUniStudents.filter(
+    (s) => (s.opportunityScore ?? 0) >= 40 && (s.opportunityScore ?? 0) < 70
+  ).length;
+  const notReadyCount = allUniStudents.filter((s) => (s.opportunityScore ?? 0) < 40).length;
+  const readinessDistribution = {
+    ready: { count: readyCount, pct: Math.round((readyCount / uniTotal) * 100) },
+    partial: { count: partialCount, pct: Math.round((partialCount / uniTotal) * 100) },
+    notReady: { count: notReadyCount, pct: Math.round((notReadyCount / uniTotal) * 100) },
+  };
+
+  // ── Skill heatmap (dept students) ──
+  const skillFreq: Record<string, number> = {};
+  students.forEach((s) => {
+    (s.skills ?? []).forEach((sk: string) => {
+      skillFreq[sk] = (skillFreq[sk] ?? 0) + 1;
+    });
+  });
+  const skillHeatmap = Object.entries(skillFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
+    .map(([skill, count]) => ({
+      skill,
+      count,
+      pct: Math.round((count / (students.length || 1)) * 100),
+    }));
+
+  // ── Industry demand alignment ──
+  const demandFreq: Record<string, number> = {};
+  relevantJobs.forEach((job) => {
+    (job.requiredSkills ?? []).forEach((sk: string) => {
+      demandFreq[sk] = (demandFreq[sk] ?? 0) + 1;
+    });
+  });
+  const industryAlignment = Object.entries(demandFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12)
+    .map(([skill, demand]) => ({
+      skill,
+      demand,
+      supply: skillFreq[skill] ?? 0,
+      supplyPct: Math.round(((skillFreq[skill] ?? 0) / (students.length || 1)) * 100),
+      demandPct: Math.round((demand / (relevantJobs.length || 1)) * 100),
+      gap: demand > (skillFreq[skill] ?? 0),
+    }));
+
+  // ── Semester-over-semester trend (university-wide) ──
+  const semMap: Record<string, { scores: number[]; cgpas: number[] }> = {};
+  allUniStudents.forEach((s) => {
+    const sem = s.currentSemester ?? 'Unknown';
+    if (!semMap[sem]) semMap[sem] = { scores: [], cgpas: [] };
+    semMap[sem].scores.push(s.opportunityScore ?? 0);
+    if (typeof s.cgpa === 'number') semMap[sem].cgpas.push(s.cgpa);
+  });
+  const semesterTrend = Object.entries(semMap)
+    .map(([semester, d]) => ({
+      semester,
+      avgScore: d.scores.length
+        ? Math.round(d.scores.reduce((a, b) => a + b, 0) / d.scores.length)
+        : 0,
+      avgCGPA: d.cgpas.length
+        ? parseFloat((d.cgpas.reduce((a, b) => a + b, 0) / d.cgpas.length).toFixed(2))
+        : 0,
+      studentCount: d.scores.length,
+    }))
+    .sort((a, b) => a.semester.localeCompare(b.semester));
+
+  // ── Top students ──
   const topStudents = students.slice(0, 6).map((student) => ({
     id: student._id.toString(),
     name: student.name,
+    department: student.department,
+    yearOfStudy: student.yearOfStudy,
     opportunityScore: student.opportunityScore ?? 0,
     profileCompleteness: student.profileCompleteness ?? 0,
     cgpa: student.cgpa,
@@ -580,7 +687,8 @@ export async function getDeptDashboardData(
         : undefined,
     },
     stats: {
-      totalStudents: students.length,
+      totalStudents: allUniStudents.length,
+      deptStudents: students.length,
       activeOpenings: relevantJobs.length,
       totalApplications: applications.length,
       hiredStudents: applications.filter((application) => application.status === 'hired').length,
@@ -592,6 +700,10 @@ export async function getDeptDashboardData(
       ),
     },
     pipeline: buildPipeline(applications),
+    readinessDistribution,
+    skillHeatmap,
+    industryAlignment,
+    semesterTrend,
     topStudents,
     upcomingOpenings: relevantJobs.slice(0, 6).map((job) => ({
       id: job._id.toString(),
