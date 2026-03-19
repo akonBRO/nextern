@@ -492,9 +492,19 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
                           fontSize: 14,
                           fontWeight: 800,
                           flexShrink: 0,
+                          overflow: 'hidden',
                         }}
                       >
-                        {initials}
+                        {student?.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={student.image}
+                            alt=""
+                            style={{ width: 44, height: 44, objectFit: 'cover' }}
+                          />
+                        ) : (
+                          initials
+                        )}
                       </div>
 
                       {/* Info */}
@@ -583,7 +593,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
                         <ApplicantActions
                           appId={app._id.toString()}
                           currentStatus={app.status}
-                          resumeUrl={undefined}
+                          resumeUrl={student?.resumeUrl ?? undefined}
                         />
                       </div>
                     </div>

@@ -61,7 +61,10 @@ async function getRegistrantsData(eventId: string, advisorId: string) {
       .lean(),
     Job.findOne({ _id: eid, employerId: oid }).lean(),
     Application.find({ jobId: eid, isEventRegistration: true })
-      .populate('studentId', 'name email university department yearOfStudy cgpa skills image')
+      .populate(
+        'studentId',
+        'name email university department yearOfStudy cgpa skills image resumeUrl'
+      )
       .sort({ appliedAt: -1 })
       .lean(),
     Notification.countDocuments({ userId: oid, isRead: false }),
@@ -241,6 +244,7 @@ export default async function EventRegistrantsPage({
                     cgpa?: number;
                     skills?: string[];
                     image?: string;
+                    resumeUrl?: string;
                   };
 
                   return (
@@ -280,6 +284,7 @@ export default async function EventRegistrantsPage({
                           }}
                         >
                           {student?.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={student.image}
                               alt=""
@@ -356,27 +361,77 @@ export default async function EventRegistrantsPage({
                           )}
                         </div>
 
-                        {/* View Application button */}
-                        <Link
-                          href={`/advisor/events/${eventId}/registrants/${student?._id}`}
+                        {/* Action buttons */}
+                        <div
                           style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            background: '#EFF6FF',
-                            color: '#2563EB',
-                            border: '1px solid #BFDBFE',
-                            padding: '8px 14px',
-                            borderRadius: 10,
-                            fontSize: 12,
-                            fontWeight: 700,
-                            textDecoration: 'none',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 8,
                             flexShrink: 0,
                             alignSelf: 'center',
                           }}
                         >
-                          <FileText size={13} /> View Application
-                        </Link>
+                          {/* View Application */}
+                          <Link
+                            href={`/advisor/events/${eventId}/registrants/${student?._id}`}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              background: '#EFF6FF',
+                              color: '#2563EB',
+                              border: '1px solid #BFDBFE',
+                              padding: '8px 14px',
+                              borderRadius: 10,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              textDecoration: 'none',
+                            }}
+                          >
+                            <FileText size={13} /> View Application
+                          </Link>
+
+                          {/* View Resume / No resume */}
+                          {student?.resumeUrl ? (
+                            <a
+                              href={student.resumeUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                background: '#ECFDF5',
+                                color: '#065F46',
+                                border: '1px solid #A7F3D0',
+                                padding: '8px 14px',
+                                borderRadius: 10,
+                                fontSize: 12,
+                                fontWeight: 700,
+                                textDecoration: 'none',
+                              }}
+                            >
+                              <FileText size={13} /> View Resume
+                            </a>
+                          ) : (
+                            <div
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                background: '#F8FAFC',
+                                color: '#94A3B8',
+                                border: '1px solid #E2E8F0',
+                                padding: '8px 14px',
+                                borderRadius: 10,
+                                fontSize: 12,
+                                fontWeight: 600,
+                              }}
+                            >
+                              <FileText size={13} /> No resume
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );

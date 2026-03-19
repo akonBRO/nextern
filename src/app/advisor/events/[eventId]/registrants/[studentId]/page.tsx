@@ -232,7 +232,7 @@ export default async function StudentApplicationPage({
   const fitColor = fitScore >= 70 ? '#10B981' : fitScore >= 40 ? '#F59E0B' : '#EF4444';
   const fitBg = fitScore >= 70 ? '#DCFCE7' : fitScore >= 40 ? '#FFFBEB' : '#FEF2F2';
   const fitBorder = fitScore >= 70 ? '#BBF7D0' : fitScore >= 40 ? '#FDE68A' : '#FECACA';
-  const resumeUrl = application.resumeUrlSnapshot || student.resumeUrl || null;
+  const resumeUrl = (student as { resumeUrl?: string }).resumeUrl ?? null;
 
   const initials = (student.name ?? 'S')
     .split(' ')
@@ -320,8 +320,9 @@ export default async function StudentApplicationPage({
                 }}
               >
                 {student.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={student.image}
+                    src={student.image as string}
                     alt=""
                     style={{ width: 72, height: 72, objectFit: 'cover' }}
                   />
