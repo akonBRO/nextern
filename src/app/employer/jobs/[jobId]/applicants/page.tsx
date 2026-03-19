@@ -14,6 +14,7 @@ import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
   DashboardPage,
   DashboardSection,
+  EmptyState,
   HeroCard,
   ActionLink,
   Panel,
@@ -24,6 +25,7 @@ import {
   formatStatusLabel,
 } from '@/components/dashboard/DashboardContent';
 import { Users, CheckCircle2, Clock3, Trophy } from 'lucide-react';
+import Link from 'next/link';
 import ApplicantActions from './ApplicantActions';
 
 const navItems = [
@@ -128,7 +130,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
   const data = await getApplicantsData(jobId, session.user.id);
   if (!data) redirect('/employer/jobs');
 
-  const { employer, job, stats, universityStats, chrome } = data;
+  const { employer, job, applications, stats, universityStats, chrome } = data;
 
   return (
     <DashboardShell
@@ -232,6 +234,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
           </div>
         </section>
 
+        {/* ── University breakdown (batch hiring only) ── */}
         {job.isBatchHiring && universityStats.length > 0 && (
           <DashboardSection
             id="university-breakdown"
@@ -418,6 +421,178 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
             </Panel>
           </DashboardSection>
         )}
+
+        {/* ── Applicant list ── */}
+        <DashboardSection
+          id="applicants"
+          title="All applicants"
+          description="Sorted by fit score. Use the status dropdown to move candidates through hiring stages."
+        >
+          {applications.length === 0 ? (
+            <Panel title="No applications yet" description="">
+              <EmptyState
+                title="No applications received"
+                description="Applications will appear here once students apply to this role."
+              />
+            </Panel>
+          ) : (
+            <Panel
+              title="Applicant pipeline"
+              description="Use the status dropdown to move candidates through hiring stages."
+              action={<Tag label={`${stats.total} total`} tone="info" />}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {applications.map((app) => {
+                  const student = app.studentId as {
+                    _id: mongoose.Types.ObjectId;
+                    name?: string;
+                    email?: string;
+                    university?: string;
+                    department?: string;
+                    cgpa?: number;
+                    skills?: string[];
+                    opportunityScore?: number;
+                    resumeUrl?: string;
+                    image?: string;
+                    yearOfStudy?: number;
+                  };
+
+                  const initials = (student?.name ?? 'S')
+                    .split(' ')
+                    .map((w: string) => w[0])
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase();
+
+                  return (
+                    <div
+                      key={app._id.toString()}
+                      style={{
+                        padding: '16px 18px',
+                        borderRadius: 16,
+                        border: '1px solid #E2E8F0',
+                        background: '#fff',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 16,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      {/* Avatar */}
+                      <div
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #2563EB, #7C3AED)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#fff',
+                          fontSize: 14,
+                          fontWeight: 800,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {initials}
+                      </div>
+
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 180 }}>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
+                          {student?.name ?? 'Unknown student'}
+                        </div>
+                        <div style={{ fontSize: 13, color: '#64748B', marginTop: 2 }}>
+                          {[student?.university, student?.department].filter(Boolean).join(' · ') ||
+                            'Academic info pending'}
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                          {typeof student?.cgpa === 'number' && (
+                            <span
+                              style={{
+                                background: '#F1F5F9',
+                                color: '#475569',
+                                padding: '2px 8px',
+                                borderRadius: 999,
+                                fontSize: 11,
+                                fontWeight: 600,
+                              }}
+                            >
+                              CGPA {student.cgpa.toFixed(2)}
+                            </span>
+                          )}
+                          {typeof student?.yearOfStudy === 'number' && (
+                            <span
+                              style={{
+                                background: '#F1F5F9',
+                                color: '#475569',
+                                padding: '2px 8px',
+                                borderRadius: 999,
+                                fontSize: 11,
+                                fontWeight: 600,
+                              }}
+                            >
+                              Year {student.yearOfStudy}
+                            </span>
+                          )}
+                          {student?.skills?.slice(0, 3).map((skill: string) => (
+                            <span
+                              key={skill}
+                              style={{
+                                background: '#EFF6FF',
+                                color: '#2563EB',
+                                padding: '2px 8px',
+                                borderRadius: 999,
+                                fontSize: 11,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>
+                          Applied {formatShortDate(app.appliedAt?.toISOString())}
+                        </div>
+                      </div>
+
+                      {/* Fit score */}
+
+                      {/* Actions */}
+                      <div
+                        style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}
+                      >
+                        <Link
+                          href={`/employer/jobs/${jobId}/applicants/${(student as { _id: mongoose.Types.ObjectId })._id.toString()}`}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 6,
+                            background: '#0F172A',
+                            color: '#fff',
+                            padding: '8px 14px',
+                            borderRadius: 9,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                          }}
+                        >
+                          View Application
+                        </Link>
+                        <ApplicantActions
+                          appId={app._id.toString()}
+                          currentStatus={app.status}
+                          resumeUrl={undefined}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Panel>
+          )}
+        </DashboardSection>
 
         <style>{`
           @media (max-width: 960px) {

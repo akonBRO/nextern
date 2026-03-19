@@ -84,17 +84,13 @@ export function HeroCard({
   eyebrow,
   title,
   subtitle,
-  websiteUrl,
   description,
   actions,
   aside,
 }: {
   eyebrow: string;
   title: string;
-  /** Optional line shown below the title — e.g. "CSE · Year 3" */
-  subtitle?: string;
-  /** Optional company website URL — renders a clickable "Website" link beside the subtitle pill */
-  websiteUrl?: string;
+  subtitle?: ReactNode;
   description: string;
   actions?: ReactNode;
   aside?: ReactNode;
@@ -132,7 +128,6 @@ export function HeroCard({
         className="dashboard-hero-grid"
       >
         <div>
-          {/* Eyebrow pill */}
           <div
             style={{
               display: 'inline-flex',
@@ -152,7 +147,6 @@ export function HeroCard({
             {eyebrow}
           </div>
 
-          {/* Full name */}
           <h1
             style={{
               margin: '18px 0 0',
@@ -168,75 +162,9 @@ export function HeroCard({
             {title}
           </h1>
 
-          {/* Department · Year pill */}
-          {subtitle ? (
-            <div
-              style={{
-                marginTop: 12,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                flexWrap: 'wrap',
-              }}
-            >
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '5px 14px',
-                  borderRadius: 999,
-                  background: 'rgba(255,255,255,0.1)',
-                  border: '1px solid rgba(255,255,255,0.18)',
-                  color: '#BAD4FF',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  letterSpacing: '0.01em',
-                }}
-              >
-                {subtitle}
-              </div>
-              {websiteUrl ? (
-                <a
-                  href={websiteUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '5px 14px',
-                    borderRadius: 999,
-                    background: 'rgba(34,211,238,0.12)',
-                    border: '1px solid rgba(34,211,238,0.3)',
-                    color: '#22D3EE',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    textDecoration: 'none',
-                    letterSpacing: '0.01em',
-                  }}
-                >
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="2" y1="12" x2="22" y2="12" />
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                  </svg>
-                  Website
-                </a>
-              ) : null}
-            </div>
-          ) : null}
+          {/* ── Subtitle — shown under name, above description ── */}
+          {subtitle ? <div style={{ marginTop: 12 }}>{subtitle}</div> : null}
 
-          {/* Bio / description */}
           <p
             style={{
               margin: '14px 0 0',
@@ -629,10 +557,8 @@ export function formatCompactNumber(value: number) {
 
 export function formatShortDate(value?: string) {
   if (!value) return 'No date';
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'No date';
-
   return new Intl.DateTimeFormat('en-BD', {
     day: 'numeric',
     month: 'short',
