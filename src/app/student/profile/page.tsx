@@ -289,6 +289,7 @@ export default function StudentProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [badges, setBadges] = useState<{ badgeName: string; badgeIcon: string; awardedAt: string; badgeSlug: string }[]>([]);
 
   // ── Resume upload state ──
   const [resumeFile, setResumeFile] = useState<File | null>(null);
