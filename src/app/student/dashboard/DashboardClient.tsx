@@ -73,7 +73,7 @@ const navItems = [
       },
       {
         label: 'Deadlines',
-        href: '/student/applications#deadlines',
+        href: '/student/applications',
         description: 'Stay ahead of closing application windows.',
         icon: 'calendar' as const,
       },
