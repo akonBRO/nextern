@@ -21,7 +21,6 @@ import {
   Panel,
   StatCard,
   formatCompactNumber,
-  formatShortDate,
   formatStatusLabel,
 } from '@/components/dashboard/DashboardContent';
 import { CalendarDays, Users, Clock, FileText } from 'lucide-react';
@@ -53,7 +52,7 @@ const navItems = [
     items: [
       {
         label: 'Benchmarks',
-        href: '/dept/benchmarks',
+        href: '/dept/dashboard#benchmarks',
         description: 'Set cohort thresholds.',
         icon: 'target' as const,
       },

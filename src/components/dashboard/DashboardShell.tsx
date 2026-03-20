@@ -62,7 +62,7 @@ const profileConfig: Record<
   student: { label: 'My Profile', href: '/student/profile', icon: 'users' },
   employer: { label: 'Company Profile', href: '/employer/profile', icon: 'building' },
   advisor: { label: 'My Profile', href: '/advisor/profile', icon: 'users' },
-  departmentHead: { label: 'My Profile', href: '/departmentHead/profile', icon: 'users' },
+  departmentHead: { label: 'My Profile', href: '/dept/profile', icon: 'users' },
 };
 
 type DashboardShellProps = {

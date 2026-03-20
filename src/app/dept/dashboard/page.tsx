@@ -19,18 +19,11 @@ import {
   formatShortDate,
 } from '@/components/dashboard/DashboardContent';
 import { getDeptDashboardData } from '@/lib/role-dashboard';
-import {
-  BriefcaseBusiness,
-  GraduationCap,
-  LineChart,
-  Medal,
-  Sparkles,
-  Target,
-  Users,
-  TrendingUp,
-  Zap,
-  BarChart3,
-} from 'lucide-react';
+import { BriefcaseBusiness, GraduationCap, LineChart, Sparkles, Target, Users } from 'lucide-react';
+import { User } from '@/models/User';
+import { Job } from '@/models/Job';
+import { connectDB } from '@/lib/db';
+import mongoose from 'mongoose';
 
 const navItems = [
   { label: 'Overview', href: '/dept/dashboard', icon: 'dashboard' as const },
@@ -54,13 +47,13 @@ const navItems = [
   },
   {
     label: 'Cohort',
-    icon: 'graduation' as const,
+    icon: 'users' as const,
     items: [
       {
         label: 'Top students',
         href: '/dept/dashboard#students',
         description: 'Track the strongest students by opportunity score and profile readiness.',
-        icon: 'graduation' as const,
+        icon: 'users' as const,
       },
       {
         label: 'Pipeline',
@@ -114,15 +107,31 @@ const navItems = [
   },
 ];
 
+async function getDeptExtras(userId: string) {
+  await connectDB();
+  const oid = new mongoose.Types.ObjectId(userId);
+  const [deptHead, totalEvents] = await Promise.all([
+    User.findById(oid)
+      .select('name bio city linkedinUrl institutionName advisoryDepartment designation image')
+      .lean(),
+    Job.countDocuments({ employerId: oid, type: { $in: ['webinar', 'workshop'] } }),
+  ]);
+  return { deptHead, totalEvents };
+}
+
 export default async function DeptDashboard() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
-  const data = await getDeptDashboardData({
-    userId: session.user.id,
-    email: session.user.email ?? undefined,
-  });
+  const [data, extras] = await Promise.all([
+    getDeptDashboardData({
+      userId: session.user.id,
+      email: session.user.email ?? undefined,
+    }),
+    getDeptExtras(session.user.id),
+  ]);
 
+  const { deptHead, totalEvents } = extras;
   const benchmark = data.department.benchmark;
   const { readinessDistribution, skillHeatmap, industryAlignment, semesterTrend } = data;
 
@@ -135,15 +144,54 @@ export default async function DeptDashboard() {
       user={data.chromeUser}
     >
       <DashboardPage>
+        {/* ── Hero ── */}
         <HeroCard
-          eyebrow="Department workspace"
-          title="Shape outcomes across the whole cohort."
-          description="Live analytics on student readiness, skill gaps, industry alignment, and hiring pipeline — all drawn from real platform data."
+          eyebrow="Department Head workspace"
+          title={deptHead?.name ?? data.chromeUser.name}
+          subtitle={
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {deptHead?.institutionName && deptHead?.advisoryDepartment && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    borderRadius: 999,
+                    padding: '5px 14px',
+                    fontSize: 13,
+                    color: '#E2E8F0',
+                    fontWeight: 600,
+                  }}
+                >
+                  {deptHead.institutionName} · {deptHead.advisoryDepartment}
+                </span>
+              )}
+              {deptHead?.designation && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    background: '#ECFDF5',
+                    border: '1px solid #A7F3D0',
+                    borderRadius: 999,
+                    padding: '5px 14px',
+                    fontSize: 13,
+                    color: '#065F46',
+                    fontWeight: 700,
+                  }}
+                >
+                  {deptHead.designation}
+                </span>
+              )}
+            </div>
+          }
+          description={deptHead?.bio || 'No bio added yet — go to My Profile to write one.'}
           actions={
             <>
               <ActionLink href="/dept/events/new" label="Post event" />
-              <ActionLink href="#students" label="View top students" tone="ghost" />
-              <ActionLink href="#heatmap" label="Skill heatmap" tone="ghost" />
+              <ActionLink href="/dept/events" label="All Events" tone="ghost" />
+              <ActionLink href="#students" label="Top students" tone="ghost" />
             </>
           }
           aside={
@@ -157,12 +205,6 @@ export default async function DeptDashboard() {
             >
               <div style={{ display: 'grid', gap: 10 }}>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {data.department.institutionName && (
-                    <Tag label={data.department.institutionName} tone="info" />
-                  )}
-                  {data.department.advisoryDepartment && (
-                    <Tag label={data.department.advisoryDepartment} tone="neutral" />
-                  )}
                   {benchmark ? (
                     <Tag label={benchmark.cohort} tone="success" />
                   ) : (
@@ -177,6 +219,12 @@ export default async function DeptDashboard() {
                       value: data.stats.totalStudents,
                       color: '#A78BFA',
                     },
+                    { label: 'Events posted', value: totalEvents, color: '#10B981' },
+                    {
+                      label: 'Avg score',
+                      value: `${data.stats.avgOpportunityScore}%`,
+                      color: '#F59E0B',
+                    },
                   ].map((s) => (
                     <div
                       key={s.label}
@@ -189,7 +237,7 @@ export default async function DeptDashboard() {
                     >
                       <div
                         style={{
-                          fontSize: 22,
+                          fontSize: 20,
                           fontWeight: 900,
                           color: s.color,
                           fontFamily: 'var(--font-display)',
@@ -206,6 +254,37 @@ export default async function DeptDashboard() {
                     </div>
                   ))}
                 </div>
+                {deptHead?.city && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      color: '#CBD5E1',
+                      fontSize: 12,
+                    }}
+                  >
+                    📍 {deptHead.city}
+                  </div>
+                )}
+                {deptHead?.linkedinUrl && (
+                  <a
+                    href={deptHead.linkedinUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      color: '#22D3EE',
+                      fontSize: 12,
+                      textDecoration: 'none',
+                      fontWeight: 600,
+                    }}
+                  >
+                    🔗 LinkedIn Profile
+                  </a>
+                )}
               </div>
             </Panel>
           }
@@ -550,7 +629,6 @@ export default async function DeptDashboard() {
           >
             {industryAlignment.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                {/* Header */}
                 <div
                   style={{
                     display: 'grid',
@@ -923,7 +1001,7 @@ export default async function DeptDashboard() {
         <DashboardSection
           id="students"
           title="Top students"
-          description="Ranked by opportunity score across the university. Toggle between dept view and university view."
+          description="Ranked by opportunity score across the university."
         >
           <Panel
             title="Leaders in the cohort"
