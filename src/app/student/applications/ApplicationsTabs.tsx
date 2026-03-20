@@ -216,16 +216,6 @@ function AppCard({ app, isEvent }: { app: AppItem; isEvent: boolean }) {
               View {isEvent ? 'Event' : 'Job'} →
             </Link>
           )}
-          {app.resumeUrlSnapshot && !isEvent && (
-            <a
-              href={app.resumeUrlSnapshot}
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: '#64748B', fontSize: 12, fontWeight: 500, textDecoration: 'none' }}
-            >
-              Resume snapshot
-            </a>
-          )}
         </div>
       </div>
     </div>

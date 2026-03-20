@@ -1,5 +1,6 @@
 // src/app/employer/jobs/[jobId]/applicants/page.tsx
-// Employer applicant pipeline for a specific job — uses DashboardShell
+// Employer applicant pipeline — with batch hiring university analytics,
+// filter tabs, expandable pipeline rows, and batch status actions
 
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -27,6 +28,7 @@ import {
 import { Users, CheckCircle2, Clock3, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import ApplicantActions from './ApplicantActions';
+import BatchHiringPanel from './BatchHiringPanel';
 
 const navItems = [
   { label: 'Overview', href: '/employer/dashboard', icon: 'dashboard' as const },
@@ -64,6 +66,7 @@ async function getApplicantsData(jobId: string, employerId: string) {
     hired: applications.filter((a) => a.status === 'hired').length,
   };
 
+  // ── University breakdown (always compute, not just batch hiring) ──
   const universityBreakdown: Record<
     string,
     {
@@ -72,40 +75,55 @@ async function getApplicantsData(jobId: string, employerId: string) {
       hired: number;
       avgFit: number;
       fitScores: number[];
+      pipeline: Record<string, number>;
     }
   > = {};
 
   if (job.isBatchHiring) {
     (job.batchUniversities ?? []).forEach((uni: string) => {
-      universityBreakdown[uni] = { total: 0, shortlisted: 0, hired: 0, avgFit: 0, fitScores: [] };
-    });
-
-    applications.forEach((app) => {
-      const student = app.studentId as { university?: string };
-      const uni = student?.university;
-      if (!uni) return;
-      if (!universityBreakdown[uni]) {
-        universityBreakdown[uni] = { total: 0, shortlisted: 0, hired: 0, avgFit: 0, fitScores: [] };
-      }
-      universityBreakdown[uni].total += 1;
-      if (
-        ['shortlisted', 'under_review', 'assessment_sent', 'interview_scheduled'].includes(
-          app.status
-        )
-      ) {
-        universityBreakdown[uni].shortlisted += 1;
-      }
-      if (app.status === 'hired') universityBreakdown[uni].hired += 1;
-      if (typeof app.fitScore === 'number') universityBreakdown[uni].fitScores.push(app.fitScore);
-    });
-
-    Object.keys(universityBreakdown).forEach((uni) => {
-      const scores = universityBreakdown[uni].fitScores;
-      universityBreakdown[uni].avgFit = scores.length
-        ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length)
-        : 0;
+      universityBreakdown[uni] = {
+        total: 0,
+        shortlisted: 0,
+        hired: 0,
+        avgFit: 0,
+        fitScores: [],
+        pipeline: {},
+      };
     });
   }
+
+  applications.forEach((app) => {
+    const student = app.studentId as { university?: string };
+    const uni = student?.university;
+    if (!uni) return;
+    if (!universityBreakdown[uni]) {
+      universityBreakdown[uni] = {
+        total: 0,
+        shortlisted: 0,
+        hired: 0,
+        avgFit: 0,
+        fitScores: [],
+        pipeline: {},
+      };
+    }
+    universityBreakdown[uni].total += 1;
+    universityBreakdown[uni].pipeline[app.status] =
+      (universityBreakdown[uni].pipeline[app.status] ?? 0) + 1;
+    if (
+      ['shortlisted', 'under_review', 'assessment_sent', 'interview_scheduled'].includes(app.status)
+    ) {
+      universityBreakdown[uni].shortlisted += 1;
+    }
+    if (app.status === 'hired') universityBreakdown[uni].hired += 1;
+    if (typeof app.fitScore === 'number') universityBreakdown[uni].fitScores.push(app.fitScore);
+  });
+
+  Object.keys(universityBreakdown).forEach((uni) => {
+    const scores = universityBreakdown[uni].fitScores;
+    universityBreakdown[uni].avgFit = scores.length
+      ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length)
+      : 0;
+  });
 
   const universityStats = Object.entries(universityBreakdown)
     .map(([university, data]) => ({ university, ...data }))
@@ -131,6 +149,39 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
   if (!data) redirect('/employer/jobs');
 
   const { employer, job, applications, stats, universityStats, chrome } = data;
+
+  // Serialize applications for client component
+  const serializedApps = applications.map((app) => {
+    const student = app.studentId as {
+      _id: mongoose.Types.ObjectId;
+      name?: string;
+      email?: string;
+      university?: string;
+      department?: string;
+      cgpa?: number;
+      skills?: string[];
+      resumeUrl?: string;
+      image?: string;
+      yearOfStudy?: number;
+    };
+    return {
+      _id: app._id.toString(),
+      status: app.status,
+      fitScore: app.fitScore ?? 0,
+      appliedAt: app.appliedAt?.toISOString() ?? '',
+      resumeUrlSnapshot: app.resumeUrlSnapshot || student?.resumeUrl || '',
+      student: {
+        _id: student?._id?.toString() ?? '',
+        name: student?.name ?? 'Unknown',
+        email: student?.email ?? '',
+        university: student?.university ?? '',
+        department: student?.department ?? '',
+        cgpa: student?.cgpa,
+        skills: student?.skills ?? [],
+        yearOfStudy: student?.yearOfStudy,
+      },
+    };
+  });
 
   return (
     <DashboardShell
@@ -234,375 +285,22 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
           </div>
         </section>
 
-        {/* ── University breakdown (batch hiring only) ── */}
-        {job.isBatchHiring && universityStats.length > 0 && (
-          <DashboardSection
-            id="university-breakdown"
-            title="University-wise breakdown"
-            description="Applicant distribution across all batch universities for this role."
-          >
-            <Panel
-              title="Batch hiring analytics"
-              description="Tracks how many students applied from each targeted university."
-              action={
-                <Tag label={`${job.batchUniversities?.length ?? 0} universities`} tone="info" />
-              }
-            >
-              <div style={{ display: 'grid', gap: 12 }}>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 80px 90px 70px 80px',
-                    gap: 12,
-                    padding: '8px 14px',
-                  }}
-                >
-                  {['University', 'Total', 'Shortlisted', 'Hired', 'Avg Fit'].map((h) => (
-                    <div
-                      key={h}
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: '#94A3B8',
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.8,
-                      }}
-                    >
-                      {h}
-                    </div>
-                  ))}
-                </div>
-
-                {universityStats.map((row, i) => {
-                  const pct = stats.total > 0 ? Math.round((row.total / stats.total) * 100) : 0;
-                  return (
-                    <div
-                      key={row.university}
-                      style={{
-                        background: i % 2 === 0 ? '#F8FAFC' : '#fff',
-                        borderRadius: 12,
-                        border: '1px solid #E2E8F0',
-                        padding: '14px',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: '1fr 80px 90px 70px 80px',
-                          gap: 12,
-                          alignItems: 'center',
-                          marginBottom: row.total > 0 ? 10 : 0,
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
-                            {row.university}
-                          </div>
-                          <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
-                            {pct}% of total
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 20,
-                            fontWeight: 900,
-                            color: '#2563EB',
-                            fontFamily: 'var(--font-display)',
-                          }}
-                        >
-                          {row.total}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 20,
-                            fontWeight: 900,
-                            color: '#22D3EE',
-                            fontFamily: 'var(--font-display)',
-                          }}
-                        >
-                          {row.shortlisted}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 20,
-                            fontWeight: 900,
-                            color: '#10B981',
-                            fontFamily: 'var(--font-display)',
-                          }}
-                        >
-                          {row.hired}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 20,
-                            fontWeight: 900,
-                            color:
-                              row.avgFit >= 70
-                                ? '#10B981'
-                                : row.avgFit >= 40
-                                  ? '#F59E0B'
-                                  : '#94A3B8',
-                            fontFamily: 'var(--font-display)',
-                          }}
-                        >
-                          {row.avgFit > 0 ? `${row.avgFit}%` : '—'}
-                        </div>
-                      </div>
-                      {row.total > 0 && (
-                        <div
-                          style={{
-                            height: 5,
-                            background: '#E2E8F0',
-                            borderRadius: 999,
-                            overflow: 'hidden',
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: `${pct}%`,
-                              height: '100%',
-                              background: 'linear-gradient(90deg, #2563EB, #22D3EE)',
-                              borderRadius: 999,
-                            }}
-                          />
-                        </div>
-                      )}
-                      {row.total === 0 && (
-                        <div style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic' }}>
-                          No applicants yet from this university
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-
-                <div
-                  style={{
-                    background: '#0F172A',
-                    borderRadius: 12,
-                    padding: '14px 16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: 12,
-                  }}
-                >
-                  <div style={{ color: '#94A3B8', fontSize: 13, fontWeight: 600 }}>
-                    Total across all universities
-                  </div>
-                  <div style={{ display: 'flex', gap: 24 }}>
-                    {[
-                      { label: 'Applied', value: stats.total, color: '#2563EB' },
-                      { label: 'Shortlisted', value: stats.shortlisted, color: '#22D3EE' },
-                      { label: 'Hired', value: stats.hired, color: '#10B981' },
-                    ].map((s) => (
-                      <div key={s.label} style={{ textAlign: 'center' }}>
-                        <div
-                          style={{
-                            fontSize: 20,
-                            fontWeight: 900,
-                            color: s.color,
-                            fontFamily: 'var(--font-display)',
-                            lineHeight: 1,
-                          }}
-                        >
-                          {s.value}
-                        </div>
-                        <div style={{ fontSize: 11, color: '#64748B', marginTop: 3 }}>
-                          {s.label}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Panel>
-          </DashboardSection>
-        )}
-
-        {/* ── Applicant list ── */}
-        <DashboardSection
-          id="applicants"
-          title="All applicants"
-          description="Sorted by fit score. Use the status dropdown to move candidates through hiring stages."
-        >
-          {applications.length === 0 ? (
-            <Panel title="No applications yet" description="">
-              <EmptyState
-                title="No applications received"
-                description="Applications will appear here once students apply to this role."
-              />
-            </Panel>
-          ) : (
-            <Panel
-              title="Applicant pipeline"
-              description="Use the status dropdown to move candidates through hiring stages."
-              action={<Tag label={`${stats.total} total`} tone="info" />}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {applications.map((app) => {
-                  const student = app.studentId as {
-                    _id: mongoose.Types.ObjectId;
-                    name?: string;
-                    email?: string;
-                    university?: string;
-                    department?: string;
-                    cgpa?: number;
-                    skills?: string[];
-                    opportunityScore?: number;
-                    resumeUrl?: string;
-                    image?: string;
-                    yearOfStudy?: number;
-                  };
-
-                  const initials = (student?.name ?? 'S')
-                    .split(' ')
-                    .map((w: string) => w[0])
-                    .slice(0, 2)
-                    .join('')
-                    .toUpperCase();
-
-                  return (
-                    <div
-                      key={app._id.toString()}
-                      style={{
-                        padding: '16px 18px',
-                        borderRadius: 16,
-                        border: '1px solid #E2E8F0',
-                        background: '#fff',
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 16,
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      {/* Avatar */}
-                      <div
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #2563EB, #7C3AED)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#fff',
-                          fontSize: 14,
-                          fontWeight: 800,
-                          flexShrink: 0,
-                          overflow: 'hidden',
-                        }}
-                      >
-                        {student?.image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={student.image}
-                            alt=""
-                            style={{ width: 44, height: 44, objectFit: 'cover' }}
-                          />
-                        ) : (
-                          initials
-                        )}
-                      </div>
-
-                      {/* Info */}
-                      <div style={{ flex: 1, minWidth: 180 }}>
-                        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
-                          {student?.name ?? 'Unknown student'}
-                        </div>
-                        <div style={{ fontSize: 13, color: '#64748B', marginTop: 2 }}>
-                          {[student?.university, student?.department].filter(Boolean).join(' · ') ||
-                            'Academic info pending'}
-                        </div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                          {typeof student?.cgpa === 'number' && (
-                            <span
-                              style={{
-                                background: '#F1F5F9',
-                                color: '#475569',
-                                padding: '2px 8px',
-                                borderRadius: 999,
-                                fontSize: 11,
-                                fontWeight: 600,
-                              }}
-                            >
-                              CGPA {student.cgpa.toFixed(2)}
-                            </span>
-                          )}
-                          {typeof student?.yearOfStudy === 'number' && (
-                            <span
-                              style={{
-                                background: '#F1F5F9',
-                                color: '#475569',
-                                padding: '2px 8px',
-                                borderRadius: 999,
-                                fontSize: 11,
-                                fontWeight: 600,
-                              }}
-                            >
-                              Year {student.yearOfStudy}
-                            </span>
-                          )}
-                          {student?.skills?.slice(0, 3).map((skill: string) => (
-                            <span
-                              key={skill}
-                              style={{
-                                background: '#EFF6FF',
-                                color: '#2563EB',
-                                padding: '2px 8px',
-                                borderRadius: 999,
-                                fontSize: 11,
-                                fontWeight: 600,
-                              }}
-                            >
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>
-                          Applied {formatShortDate(app.appliedAt?.toISOString())}
-                        </div>
-                      </div>
-
-                      {/* Fit score */}
-
-                      {/* Actions */}
-                      <div
-                        style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}
-                      >
-                        <Link
-                          href={`/employer/jobs/${jobId}/applicants/${(student as { _id: mongoose.Types.ObjectId })._id.toString()}`}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 6,
-                            background: '#0F172A',
-                            color: '#fff',
-                            padding: '8px 14px',
-                            borderRadius: 9,
-                            fontSize: 12,
-                            fontWeight: 700,
-                            textDecoration: 'none',
-                          }}
-                        >
-                          View Application
-                        </Link>
-                        <ApplicantActions
-                          appId={app._id.toString()}
-                          currentStatus={app.status}
-                          resumeUrl={student?.resumeUrl ?? undefined}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </Panel>
-          )}
-        </DashboardSection>
+        {/* ── Batch hiring panel (client component with all interactivity) ── */}
+        <BatchHiringPanel
+          jobId={jobId}
+          isBatchHiring={job.isBatchHiring ?? false}
+          batchUniversities={job.batchUniversities ?? []}
+          applications={serializedApps}
+          universityStats={universityStats.map((u) => ({
+            university: u.university,
+            total: u.total,
+            shortlisted: u.shortlisted,
+            hired: u.hired,
+            avgFit: u.avgFit,
+            pipeline: u.pipeline,
+          }))}
+          totalApplications={stats.total}
+        />
 
         <style>{`
           @media (max-width: 960px) {
