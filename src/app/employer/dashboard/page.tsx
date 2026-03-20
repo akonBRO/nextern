@@ -17,13 +17,14 @@ import {
 import { getEmployerDashboardData } from '@/lib/role-dashboard';
 import {
   BriefcaseBusiness,
-  Building2,
   CheckCircle2,
   Clock3,
+  Globe,
   MapPin,
   Sparkles,
   Users,
 } from 'lucide-react';
+import Link from 'next/link';
 
 const navItems = [
   { label: 'Overview', href: '/employer/dashboard', icon: 'dashboard' as const },
@@ -62,18 +63,18 @@ const navItems = [
         description: 'Surface the strongest student matches already in your pipeline.',
         icon: 'sparkles' as const,
       },
-      {
-        label: 'Company profile',
-        href: '/employer/dashboard#company',
-        description: 'Keep your company story and hiring profile visible and credible.',
-        icon: 'building' as const,
-      },
     ],
   },
 ];
 
 function statusTone(isActive: boolean): 'success' | 'warning' {
   return isActive ? 'success' : 'warning';
+}
+
+// Conversion rate helper
+function conversionRate(numerator: number, denominator: number): string {
+  if (denominator === 0) return '0%';
+  return `${Math.round((numerator / denominator) * 100)}%`;
 }
 
 export default async function EmployerDashboard() {
@@ -85,17 +86,29 @@ export default async function EmployerDashboard() {
     email: session.user.email ?? undefined,
   });
 
-  const quickStats = [
-    {
-      label: 'Active jobs',
-      value: data.stats.activeJobs,
-      color: '#10B981',
-      Icon: BriefcaseBusiness,
-    },
-    { label: 'Applications', value: data.stats.totalApplications, color: '#22D3EE', Icon: Users },
-    { label: 'Shortlisted', value: data.stats.shortlisted, color: '#F59E0B', Icon: CheckCircle2 },
-    { label: 'Hired', value: data.stats.hired, color: '#F8FAFC', Icon: Sparkles },
+  // Profile completeness score
+  const profileItems = [
+    !!data.company.industry,
+    !!data.company.headquartersCity,
+    !!data.company.companyWebsite,
+    !!data.company.companyDescription,
   ];
+  const profileScore = Math.round(
+    (profileItems.filter(Boolean).length / profileItems.length) * 100
+  );
+
+  // Hiring health score (simple calculation)
+  const hiringHealth =
+    data.stats.totalApplications > 0
+      ? Math.min(
+          100,
+          Math.round(
+            (data.stats.shortlisted / Math.max(data.stats.totalApplications, 1)) * 40 +
+              (data.stats.interviews / Math.max(data.stats.totalApplications, 1)) * 30 +
+              (data.stats.hired / Math.max(data.stats.totalApplications, 1)) * 30 * 3
+          )
+        )
+      : 0;
 
   return (
     <DashboardShell
@@ -106,15 +119,64 @@ export default async function EmployerDashboard() {
       user={data.chromeUser}
     >
       <DashboardPage>
+        {/* ── Hero ── */}
         <HeroCard
           eyebrow="Employer workspace"
           title={data.company.companyName}
-          subtitle={[data.company.industry, data.company.headquartersCity]
-            .filter(Boolean)
-            .join(' · ')}
           description={
             data.company.companyDescription ||
             'No company description added yet — go to Company Profile to write one.'
+          }
+          subtitle={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              {data.company.headquartersCity && (
+                <span style={{ fontSize: 13, color: '#94A3B8', fontWeight: 500 }}>
+                  📍 {data.company.headquartersCity}
+                </span>
+              )}
+              {data.company.headquartersCity && data.company.industry && (
+                <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>·</span>
+              )}
+              {data.company.industry && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    borderRadius: 999,
+                    padding: '5px 14px',
+                    fontSize: 13,
+                    color: '#E2E8F0',
+                    fontWeight: 600,
+                  }}
+                >
+                  {data.company.industry}
+                </span>
+              )}
+              {data.company.companyWebsite && (
+                <Link
+                  href={data.company.companyWebsite}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: '#EFF6FF',
+                    border: '1px solid #BFDBFE',
+                    borderRadius: 999,
+                    padding: '5px 14px',
+                    fontSize: 13,
+                    color: '#2563EB',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Globe size={13} /> Website
+                </Link>
+              )}
+            </div>
           }
           actions={
             <>
@@ -123,61 +185,185 @@ export default async function EmployerDashboard() {
             </>
           }
           aside={
-            <Panel
-              title="Quick stats"
+            <div
               style={{
-                background: 'rgba(255,255,255,0.12)',
-                border: '1px solid rgba(255,255,255,0.16)',
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                borderRadius: 20,
+                padding: '20px 22px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
               }}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                {quickStats.map((s) => (
+              {/* Header */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 26,
+                    fontWeight: 900,
+                    color: '#F8FAFC',
+                    fontFamily: 'var(--font-display)',
+                    letterSpacing: -0.3,
+                  }}
+                >
+                  Company Snapshot
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-end',
+                    gap: 4,
+                    flexShrink: 0,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>Profile</span>
+                    <span
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 900,
+                        color: profileScore === 100 ? '#10B981' : '#F59E0B',
+                        fontFamily: 'var(--font-display)',
+                      }}
+                    >
+                      {profileScore}%
+                    </span>
+                  </div>
                   <div
-                    key={s.label}
                     style={{
-                      background: 'rgba(255,255,255,0.08)',
-                      borderRadius: 14,
-                      padding: '14px 16px',
-                      border: '1px solid rgba(255,255,255,0.1)',
+                      width: 105,
+                      height: 5,
+                      background: 'rgba(255,255,255,0.1)',
+                      borderRadius: 999,
+                      overflow: 'hidden',
                     }}
                   >
                     <div
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 7,
-                        lineHeight: 1,
+                        width: `${profileScore}%`,
+                        height: '100%',
+                        borderRadius: 999,
+                        background:
+                          profileScore === 100
+                            ? 'linear-gradient(90deg, #10B981, #34D399)'
+                            : 'linear-gradient(90deg, #2563EB, #22D3EE)',
                       }}
-                    >
-                      <s.Icon size={18} strokeWidth={2.5} color={s.color} />
-                      <span
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+
+              {/* Conversion metrics */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  {
+                    label: 'Application → Shortlist',
+                    numerator: data.stats.shortlisted,
+                    denominator: data.stats.totalApplications,
+                    color: '#22D3EE',
+                    desc: 'of applicants moved to review',
+                  },
+                  {
+                    label: 'Shortlist → Interview',
+                    numerator: data.stats.interviews,
+                    denominator: data.stats.shortlisted,
+                    color: '#F59E0B',
+                    desc: 'of shortlisted reached interview',
+                  },
+                  {
+                    label: 'Interview → Hire',
+                    numerator: data.stats.hired,
+                    denominator: data.stats.interviews,
+                    color: '#10B981',
+                    desc: 'of interviews resulted in hire',
+                  },
+                  {
+                    label: 'Overall hire rate',
+                    numerator: data.stats.hired,
+                    denominator: data.stats.totalApplications,
+                    color: '#A78BFA',
+                    desc: 'of all applicants were hired',
+                  },
+                ].map((metric) => {
+                  const pct =
+                    metric.denominator > 0
+                      ? Math.round((metric.numerator / metric.denominator) * 100)
+                      : 0;
+                  return (
+                    <div key={metric.label}>
+                      <div
                         style={{
-                          fontSize: 26,
-                          fontWeight: 900,
-                          color: s.color,
-                          fontFamily: 'var(--font-display)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: 5,
                         }}
                       >
-                        {formatCompactNumber(s.value)}
-                      </span>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#CBD5E1' }}>
+                            {metric.label}
+                          </div>
+                          <div style={{ fontSize: 10, color: '#94A3B8', marginTop: 1 }}>
+                            {metric.desc}
+                          </div>
+                        </div>
+                        <div
+                          style={{ display: 'flex', alignItems: 'baseline', gap: 3, flexShrink: 0 }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 16,
+                              fontWeight: 900,
+                              color: metric.color,
+                              fontFamily: 'var(--font-display)',
+                              lineHeight: 1,
+                            }}
+                          >
+                            {pct}%
+                          </div>
+                          <div style={{ fontSize: 10, color: '#475569' }}>
+                            ({metric.numerator}/{metric.denominator})
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          height: 6,
+                          background: 'rgba(255,255,255,0.1)',
+                          borderRadius: 999,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${pct}%`,
+                            height: '100%',
+                            background: metric.color,
+                            borderRadius: 999,
+                            transition: 'width 0.4s',
+                          }}
+                        />
+                      </div>
                     </div>
-                    <div
-                      style={{
-                        color: '#9FB4D0',
-                        fontSize: 12,
-                        marginTop: 7,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {s.label}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-            </Panel>
+            </div>
           }
         />
 
+        {/* ── Stat cards ── */}
         <section style={{ marginTop: 22 }}>
           <div
             style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 16 }}
@@ -215,6 +401,7 @@ export default async function EmployerDashboard() {
           </div>
         </section>
 
+        {/* ── Hiring pipeline ── */}
         <DashboardSection
           id="pipeline"
           title="Hiring pipeline"
@@ -226,131 +413,191 @@ export default async function EmployerDashboard() {
           >
             <Panel
               title="Pipeline stage counts"
-              description="A simple distribution of the application volume moving through each hiring stage."
+              description="Distribution of application volume moving through each hiring stage."
             >
               <div style={{ display: 'grid', gap: 12 }}>
-                {data.pipeline.map((stage) => (
-                  <div
-                    key={stage.label}
-                    style={{
-                      padding: 16,
-                      borderRadius: 18,
-                      border: '1px solid #E2E8F0',
-                      background: '#F8FAFC',
-                    }}
-                  >
+                {data.pipeline.map((stage, i) => {
+                  const total = data.stats.totalApplications;
+                  const pct = total > 0 ? Math.round((stage.count / total) * 100) : 0;
+                  const colors = ['#2563EB', '#22D3EE', '#F59E0B', '#10B981'];
+                  const color = colors[i % colors.length];
+                  return (
                     <div
+                      key={stage.label}
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 12,
+                        padding: '14px 16px',
+                        borderRadius: 16,
+                        border: '1px solid #E2E8F0',
+                        background: '#F8FAFC',
                       }}
                     >
-                      <div style={{ fontSize: 14, fontWeight: 800, color: '#1E293B' }}>
-                        {stage.label}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: 10,
+                        }}
+                      >
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#1E293B' }}>
+                          {stage.label}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                          <div
+                            style={{
+                              fontSize: 26,
+                              fontWeight: 900,
+                              color,
+                              fontFamily: 'var(--font-display)',
+                              lineHeight: 1,
+                            }}
+                          >
+                            {formatCompactNumber(stage.count)}
+                          </div>
+                          <div style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600 }}>
+                            {pct}%
+                          </div>
+                        </div>
                       </div>
                       <div
                         style={{
-                          fontSize: 28,
-                          fontWeight: 900,
-                          color: '#2563EB',
-                          fontFamily: 'var(--font-display)',
+                          height: 6,
+                          background: '#E2E8F0',
+                          borderRadius: 999,
+                          overflow: 'hidden',
                         }}
                       >
-                        {formatCompactNumber(stage.count)}
+                        <div
+                          style={{
+                            width: `${pct}%`,
+                            height: '100%',
+                            background: color,
+                            borderRadius: 999,
+                            transition: 'width 0.4s ease',
+                          }}
+                        />
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </Panel>
 
-            <div id="company">
-              <Panel
-                title="Company snapshot"
-                description="Your hiring presence as it appears to candidates across the current data in the platform."
-              >
-                <div style={{ display: 'grid', gap: 14 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div
-                      style={{
-                        width: 46,
-                        height: 46,
-                        borderRadius: 16,
-                        background: '#EFF6FF',
-                        color: '#2563EB',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Building2 size={22} strokeWidth={2} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: '#1E293B' }}>
-                        {data.company.companyName}
+            {/* ── Conversion metrics (replaces Company Snapshot) ── */}
+            <Panel
+              title="Conversion metrics"
+              description="How effectively your pipeline is converting applicants through each stage."
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {[
+                  {
+                    label: 'Application → Shortlist',
+                    numerator: data.stats.shortlisted,
+                    denominator: data.stats.totalApplications,
+                    color: '#22D3EE',
+                    desc: 'of applicants made it to review',
+                  },
+                  {
+                    label: 'Shortlist → Interview',
+                    numerator: data.stats.interviews,
+                    denominator: data.stats.shortlisted,
+                    color: '#F59E0B',
+                    desc: 'of shortlisted reached interview',
+                  },
+                  {
+                    label: 'Interview → Hire',
+                    numerator: data.stats.hired,
+                    denominator: data.stats.interviews,
+                    color: '#10B981',
+                    desc: 'of interviews resulted in hire',
+                  },
+                  {
+                    label: 'Overall hire rate',
+                    numerator: data.stats.hired,
+                    denominator: data.stats.totalApplications,
+                    color: '#A78BFA',
+                    desc: 'of all applicants were hired',
+                  },
+                ].map((metric) => {
+                  const pct =
+                    metric.denominator > 0
+                      ? Math.round((metric.numerator / metric.denominator) * 100)
+                      : 0;
+                  return (
+                    <div key={metric.label}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: 6,
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                            {metric.label}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 1 }}>
+                            {metric.desc}
+                          </div>
+                        </div>
+                        <div
+                          style={{ display: 'flex', alignItems: 'baseline', gap: 4, flexShrink: 0 }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 20,
+                              fontWeight: 900,
+                              color: metric.color,
+                              fontFamily: 'var(--font-display)',
+                              lineHeight: 1,
+                            }}
+                          >
+                            {pct}%
+                          </div>
+                          <div style={{ fontSize: 11, color: '#94A3B8' }}>
+                            ({metric.numerator}/{metric.denominator})
+                          </div>
+                        </div>
                       </div>
-                      <div style={{ marginTop: 4, fontSize: 13, color: '#64748B' }}>
-                        {data.company.industry || 'Industry not set yet'}
+                      <div
+                        style={{
+                          height: 8,
+                          background: '#F1F5F9',
+                          borderRadius: 999,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${pct}%`,
+                            height: '100%',
+                            background: metric.color,
+                            borderRadius: 999,
+                            transition: 'width 0.4s',
+                          }}
+                        />
                       </div>
                     </div>
-                  </div>
+                  );
+                })}
 
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {data.company.industry ? (
-                      <Tag label={data.company.industry} tone="info" />
-                    ) : null}
-                    {data.company.headquartersCity ? (
-                      <Tag label={data.company.headquartersCity} tone="neutral" />
-                    ) : null}
-                    {data.company.companyWebsite ? (
-                      <Tag label="Website added" tone="success" />
-                    ) : (
-                      <Tag label="Website missing" tone="warning" />
-                    )}
-                  </div>
-
-                  {data.company.companyWebsite ? (
-                    <a
-                      href={data.company.companyWebsite}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        color: '#2563EB',
-                        fontSize: 13,
-                        fontWeight: 700,
-                        textDecoration: 'none',
-                        wordBreak: 'break-all',
-                      }}
-                    >
-                      {data.company.companyWebsite}
-                    </a>
-                  ) : null}
-
-                  {data.company.companyDescription ? (
-                    <div style={{ fontSize: 14, lineHeight: 1.7, color: '#64748B' }}>
-                      {data.company.companyDescription}
-                    </div>
-                  ) : (
-                    <EmptyState
-                      title="Company story missing"
-                      description="Add a company description to make your employer profile stronger for students."
-                    />
-                  )}
-                </div>
-              </Panel>
-            </div>
+                {data.stats.totalApplications === 0 && (
+                  <EmptyState
+                    title="No applications yet"
+                    description="Conversion metrics will appear once candidates start applying to your roles."
+                  />
+                )}
+              </div>
+            </Panel>
           </div>
         </DashboardSection>
 
+        {/* ── Recent roles ── */}
         <DashboardSection
           id="jobs"
           title="Recent roles"
-          description="These cards use your actual job documents, including their live status, volume, and deadline information."
+          description="Your latest job postings with live status, application volume, and deadline."
         >
           <Panel
             title="Role activity"
@@ -443,10 +690,11 @@ export default async function EmployerDashboard() {
           </Panel>
         </DashboardSection>
 
+        {/* ── Recent applicant flow ── */}
         <DashboardSection
           id="applications"
           title="Recent applicant flow"
-          description="A focused feed of the latest candidate records arriving under your employer account."
+          description="The latest candidate records arriving under your employer account."
         >
           <Panel
             title="Incoming applications"
@@ -536,10 +784,11 @@ export default async function EmployerDashboard() {
           </Panel>
         </DashboardSection>
 
+        {/* ── Top candidates ── */}
         <DashboardSection
           id="candidates"
           title="Top candidates"
-          description="A ranked shortlist driven by the strongest fit scores already attached to your application records."
+          description="A ranked shortlist driven by the strongest fit scores in your pipeline."
         >
           <Panel
             title="Best current matches"
@@ -610,17 +859,10 @@ export default async function EmployerDashboard() {
 
         <style>{`
           @media (max-width: 1100px) {
-            .dashboard-stats-grid {
-              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            }
+            .dashboard-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
           }
-
           @media (max-width: 900px) {
-            .dashboard-stats-grid,
-            .dashboard-grid-two,
-            .dashboard-inline-grid {
-              grid-template-columns: 1fr !important;
-            }
+            .dashboard-stats-grid, .dashboard-grid-two, .dashboard-inline-grid { grid-template-columns: 1fr !important; }
           }
         `}</style>
       </DashboardPage>

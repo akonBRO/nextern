@@ -413,8 +413,20 @@ export default function EmployerProfilePage() {
             </Field>
             <Field label="Industry">
               <select
-                value={form.industry}
-                onChange={(e) => set('industry', e.target.value)}
+                value={
+                  BD_INDUSTRIES.includes(form.industry)
+                    ? form.industry
+                    : form.industry === ''
+                      ? ''
+                      : 'Other'
+                }
+                onChange={(e) => {
+                  if (e.target.value === 'Other') {
+                    set('industry', '__other__');
+                  } else {
+                    set('industry', e.target.value);
+                  }
+                }}
                 style={{ ...inputBase, appearance: 'none' as const }}
               >
                 <option value="">Select industry</option>
@@ -424,6 +436,16 @@ export default function EmployerProfilePage() {
                   </option>
                 ))}
               </select>
+              {!BD_INDUSTRIES.includes(form.industry) && form.industry !== '' && (
+                <input
+                  type="text"
+                  value={form.industry === '__other__' ? '' : form.industry}
+                  onChange={(e) => set('industry', e.target.value || '__other__')}
+                  placeholder="Type your industry…"
+                  autoFocus
+                  style={{ ...inputBase, marginTop: 8 }}
+                />
+              )}
             </Field>
             <Field label="Company Size">
               <select
