@@ -419,14 +419,13 @@ export default function StudentProfilePage() {
       setResumeError('Only PDF files are allowed.');
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      setResumeError('File size must be under 10MB.');
+    if (file.size > 8 * 1024 * 1024) {
+      setResumeError('File size must be under 8MB.');
       return;
     }
     setResumeFile(file);
   }
 
-  // Entire handleResumeUpload function:
   async function handleResumeUpload() {
     if (!resumeFile) return;
     setResumeUploading(true);
@@ -444,8 +443,10 @@ export default function StudentProfilePage() {
       setResumeSaved(true);
       setShowUploadZone(false);
       setTimeout(() => setResumeSaved(false), 4000);
-    } catch {
-      setResumeError('Network error. Please try again.');
+    } catch (err: unknown) {
+      // ← fixed: surfaces the actual error message from UploadThing/auth
+      const message = err instanceof Error ? err.message : 'Upload failed. Please try again.';
+      setResumeError(message);
     } finally {
       setResumeUploading(false);
     }
@@ -902,7 +903,6 @@ export default function StudentProfilePage() {
         >
           <SectionHeader icon={<FileText size={18} />} label="Resume" />
 
-          {/* Resume saved success toast */}
           {resumeSaved && (
             <div
               style={{
@@ -923,7 +923,6 @@ export default function StudentProfilePage() {
             </div>
           )}
 
-          {/* Current resume banner */}
           {user?.resumeUrl ? (
             <div
               style={{
@@ -1084,12 +1083,10 @@ export default function StudentProfilePage() {
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) handleFileSelect(file);
-                // reset input so same file can be reselected
                 e.target.value = '';
               }}
             />
 
-            {/* Icon */}
             <div
               style={{
                 width: 56,
@@ -1122,35 +1119,30 @@ export default function StudentProfilePage() {
             </div>
 
             {resumeFile ? (
-              <>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: C.blue }}>
-                    {resumeFile.name}
-                  </div>
-                  <div style={{ fontSize: 12, color: C.gray, marginTop: 3 }}>
-                    {(resumeFile.size / 1024 / 1024).toFixed(2)} MB · PDF · Ready to upload
-                  </div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.blue }}>
+                  {resumeFile.name}
                 </div>
-              </>
+                <div style={{ fontSize: 12, color: C.gray, marginTop: 3 }}>
+                  {(resumeFile.size / 1024 / 1024).toFixed(2)} MB · PDF · Ready to upload
+                </div>
+              </div>
             ) : (
-              <>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>
-                    {dragOver ? 'Drop your resume here' : 'Drag & drop your resume'}
-                  </div>
-                  <div style={{ fontSize: 13, color: C.light, marginTop: 4 }}>
-                    or{' '}
-                    <span style={{ color: C.blue, fontWeight: 700, textDecoration: 'underline' }}>
-                      click to browse
-                    </span>{' '}
-                    — PDF only, max 10MB
-                  </div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>
+                  {dragOver ? 'Drop your resume here' : 'Drag & drop your resume'}
                 </div>
-              </>
+                <div style={{ fontSize: 13, color: C.light, marginTop: 4 }}>
+                  or{' '}
+                  <span style={{ color: C.blue, fontWeight: 700, textDecoration: 'underline' }}>
+                    click to browse
+                  </span>{' '}
+                  — PDF only, max 4MB
+                </div>
+              </div>
             )}
           </label>
 
-          {/* Error message */}
           {resumeError && (
             <div
               style={{
@@ -1170,7 +1162,6 @@ export default function StudentProfilePage() {
             </div>
           )}
 
-          {/* Action buttons — only shown when a file is selected */}
           {resumeFile && (
             <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
               <button
@@ -1696,7 +1687,6 @@ export default function StudentProfilePage() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Icon */}
             <div
               style={{
                 width: 52,
@@ -1713,8 +1703,6 @@ export default function StudentProfilePage() {
             >
               <Trash2 size={22} />
             </div>
-
-            {/* Title */}
             <h3
               style={{
                 margin: 0,
@@ -1727,8 +1715,6 @@ export default function StudentProfilePage() {
             >
               Delete resume?
             </h3>
-
-            {/* Description */}
             <p
               style={{
                 margin: '10px 0 24px',
@@ -1741,8 +1727,6 @@ export default function StudentProfilePage() {
               Your resume will be removed from your profile and will no longer be attached to future
               job applications. This cannot be undone.
             </p>
-
-            {/* Buttons */}
             <div style={{ display: 'flex', gap: 10 }}>
               <button
                 type="button"

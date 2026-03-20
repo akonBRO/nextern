@@ -6,7 +6,7 @@ import { User } from '@/models/User';
 const f = createUploadthing();
 
 export const ourFileRouter = {
-  resumeUploader: f({ pdf: { maxFileSize: '4MB' } })
+  resumeUploader: f({ pdf: { maxFileSize: '8MB' } })
     .middleware(async () => {
       const session = await auth();
       if (!session?.user?.id) throw new Error('Unauthorized');
