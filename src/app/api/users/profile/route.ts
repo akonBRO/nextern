@@ -19,7 +19,9 @@ const UpdateAdvisorProfileSchema = z.object({
   name: z.string().min(2).max(60).optional(),
   phone: z
     .string()
-    .regex(/^\+8801[3-9]\d{8}$/)
+    .regex(/^\+?8?8?0?1[3-9]\d{8}$/)
+    .optional()
+    .or(z.literal(''))
     .optional()
     .or(z.literal('')),
   bio: z.string().max(500).optional(),
