@@ -290,7 +290,9 @@ export default function StudentProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
-  const [badges, setBadges] = useState<{ badgeName: string; badgeIcon: string; awardedAt: string; badgeSlug: string }[]>([]);
+  const [badges, setBadges] = useState<
+    { badgeName: string; badgeIcon: string; awardedAt: string; badgeSlug: string }[]
+  >([]);
 
   // ── Resume upload state ──
   const { startUpload, isUploading } = useUploadThing('resumeUploader');
@@ -452,7 +454,6 @@ export default function StudentProfilePage() {
       setShowUploadZone(false);
       setTimeout(() => setResumeSaved(false), 4000);
     } catch (err: unknown) {
-      // ← fixed: surfaces the actual error message from UploadThing/auth
       const message = err instanceof Error ? err.message : 'Upload failed. Please try again.';
       setResumeError(message);
     } finally {
@@ -1653,7 +1654,8 @@ export default function StudentProfilePage() {
         >
           <SectionHeader icon={<Award size={18} />} label="Badges & Achievements" />
           <div style={{ fontSize: 13, color: C.gray, marginBottom: 16 }}>
-            Badges you earn on Nextern are permanently displayed here to showcase your verified achievements.
+            Badges you earn on Nextern are permanently displayed here to showcase your verified
+            achievements.
           </div>
           {badges.length === 0 ? (
             <div
@@ -1669,7 +1671,13 @@ export default function StudentProfilePage() {
               No badges earned yet. Keep engaging with the platform to unlock achievements!
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: 12,
+              }}
+            >
               {badges.map((b) => (
                 <div
                   key={`${b.badgeSlug}-${b.awardedAt}`}
@@ -1685,7 +1693,9 @@ export default function StudentProfilePage() {
                 >
                   <div style={{ fontSize: 24 }}>{b.badgeIcon}</div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{b.badgeName}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+                      {b.badgeName}
+                    </div>
                     <div style={{ fontSize: 11, color: C.gray }}>
                       Earned {new Date(b.awardedAt).toLocaleDateString()}
                     </div>
