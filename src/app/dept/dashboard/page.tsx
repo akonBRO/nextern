@@ -24,6 +24,7 @@ import { User } from '@/models/User';
 import { Job } from '@/models/Job';
 import { connectDB } from '@/lib/db';
 import mongoose from 'mongoose';
+import Link from 'next/link';
 
 const navItems = [
   { label: 'Overview', href: '/dept/dashboard', icon: 'dashboard' as const },
@@ -145,11 +146,21 @@ export default async function DeptDashboard() {
     >
       <DashboardPage>
         {/* ── Hero ── */}
+        {/* ── Hero ── */}
         <HeroCard
           eyebrow="Department Head workspace"
           title={deptHead?.name ?? data.chromeUser.name}
+          description={deptHead?.bio || 'No bio added yet — go to My Profile to write one.'}
           subtitle={
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              {deptHead?.city && (
+                <span style={{ fontSize: 13, color: '#94A3B8', fontWeight: 500 }}>
+                  📍 {deptHead.city}
+                </span>
+              )}
+              {deptHead?.city && deptHead?.institutionName && (
+                <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>·</span>
+              )}
               {deptHead?.institutionName && deptHead?.advisoryDepartment && (
                 <span
                   style={{
@@ -172,21 +183,40 @@ export default async function DeptDashboard() {
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    background: '#ECFDF5',
-                    border: '1px solid #A7F3D0',
+                    background: '#EFF6FF',
+                    border: '1px solid #BFDBFE',
                     borderRadius: 999,
                     padding: '5px 14px',
                     fontSize: 13,
-                    color: '#065F46',
+                    color: '#2563EB',
                     fontWeight: 700,
                   }}
                 >
                   {deptHead.designation}
                 </span>
               )}
+              {deptHead?.linkedinUrl && (
+                <Link
+                  href={deptHead.linkedinUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    borderRadius: 999,
+                    padding: '5px 1px',
+                    fontSize: 13,
+                    color: '#FFFFFF',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  🔗 LinkedIn
+                </Link>
+              )}
             </div>
           }
-          description={deptHead?.bio || 'No bio added yet — go to My Profile to write one.'}
           actions={
             <>
               <ActionLink href="/dept/events/new" label="Post event" />
@@ -254,37 +284,6 @@ export default async function DeptDashboard() {
                     </div>
                   ))}
                 </div>
-                {deptHead?.city && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      color: '#CBD5E1',
-                      fontSize: 12,
-                    }}
-                  >
-                    📍 {deptHead.city}
-                  </div>
-                )}
-                {deptHead?.linkedinUrl && (
-                  <a
-                    href={deptHead.linkedinUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      color: '#22D3EE',
-                      fontSize: 12,
-                      textDecoration: 'none',
-                      fontWeight: 600,
-                    }}
-                  >
-                    🔗 LinkedIn Profile
-                  </a>
-                )}
               </div>
             </Panel>
           }
