@@ -38,6 +38,8 @@ export interface ProfileData {
   skills: string[];
   isGraduated: boolean;
   bio?: string;
+  city?: string;
+  institutionName?: string;
   unreadNotifications: number;
   unreadMessages: number;
 }
@@ -347,6 +349,8 @@ export async function getStudentDashboardData(userId: string): Promise<Dashboard
       department: user.department,
       yearOfStudy: user.yearOfStudy,
       cgpa: user.cgpa,
+      city: user.city,
+      institutionName: user.university,
       opportunityScore: user.opportunityScore ?? 0,
       profileCompleteness: user.profileCompleteness ?? 0,
       skills: (user.skills ?? []).slice(0, 8),

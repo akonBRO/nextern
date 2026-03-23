@@ -2,6 +2,7 @@
 
 import type { DashboardData } from '@/lib/student-dashboard';
 import DashboardShell from '@/components/dashboard/DashboardShell';
+import Link from 'next/link';
 import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import {
   ActionLink,
@@ -129,12 +130,165 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
         <HeroCard
           eyebrow="Student workspace"
           title={data.profile.name}
-          subtitle={[
-            data.profile.department,
-            data.profile.yearOfStudy ? `Year ${data.profile.yearOfStudy}` : null,
-          ]
-            .filter(Boolean)
-            .join(' · ')}
+          subtitle={
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '6px 10px',
+                marginTop: 4,
+                alignItems: 'center',
+              }}
+            >
+              {data.profile.city && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    fontSize: 13,
+                    color: 'rgba(255,255,255,0.75)',
+                    fontWeight: 500,
+                  }}
+                >
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  {data.profile.city}
+                </span>
+              )}
+              {data.profile.city && (data.profile.university || data.profile.department) && (
+                <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>·</span>
+              )}
+              {data.profile.university && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    borderRadius: 999,
+                    padding: '5px 14px',
+                    fontSize: 13,
+                    color: '#E2E8F0',
+                    fontWeight: 600,
+                  }}
+                >
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                  </svg>
+                  {data.profile.university}
+                </span>
+              )}
+              {data.profile.department && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    borderRadius: 999,
+                    padding: '5px 14px',
+                    fontSize: 13,
+                    color: '#E2E8F0',
+                    fontWeight: 600,
+                  }}
+                >
+                  {data.profile.department}
+                </span>
+              )}
+              {(data.profile.isGraduated || data.profile.yearOfStudy) && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    borderRadius: 999,
+                    padding: '5px 14px',
+                    fontSize: 13,
+                    color: '#E2E8F0',
+                    fontWeight: 600,
+                  }}
+                >
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                    <line x1="16" x2="16" y1="2" y2="6" />
+                    <line x1="8" x2="8" y1="2" y2="6" />
+                    <line x1="3" x2="21" y1="10" y2="10" />
+                  </svg>
+                  {data.profile.isGraduated ? 'Graduated' : `Year ${data.profile.yearOfStudy}`}
+                </span>
+              )}
+              {data.profile.email && (
+                <Link
+                  href={`mailto:${data.profile.email}`}
+                  title={data.profile.email}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: '#EFF6FF',
+                    border: '1px solid #BFDBFE',
+                    borderRadius: 999,
+                    padding: '5px 14px',
+                    fontSize: 13,
+                    color: '#2563EB',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect width="20" height="16" x="2" y="4" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                  Email Address
+                </Link>
+              )}
+            </div>
+          }
           description={data.profile.bio || 'No bio added yet — go to My Profile to write one.'}
           actions={
             <>
