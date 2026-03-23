@@ -3,21 +3,37 @@
 // Tabbed view — Applications tab + Events tab
 
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { BriefcaseBusiness, CalendarDays } from 'lucide-react';
+import {
+  BriefcaseBusiness,
+  CalendarDays,
+  Send,
+  Eye,
+  Star,
+  ClipboardList,
+  CalendarCheck,
+  BadgeCheck,
+  XCircle,
+  Undo2,
+} from 'lucide-react';
 
 const STATUS_CONFIG: Record<
   string,
-  { label: string; tone: 'info' | 'success' | 'warning' | 'neutral'; icon: string }
+  { label: string; tone: 'info' | 'success' | 'warning' | 'neutral'; icon: ReactNode }
 > = {
-  applied: { label: 'Applied', tone: 'info', icon: '📤' },
-  under_review: { label: 'Under Review', tone: 'warning', icon: '👀' },
-  shortlisted: { label: 'Shortlisted', tone: 'info', icon: '⭐' },
-  assessment_sent: { label: 'Assessment Sent', tone: 'info', icon: '📝' },
-  interview_scheduled: { label: 'Interview Scheduled', tone: 'info', icon: '🗓' },
-  hired: { label: 'Hired', tone: 'success', icon: '🎉' },
-  rejected: { label: 'Not Selected', tone: 'warning', icon: '❌' },
-  withdrawn: { label: 'Withdrawn', tone: 'neutral', icon: '↩' },
+  applied: { label: 'Applied', tone: 'info', icon: <Send size={11} /> },
+  under_review: { label: 'Under Review', tone: 'warning', icon: <Eye size={11} /> },
+  shortlisted: { label: 'Shortlisted', tone: 'info', icon: <Star size={11} /> },
+  assessment_sent: { label: 'Assessment Sent', tone: 'info', icon: <ClipboardList size={11} /> },
+  interview_scheduled: {
+    label: 'Interview Scheduled',
+    tone: 'info',
+    icon: <CalendarCheck size={11} />,
+  },
+  hired: { label: 'Hired', tone: 'success', icon: <BadgeCheck size={11} /> },
+  rejected: { label: 'Not Selected', tone: 'warning', icon: <XCircle size={11} /> },
+  withdrawn: { label: 'Withdrawn', tone: 'neutral', icon: <Undo2 size={11} /> },
 };
 
 const TONE_STYLES = {
@@ -55,6 +71,7 @@ function formatShortDate(d?: string | null) {
     year: 'numeric',
   }).format(new Date(d));
 }
+
 function formatStatusLabel(v: string) {
   return v
     .split('_')
@@ -133,7 +150,9 @@ function AppCard({ app, isEvent }: { app: AppItem; isEvent: boolean }) {
                     app.fitScore >= 70 ? '#ECFDF5' : app.fitScore >= 40 ? '#EFF6FF' : '#FFFBEB',
                   color:
                     app.fitScore >= 70 ? '#065F46' : app.fitScore >= 40 ? '#2563EB' : '#92400E',
-                  border: `1px solid ${app.fitScore >= 70 ? '#A7F3D0' : app.fitScore >= 40 ? '#BFDBFE' : '#FDE68A'}`,
+                  border: `1px solid ${
+                    app.fitScore >= 70 ? '#A7F3D0' : app.fitScore >= 40 ? '#BFDBFE' : '#FDE68A'
+                  }`,
                   padding: '3px 10px',
                   borderRadius: 999,
                   fontSize: 11,
@@ -144,6 +163,7 @@ function AppCard({ app, isEvent }: { app: AppItem; isEvent: boolean }) {
               </span>
             )}
           </div>
+
           <div style={{ color: '#64748B', fontSize: 13 }}>
             {job?.companyName}
             {job?.city && ` · ${job.city}`}
@@ -211,7 +231,12 @@ function AppCard({ app, isEvent }: { app: AppItem; isEvent: boolean }) {
           {job?._id && (
             <Link
               href={`/student/jobs/${job._id}`}
-              style={{ color: '#2563EB', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
+              style={{
+                color: '#2563EB',
+                fontSize: 13,
+                fontWeight: 600,
+                textDecoration: 'none',
+              }}
             >
               View {isEvent ? 'Event' : 'Job'} →
             </Link>
@@ -312,7 +337,9 @@ export default function ApplicationsTabs({
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: 36, marginBottom: 12 }}>{isEvent ? '📅' : '📭'}</div>
+            <div style={{ marginBottom: 12, color: '#94A3B8' }}>
+              {isEvent ? <CalendarDays size={36} /> : <BriefcaseBusiness size={36} />}
+            </div>
             <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
               {isEvent ? 'No events registered yet' : 'No applications yet'}
             </div>
@@ -321,7 +348,6 @@ export default function ApplicationsTabs({
                 ? 'Register for webinars and workshops from the job feed to see them here.'
                 : 'Apply to jobs and internships from the job feed to track them here.'}
             </div>
-            {/* ✅ Fixed: <a> → <Link> for internal navigation */}
             <Link
               href="/student/jobs"
               style={{
