@@ -45,6 +45,11 @@ export const STUDENT_NAV_ITEMS: DashboardNavItem[] = [
     ],
   },
   {
+    label: 'Badges',
+    icon: 'shield',
+    href: '/student/badges',
+  },
+  {
     label: 'Growth',
     icon: 'insights',
     items: [

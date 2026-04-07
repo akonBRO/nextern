@@ -49,9 +49,11 @@ export async function onApplicationStatusChanged(userId: string, _status: string
   await evaluateBadges(userId, 'onApplicationStatusChanged').catch(console.error);
 }
 
-export async function onMentorSessionComplete(studentId: string, _mentorId: string) {
+export async function onMentorSessionComplete(studentId: string, mentorId: string) {
   // Evaluates Mentor's Pick
   await evaluateBadges(studentId, 'onMentorSessionComplete', 'student').catch(console.error);
+  // Evaluates Guiding Light
+  await evaluateBadges(mentorId, 'onMentorSessionComplete', 'advisor').catch(console.error);
 }
 
 export async function onReviewSubmitted(userId: string, targetId: string) {
@@ -69,4 +71,14 @@ export async function onFreelanceCompleted(studentId: string, _orderId: string) 
 export async function onOpportunityScoreGain(userId: string, _newScore: number) {
   // Evaluates Rising Star
   await evaluateBadges(userId, 'onOpportunityScoreGain', 'student').catch(console.error);
+}
+
+export async function onDepartmentScoreUpdate(deptHeadId: string, _newAverageScore: number) {
+  // Evaluates Visionary Leader
+  await evaluateBadges(deptHeadId, 'onDepartmentScoreUpdate', 'dept_head').catch(console.error);
+}
+
+export async function onEventCreated(deptHeadId: string) {
+  // Evaluates Engagement Pro
+  await evaluateBadges(deptHeadId, 'onEventCreated', 'dept_head').catch(console.error);
 }

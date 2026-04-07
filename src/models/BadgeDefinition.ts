@@ -5,12 +5,13 @@ export interface IBadgeDefinition extends Document {
   name: string;
   description: string;
   icon: string; // emoji or Uploadthing URL
-  category: 'student' | 'employer';
+  category: 'student' | 'employer' | 'advisor' | 'dept_head';
   criteria: string; // human-readable requirement
   triggerEvent: string; // maps to lib/events.ts function name
   thresholdValue: number; // how many times event must fire
   aiWeightBoost: number; // bonus in recommendation ranking
   opportunityScorePoints: number; // points added to Opportunity Score
+  marksReward: number; // GER totalScore points (students) or profile value points
 }
 
 const BadgeDefinitionSchema = new Schema<IBadgeDefinition>(
@@ -19,12 +20,13 @@ const BadgeDefinitionSchema = new Schema<IBadgeDefinition>(
     name: { type: String, required: true },
     description: { type: String, required: true },
     icon: { type: String, required: true },
-    category: { type: String, enum: ['student', 'employer'], required: true },
+    category: { type: String, enum: ['student', 'employer', 'advisor', 'dept_head'], required: true },
     criteria: { type: String, required: true },
     triggerEvent: { type: String, required: true },
     thresholdValue: { type: Number, default: 1 },
     aiWeightBoost: { type: Number, default: 0 },
     opportunityScorePoints: { type: Number, default: 5 },
+    marksReward: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

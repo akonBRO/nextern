@@ -106,6 +106,7 @@ const navItems = [
       },
     ],
   },
+  { label: 'Badges', href: '/dept/badges', icon: 'shield' as const },
 ];
 
 async function getDeptExtras(userId: string) {

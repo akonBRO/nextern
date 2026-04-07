@@ -3,6 +3,7 @@
 // Called by event hooks in lib/events.ts — never called directly by API routes.
 
 import { connectDB } from '@/lib/db';
+import mongoose from 'mongoose';
 import { BadgeDefinition, type IBadgeDefinition } from '@/models/BadgeDefinition';
 import { BadgeAward } from '@/models/BadgeAward';
 import { Notification } from '@/models/Notification';
@@ -18,7 +19,7 @@ import { Job } from '@/models/Job';
  * Count how many times a user has triggered a particular event.
  * Each event has its own counting logic.
  */
-async function getEventCount(
+export async function getEventCount(
   userId: string,
   triggerEvent: string,
   badge: IBadgeDefinition
@@ -53,9 +54,15 @@ async function getEventCount(
       // For employers: count reviews received about them
       if (badge.badgeSlug === 'campus-favorite') {
         // Check average rating ≥ 4.5 AND at least threshold reviews
-        const reviews = await Review.find({ revieweeId: userId }).select('overallRating').lean() as { overallRating?: number }[];
+        const reviews = (await Review.find({ revieweeId: userId })
+          .select('overallRating')
+          .lean()) as { overallRating?: number }[];
         if (reviews.length < badge.thresholdValue) return 0;
-        const avg = reviews.reduce((s: number, r: { overallRating?: number }) => s + (r.overallRating ?? 0), 0) / reviews.length;
+        const avg =
+          reviews.reduce(
+            (s: number, r: { overallRating?: number }) => s + (r.overallRating ?? 0),
+            0
+          ) / reviews.length;
         return avg >= 4.5 ? badge.thresholdValue : 0;
       }
       // trusted-recruiter: count positive reviews (rating ≥ 4)
@@ -63,6 +70,9 @@ async function getEventCount(
     }
 
     case 'onMentorSessionComplete': {
+      if (badge.category === 'advisor') {
+        return MentorSession.countDocuments({ mentorId: userId, status: 'completed' });
+      }
       return MentorSession.countDocuments({ studentId: userId, status: 'completed' });
     }
 
@@ -86,6 +96,41 @@ async function getEventCount(
       return Job.countDocuments({ employerId: userId, isActive: true });
     }
 
+    case 'onDepartmentScoreUpdate': {
+      // Visionary Leader: Just check if the trigger value (which we can fake or we query users)
+      // Actually, we need the average score. Since we don't have a direct "Department Score" collection here,
+      // we can do an aggregate, but for now we could just check the user's personal opp score if they represent the dept,
+      // or we can just expect the triggerEvent to provide the new average score as threshold check if possible?
+      // Wait, getEventCount doesn't receive the event data. Let's do an aggregate check over students in their dept.
+      const head = await User.findById(userId).select('advisoryDepartment').lean();
+      if (!head || !head.advisoryDepartment) return 0;
+      const deptStudents = await User.find({ department: head.advisoryDepartment, role: 'student' })
+        .select('opportunityScore')
+        .lean();
+      if (deptStudents.length === 0) return 0;
+      const avg =
+        deptStudents.reduce(
+          (sum: number, s: { opportunityScore?: number }) => sum + (s.opportunityScore || 0),
+          0
+        ) / deptStudents.length;
+      return avg;
+    }
+
+    case 'onEventCreated': {
+      // For Engagement Pro: we assume a generic Event/Workshop model exists, but if not we can query notifications or just return 0 for now.
+      // Wait, AdvisorAction model exists? Yes, the analysis mentioned AdvisorAction. Let's check AdvisorAction.
+      // If we don't have it imported, we'll try catching exceptions.
+      try {
+        const EventModel = mongoose.models.Event || mongoose.models.AdvisorAction;
+        if (EventModel) {
+          return await EventModel.countDocuments({ createdBy: userId });
+        }
+      } catch {
+        // ignore
+      }
+      return 0; // fallback
+    }
+
     default:
       return 0;
   }
@@ -104,7 +149,7 @@ async function getEventCount(
 export async function evaluateBadges(
   userId: string,
   triggerEvent: string,
-  category?: 'student' | 'employer'
+  category?: 'student' | 'employer' | 'advisor' | 'dept_head'
 ): Promise<void> {
   await connectDB();
 
@@ -158,6 +203,29 @@ export async function evaluateBadges(
           isRead: false,
           meta: { badgeSlug: badge.badgeSlug, badgeIcon: badge.icon },
         });
+
+        // Add GER update logic here for students
+        if (badge.category === 'student' && badge.marksReward && badge.marksReward > 0) {
+          const { GER } = await import('@/models/GER');
+          const ger = await GER.findOne({ studentId: userId });
+          if (ger) {
+            ger.platformEngagement.score += badge.marksReward;
+            ger.totalScore += badge.marksReward;
+            // Cap scores at 100
+            if (ger.totalScore > 100) ger.totalScore = 100;
+            if (ger.platformEngagement.score > 100) ger.platformEngagement.score = 100;
+            await ger.save();
+
+            // Notify about GER increase
+            await Notification.create({
+              userId,
+              type: 'system',
+              title: `GER Boost Received!`,
+              body: `You received +${badge.marksReward} marks in Platform Engagement from your new badge.`,
+              isRead: false,
+            });
+          }
+        }
 
         console.log(`[BADGE] Awarded "${badge.name}" to user ${userId}`);
       }

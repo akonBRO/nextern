@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/db';
 import { Job } from '@/models/Job';
 import { User } from '@/models/User';
 import mongoose from 'mongoose';
+import Link from 'next/link';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
   ActionLink,
@@ -74,6 +75,7 @@ const navItems = [
       },
     ],
   },
+  { label: 'Badges', href: '/advisor/badges', icon: 'shield' as const },
 ];
 
 async function getAdvisorExtras(userId: string) {
@@ -577,7 +579,7 @@ export default async function AdvisorDashboard() {
                       ))}
                     </div>
                     <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid #F1F5F9' }}>
-                      <a
+                      <Link
                         href="/advisor/events/new"
                         style={{
                           display: 'inline-flex',
@@ -594,7 +596,7 @@ export default async function AdvisorDashboard() {
                         }}
                       >
                         📅 Run a workshop on these gaps →
-                      </a>
+                      </Link>
                     </div>
                   </>
                 ) : (

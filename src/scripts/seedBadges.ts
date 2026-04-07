@@ -20,6 +20,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 10,
     aiWeightBoost: 5,
     opportunityScorePoints: 10,
+    marksReward: 50,
   },
   {
     badgeSlug: 'skill-champion',
@@ -32,6 +33,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 5,
     aiWeightBoost: 8,
     opportunityScorePoints: 15,
+    marksReward: 75,
   },
   {
     badgeSlug: 'verified-scholar',
@@ -44,6 +46,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 1,
     aiWeightBoost: 6,
     opportunityScorePoints: 10,
+    marksReward: 60,
   },
   {
     badgeSlug: 'community-leader',
@@ -56,6 +59,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 3,
     aiWeightBoost: 4,
     opportunityScorePoints: 8,
+    marksReward: 40,
   },
   {
     badgeSlug: 'mentors-pick',
@@ -68,6 +72,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 3,
     aiWeightBoost: 7,
     opportunityScorePoints: 12,
+    marksReward: 80,
   },
   {
     badgeSlug: 'rising-star',
@@ -80,6 +85,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 50,
     aiWeightBoost: 5,
     opportunityScorePoints: 10,
+    marksReward: 100,
   },
 
   // ── Employer badges ───────────────────────────────────────────────
@@ -94,6 +100,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 5,
     aiWeightBoost: 6,
     opportunityScorePoints: 0,
+    marksReward: 0,
   },
   {
     badgeSlug: 'campus-favorite',
@@ -106,6 +113,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 3,
     aiWeightBoost: 8,
     opportunityScorePoints: 0,
+    marksReward: 0,
   },
   {
     badgeSlug: 'fast-responder',
@@ -118,6 +126,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 10,
     aiWeightBoost: 4,
     opportunityScorePoints: 0,
+    marksReward: 0,
   },
   {
     badgeSlug: 'active-hirer',
@@ -130,6 +139,63 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 5,
     aiWeightBoost: 5,
     opportunityScorePoints: 0,
+    marksReward: 0,
+  },
+
+  // ── Advisor Badges ───────────────────────────────────────────────
+  {
+    badgeSlug: 'guiding-light',
+    name: 'Guiding Light',
+    description: 'Actively mentors students, shaping their career trajectories.',
+    icon: '💡',
+    category: 'advisor' as const,
+    criteria: 'Complete at least 10 mentorship sessions',
+    triggerEvent: 'onMentorSessionComplete',
+    thresholdValue: 10,
+    aiWeightBoost: 10,
+    opportunityScorePoints: 0,
+    marksReward: 0,
+  },
+  {
+    badgeSlug: 'top-mentor',
+    name: 'Top Mentor',
+    description: 'Highly rated by students for insightful and helpful advice.',
+    icon: '🏅',
+    category: 'advisor' as const,
+    criteria: 'Maintain a 4.5+ average rating on mentorship reviews',
+    triggerEvent: 'onReviewReceived',
+    thresholdValue: 3,
+    aiWeightBoost: 15,
+    opportunityScorePoints: 0,
+    marksReward: 0,
+  },
+
+  // ── Dept Head Badges ──────────────────────────────────────────────
+  {
+    badgeSlug: 'visionary-leader',
+    name: 'Visionary Leader',
+    description: 'Fosters high student engagement, leading the department to excellence.',
+    icon: '🔭',
+    category: 'dept_head' as const,
+    criteria: 'Department average Opportunity Score reaches 70+',
+    triggerEvent: 'onDepartmentScoreUpdate',
+    thresholdValue: 70,
+    aiWeightBoost: 20,
+    opportunityScorePoints: 0,
+    marksReward: 0,
+  },
+  {
+    badgeSlug: 'engagement-pro',
+    name: 'Engagement Pro',
+    description: 'Consistently organizes and promotes department-wide career events.',
+    icon: '📢',
+    category: 'dept_head' as const,
+    criteria: 'Create and lead 5 department events',
+    triggerEvent: 'onEventCreated',
+    thresholdValue: 5,
+    aiWeightBoost: 10,
+    opportunityScorePoints: 0,
+    marksReward: 0,
   },
 ];
 
