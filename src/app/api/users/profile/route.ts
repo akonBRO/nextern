@@ -122,7 +122,7 @@ export async function PATCH(req: NextRequest) {
     ).select('-password');
 
     // Trigger badge evaluation
-    if (user.role === 'student' && updated?.isVerified && updated?.cgpa >= 3.5) {
+    if (user.role === 'student' && updated?.cgpa >= 3.5) {
       await onProfileVerified(user._id.toString()).catch(console.error);
     }
 

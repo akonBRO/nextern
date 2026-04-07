@@ -12,7 +12,8 @@ const BADGE_DEFINITIONS = [
   {
     badgeSlug: 'top-applicant',
     name: 'Top Applicant',
-    description: 'Consistently applies to relevant opportunities — showing initiative and career focus.',
+    description:
+      'Consistently applies to relevant opportunities — showing initiative and career focus.',
     icon: '🎯',
     category: 'student' as const,
     criteria: 'Apply to at least 10 jobs or internships',
@@ -38,10 +39,10 @@ const BADGE_DEFINITIONS = [
   {
     badgeSlug: 'verified-scholar',
     name: 'Verified Scholar',
-    description: 'Strong academic standing with a verified profile — a mark of academic excellence.',
+    description: 'Strong academic standing — a mark of academic excellence.',
     icon: '🎓',
     category: 'student' as const,
-    criteria: 'Maintain CGPA ≥ 3.5 and have a verified account',
+    criteria: 'Maintain CGPA ≥ 3.5',
     triggerEvent: 'onProfileVerified',
     thresholdValue: 1,
     aiWeightBoost: 6,

@@ -40,8 +40,8 @@ export async function getEventCount(
     }
 
     case 'onProfileVerified': {
-      const user = await User.findById(userId).select('isVerified cgpa').lean();
-      if (user?.isVerified && (user?.cgpa ?? 0) >= 3.5) return 1;
+      const user = await User.findById(userId).select('cgpa').lean();
+      if ((user?.cgpa ?? 0) >= 3.5) return 1;
       return 0;
     }
 
