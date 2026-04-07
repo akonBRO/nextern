@@ -28,7 +28,7 @@ export const PLANS: Record<PlanId, SubscriptionPlan> = {
       'Unlimited AI Skill Gap Analysis (vs 5/month free)',
       'Full Internship Fit Score for all jobs',
       'AI-generated personalized training paths',
-      'Unlimited Mock Interview sessions with Groq AI',
+      'Unlimited Mock Interview sessions with Nextern AI',
       'Priority job recommendations in feed',
       'AI-powered resume review & suggestions',
       'Unlimited mentorship requests (vs 2/month free)',

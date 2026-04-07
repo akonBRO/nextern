@@ -284,7 +284,7 @@ export default function StripeCheckoutModal({
       >
         <div
           style={{
-            background: 'linear-gradient(135deg, #1E293B, rgba(37,99,235,0.96))',
+            background: '#0F172A',
             padding: '22px 24px',
             display: 'flex',
             alignItems: 'center',
@@ -298,7 +298,11 @@ export default function StripeCheckoutModal({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
-                color: '#BFDBFE',
+                padding: '6px 10px',
+                borderRadius: 999,
+                border: '1px solid rgba(59,130,246,0.28)',
+                background: 'rgba(37,99,235,0.14)',
+                color: '#DBEAFE',
                 fontSize: 12,
                 fontWeight: 700,
                 marginBottom: 8,
@@ -329,8 +333,8 @@ export default function StripeCheckoutModal({
               width: 40,
               height: 40,
               borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.12)',
-              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid #334155',
+              background: '#1E293B',
               color: '#FFFFFF',
               display: 'inline-flex',
               alignItems: 'center',

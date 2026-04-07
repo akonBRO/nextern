@@ -15,8 +15,8 @@ export interface AIResult<T> {
   meta: AIExecutionMeta;
 }
 
-function providerName(provider: AIRequestedProvider) {
-  return provider === 'gemini' ? 'Gemini' : 'Groq';
+function providerName(_provider: AIRequestedProvider) {
+  return 'Nextern AI';
 }
 
 export function buildAIProviderMeta(
@@ -88,11 +88,9 @@ export function describeAIExecutionMeta(meta: AIExecutionMeta) {
 
   if (meta.mode === 'ai') {
     return {
-      badgeLabel: `AI-generated with ${requestedName}`,
+      badgeLabel: 'Nextern AI Generated',
       badgeTone: 'info' as const,
-      detail: meta.model
-        ? `${requestedName} completed this request successfully using ${meta.model}.`
-        : `${requestedName} completed this request successfully.`,
+      detail: `${requestedName} completed this request successfully.`,
     };
   }
 

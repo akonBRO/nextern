@@ -846,7 +846,7 @@ export default function MockInterviewClient() {
               }}
             >
               <Brain size={14} />
-              Groq interview simulator
+              Nextern AI interview simulator
             </div>
             <h2
               style={{
@@ -860,8 +860,8 @@ export default function MockInterviewClient() {
               Practice interviews before the real one
             </h2>
             <p style={{ margin: '10px 0 0', color: '#D6E4FF', fontSize: 14, lineHeight: 1.7 }}>
-              The question plan comes from Gemini, the live interviewer and final feedback come from
-              Groq, and the page tells you whenever backup logic is used instead.
+              Nextern AI generates the question plan, powers the live interviewer, and prepares the
+              final feedback. The page also tells you whenever backup logic is used instead.
             </p>
           </div>
 
