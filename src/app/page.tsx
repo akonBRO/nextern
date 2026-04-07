@@ -1334,7 +1334,7 @@ export default async function LandingPage() {
               title="AI Skill Gap Analysis"
               accent="#2563EB"
               bg="#EFF6FF"
-              desc="Gemini AI compares your profile against job requirements and generates a personalized learning path to close every skill gap."
+              desc="Nextern AI compares your profile against job requirements and generates a personalized learning path to close every skill gap."
             />
             <FeatureCard
               icon={Icons.Target}
