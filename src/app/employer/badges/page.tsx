@@ -34,7 +34,7 @@ export default async function EmployerBadgesPage() {
   const session = await auth();
   if (!session?.user) redirect('/login');
   // Need to just make sure they are employer
-  if (session.user.role !== 'company' && session.user.role !== 'employer') redirect('/login');
+  if (session.user.role !== 'employer') redirect('/login');
 
   await connectDB();
   const userId = session.user.id;
