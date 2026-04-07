@@ -71,7 +71,9 @@ export async function getEventCount(
 
     case 'onMentorSessionComplete': {
       if (badge.category === 'advisor') {
-        return MentorSession.countDocuments({ mentorId: userId, status: 'completed' });
+        const mentor = await mongoose.models.Mentor?.findOne({ userId }).select('_id').lean();
+        if (!mentor) return 0;
+        return MentorSession.countDocuments({ mentorId: mentor._id, status: 'completed' });
       }
       return MentorSession.countDocuments({ studentId: userId, status: 'completed' });
     }
@@ -123,7 +125,12 @@ export async function getEventCount(
       try {
         const EventModel = mongoose.models.Event || mongoose.models.AdvisorAction;
         if (EventModel) {
-          return await EventModel.countDocuments({ createdBy: userId });
+          // AdvisorAction uses advisorId, a hypothetical Event model might use createdBy
+          const query =
+            EventModel.modelName === 'AdvisorAction'
+              ? { advisorId: userId }
+              : { createdBy: userId };
+          return await EventModel.countDocuments(query);
         }
       } catch {
         // ignore

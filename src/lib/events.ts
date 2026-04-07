@@ -26,8 +26,6 @@
 //   // Sabbir fills this in module3-freelance branch
 // }
 
-
-
 // Event hook interface — Jauad's badge system calls these.
 // Each hook body is filled by the respective feature owner.
 // DO NOT change the function signatures.
@@ -42,6 +40,11 @@ export async function onJobApplied(userId: string, _jobId: string) {
 export async function onSkillGapClosed(userId: string, _skillName: string) {
   // Evaluates Skill Champion
   await evaluateBadges(userId, 'onSkillGapClosed', 'student').catch(console.error);
+}
+
+export async function onProfileVerified(userId: string) {
+  // Evaluates Verified Scholar
+  await evaluateBadges(userId, 'onProfileVerified', 'student').catch(console.error);
 }
 
 export async function onApplicationStatusChanged(userId: string, _status: string) {

@@ -13,6 +13,7 @@ import {
   ChangePasswordSchema,
 } from '@/lib/validations';
 import { z } from 'zod';
+import { onProfileVerified } from '@/lib/events';
 
 // ── Advisor / Dept Head profile schema ────────────────────────────────────
 const UpdateAdvisorProfileSchema = z.object({
@@ -119,6 +120,11 @@ export async function PATCH(req: NextRequest) {
       { $set: updates },
       { new: true, runValidators: true }
     ).select('-password');
+
+    // Trigger badge evaluation
+    if (user.role === 'student' && updated?.isVerified && updated?.cgpa >= 3.5) {
+      await onProfileVerified(user._id.toString()).catch(console.error);
+    }
 
     return NextResponse.json({ message: 'Profile updated successfully.', user: updated });
   } catch (error) {

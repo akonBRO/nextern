@@ -8,6 +8,7 @@ import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 import { sendEmail } from '@/lib/email';
 import { AdminApproveSchema } from '@/lib/validations';
+import { onProfileVerified } from '@/lib/events';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   try {
@@ -37,7 +38,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
     await User.findByIdAndUpdate(userId, {
       verificationStatus: newStatus,
       verificationNote: parsed.data.note ?? '',
+      ...(newStatus === 'approved' && user.role === 'student' ? { isVerified: true } : {}), // Ensure isVerified syncing if needed
     });
+
+    if (newStatus === 'approved') {
+      await onProfileVerified(userId).catch(console.error);
+    }
 
     // Notify user by email
     const subject =
