@@ -54,9 +54,15 @@ export async function getEventCount(
       // For employers: count reviews received about them
       if (badge.badgeSlug === 'campus-favorite') {
         // Check average rating ≥ 4.5 AND at least threshold reviews
-        const reviews = await Review.find({ revieweeId: userId }).select('overallRating').lean() as { overallRating?: number }[];
+        const reviews = (await Review.find({ revieweeId: userId })
+          .select('overallRating')
+          .lean()) as { overallRating?: number }[];
         if (reviews.length < badge.thresholdValue) return 0;
-        const avg = reviews.reduce((s: number, r: { overallRating?: number }) => s + (r.overallRating ?? 0), 0) / reviews.length;
+        const avg =
+          reviews.reduce(
+            (s: number, r: { overallRating?: number }) => s + (r.overallRating ?? 0),
+            0
+          ) / reviews.length;
         return avg >= 4.5 ? badge.thresholdValue : 0;
       }
       // trusted-recruiter: count positive reviews (rating ≥ 4)
@@ -98,9 +104,15 @@ export async function getEventCount(
       // Wait, getEventCount doesn't receive the event data. Let's do an aggregate check over students in their dept.
       const head = await User.findById(userId).select('advisoryDepartment').lean();
       if (!head || !head.advisoryDepartment) return 0;
-      const deptStudents = await User.find({ department: head.advisoryDepartment, role: 'student' }).select('opportunityScore').lean();
+      const deptStudents = await User.find({ department: head.advisoryDepartment, role: 'student' })
+        .select('opportunityScore')
+        .lean();
       if (deptStudents.length === 0) return 0;
-      const avg = deptStudents.reduce((sum: number, s: any) => sum + (s.opportunityScore || 0), 0) / deptStudents.length;
+      const avg =
+        deptStudents.reduce(
+          (sum: number, s: { opportunityScore?: number }) => sum + (s.opportunityScore || 0),
+          0
+        ) / deptStudents.length;
       return avg;
     }
 
@@ -111,10 +123,10 @@ export async function getEventCount(
       try {
         const EventModel = mongoose.models.Event || mongoose.models.AdvisorAction;
         if (EventModel) {
-            return await EventModel.countDocuments({ createdBy: userId });
+          return await EventModel.countDocuments({ createdBy: userId });
         }
-      } catch (e) {
-          // ignore
+      } catch {
+        // ignore
       }
       return 0; // fallback
     }
@@ -197,21 +209,21 @@ export async function evaluateBadges(
           const { GER } = await import('@/models/GER');
           const ger = await GER.findOne({ studentId: userId });
           if (ger) {
-             ger.platformEngagement.score += badge.marksReward;
-             ger.totalScore += badge.marksReward;
-             // Cap scores at 100
-             if (ger.totalScore > 100) ger.totalScore = 100;
-             if (ger.platformEngagement.score > 100) ger.platformEngagement.score = 100;
-             await ger.save();
+            ger.platformEngagement.score += badge.marksReward;
+            ger.totalScore += badge.marksReward;
+            // Cap scores at 100
+            if (ger.totalScore > 100) ger.totalScore = 100;
+            if (ger.platformEngagement.score > 100) ger.platformEngagement.score = 100;
+            await ger.save();
 
-             // Notify about GER increase
-             await Notification.create({
-                userId,
-                type: 'system',
-                title: `GER Boost Received!`,
-                body: `You received +${badge.marksReward} marks in Platform Engagement from your new badge.`,
-                isRead: false,
-             });
+            // Notify about GER increase
+            await Notification.create({
+              userId,
+              type: 'system',
+              title: `GER Boost Received!`,
+              body: `You received +${badge.marksReward} marks in Platform Engagement from your new badge.`,
+              isRead: false,
+            });
           }
         }
 

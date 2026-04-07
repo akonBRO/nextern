@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
     await connectDB();
     const userId = session.user.id;
-    
+
     // Determine the user's role
     const userRole = session.user.role || 'student';
 
@@ -28,24 +28,28 @@ export async function GET(req: NextRequest) {
       .lean();
 
     // Get earned badges
-    const earnedBadges = await BadgeAward.find({ userId })
-      .select('badgeSlug awardedAt')
-      .lean();
-    
-    const earnedSlugs = new Set(earnedBadges.map((b: any) => b.badgeSlug));
+    const earnedBadges = await BadgeAward.find({ userId }).select('badgeSlug awardedAt').lean();
+
+    const earnedSlugs = new Set(
+      earnedBadges.map((b: { badgeSlug: string; awardedAt?: Date }) => b.badgeSlug)
+    );
 
     // Calculate progress for each badge
     const progressList = await Promise.all(
-      definitions.map(async (def: any) => {
+      definitions.map(async (def: IBadgeDefinition & Record<string, unknown>) => {
         const isEarned = earnedSlugs.has(def.badgeSlug);
         let count = 0;
-        
+
         if (isEarned) {
           count = def.thresholdValue; // Already earned, progress is complete
         } else {
           try {
             // Count current progress
-            count = await getEventCount(userId, def.triggerEvent, def as unknown as IBadgeDefinition);
+            count = await getEventCount(
+              userId,
+              def.triggerEvent,
+              def as unknown as IBadgeDefinition
+            );
             // Ensure count doesn't exceed threshold visually if it's not yet awarded (e.g. race condition)
             if (count > def.thresholdValue) count = def.thresholdValue;
           } catch (e) {
@@ -59,19 +63,23 @@ export async function GET(req: NextRequest) {
           threshold: def.thresholdValue,
           isEarned,
           // Calculate percentage explicitly for the UI
-          progressPercentage: Math.min(100, Math.round((count / def.thresholdValue) * 100))
+          progressPercentage: Math.min(100, Math.round((count / def.thresholdValue) * 100)),
         };
       })
     );
 
     // Also get the total accumulated marks from earned badges
     const totalMarks = definitions
-      .filter((def: any) => earnedSlugs.has(def.badgeSlug))
-      .reduce((sum: number, def: any) => sum + (def.marksReward || 0), 0);
+      .filter((def: IBadgeDefinition & Record<string, unknown>) => earnedSlugs.has(def.badgeSlug))
+      .reduce(
+        (sum: number, def: IBadgeDefinition & Record<string, unknown>) =>
+          sum + ((def.marksReward as number) || 0),
+        0
+      );
 
     return NextResponse.json({
       progress: progressList,
-      totalMarks
+      totalMarks,
     });
   } catch (error) {
     console.error('[GET BADGE PROGRESS ERROR]', error);

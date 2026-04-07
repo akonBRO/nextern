@@ -1,7 +1,6 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
-import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import { DashboardPage, DashboardSection, HeroCard } from '@/components/dashboard/DashboardContent';
 import { BadgeDefinition, type IBadgeDefinition } from '@/models/BadgeDefinition';
@@ -9,15 +8,104 @@ import { BadgeAward } from '@/models/BadgeAward';
 import { getEventCount } from '@/lib/badge-engine';
 import { Trophy } from 'lucide-react';
 
-export default async function StudentBadgesPage() {
+const deptNavItems = [
+  {
+    label: 'Overview',
+    href: '/dept/dashboard',
+    icon: 'dashboard' as const,
+  },
+  {
+    label: 'Events',
+    icon: 'calendar' as const,
+    items: [
+      {
+        label: 'Post Event',
+        href: '/dept/events/new',
+        description: 'Publish a webinar or workshop for students.',
+        icon: 'calendar' as const,
+      },
+      {
+        label: 'My Events',
+        href: '/dept/events',
+        description: 'View and manage all your posted events.',
+        icon: 'file' as const,
+      },
+    ],
+  },
+  {
+    label: 'Cohort',
+    icon: 'users' as const,
+    items: [
+      {
+        label: 'Top students',
+        href: '/dept/dashboard#students',
+        description: 'Track the strongest students by opportunity score and profile readiness.',
+        icon: 'users' as const,
+      },
+      {
+        label: 'Pipeline',
+        href: '/dept/dashboard#pipeline',
+        description: 'See the aggregate hiring journey for your department cohort.',
+        icon: 'insights' as const,
+      },
+    ],
+  },
+  {
+    label: 'Analytics',
+    icon: 'insights' as const,
+    items: [
+      {
+        label: 'Skill heatmap',
+        href: '/dept/dashboard#heatmap',
+        description: 'Most common skills across the department cohort.',
+        icon: 'sparkles' as const,
+      },
+      {
+        label: 'Industry alignment',
+        href: '/dept/dashboard#alignment',
+        description: 'Student skills vs employer demand.',
+        icon: 'insights' as const,
+      },
+      {
+        label: 'Semester trend',
+        href: '/dept/dashboard#trend',
+        description: 'Semester-over-semester readiness trajectory.',
+        icon: 'target' as const,
+      },
+    ],
+  },
+  {
+    label: 'Opportunities',
+    icon: 'briefcase' as const,
+    items: [
+      {
+        label: 'Openings',
+        href: '/dept/dashboard#openings',
+        description: 'Active roles relevant to your university and department.',
+        icon: 'briefcase' as const,
+      },
+      {
+        label: 'Benchmarks',
+        href: '/dept/dashboard#benchmarks',
+        description: 'Department-level thresholds and readiness guardrails.',
+        icon: 'target' as const,
+      },
+    ],
+  },
+  { label: 'Badges', href: '/dept/badges', icon: 'shield' as const },
+];
+
+export default async function DeptBadgesPage() {
   const session = await auth();
   if (!session?.user) redirect('/login');
-  if (session.user.role !== 'student') redirect('/login');
+  if (session.user.role !== 'dept_head') redirect('/login');
 
   await connectDB();
   const userId = session.user.id;
 
-  const definitions = await BadgeDefinition.find({ category: 'student' }).lean();
+  const definitions = await BadgeDefinition.find({
+    category: 'dept_head',
+  }).lean();
   const earnedBadges = await BadgeAward.find({ userId }).select('badgeSlug awardedAt').lean();
   const earnedSlugs = new Set(
     earnedBadges.map((b: { badgeSlug: string; awardedAt?: Date }) => b.badgeSlug)
@@ -50,22 +138,14 @@ export default async function StudentBadgesPage() {
     })
   );
 
-  const totalMarks = definitions
-    .filter((def: IBadgeDefinition & Record<string, unknown>) => earnedSlugs.has(def.badgeSlug))
-    .reduce(
-      (sum: number, def: IBadgeDefinition & Record<string, unknown>) =>
-        sum + ((def.marksReward as number) || 0),
-      0
-    );
-
   return (
     <DashboardShell
-      role="student"
-      roleLabel="Student dashboard"
-      homeHref="/student/dashboard"
-      navItems={STUDENT_NAV_ITEMS}
+      role="departmentHead"
+      roleLabel="Department workspace"
+      homeHref="/dept/dashboard"
+      navItems={deptNavItems}
       user={{
-        name: session.user.name ?? 'Student',
+        name: session.user.name ?? 'Department Head',
         email: session.user.email ?? '',
         image: session.user.image ?? undefined,
         subtitle: session.user.email ?? '',
@@ -76,8 +156,8 @@ export default async function StudentBadgesPage() {
       <DashboardPage>
         <HeroCard
           eyebrow="Achievements"
-          title="Your Badges"
-          description={`Unlock badges to earn GER marks and elevate your platform visibility. Every badge proves your commitment to career readiness.`}
+          title="Department Head Badges"
+          description="Earn recognition for driving department-wide excellence. These badges reflect your strategic leadership in student career readiness."
           actions={<div />}
           aside={
             <div
@@ -92,7 +172,7 @@ export default async function StudentBadgesPage() {
                 justifyContent: 'center',
               }}
             >
-              <Trophy size={32} color="#FDE047" style={{ marginBottom: 12 }} />
+              <Trophy size={32} color="#A78BFA" style={{ marginBottom: 12 }} />
               <div
                 style={{
                   fontSize: 32,
@@ -102,18 +182,25 @@ export default async function StudentBadgesPage() {
                   lineHeight: 1,
                 }}
               >
-                {totalMarks}
+                {earnedSlugs.size}
               </div>
-              <div style={{ fontSize: 13, color: '#94A3B8', fontWeight: 600, marginTop: 4 }}>
-                Total GER Marks Earned
+              <div
+                style={{
+                  fontSize: 13,
+                  color: '#94A3B8',
+                  fontWeight: 600,
+                  marginTop: 4,
+                }}
+              >
+                Badges Unlocked
               </div>
             </div>
           }
         />
 
         <DashboardSection
-          title="Badges & Path"
-          description="Complete these milestones to fully enhance your profile."
+          title="Leadership Milestones"
+          description="Drive department performance and student engagement to unlock these strategic achievements."
         >
           <div
             style={{
@@ -123,17 +210,10 @@ export default async function StudentBadgesPage() {
             }}
           >
             {progressList.map(
-              ({
-                definition: def,
-                currentCount,
-                threshold,
-                isEarned,
-                progressPercentage,
-                awardedAt,
-              }) => {
-                const bg = isEarned ? '#EFF6FF' : '#FFFFFF';
-                const border = isEarned ? '#60A5FA' : '#E2E8F0';
-                const titleColor = isEarned ? '#1E3A8A' : '#1E293B';
+              ({ definition: def, currentCount, threshold, isEarned, progressPercentage }) => {
+                const bg = isEarned ? '#F5F3FF' : '#FFFFFF';
+                const border = isEarned ? '#A78BFA' : '#E2E8F0';
+                const titleColor = isEarned ? '#4C1D95' : '#1E293B';
 
                 return (
                   <div
@@ -154,7 +234,7 @@ export default async function StudentBadgesPage() {
                           top: 0,
                           right: 0,
                           padding: '6px 14px',
-                          background: '#3B82F6',
+                          background: '#7C3AED',
                           color: '#FFF',
                           fontSize: 11,
                           fontWeight: 800,
@@ -171,7 +251,7 @@ export default async function StudentBadgesPage() {
                           width: 64,
                           height: 64,
                           borderRadius: 16,
-                          background: isEarned ? '#DBEAFE' : '#F1F5F9',
+                          background: isEarned ? '#EDE9FE' : '#F1F5F9',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -184,42 +264,26 @@ export default async function StudentBadgesPage() {
                       </div>
 
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 16, fontWeight: 800, color: titleColor }}>
+                        <div
+                          style={{
+                            fontSize: 16,
+                            fontWeight: 800,
+                            color: titleColor,
+                          }}
+                        >
                           {def.name}
                         </div>
                         <div
-                          style={{ fontSize: 13, color: '#64748B', marginTop: 4, lineHeight: 1.4 }}
+                          style={{
+                            fontSize: 13,
+                            color: '#64748B',
+                            marginTop: 4,
+                            lineHeight: 1.4,
+                          }}
                         >
                           {def.description}
                         </div>
                       </div>
-                    </div>
-
-                    <div style={{ marginTop: 24, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          padding: '4px 10px',
-                          borderRadius: 999,
-                          background: isEarned ? '#DBEAFE' : '#F1F5F9',
-                          color: isEarned ? '#1E40AF' : '#64748B',
-                        }}
-                      >
-                        +{def.marksReward || 0} Marks
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          padding: '4px 10px',
-                          borderRadius: 999,
-                          background: isEarned ? '#DCFCE7' : '#F1F5F9',
-                          color: isEarned ? '#166534' : '#64748B',
-                        }}
-                      >
-                        Boosts AI Match by {def.aiWeightBoost}x
-                      </span>
                     </div>
 
                     <div style={{ marginTop: 24 }}>
@@ -230,7 +294,7 @@ export default async function StudentBadgesPage() {
                           marginBottom: 8,
                           fontSize: 12,
                           fontWeight: 700,
-                          color: isEarned ? '#3B82F6' : '#94A3B8',
+                          color: isEarned ? '#7C3AED' : '#94A3B8',
                         }}
                       >
                         <span>{def.criteria}</span>
@@ -241,7 +305,7 @@ export default async function StudentBadgesPage() {
                       <div
                         style={{
                           height: 8,
-                          background: isEarned ? '#BFDBFE' : '#F1F5F9',
+                          background: isEarned ? '#DDD6FE' : '#F1F5F9',
                           borderRadius: 999,
                           overflow: 'hidden',
                         }}
@@ -250,7 +314,7 @@ export default async function StudentBadgesPage() {
                           style={{
                             height: '100%',
                             width: `${progressPercentage}%`,
-                            background: isEarned ? '#2563EB' : '#CBD5E1',
+                            background: isEarned ? '#7C3AED' : '#CBD5E1',
                             borderRadius: 999,
                             transition: 'width 0.6s ease',
                           }}
