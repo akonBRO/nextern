@@ -15,8 +15,12 @@ export interface AIResult<T> {
   meta: AIExecutionMeta;
 }
 
-function providerName(_provider: AIRequestedProvider) {
-  return 'Nextern AI';
+function providerName(provider: AIRequestedProvider) {
+  switch (provider) {
+    case 'gemini':
+    case 'groq':
+      return 'Nextern AI';
+  }
 }
 
 export function buildAIProviderMeta(
@@ -62,6 +66,14 @@ export function sanitizeAIProviderError(provider: AIRequestedProvider, error: un
 
   if (message.includes('api_key') || message.includes('not configured')) {
     return `${name} is not configured for this environment.`;
+  }
+
+  if (
+    message.includes('503') ||
+    message.includes('service unavailable') ||
+    message.includes('high demand')
+  ) {
+    return `${name} is experiencing high demand right now.`;
   }
 
   if (message.includes('429') || message.includes('rate limit')) {
