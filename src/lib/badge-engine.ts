@@ -180,61 +180,102 @@ export async function evaluateBadges(
   );
 
   for (const badge of definitions) {
-    // Skip if already awarded
-    if (existingSlugs.has(badge.badgeSlug)) continue;
-
     // Skip if category doesn't match (safety check)
     if (category && badge.category !== category) continue;
+
+    const hasBadge = existingSlugs.has(badge.badgeSlug);
 
     try {
       const count = await getEventCount(userId, triggerEvent, badge);
 
       if (count >= badge.thresholdValue) {
-        // Award the badge
-        await BadgeAward.create({
-          userId,
-          badgeSlug: badge.badgeSlug,
-          badgeName: badge.name,
-          badgeIcon: badge.icon,
-          awardedAt: new Date(),
-          evidenceData: { triggerEvent, countAtAward: count },
-          isDisplayed: true,
-        });
+        if (!hasBadge) {
+          // Award the badge
+          await BadgeAward.create({
+            userId,
+            badgeSlug: badge.badgeSlug,
+            badgeName: badge.name,
+            badgeIcon: badge.icon,
+            awardedAt: new Date(),
+            evidenceData: { triggerEvent, countAtAward: count },
+            isDisplayed: true,
+          });
 
-        // Send notification
-        await Notification.create({
-          userId,
-          type: 'badge_earned',
-          title: `Badge earned: ${badge.name}`,
-          body: badge.description,
-          isRead: false,
-          meta: { badgeSlug: badge.badgeSlug, badgeIcon: badge.icon },
-        });
+          // Send notification
+          await Notification.create({
+            userId,
+            type: 'badge_earned',
+            title: `Badge earned: ${badge.name}`,
+            body: badge.description,
+            isRead: false,
+            meta: { badgeSlug: badge.badgeSlug, badgeIcon: badge.icon },
+          });
 
-        // Add GER update logic here for students
-        if (badge.category === 'student' && badge.marksReward && badge.marksReward > 0) {
-          const { GER } = await import('@/models/GER');
-          const ger = await GER.findOne({ studentId: userId });
-          if (ger) {
-            ger.platformEngagement.score += badge.marksReward;
-            ger.totalScore += badge.marksReward;
-            // Cap scores at 100
-            if (ger.totalScore > 100) ger.totalScore = 100;
-            if (ger.platformEngagement.score > 100) ger.platformEngagement.score = 100;
-            await ger.save();
+          // Add GER update logic here for students
+          if (badge.category === 'student' && badge.marksReward && badge.marksReward > 0) {
+            const { GER } = await import('@/models/GER');
+            const ger = await GER.findOne({ studentId: userId });
+            if (ger) {
+              ger.platformEngagement.score += badge.marksReward;
+              ger.totalScore += badge.marksReward;
+              // Cap scores at 100
+              if (ger.totalScore > 100) ger.totalScore = 100;
+              if (ger.platformEngagement.score > 100) ger.platformEngagement.score = 100;
+              await ger.save();
 
-            // Notify about GER increase
-            await Notification.create({
-              userId,
-              type: 'system',
-              title: `GER Boost Received!`,
-              body: `You received +${badge.marksReward} marks in Platform Engagement from your new badge.`,
-              isRead: false,
-            });
+              // Notify about GER increase
+              await Notification.create({
+                userId,
+                type: 'system',
+                title: `GER Boost Received!`,
+                body: `You received +${badge.marksReward} marks in Platform Engagement from your new badge.`,
+                isRead: false,
+              });
+            }
           }
-        }
 
-        console.log(`[BADGE] Awarded "${badge.name}" to user ${userId}`);
+          console.log(`[BADGE] Awarded "${badge.name}" to user ${userId}`);
+        }
+      } else {
+        if (hasBadge) {
+          // Revoke the badge
+          await BadgeAward.deleteOne({ userId, badgeSlug: badge.badgeSlug });
+
+          // Send notification
+          await Notification.create({
+            userId,
+            type: 'system',
+            title: `Badge lost: ${badge.name}`,
+            body: `You no longer meet the criteria for the "${badge.name}" badge.`,
+            isRead: false,
+            meta: { badgeSlug: badge.badgeSlug, badgeIcon: badge.icon },
+          });
+
+          // Revert GER update logic here for students
+          if (badge.category === 'student' && badge.marksReward && badge.marksReward > 0) {
+            const { GER } = await import('@/models/GER');
+            const ger = await GER.findOne({ studentId: userId });
+            if (ger) {
+              ger.platformEngagement.score -= badge.marksReward;
+              ger.totalScore -= badge.marksReward;
+              // Prevent scores below 0
+              if (ger.totalScore < 0) ger.totalScore = 0;
+              if (ger.platformEngagement.score < 0) ger.platformEngagement.score = 0;
+              await ger.save();
+
+              // Notify about GER decrease
+              await Notification.create({
+                userId,
+                type: 'system',
+                title: `GER Adjustment`,
+                body: `You lost ${badge.marksReward} marks in Platform Engagement due to losing the "${badge.name}" badge.`,
+                isRead: false,
+              });
+            }
+          }
+
+          console.log(`[BADGE] Revoked "${badge.name}" from user ${userId}`);
+        }
       }
     } catch (err) {
       // Duplicate key error means badge was already awarded (race condition) — safe to skip
