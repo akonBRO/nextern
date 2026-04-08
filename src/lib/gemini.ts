@@ -863,6 +863,38 @@ function isInvalidJsonError(error: unknown) {
   return error instanceof Error && error.message.toLowerCase().includes('invalid json');
 }
 
+async function requestTrainingPathCandidate(
+  prompt: string,
+  generationConfig?: Record<string, unknown>
+) {
+  try {
+    return await askGeminiJSONWithConfig<unknown>(prompt, {
+      responseSchema: TRAINING_PATH_RESPONSE_SCHEMA,
+      ...generationConfig,
+    });
+  } catch (error) {
+    if (!isInvalidJsonError(error)) {
+      throw error;
+    }
+
+    return askGeminiJSONWithConfig<unknown>(
+      `${prompt}
+
+Important:
+- The full response must be a single valid JSON object.
+- Do not include markdown fences, notes, or explanatory text.
+- Double-quote every string and every object key.
+- Ensure the final output is complete, closed, and parseable JSON.
+`,
+      {
+        responseSchema: TRAINING_PATH_RESPONSE_SCHEMA,
+        temperature: 0.1,
+        ...generationConfig,
+      }
+    );
+  }
+}
+
 export async function generateTrainingPath(params: {
   skill: string;
   studentLevel: 'beginner' | 'intermediate';
@@ -905,31 +937,7 @@ Rules:
   `;
 
   try {
-    let result: unknown;
-
-    try {
-      result = await askGeminiJSONWithConfig<unknown>(prompt, {
-        responseSchema: TRAINING_PATH_RESPONSE_SCHEMA,
-      });
-    } catch (error) {
-      if (!isInvalidJsonError(error)) {
-        throw error;
-      }
-
-      result = await askGeminiJSONWithConfig<unknown>(
-        `${prompt}
-
-Important:
-- The full response must be a single valid JSON object.
-- Do not include markdown fences, notes, or explanatory text.
-- Double-quote every string and every object key.
-`,
-        {
-          responseSchema: TRAINING_PATH_RESPONSE_SCHEMA,
-          temperature: 0.1,
-        }
-      );
-    }
+    const result = await requestTrainingPathCandidate(prompt);
 
     let normalized = normalizeTrainingPath(result, 1);
 
@@ -946,8 +954,7 @@ Draft to expand:
 ${JSON.stringify({ steps: normalized }, null, 2)}
 `;
 
-      const retriedResult = await askGeminiJSONWithConfig<unknown>(retryPrompt, {
-        responseSchema: TRAINING_PATH_RESPONSE_SCHEMA,
+      const retriedResult = await requestTrainingPathCandidate(retryPrompt, {
         temperature: 0.1,
       });
       normalized = normalizeTrainingPath(retriedResult);
