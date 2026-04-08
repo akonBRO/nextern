@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
 import {
   AlertCircle,
   CheckCircle2,
@@ -127,7 +128,9 @@ export default function EmployerProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
-  const [badges, setBadges] = useState<{ badgeName: string; badgeIcon: string; awardedAt: string; badgeSlug: string }[]>([]);
+  const [badges, setBadges] = useState<
+    { badgeName: string; badgeIcon: string; awardedAt: string; badgeSlug: string }[]
+  >([]);
 
   const [form, setForm] = useState({
     name: '',
@@ -208,6 +211,26 @@ export default function EmployerProfilePage() {
     }
   }
 
+  async function handleLogoUploaded(url: string) {
+    await fetch('/api/users/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ companyLogo: url }),
+    });
+
+    setUser((prev) => (prev ? { ...prev, companyLogo: url } : prev));
+  }
+
+  async function handleLogoRemoved() {
+    await fetch('/api/users/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ companyLogo: null }),
+    });
+
+    setUser((prev) => (prev ? { ...prev, companyLogo: undefined } : prev));
+  }
+
   if (fetching)
     return (
       <div
@@ -245,33 +268,16 @@ export default function EmployerProfilePage() {
             ← Back to Dashboard
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}>
-            <div
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: 18,
-                background: 'linear-gradient(135deg, #1E293B, #334155)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 26,
-                fontWeight: 900,
-                color: '#fff',
-                fontFamily: 'var(--font-display)',
-                border: '3px solid rgba(255,255,255,0.1)',
-                overflow: 'hidden',
-                flexShrink: 0,
-              }}
-            >
-              {user?.companyLogo ? (
-                <img
-                  src={user.companyLogo as string}
-                  alt=""
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                (form.companyName?.charAt(0) ?? 'E')
-              )}
+            <div>
+              <ProfilePictureUpload
+                currentImage={(user?.companyLogo as string) ?? null}
+                name={form.companyName ?? 'E'}
+                size={96}
+                radius="18px"
+                gradient="linear-gradient(135deg, #1E293B, #334155)"
+                onUploaded={handleLogoUploaded}
+                onRemoved={handleLogoRemoved}
+              />
             </div>
             <div>
               <h1
@@ -544,7 +550,8 @@ export default function EmployerProfilePage() {
         >
           <SectionHeader icon={<Award size={18} />} label="Badges & Achievements" />
           <div style={{ fontSize: 13, color: C.gray, marginBottom: 16 }}>
-            Top-performing employers earn verified badges that are displayed here and visible to students.
+            Top-performing employers earn verified badges that are displayed here and visible to
+            students.
           </div>
           {badges.length === 0 ? (
             <div
@@ -560,7 +567,13 @@ export default function EmployerProfilePage() {
               No badges earned yet. Keep actively hiring and receiving good reviews to unlock them!
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: 12,
+              }}
+            >
               {badges.map((b) => (
                 <div
                   key={`${b.badgeSlug}-${b.awardedAt}`}
@@ -576,7 +589,9 @@ export default function EmployerProfilePage() {
                 >
                   <div style={{ fontSize: 24 }}>{b.badgeIcon}</div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{b.badgeName}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+                      {b.badgeName}
+                    </div>
                     <div style={{ fontSize: 11, color: C.gray }}>
                       Earned {new Date(b.awardedAt).toLocaleDateString()}
                     </div>

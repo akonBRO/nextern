@@ -99,6 +99,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isVerified = user.isVerified;
         token.isEmailVerified = user.isEmailVerified;
         token.verificationStatus = user.verificationStatus;
+        token.picture = user.image; // ✅ ensure picture is set initially
       }
 
       // Heal stale or provider-derived tokens that do not carry our MongoDB user id.
@@ -106,7 +107,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         await connectDB();
         const dbUser = await User.findOne({
           email: token.email.toLowerCase().trim(),
-        }).select('_id role isVerified verificationStatus');
+        }).select('_id role isVerified verificationStatus image');
 
         if (dbUser) {
           token.id = dbUser._id.toString();
@@ -114,6 +115,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.isVerified = dbUser.isVerified;
           token.isEmailVerified = dbUser.isVerified;
           token.verificationStatus = dbUser.verificationStatus;
+          token.picture = dbUser.image ?? token.picture; // ✅ keep image synced
         }
       }
 
@@ -127,6 +129,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.isVerified = freshUser.isVerified;
           token.isEmailVerified = freshUser.isVerified;
           token.verificationStatus = freshUser.verificationStatus;
+          token.picture = freshUser.image ?? token.picture; // ← ✅ ADDED LINE
         }
       }
 
@@ -153,6 +156,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           | 'approved'
           | 'rejected'
           | undefined;
+
+        // ✅ ADD THIS LINE (sync image to frontend)
+        session.user.image = (token.picture ?? session.user.image) as string | null;
       }
       return session;
     },

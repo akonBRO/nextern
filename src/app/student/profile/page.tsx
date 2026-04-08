@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
 import {
   AlertCircle,
   CheckCircle2,
@@ -570,37 +571,19 @@ export default function StudentProfilePage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              {/* ✅ Avatar: <Image> instead of <img> */}
-              <div
-                style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 28,
-                  fontWeight: 900,
-                  color: '#fff',
-                  fontFamily: 'var(--font-display)',
-                  flexShrink: 0,
-                  border: '3px solid rgba(255,255,255,0.15)',
-                  overflow: 'hidden',
+              <ProfilePictureUpload
+                currentImage={user?.image ?? null}
+                name={user?.name ?? ''}
+                size={72}
+                radius="50%"
+                gradient="linear-gradient(135deg, #2563EB, #22D3EE)"
+                onUploaded={(url) => {
+                  setUser((prev) => (prev ? { ...prev, image: url } : prev));
                 }}
-              >
-                {user?.image ? (
-                  <Image
-                    src={user.image}
-                    alt={user.name ?? ''}
-                    width={72}
-                    height={72}
-                    style={{ objectFit: 'cover' }}
-                  />
-                ) : (
-                  (user?.name?.charAt(0) ?? 'S')
-                )}
-              </div>
+                onRemoved={() => {
+                  setUser((prev) => (prev ? { ...prev, image: undefined } : prev));
+                }}
+              />
               <div>
                 <h1
                   style={{

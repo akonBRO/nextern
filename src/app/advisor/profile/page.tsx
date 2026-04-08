@@ -14,6 +14,7 @@ import {
   Linkedin,
   MapPin,
 } from 'lucide-react';
+import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
 
 const C = {
   blue: '#2563EB',
@@ -239,34 +240,29 @@ export default function AdvisorProfilePage() {
             ← Back to Dashboard
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}>
-            <div
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #7C3AED, #6D28D9)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 28,
-                fontWeight: 900,
-                color: '#fff',
-                fontFamily: 'var(--font-display)',
-                flexShrink: 0,
-                border: '3px solid rgba(255,255,255,0.12)',
-                overflow: 'hidden',
+            <ProfilePictureUpload
+              currentImage={(user?.image as string) ?? null}
+              name={form.name ?? ''}
+              size={72}
+              radius="50%"
+              gradient="linear-gradient(135deg, #7C3AED, #6D28D9)"
+              onUploaded={async (url) => {
+                await fetch('/api/users/profile', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ image: url }),
+                });
+                setUser((prev) => (prev ? { ...prev, image: url } : prev));
               }}
-            >
-              {user?.image ? (
-                <img
-                  src={user.image as string}
-                  alt=""
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                (form.name?.charAt(0) ?? 'A')
-              )}
-            </div>
+              onRemoved={async () => {
+                await fetch('/api/users/profile', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ image: null }),
+                });
+                setUser((prev) => (prev ? { ...prev, image: undefined } : prev));
+              }}
+            />
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <span

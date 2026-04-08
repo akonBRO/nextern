@@ -63,6 +63,10 @@ export const UpdateStudentProfileSchema = z.object({
     .optional()
     .or(z.literal('')),
   bio: z.string().max(500).optional(),
+
+  // Profile image for students
+  image: z.string().url().optional(),
+
   university: z.string().max(120).optional(),
   department: z.string().max(60).optional(),
   yearOfStudy: z.number().int().min(1).max(5).optional(),
@@ -83,6 +87,10 @@ export const UpdateEmployerProfileSchema = z.object({
     .regex(/^\+8801[3-9]\d{8}$/)
     .optional()
     .or(z.literal('')),
+
+  // ONLY company logo for employers
+  companyLogo: z.string().url().optional(),
+
   companyName: z.string().min(2).max(120).optional(),
   industry: z.string().max(80).optional(),
   companySize: z.enum(['1-10', '11-50', '51-200', '201-500', '500+']).optional(),
@@ -115,10 +123,6 @@ export const AdminApproveSchema = z.object({
 });
 
 // ── Module 1 — Job, Recruitment & Career Events System ───────────────────────
-// Used by: /api/jobs (POST, PATCH), /api/jobs/[jobId]/apply (POST),
-//          /api/applications (PATCH)
-// Feeds into: Module 2 AI Skill Gap & Fit Scoring Engine (Sabbir)
-//             Module 3 Calendar Integration (deadline stored on Job)
 
 export const CreateJobSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(120),
@@ -128,60 +132,50 @@ export const CreateJobSchema = z.object({
   locationType: z.enum(['onsite', 'remote', 'hybrid']),
   city: z.string().max(80).optional(),
 
-  // Compensation
   stipendBDT: z.number().int().min(0).optional(),
   isStipendNegotiable: z.boolean().optional().default(false),
 
-  // Dates — stored as ISO strings, converted to Date in route handler
   applicationDeadline: z.string().min(1, 'Deadline is required'),
   startDate: z.string().optional(),
   durationMonths: z.number().int().min(1).max(24).optional(),
 
-  // Targeting filters — empty arrays = open to all
   targetUniversities: z.array(z.string()).optional().default([]),
   targetDepartments: z.array(z.string()).optional().default([]),
   targetYears: z.array(z.number().int().min(1).max(5)).optional().default([]),
 
-  // Internship Requirement Profile — read by Sabbir's M2 AI engine
   requiredSkills: z.array(z.string()).optional().default([]),
   minimumCGPA: z.number().min(0).max(4.0).optional(),
   requiredCourses: z.array(z.string()).optional().default([]),
   experienceExpectations: z.string().max(500).optional(),
   preferredCertifications: z.array(z.string()).optional().default([]),
 
-  // Batch hiring
   isBatchHiring: z.boolean().optional().default(false),
   batchUniversities: z.array(z.string()).optional().default([]),
 
-  // Metadata
   isActive: z.boolean().optional().default(true),
-  academicSession: z.string().max(20).optional(), // e.g. 'Spring 2026'
+  academicSession: z.string().max(20).optional(),
 });
 
-// Partial version of CreateJobSchema for PATCH — all fields optional
-// isActive extended to include 'closed' flow
 export const UpdateJobSchema = CreateJobSchema.partial().extend({
   isActive: z.boolean().optional(),
 });
 
-// Used by POST /api/jobs/[jobId]/apply
 export const ApplyJobSchema = z.object({
   coverLetter: z.string().max(2000).optional(),
 });
 
-// Used by PATCH /api/applications?id=[appId] — employer updates pipeline stage
 export const UpdateApplicationStatusSchema = z.object({
   status: z.enum([
     'applied',
     'shortlisted',
     'under_review',
-    'assessment_sent', // M3: Sabbir's assessment suite
-    'interview_scheduled', // M3: Sabbir's interview suite
+    'assessment_sent',
+    'interview_scheduled',
     'rejected',
     'hired',
     'withdrawn',
   ]),
-  note: z.string().max(500).optional(), // stored in statusHistory
+  note: z.string().max(500).optional(),
 });
 
 // ── Type exports ──────────────────────────────────────────────────────────────
