@@ -216,11 +216,11 @@ export async function evaluateBadges(
             const { GER } = await import('@/models/GER');
             const ger = await GER.findOne({ studentId: userId });
             if (ger) {
-              ger.platformEngagement.score += badge.marksReward;
+              ger.peerRecognition.score += badge.marksReward;
               ger.totalScore += badge.marksReward;
               // Cap scores at 100
               if (ger.totalScore > 100) ger.totalScore = 100;
-              if (ger.platformEngagement.score > 100) ger.platformEngagement.score = 100;
+              if (ger.peerRecognition.score > 100) ger.peerRecognition.score = 100;
               await ger.save();
 
               // Notify about GER increase
@@ -228,7 +228,7 @@ export async function evaluateBadges(
                 userId,
                 type: 'system',
                 title: `GER Boost Received!`,
-                body: `You received +${badge.marksReward} marks in Platform Engagement from your new badge.`,
+                body: `You received +${badge.marksReward} marks in Peer Recognition from your new badge.`,
                 isRead: false,
               });
             }
@@ -256,11 +256,11 @@ export async function evaluateBadges(
             const { GER } = await import('@/models/GER');
             const ger = await GER.findOne({ studentId: userId });
             if (ger) {
-              ger.platformEngagement.score -= badge.marksReward;
+              ger.peerRecognition.score -= badge.marksReward;
               ger.totalScore -= badge.marksReward;
               // Prevent scores below 0
               if (ger.totalScore < 0) ger.totalScore = 0;
-              if (ger.platformEngagement.score < 0) ger.platformEngagement.score = 0;
+              if (ger.peerRecognition.score < 0) ger.peerRecognition.score = 0;
               await ger.save();
 
               // Notify about GER decrease
@@ -268,7 +268,7 @@ export async function evaluateBadges(
                 userId,
                 type: 'system',
                 title: `GER Adjustment`,
-                body: `You lost ${badge.marksReward} marks in Platform Engagement due to losing the "${badge.name}" badge.`,
+                body: `You lost ${badge.marksReward} marks in Peer Recognition due to losing the "${badge.name}" badge.`,
                 isRead: false,
               });
             }
