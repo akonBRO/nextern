@@ -146,6 +146,29 @@ export async function getEventCount(
 // ── Main evaluator ────────────────────────────────────────────────────
 
 /**
+ * Helper to recalculate the peer recognition score
+ */
+async function recalculatePeerRecognition(userId: string) {
+  const { GER } = await import('@/models/GER');
+  const ger = await GER.findOne({ studentId: userId });
+  if (!ger) return;
+
+  const earnedBadges = await BadgeAward.find({ userId }).lean();
+  const earnedSlugs = earnedBadges.map((b: { badgeSlug: string }) => b.badgeSlug);
+  
+  const studentDefs = await BadgeDefinition.find({ category: 'student' }).lean();
+  
+  // Directly sum the marks Reward
+  const earnedMarks = studentDefs
+    .filter(d => earnedSlugs.includes(d.badgeSlug))
+    .reduce((sum, d) => sum + (d.marksReward || 0), 0);
+
+  // The subcategory score explicitly caps at 100 points
+  ger.peerRecognition.score = Math.min(earnedMarks, 100);
+  await ger.save();
+}
+
+/**
  * Evaluate and award badges for a user after a specific event fires.
  * Safe to call multiple times — already-awarded badges are skipped.
  *
@@ -213,25 +236,16 @@ export async function evaluateBadges(
 
           // Add GER update logic here for students
           if (badge.category === 'student' && badge.marksReward && badge.marksReward > 0) {
-            const { GER } = await import('@/models/GER');
-            const ger = await GER.findOne({ studentId: userId });
-            if (ger) {
-              ger.peerRecognition.score += badge.marksReward;
-              ger.totalScore += badge.marksReward;
-              // Cap scores at 100
-              if (ger.totalScore > 100) ger.totalScore = 100;
-              if (ger.peerRecognition.score > 100) ger.peerRecognition.score = 100;
-              await ger.save();
+            await recalculatePeerRecognition(userId);
 
-              // Notify about GER increase
-              await Notification.create({
-                userId,
-                type: 'system',
-                title: `GER Boost Received!`,
-                body: `You received +${badge.marksReward} marks in Peer Recognition from your new badge.`,
-                isRead: false,
-              });
-            }
+            // Notify about GER increase
+            await Notification.create({
+              userId,
+              type: 'system',
+              title: `GER Boost Received!`,
+              body: `You received a boost in Peer Recognition from your new badge.`,
+              isRead: false,
+            });
           }
 
           console.log(`[BADGE] Awarded "${badge.name}" to user ${userId}`);
@@ -253,25 +267,16 @@ export async function evaluateBadges(
 
           // Revert GER update logic here for students
           if (badge.category === 'student' && badge.marksReward && badge.marksReward > 0) {
-            const { GER } = await import('@/models/GER');
-            const ger = await GER.findOne({ studentId: userId });
-            if (ger) {
-              ger.peerRecognition.score -= badge.marksReward;
-              ger.totalScore -= badge.marksReward;
-              // Prevent scores below 0
-              if (ger.totalScore < 0) ger.totalScore = 0;
-              if (ger.peerRecognition.score < 0) ger.peerRecognition.score = 0;
-              await ger.save();
+            await recalculatePeerRecognition(userId);
 
-              // Notify about GER decrease
-              await Notification.create({
-                userId,
-                type: 'system',
-                title: `GER Adjustment`,
-                body: `You lost ${badge.marksReward} marks in Peer Recognition due to losing the "${badge.name}" badge.`,
-                isRead: false,
-              });
-            }
+            // Notify about GER decrease
+            await Notification.create({
+              userId,
+              type: 'system',
+              title: `GER Adjustment`,
+              body: `Your Peer Recognition score was adjusted due to losing the "${badge.name}" badge.`,
+              isRead: false,
+            });
           }
 
           console.log(`[BADGE] Revoked "${badge.name}" from user ${userId}`);
