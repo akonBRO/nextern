@@ -59,12 +59,12 @@ const GERSchema = new Schema<IGER>(
   { timestamps: true }
 );
 
-GERSchema.pre('save', function (next) {
+GERSchema.pre('save', async function () {
   const ger = this as unknown as IGER;
-  
+
   const getVal = (cat: IGERCategory | undefined) => ((cat?.score ?? 0) * (cat?.weight ?? 0)) / 100;
 
-  ger.totalScore = 
+  ger.totalScore =
     getVal(ger.academicPerformance) +
     getVal(ger.skillGrowth) +
     getVal(ger.platformEngagement) +
@@ -76,8 +76,6 @@ GERSchema.pre('save', function (next) {
 
   if (ger.totalScore > 100) ger.totalScore = 100;
   if (ger.totalScore < 0) ger.totalScore = 0;
-
-  next();
 });
 
 export const GER = mongoose.models.GER || mongoose.model<IGER>('GER', GERSchema);
