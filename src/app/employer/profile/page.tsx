@@ -275,6 +275,8 @@ export default function EmployerProfilePage() {
                 size={96}
                 radius="18px"
                 gradient="linear-gradient(135deg, #1E293B, #334155)"
+                uploaderType="companyLogoUploader"
+                label="Choose company logo"
                 onUploaded={handleLogoUploaded}
                 onRemoved={handleLogoRemoved}
               />

@@ -6,18 +6,23 @@ import Image from 'next/image';
 import { Camera, Eye, ImagePlus, Trash2, X, ZoomIn, ZoomOut, Check } from 'lucide-react';
 import { useUploadThing } from '@/lib/uploadthing';
 
+type UploaderType = 'profilePictureUploader' | 'companyLogoUploader';
+
 type Props = {
   currentImage?: string | null;
   name?: string;
   size?: number;
   radius?: string;
   gradient?: string;
+  uploaderType?: UploaderType; // which UT endpoint to use — default: profilePictureUploader
+  label?: string; // modal title — default: 'Choose profile picture'
   onUploaded: (url: string) => void;
   onRemoved?: () => void;
 };
 
 const MAX_MB = 2;
 const CROP_SIZE = 320;
+const OUTPUT_SIZE = 800;
 
 export default function ProfilePictureUpload({
   currentImage,
@@ -25,12 +30,15 @@ export default function ProfilePictureUpload({
   size = 140,
   radius = '50%',
   gradient = 'linear-gradient(135deg, #2563EB, #22D3EE)',
+  uploaderType = 'profilePictureUploader',
+  label = 'Choose profile picture',
   onUploaded,
   onRemoved,
 }: Props) {
-  const { startUpload } = useUploadThing('profilePictureUploader');
+  const { startUpload } = useUploadThing(uploaderType);
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuAbove, setMenuAbove] = useState(false); // smart positioning
   const [viewerOpen, setViewerOpen] = useState(false);
   const [cropOpen, setCropOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -42,21 +50,36 @@ export default function ProfilePictureUpload({
   const [dragOver, setDragOver] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
-  const fileRef = useRef<File | null>(null);
+  const avatarRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  // mouse drag
   const dragStart = useRef({ mx: 0, my: 0, ox: 0, oy: 0 });
+  // touch drag
+  const touchStart = useRef({ tx: 0, ty: 0, ox: 0, oy: 0 });
 
-  // close menu on outside click
+  // ── Close menu on outside click ────────────────────────────────────────
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
     }
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // redraw crop canvas
+  // ── Smart dropdown positioning: open above if near viewport bottom ─────
+  function handleCameraClick() {
+    if (avatarRef.current) {
+      const rect = avatarRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setMenuAbove(spaceBelow < 180);
+    }
+    setMenuOpen((v) => !v);
+  }
+
+  // ── Redraw crop canvas ─────────────────────────────────────────────────
   useEffect(() => {
     if (!cropOpen || !imageSrc || !canvasRef.current) return;
     const canvas = canvasRef.current;
@@ -67,12 +90,10 @@ export default function ProfilePictureUpload({
       canvas.width = CROP_SIZE;
       canvas.height = CROP_SIZE;
       ctx.clearRect(0, 0, CROP_SIZE, CROP_SIZE);
-      // Draw image clipped to circle — no overlay, no dimming
       ctx.save();
       ctx.beginPath();
       ctx.arc(CROP_SIZE / 2, CROP_SIZE / 2, CROP_SIZE / 2, 0, Math.PI * 2);
       ctx.clip();
-      // cover-scale: fill the circle without distortion, then apply zoom on top
       const coverScale = Math.max(CROP_SIZE / img.width, CROP_SIZE / img.height);
       const w = img.width * coverScale * zoom;
       const h = img.height * coverScale * zoom;
@@ -82,10 +103,10 @@ export default function ProfilePictureUpload({
     img.src = imageSrc;
   }, [cropOpen, imageSrc, zoom, offset]);
 
+  // ── Open file → show crop ──────────────────────────────────────────────
   function openFile(file: File) {
     if (!file.type.match(/^image\/(jpeg|png|webp)$/)) return;
     if (file.size > MAX_MB * 1024 * 1024) return;
-    fileRef.current = file;
     setImageSrc(URL.createObjectURL(file));
     setZoom(1);
     setOffset({ x: 0, y: 0 });
@@ -93,6 +114,7 @@ export default function ProfilePictureUpload({
     setCropOpen(true);
   }
 
+  // ── Mouse drag handlers ────────────────────────────────────────────────
   function onMouseDown(e: React.MouseEvent) {
     setDragging(true);
     dragStart.current = { mx: e.clientX, my: e.clientY, ox: offset.x, oy: offset.y };
@@ -108,13 +130,29 @@ export default function ProfilePictureUpload({
     setDragging(false);
   }
 
+  // ── Touch drag handlers ────────────────────────────────────────────────
+  function onTouchStart(e: React.TouchEvent) {
+    const t = e.touches[0];
+    touchStart.current = { tx: t.clientX, ty: t.clientY, ox: offset.x, oy: offset.y };
+  }
+  function onTouchMove(e: React.TouchEvent) {
+    e.preventDefault(); // stop page scroll
+    const t = e.touches[0];
+    setOffset({
+      x: touchStart.current.ox + (t.clientX - touchStart.current.tx),
+      y: touchStart.current.oy + (t.clientY - touchStart.current.ty),
+    });
+  }
+
+  // ── Save cropped image → upload ────────────────────────────────────────
   async function handleSave() {
     if (!imageSrc) return;
     setUploading(true);
     try {
+      const scale = OUTPUT_SIZE / CROP_SIZE;
       const fc = document.createElement('canvas');
-      fc.width = CROP_SIZE;
-      fc.height = CROP_SIZE;
+      fc.width = OUTPUT_SIZE;
+      fc.height = OUTPUT_SIZE;
       const ctx = fc.getContext('2d')!;
       const img = new window.Image();
       await new Promise<void>((res) => {
@@ -123,15 +161,26 @@ export default function ProfilePictureUpload({
       });
       ctx.save();
       ctx.beginPath();
-      ctx.arc(CROP_SIZE / 2, CROP_SIZE / 2, CROP_SIZE / 2, 0, Math.PI * 2);
+      ctx.arc(OUTPUT_SIZE / 2, OUTPUT_SIZE / 2, OUTPUT_SIZE / 2, 0, Math.PI * 2);
       ctx.clip();
-      const coverScale2 = Math.max(CROP_SIZE / img.width, CROP_SIZE / img.height);
-      const w = img.width * coverScale2 * zoom;
-      const h = img.height * coverScale2 * zoom;
-      ctx.drawImage(img, CROP_SIZE / 2 - w / 2 + offset.x, CROP_SIZE / 2 - h / 2 + offset.y, w, h);
+      const coverScale = Math.max(OUTPUT_SIZE / img.width, OUTPUT_SIZE / img.height);
+      const w = img.width * coverScale * zoom;
+      const h = img.height * coverScale * zoom;
+      ctx.drawImage(
+        img,
+        OUTPUT_SIZE / 2 - w / 2 + offset.x * scale,
+        OUTPUT_SIZE / 2 - h / 2 + offset.y * scale,
+        w,
+        h
+      );
       ctx.restore();
-      const blob: Blob = await new Promise((res) => fc.toBlob((b) => res(b!), 'image/png', 0.92));
-      const croppedFile = new File([blob], 'profile.png', { type: 'image/png' });
+      const blob: Blob = await new Promise((res) => fc.toBlob((b) => res(b!), 'image/jpeg', 0.92));
+      const safeName = (name ?? 'user')
+        .trim()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-zA-Z0-9_]/g, '');
+      const filename = `ProfilePicture_${safeName}.jpg`;
+      const croppedFile = new File([blob], filename, { type: 'image/jpeg' });
       const res = await startUpload([croppedFile]);
       if (res?.[0]?.ufsUrl) {
         onUploaded(res[0].ufsUrl);
@@ -145,12 +194,18 @@ export default function ProfilePictureUpload({
 
   const initials = name?.charAt(0)?.toUpperCase() ?? '?';
 
+  // ── Dropdown vertical position ─────────────────────────────────────────
+  const dropdownPos = menuAbove
+    ? { bottom: size + 10, top: 'auto' }
+    : { top: size + 10, bottom: 'auto' };
+
   return (
     <>
-      {/* ── Avatar + camera badge ──────────────────────────────────────── */}
+      {/* ── Avatar + camera badge ──────────────────────────────────── */}
       <div ref={menuRef} style={{ position: 'relative', flexShrink: 0 }}>
         {/* Avatar */}
         <div
+          ref={avatarRef}
           style={{
             width: size,
             height: size,
@@ -181,10 +236,10 @@ export default function ProfilePictureUpload({
           )}
         </div>
 
-        {/* Camera badge — smaller (24px), pushed right outside the avatar edge */}
+        {/* Camera badge */}
         <button
           type="button"
-          onClick={() => setMenuOpen((v) => !v)}
+          onClick={handleCameraClick}
           style={{
             position: 'absolute',
             bottom: 6,
@@ -215,12 +270,12 @@ export default function ProfilePictureUpload({
           <Camera size={11} />
         </button>
 
-        {/* Dropdown */}
+        {/* Dropdown — opens above or below based on viewport space */}
         {menuOpen && (
           <div
             style={{
               position: 'absolute',
-              top: size + 10,
+              ...dropdownPos,
               left: 0,
               zIndex: 200,
               background: '#1E293B',
@@ -235,7 +290,7 @@ export default function ProfilePictureUpload({
               <>
                 <MenuBtn
                   icon={<Eye size={15} color="#94A3B8" />}
-                  label="See profile picture"
+                  label={`See ${label.toLowerCase().replace('choose ', '')}`}
                   onClick={() => {
                     setViewerOpen(true);
                     setMenuOpen(false);
@@ -246,7 +301,7 @@ export default function ProfilePictureUpload({
             )}
             <MenuBtn
               icon={<ImagePlus size={15} color="#94A3B8" />}
-              label="Choose profile picture"
+              label={label}
               onClick={() => {
                 fileInput.current?.click();
                 setMenuOpen(false);
@@ -269,6 +324,7 @@ export default function ProfilePictureUpload({
           </div>
         )}
 
+        {/* Hidden file input */}
         <input
           ref={fileInput}
           type="file"
@@ -282,7 +338,7 @@ export default function ProfilePictureUpload({
         />
       </div>
 
-      {/* ── Full-screen viewer ─────────────────────────────────────────── */}
+      {/* ── Full-screen viewer ─────────────────────────────────────── */}
       {viewerOpen && currentImage && (
         <div onClick={() => setViewerOpen(false)} style={backdropStyle}>
           <button type="button" onClick={() => setViewerOpen(false)} style={closeBtn}>
@@ -293,7 +349,7 @@ export default function ProfilePictureUpload({
             style={{
               width: 'min(82vw,480px)',
               height: 'min(82vw,480px)',
-              borderRadius: '50%',
+              borderRadius: radius === '50%' ? '50%' : radius,
               overflow: 'hidden',
               border: '4px solid rgba(255,255,255,0.14)',
               boxShadow: '0 0 80px rgba(0,0,0,0.7)',
@@ -310,7 +366,7 @@ export default function ProfilePictureUpload({
         </div>
       )}
 
-      {/* ── Crop modal ────────────────────────────────────────────────── */}
+      {/* ── Crop modal ────────────────────────────────────────────── */}
       {cropOpen && imageSrc && (
         <div
           onClick={() => {
@@ -351,7 +407,7 @@ export default function ProfilePictureUpload({
                   fontFamily: 'var(--font-display)',
                 }}
               >
-                Choose profile picture
+                {label}
               </span>
               <button
                 type="button"
@@ -377,7 +433,7 @@ export default function ProfilePictureUpload({
               </button>
             </div>
 
-            {/* Canvas */}
+            {/* Canvas — mouse + touch drag */}
             <div style={{ padding: '28px 28px 0', display: 'flex', justifyContent: 'center' }}>
               <div
                 style={{
@@ -389,11 +445,17 @@ export default function ProfilePictureUpload({
                   border: '2.5px solid rgba(255,255,255,0.12)',
                   background: '#1E293B',
                   userSelect: 'none',
+                  touchAction: 'none', // prevent scroll while dragging on mobile
                 }}
                 onMouseDown={onMouseDown}
                 onMouseMove={onMouseMove}
                 onMouseUp={onMouseUp}
                 onMouseLeave={onMouseUp}
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={() => {
+                  /* no-op — offset stays */
+                }}
               >
                 <canvas
                   ref={canvasRef}
@@ -421,7 +483,7 @@ export default function ProfilePictureUpload({
               Drag to reposition
             </p>
 
-            {/* Zoom */}
+            {/* Zoom slider */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 28px' }}>
               <ZoomOut size={16} color="#475569" style={{ flexShrink: 0 }} />
               <input
@@ -436,7 +498,7 @@ export default function ProfilePictureUpload({
               <ZoomIn size={16} color="#475569" style={{ flexShrink: 0 }} />
             </div>
 
-            {/* Drop zone hint */}
+            {/* Drop zone */}
             <div
               onClick={() => fileInput.current?.click()}
               onDragOver={(e) => {
@@ -464,7 +526,7 @@ export default function ProfilePictureUpload({
                 fontWeight: 500,
               }}
             >
-              {dragOver ? '📂 Drop it here!' : 'JPG, PNG or WebP · max 2MB ·'}
+              {dragOver ? '📂 Drop it here!' : 'JPG, PNG or WebP · max 2MB · click to change'}
             </div>
 
             {/* Action buttons */}
@@ -530,8 +592,7 @@ export default function ProfilePictureUpload({
                   </>
                 ) : (
                   <>
-                    <Check size={15} />
-                    Save photo
+                    <Check size={15} /> Save photo
                   </>
                 )}
               </button>
@@ -540,7 +601,7 @@ export default function ProfilePictureUpload({
         </div>
       )}
 
-      {/* ── Delete confirm ────────────────────────────────────────────── */}
+      {/* ── Delete confirm ─────────────────────────────────────────── */}
       {deleteOpen && (
         <div
           onClick={() => setDeleteOpen(false)}
@@ -584,7 +645,7 @@ export default function ProfilePictureUpload({
                 fontFamily: 'var(--font-display)',
               }}
             >
-              Delete profile photo?
+              Delete photo?
             </h3>
             <p style={{ margin: '10px 0 26px', fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
               Your photo will be removed and replaced with your initials. This cannot be undone.
@@ -636,7 +697,7 @@ export default function ProfilePictureUpload({
   );
 }
 
-/* ── Helpers ───────────────────────────────────────────────────────────────── */
+/* ── Helpers ─────────────────────────────────────────────────────────────── */
 function Divider() {
   return <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '0 14px' }} />;
 }
