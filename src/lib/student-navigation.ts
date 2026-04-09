@@ -1,3 +1,4 @@
+// src/lib/student-navigation.ts
 import type { DashboardNavItem } from '@/components/dashboard/DashboardShell';
 
 export const STUDENT_NAV_ITEMS: DashboardNavItem[] = [
@@ -41,6 +42,24 @@ export const STUDENT_NAV_ITEMS: DashboardNavItem[] = [
         href: '/student/mock-interview',
         description: 'Practice with AI and get instant interview feedback.',
         icon: 'messages',
+      },
+    ],
+  },
+  {
+    label: 'Resume & GER',
+    icon: 'file',
+    items: [
+      {
+        label: 'Resume Builder',
+        href: '/student/resume',
+        description: 'Generate and download your professional resume as a PDF.',
+        icon: 'file',
+      },
+      {
+        label: 'Graduation Report',
+        href: '/student/ger',
+        description: 'View and download your Graduation Evaluation Report.',
+        icon: 'graduation',
       },
     ],
   },
