@@ -15,7 +15,6 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.2",
-    "@types/pdfkit": "^0.17.5",
     "@uploadthing/react": "^7.3.3",
     "@upstash/redis": "^1.37.0",
     "axios": "^1.13.6",
