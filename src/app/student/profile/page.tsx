@@ -472,10 +472,6 @@ export default function StudentProfilePage() {
       if (res.ok) {
         setUser((prev) => (prev ? { ...prev, resumeUrl: undefined } : prev));
         setShowDeleteConfirm(false);
-        setResumeSaved(false);
-      } else {
-        setResumeError('Failed to delete resume. Please try again.');
-        setShowDeleteConfirm(false);
       }
     } catch {
       setResumeError('Failed to delete resume. Please try again.');
