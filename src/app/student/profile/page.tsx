@@ -463,19 +463,23 @@ export default function StudentProfilePage() {
   }
 
   async function handleResumeDelete() {
+    if (!confirm('Are you sure you want to delete your resume?')) return;
+
     try {
       const res = await fetch('/api/users/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resumeUrl: null }),
+        body: JSON.stringify({ resumeUrl: null }), // Telling the server to clear the URL
       });
+
       if (res.ok) {
         setUser((prev) => (prev ? { ...prev, resumeUrl: undefined } : prev));
         setShowDeleteConfirm(false);
+      } else {
+        setResumeError('Failed to delete resume.');
       }
-    } catch {
-      setResumeError('Failed to delete resume. Please try again.');
-      setShowDeleteConfirm(false);
+    } catch (err) {
+      setResumeError('Network error while deleting.');
     }
   }
 
