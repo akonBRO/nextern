@@ -122,7 +122,7 @@ export default function ApplicantActions({
                 background: '#EFF6FF',
               }}
             >
-              ⚡<span style={{ flex: 1 }}>In-platform Resume</span>
+              ⚡<span style={{ flex: 1 }}>In-Platform Resume</span>
               <span
                 style={{
                   fontSize: 10,

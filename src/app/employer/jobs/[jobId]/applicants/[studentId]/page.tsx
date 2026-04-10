@@ -1785,7 +1785,7 @@ export default async function EmployerApplicantDetailPage({
               {/* Nextern In-Platform Resume */}
               {generatedResumeUrl && (
                 <SideCard
-                  title="In-platform Resume"
+                  title="In-Platform Resume"
                   icon={
                     <SideIconBox bg="#EFF6FF" color="#2563EB">
                       <FileText size={14} />
@@ -1825,7 +1825,7 @@ export default async function EmployerApplicantDetailPage({
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: '#1D4ED8' }}>
                         {' '}
-                        View In-platform Resume
+                        View In-Platform Resume
                       </div>
                       <div style={{ fontSize: 11, color: '#3B82F6', marginTop: 2 }}>PDF</div>
                     </div>
