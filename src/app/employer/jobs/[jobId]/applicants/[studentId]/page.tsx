@@ -114,7 +114,7 @@ async function getApplicantDetail(jobId: string, studentId: string, employerId: 
     Application.findOne({ jobId: jid, studentId: sid, employerId: oid }).lean(),
     User.findById(sid)
       .select(
-        'name email image university department yearOfStudy cgpa skills bio linkedinUrl githubUrl portfolioUrl city phone resumeUrl opportunityScore profileCompleteness completedCourses projects certifications studentId currentSemester isGraduated'
+        'name email image university department yearOfStudy cgpa skills bio linkedinUrl githubUrl portfolioUrl city phone resumeUrl generatedResumeUrl opportunityScore profileCompleteness completedCourses projects certifications studentId currentSemester isGraduated'
       )
       .lean(),
     Notification.countDocuments({ userId: oid, isRead: false }),
@@ -427,6 +427,8 @@ export default async function EmployerApplicantDetailPage({
     suggestedPath.length > 0;
   const visibleSummary =
     fitSummary || 'No automated summary was generated for this application yet.';
+  const generatedResumeUrl =
+    (student as { generatedResumeUrl?: string }).generatedResumeUrl ?? null;
 
   const initials = (student.name ?? 'S')
     .split(' ')
@@ -1737,9 +1739,7 @@ export default async function EmployerApplicantDetailPage({
                       <div style={{ fontSize: 13, fontWeight: 700, color: '#065F46' }}>
                         View Resume
                       </div>
-                      <div style={{ fontSize: 11, color: '#16A34A', marginTop: 2 }}>
-                        PDF · Opens in new tab
-                      </div>
+                      <div style={{ fontSize: 11, color: '#16A34A', marginTop: 2 }}>PDF</div>
                     </div>
                     <ExternalLink size={14} color="#16A34A" />
                   </a>
@@ -1781,6 +1781,58 @@ export default async function EmployerApplicantDetailPage({
                   </div>
                 )}
               </SideCard>
+
+              {/* Nextern In-Platform Resume */}
+              {generatedResumeUrl && (
+                <SideCard
+                  title="In-platform Resume"
+                  icon={
+                    <SideIconBox bg="#EFF6FF" color="#2563EB">
+                      <FileText size={14} />
+                    </SideIconBox>
+                  }
+                >
+                  <a
+                    href={generatedResumeUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      background: '#EFF6FF',
+                      border: '1px solid #BFDBFE',
+                      borderRadius: 12,
+                      padding: '12px 14px',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 9,
+                        background: '#DBEAFE',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#1D4ED8',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <FileText size={16} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#1D4ED8' }}>
+                        {' '}
+                        View In-platform Resume
+                      </div>
+                      <div style={{ fontSize: 11, color: '#3B82F6', marginTop: 2 }}>PDF</div>
+                    </div>
+                    <ExternalLink size={14} color="#1D4ED8" />
+                  </a>
+                </SideCard>
+              )}
 
               {/* Academic Profile */}
               <SideCard

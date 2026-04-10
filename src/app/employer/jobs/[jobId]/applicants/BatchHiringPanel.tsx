@@ -36,6 +36,7 @@ type AppData = {
   fitScore: number;
   appliedAt: string;
   resumeUrlSnapshot: string;
+  generatedResumeUrlSnapshot: string;
   student: StudentData;
 };
 
@@ -596,6 +597,7 @@ function ApplicantCard({
           appId={app._id}
           currentStatus={app.status}
           resumeUrl={app.resumeUrlSnapshot || undefined}
+          generatedResumeUrl={app.generatedResumeUrlSnapshot}
         />
       </div>
     </div>
