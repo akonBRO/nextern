@@ -73,6 +73,7 @@ export const PREMIUM_LIMITS = {
     mockInterviewsPerMonth: 2,
     mentorshipRequestsPerMonth: 2,
     jobPostingsPerMonth: 3, // employers
+    aiApplicantShortlistsPerMonth: 5, // employers
   },
   premium: {
     skillGapAnalysisPerMonth: Infinity,
@@ -80,5 +81,6 @@ export const PREMIUM_LIMITS = {
     mockInterviewsPerMonth: Infinity,
     mentorshipRequestsPerMonth: Infinity,
     jobPostingsPerMonth: Infinity,
+    aiApplicantShortlistsPerMonth: Infinity,
   },
 };

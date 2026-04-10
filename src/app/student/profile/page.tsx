@@ -666,13 +666,13 @@ export default function StudentProfilePage() {
     { badgeName: string; badgeIcon: string; awardedAt: string; badgeSlug: string }[]
   >([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // ── Resume upload state ──
+  const { startUpload, isUploading } = useUploadThing('resumeUploader');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeUploading, setResumeUploading] = useState(false);
   const [resumeError, setResumeError] = useState('');
   const [resumeSaved, setResumeSaved] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-
-  const { startUpload, isUploading } = useUploadThing('resumeUploader');
   const uploading = resumeUploading || isUploading;
 
   const resumeUrlRef = useRef<string | undefined>(undefined);
@@ -852,7 +852,7 @@ export default function StudentProfilePage() {
         setShowDeleteConfirm(false);
       }
     } catch {
-      setResumeError('Failed to delete resume.');
+      setResumeError('Failed to delete resume. Please try again.');
       setShowDeleteConfirm(false);
     }
   }

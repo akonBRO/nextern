@@ -9,6 +9,7 @@ import { Application } from '@/models/Application';
 import { User } from '@/models/User';
 import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
+import { syncPremiumStatus } from '@/lib/premium';
 import mongoose from 'mongoose';
 import Link from 'next/link';
 import DashboardShell from '@/components/dashboard/DashboardShell';
@@ -39,6 +40,9 @@ import {
   Phone,
   Link2,
   Code2,
+  Crown,
+  Lock,
+  Sparkles,
 } from 'lucide-react';
 import ApplicantActions from '../ApplicantActions';
 import Image from 'next/image';
@@ -110,7 +114,7 @@ async function getApplicantDetail(jobId: string, studentId: string, employerId: 
     Application.findOne({ jobId: jid, studentId: sid, employerId: oid }).lean(),
     User.findById(sid)
       .select(
-        'name email image university department yearOfStudy cgpa skills bio linkedinUrl githubUrl portfolioUrl city phone resumeUrl opportunityScore profileCompleteness completedCourses projects certifications studentId currentSemester isGraduated'
+        'name email image university department yearOfStudy cgpa skills bio linkedinUrl githubUrl portfolioUrl city phone resumeUrl generatedResumeUrl opportunityScore profileCompleteness completedCourses projects certifications studentId currentSemester isGraduated'
       )
       .lean(),
     Notification.countDocuments({ userId: oid, isRead: false }),
@@ -194,6 +198,196 @@ function SideIconBox({
   );
 }
 
+function PremiumAiGlassLockCard({ fitScore, fitColor }: { fitScore: number; fitColor: string }) {
+  return (
+    <div
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 28,
+        padding: '1px',
+        background:
+          'linear-gradient(135deg, rgba(255,255,255,0.86), rgba(191,219,254,0.48), rgba(253,230,138,0.42))',
+        boxShadow: '0 24px 70px rgba(15,23,42,0.14), inset 0 1px 0 rgba(255,255,255,0.8)',
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          inset: -90,
+          background:
+            'radial-gradient(circle at 12% 18%, rgba(37,99,235,0.2), transparent 34%), radial-gradient(circle at 88% 10%, rgba(245,158,11,0.2), transparent 32%), radial-gradient(circle at 52% 92%, rgba(34,211,238,0.16), transparent 35%)',
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        style={{
+          position: 'relative',
+          borderRadius: 27,
+          padding: '28px 30px',
+          background: 'rgba(255,255,255,0.62)',
+          backdropFilter: 'blur(26px) saturate(160%)',
+          border: '1px solid rgba(255,255,255,0.66)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18, flexWrap: 'wrap' }}>
+          <div
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: 20,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.34))',
+              border: '1px solid rgba(255,255,255,0.78)',
+              color: '#0F172A',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 14px 26px rgba(15,23,42,0.12)',
+              flexShrink: 0,
+            }}
+          >
+            <Lock size={22} />
+          </div>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                flexWrap: 'wrap',
+                marginBottom: 9,
+              }}
+            >
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: 'rgba(255,255,255,0.68)',
+                  border: '1px solid rgba(255,255,255,0.82)',
+                  color: '#92400E',
+                  borderRadius: 999,
+                  padding: '5px 10px',
+                  fontSize: 11,
+                  fontWeight: 900,
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85)',
+                }}
+              >
+                <Crown size={12} /> Premium insight
+              </span>
+              {fitScore > 0 ? (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: 'rgba(255,255,255,0.56)',
+                    border: '1px solid rgba(255,255,255,0.76)',
+                    color: fitColor,
+                    borderRadius: 999,
+                    padding: '5px 10px',
+                    fontSize: 11,
+                    fontWeight: 900,
+                  }}
+                >
+                  {fitScore}% fit score ready
+                </span>
+              ) : null}
+            </div>
+            <h2
+              style={{
+                margin: '0 0 8px',
+                color: '#0F172A',
+                fontSize: 22,
+                lineHeight: 1.18,
+                fontWeight: 900,
+                fontFamily: 'var(--font-display)',
+              }}
+            >
+              Unlock the automated fit summary and AI analysis
+            </h2>
+            <p style={{ margin: 0, color: '#475569', fontSize: 14, lineHeight: 1.75 }}>
+              Employer Premium reveals the applicant summary, matched requirements, gaps, and
+              suggested prep path in one clean view. Regular employers can still review the
+              application details, resume, projects, and status history.
+            </p>
+          </div>
+          <Link
+            href="/employer/premium"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              background: 'rgba(15,23,42,0.92)',
+              color: '#FFFFFF',
+              borderRadius: 15,
+              padding: '12px 16px',
+              textDecoration: 'none',
+              fontSize: 13,
+              fontWeight: 900,
+              boxShadow: '0 16px 30px rgba(15,23,42,0.22), inset 0 1px 0 rgba(255,255,255,0.18)',
+              flexShrink: 0,
+            }}
+          >
+            <Sparkles size={15} /> Upgrade to view
+          </Link>
+        </div>
+        <div
+          style={{
+            marginTop: 22,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            gap: 10,
+          }}
+          className="premium-glass-preview"
+        >
+          {['Automated summary', 'AI fit gaps', 'Suggested prep path'].map((label) => (
+            <div
+              key={label}
+              style={{
+                minHeight: 76,
+                borderRadius: 18,
+                background: 'rgba(255,255,255,0.36)',
+                border: '1px solid rgba(255,255,255,0.58)',
+                padding: 14,
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.62)',
+              }}
+            >
+              <div
+                style={{
+                  width: '62%',
+                  height: 9,
+                  borderRadius: 999,
+                  background: 'rgba(15,23,42,0.14)',
+                  marginBottom: 12,
+                }}
+              />
+              <div
+                style={{
+                  width: '92%',
+                  height: 8,
+                  borderRadius: 999,
+                  background: 'rgba(15,23,42,0.08)',
+                  marginBottom: 8,
+                }}
+              />
+              <div
+                style={{
+                  width: '74%',
+                  height: 8,
+                  borderRadius: 999,
+                  background: 'rgba(15,23,42,0.08)',
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default async function EmployerApplicantDetailPage({
   params,
 }: {
@@ -204,16 +398,37 @@ export default async function EmployerApplicantDetailPage({
   if (session.user.role !== 'employer') redirect('/employer/dashboard');
 
   const { jobId, studentId } = await params;
-  const data = await getApplicantDetail(jobId, studentId, session.user.id);
+  const [data, premiumStatus] = await Promise.all([
+    getApplicantDetail(jobId, studentId, session.user.id),
+    syncPremiumStatus(session.user.id),
+  ]);
   if (!data) redirect(`/employer/jobs/${jobId}/applicants`);
 
   const { employer, job, application, student, chrome } = data;
+  const canViewAiInsights = premiumStatus.isPremium;
   const statusCfg = STATUS_CFG[application.status] ?? STATUS_CFG['applied'];
   const fitScore = application.fitScore ?? 0;
   const fitColor = fitScore >= 70 ? '#10B981' : fitScore >= 40 ? '#F59E0B' : '#EF4444';
   const fitBg = fitScore >= 70 ? '#DCFCE7' : fitScore >= 40 ? '#FFFBEB' : '#FEF2F2';
   const fitBorder = fitScore >= 70 ? '#BBF7D0' : fitScore >= 40 ? '#FDE68A' : '#FECACA';
   const resumeUrl = (student as { resumeUrl?: string }).resumeUrl ?? null;
+  const fitSummary =
+    typeof application.fitSummary === 'string' ? application.fitSummary.trim() : '';
+  const hardGaps = application.hardGaps ?? [];
+  const softGaps = application.softGaps ?? [];
+  const metRequirements = application.metRequirements ?? [];
+  const suggestedPath = application.suggestedPath ?? [];
+  const hasAiFitAnalysis =
+    fitScore > 0 ||
+    Boolean(fitSummary) ||
+    hardGaps.length > 0 ||
+    softGaps.length > 0 ||
+    metRequirements.length > 0 ||
+    suggestedPath.length > 0;
+  const visibleSummary =
+    fitSummary || 'No automated summary was generated for this application yet.';
+  const generatedResumeUrl =
+    (student as { generatedResumeUrl?: string }).generatedResumeUrl ?? null;
 
   const initials = (student.name ?? 'S')
     .split(' ')
@@ -233,6 +448,7 @@ export default async function EmployerApplicantDetailPage({
         email: employer?.email ?? '',
         image: employer?.image,
         subtitle: employer?.companyName ?? 'Employer workspace',
+        isPremium: premiumStatus.isPremium,
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
       }}
@@ -837,8 +1053,13 @@ export default async function EmployerApplicantDetailPage({
                 </div>
               )}
 
-              {/* AI Fit Analysis */}
-              {fitScore > 0 && (
+              {/* Premium AI gate */}
+              {hasAiFitAnalysis && !canViewAiInsights && (
+                <PremiumAiGlassLockCard fitScore={fitScore} fitColor={fitColor} />
+              )}
+
+              {/* Automated Fit Summary */}
+              {hasAiFitAnalysis && canViewAiInsights && (
                 <div
                   style={{
                     background: '#fff',
@@ -846,6 +1067,106 @@ export default async function EmployerApplicantDetailPage({
                     border: '1px solid #E2E8F0',
                     padding: '24px 28px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      gap: 14,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 10,
+                          background: '#EFF6FF',
+                          border: '1px solid #BFDBFE',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#2563EB',
+                        }}
+                      >
+                        <Sparkles size={16} />
+                      </div>
+                      <div>
+                        <h2
+                          style={{
+                            fontSize: 16,
+                            fontWeight: 800,
+                            color: '#0F172A',
+                            fontFamily: 'var(--font-display)',
+                            margin: 0,
+                          }}
+                        >
+                          Automated Fit Summary
+                        </h2>
+                        {application.fitScoreComputedAt && (
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: '#64748B',
+                              marginTop: 3,
+                              fontWeight: 600,
+                            }}
+                          >
+                            Generated{' '}
+                            {formatShortDate(application.fitScoreComputedAt.toISOString())}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        background: canViewAiInsights ? '#FEF3C7' : '#F1F5F9',
+                        color: canViewAiInsights ? '#92400E' : '#475569',
+                        border: `1px solid ${canViewAiInsights ? '#FDE68A' : '#E2E8F0'}`,
+                        borderRadius: 999,
+                        padding: '5px 10px',
+                        fontSize: 11,
+                        fontWeight: 800,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {canViewAiInsights ? <Crown size={12} /> : <Lock size={12} />}
+                      {canViewAiInsights ? 'Premium insight' : 'Upgrade required'}
+                    </span>
+                  </div>
+                  <p
+                    style={{
+                      margin: 0,
+                      color: '#475569',
+                      fontSize: 14,
+                      lineHeight: 1.8,
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {visibleSummary}
+                  </p>
+                </div>
+              )}
+
+              {/* AI Fit Analysis */}
+              {hasAiFitAnalysis && canViewAiInsights && (
+                <div
+                  style={{
+                    background: '#fff',
+                    borderRadius: 20,
+                    border: '1px solid #E2E8F0',
+                    padding: '24px 28px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    position: 'relative',
+                    overflow: 'hidden',
                   }}
                 >
                   <div
@@ -919,8 +1240,61 @@ export default async function EmployerApplicantDetailPage({
                       }}
                     />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                    {application.hardGaps?.length > 0 && (
+                  <div
+                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}
+                    className="ai-fit-grid"
+                  >
+                    {metRequirements.length > 0 && (
+                      <div
+                        style={{
+                          background: '#ECFDF5',
+                          borderRadius: 14,
+                          padding: '14px 16px',
+                          border: '1px solid #A7F3D0',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            marginBottom: 10,
+                          }}
+                        >
+                          <CheckCircle2 size={14} color="#10B981" />
+                          <span
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: '#065F46',
+                              textTransform: 'uppercase',
+                              letterSpacing: 0.6,
+                            }}
+                          >
+                            Matched Requirements
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                          {metRequirements.map((item: string) => (
+                            <span
+                              key={item}
+                              style={{
+                                background: '#fff',
+                                color: '#047857',
+                                border: '1px solid #A7F3D0',
+                                padding: '2px 8px',
+                                borderRadius: 999,
+                                fontSize: 11,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {hardGaps.length > 0 && (
                       <div
                         style={{
                           background: '#FEF2F2',
@@ -951,7 +1325,7 @@ export default async function EmployerApplicantDetailPage({
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                          {application.hardGaps.map((g: string) => (
+                          {hardGaps.map((g: string) => (
                             <span
                               key={g}
                               style={{
@@ -970,7 +1344,7 @@ export default async function EmployerApplicantDetailPage({
                         </div>
                       </div>
                     )}
-                    {application.softGaps?.length > 0 && (
+                    {softGaps.length > 0 && (
                       <div
                         style={{
                           background: '#FFFBEB',
@@ -1001,7 +1375,7 @@ export default async function EmployerApplicantDetailPage({
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                          {application.softGaps.map((g: string) => (
+                          {softGaps.map((g: string) => (
                             <span
                               key={g}
                               style={{
@@ -1021,7 +1395,7 @@ export default async function EmployerApplicantDetailPage({
                       </div>
                     )}
                   </div>
-                  {application.suggestedPath?.length > 0 && (
+                  {suggestedPath.length > 0 && (
                     <div
                       style={{
                         marginTop: 14,
@@ -1056,7 +1430,7 @@ export default async function EmployerApplicantDetailPage({
                           gap: 6,
                         }}
                       >
-                        {application.suggestedPath.map((step: string, i: number) => (
+                        {suggestedPath.map((step: string, i: number) => (
                           <li key={i} style={{ fontSize: 13, color: '#5B21B6', lineHeight: 1.6 }}>
                             {step}
                           </li>
@@ -1365,9 +1739,7 @@ export default async function EmployerApplicantDetailPage({
                       <div style={{ fontSize: 13, fontWeight: 700, color: '#065F46' }}>
                         View Resume
                       </div>
-                      <div style={{ fontSize: 11, color: '#16A34A', marginTop: 2 }}>
-                        PDF · Opens in new tab
-                      </div>
+                      <div style={{ fontSize: 11, color: '#16A34A', marginTop: 2 }}>PDF</div>
                     </div>
                     <ExternalLink size={14} color="#16A34A" />
                   </a>
@@ -1409,6 +1781,58 @@ export default async function EmployerApplicantDetailPage({
                   </div>
                 )}
               </SideCard>
+
+              {/* Nextern In-Platform Resume */}
+              {generatedResumeUrl && (
+                <SideCard
+                  title="In-platform Resume"
+                  icon={
+                    <SideIconBox bg="#EFF6FF" color="#2563EB">
+                      <FileText size={14} />
+                    </SideIconBox>
+                  }
+                >
+                  <a
+                    href={generatedResumeUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      background: '#EFF6FF',
+                      border: '1px solid #BFDBFE',
+                      borderRadius: 12,
+                      padding: '12px 14px',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 9,
+                        background: '#DBEAFE',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#1D4ED8',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <FileText size={16} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#1D4ED8' }}>
+                        {' '}
+                        View In-platform Resume
+                      </div>
+                      <div style={{ fontSize: 11, color: '#3B82F6', marginTop: 2 }}>PDF</div>
+                    </div>
+                    <ExternalLink size={14} color="#1D4ED8" />
+                  </a>
+                </SideCard>
+              )}
 
               {/* Academic Profile */}
               <SideCard
@@ -1642,6 +2066,8 @@ export default async function EmployerApplicantDetailPage({
         <style>{`
           @media (max-width: 860px) {
             .app-detail-grid { grid-template-columns: 1fr !important; }
+            .ai-fit-grid { grid-template-columns: 1fr !important; }
+            .premium-glass-preview { grid-template-columns: 1fr !important; }
           }
         `}</style>
       </DashboardPage>

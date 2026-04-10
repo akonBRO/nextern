@@ -1,6 +1,6 @@
 // src/app/employer/premium/page.tsx
 import { auth } from '@/lib/auth';
-import { syncPremiumStatus } from '@/lib/premium';
+import { getUsageSummary } from '@/lib/premium';
 import { redirect } from 'next/navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import { DashboardPage, DashboardSection } from '@/components/dashboard/DashboardContent';
@@ -16,7 +16,7 @@ export default async function EmployerPremiumPage() {
   const session = await auth();
   if (!session?.user) redirect('/login');
   if (session.user.role !== 'employer') redirect('/login');
-  const premiumStatus = await syncPremiumStatus(session.user.id);
+  const usage = await getUsageSummary(session.user.id);
 
   return (
     <DashboardShell
@@ -29,7 +29,7 @@ export default async function EmployerPremiumPage() {
         email: session.user.email ?? '',
         image: session.user.image ?? undefined,
         subtitle: session.user.email ?? '',
-        isPremium: premiumStatus.isPremium,
+        isPremium: usage.isPremium,
         unreadNotifications: 0,
         unreadMessages: 0,
       }}
@@ -39,7 +39,10 @@ export default async function EmployerPremiumPage() {
           title="Employer Premium"
           description="Unlock unlimited hiring tools, AI-powered shortlisting, and campus-wide campaigns."
         >
-          <EmployerPremiumClient isPremium={premiumStatus.isPremium} />
+          <EmployerPremiumClient
+            isPremium={usage.isPremium}
+            usage={JSON.parse(JSON.stringify(usage))}
+          />
         </DashboardSection>
       </DashboardPage>
     </DashboardShell>

@@ -24,6 +24,7 @@ export interface IApplication extends Document {
   appliedAt: Date;
   coverLetter?: string;
   resumeUrlSnapshot?: string;
+  generatedResumeUrlSnapshot?: string;
   isEventRegistration: boolean;
 
   fitScore?: number;
@@ -73,6 +74,7 @@ const ApplicationSchema = new Schema<IApplication>(
     appliedAt: { type: Date, default: Date.now },
     coverLetter: { type: String, maxlength: 2000 },
     resumeUrlSnapshot: { type: String },
+    generatedResumeUrlSnapshot: { type: String },
     isEventRegistration: { type: Boolean, default: false },
     fitScore: { type: Number, min: 0, max: 100 },
     hardGaps: [{ type: String }],

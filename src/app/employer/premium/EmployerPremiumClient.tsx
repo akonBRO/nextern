@@ -33,7 +33,34 @@ const C = {
   bg: '#F1F5F9',
 };
 
-export default function EmployerPremiumClient({ isPremium }: { isPremium: boolean }) {
+type EmployerPremiumUsage = {
+  counts: {
+    aiApplicantShortlist: number;
+    jobPosting: number;
+  };
+  limits: {
+    aiApplicantShortlist: number | null;
+    jobPosting: number | null;
+  };
+  remaining: {
+    aiApplicantShortlist: number | null;
+    jobPosting: number | null;
+  };
+};
+
+function usageText(remaining?: number | null) {
+  if (remaining === null) return 'Unlimited';
+  if (typeof remaining === 'number') return `${remaining} left this month`;
+  return 'Usage loading';
+}
+
+export default function EmployerPremiumClient({
+  isPremium,
+  usage,
+}: {
+  isPremium: boolean;
+  usage?: EmployerPremiumUsage;
+}) {
   const [method, setMethod] = useState<PayMethod>('bkash');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -65,21 +92,39 @@ export default function EmployerPremiumClient({ isPremium }: { isPremium: boolea
         <p style={{ color: '#64748B', fontSize: 15, marginBottom: 24 }}>
           All premium hiring features are active on your account.
         </p>
-        <Link
-          href="/employer/subscription"
-          style={{
-            display: 'inline-block',
-            background: '#2563EB',
-            color: '#fff',
-            padding: '12px 24px',
-            borderRadius: 12,
-            textDecoration: 'none',
-            fontWeight: 700,
-            fontSize: 14,
-          }}
-        >
-          Manage Subscription →
-        </Link>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <Link
+            href="/employer/subscription"
+            style={{
+              display: 'inline-block',
+              background: '#2563EB',
+              color: '#fff',
+              padding: '12px 24px',
+              borderRadius: 12,
+              textDecoration: 'none',
+              fontWeight: 700,
+              fontSize: 14,
+            }}
+          >
+            Manage Subscription
+          </Link>
+          <Link
+            href="/employer/ai"
+            style={{
+              display: 'inline-block',
+              background: 'rgba(255,255,255,0.08)',
+              color: '#CBD5E1',
+              padding: '12px 24px',
+              borderRadius: 12,
+              textDecoration: 'none',
+              fontWeight: 700,
+              fontSize: 14,
+              border: '1px solid rgba(255,255,255,0.12)',
+            }}
+          >
+            Open AI Hiring Center
+          </Link>
+        </div>
       </div>
     );
   }
@@ -178,6 +223,46 @@ export default function EmployerPremiumClient({ isPremium }: { isPremium: boolea
               </span>
               <span style={{ color: '#64748B', fontSize: 14 }}>/month</span>
             </div>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 10,
+              marginBottom: 24,
+            }}
+          >
+            {[
+              {
+                label: 'AI shortlists',
+                free: usageText(usage?.remaining.aiApplicantShortlist),
+                premium: 'Unlimited',
+              },
+              {
+                label: 'Job postings',
+                free: usageText(usage?.remaining.jobPosting),
+                premium: 'Unlimited',
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 14,
+                  padding: '12px 14px',
+                }}
+              >
+                <div style={{ color: '#94A3B8', fontSize: 11, fontWeight: 800 }}>{item.label}</div>
+                <div style={{ color: '#F8FAFC', fontSize: 13, fontWeight: 900, marginTop: 5 }}>
+                  Regular: {item.free}
+                </div>
+                <div style={{ color: '#FDE68A', fontSize: 12, fontWeight: 800, marginTop: 3 }}>
+                  Premium: {item.premium}
+                </div>
+              </div>
+            ))}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>

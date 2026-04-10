@@ -6,6 +6,7 @@ import { signOut } from 'next-auth/react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NexternLogo } from '@/components/brand/NexternLogo';
 import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
+import { EMPLOYER_NAV_ITEMS } from '@/lib/employer-navigation';
 import {
   Bell,
   BookOpen,
@@ -143,7 +144,8 @@ export default function DashboardShell({
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [premiumActive, setPremiumActive] = useState(Boolean(user.isPremium));
   const shellRef = useRef<HTMLDivElement>(null);
-  const resolvedNavItems = role === 'student' ? STUDENT_NAV_ITEMS : navItems;
+  const resolvedNavItems =
+    role === 'student' ? STUDENT_NAV_ITEMS : role === 'employer' ? EMPLOYER_NAV_ITEMS : navItems;
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
