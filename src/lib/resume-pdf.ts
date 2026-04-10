@@ -3,6 +3,8 @@
 // Called by /api/resume/generate
 
 import PDFDocument from 'pdfkit';
+import https from 'https';
+import http from 'http';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export type ResumeData = {
@@ -37,7 +39,6 @@ export type ResumeData = {
     issueDate?: string;
     credentialUrl?: string;
   }[];
-  // Platform activity
   jobApplications?: {
     status: string;
     appliedAt: string | null;
@@ -68,10 +69,9 @@ const DARK = '#0F172A';
 const MID = '#334155';
 const MUTED = '#64748B';
 const LIGHT = '#94A3B8';
-const ACCENT = '#2563EB'; // primary blue
-const TEAL = '#0D9488'; // section teal
+const ACCENT = '#2563EB';
+const TEAL = '#0D9488';
 const DIVIDER = '#E2E8F0';
-const SIDEBAR = '#F1F5F9';
 const WHITE = '#FFFFFF';
 const SUCCESS = '#059669';
 const WARNING = '#D97706';
@@ -79,16 +79,15 @@ const WARNING = '#D97706';
 // ── Layout constants ───────────────────────────────────────────────────────
 const PAGE_W = 595.28;
 const PAGE_H = 841.89;
-const SIDEBAR_W = 180;
-const MARGIN = 36;
-const SB_X = MARGIN; // sidebar x
-const SB_INN = SB_X + 14; // sidebar inner x
-const SB_W = SIDEBAR_W - 14; // sidebar text width
-const MAIN_X = MARGIN + SIDEBAR_W + 16; // main content x
-const MAIN_W = PAGE_W - MAIN_X - MARGIN; // main content width
-const HEADER_H = 100;
+const SIDEBAR_W = 190;
+const SB_PAD = 20;
+const SB_INN = SB_PAD;
+const SB_W = SIDEBAR_W - SB_PAD * 2;
+const MAIN_X = SIDEBAR_W + 24;
+const MAIN_W = PAGE_W - MAIN_X - 24;
+const HEADER_H = 110;
 
-// ── Colour helper ──────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────
 function rgb(hex: string): [number, number, number] {
   const n = parseInt(hex.replace('#', ''), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
@@ -127,17 +126,55 @@ function statusLabel(s: string): string {
   return map[s] ?? s;
 }
 
-// ── Sidebar helpers ────────────────────────────────────────────────────────
+async function fetchImage(url: string): Promise<Buffer | null> {
+  if (!url) return null;
+  return new Promise((resolve) => {
+    const attempt = (u: string, hops = 0) => {
+      if (hops > 2) {
+        resolve(null);
+        return;
+      }
+      const mod = u.startsWith('https') ? https : http;
+      const req = mod.get(u, { timeout: 8000 }, (res) => {
+        if (
+          res.statusCode &&
+          res.statusCode >= 300 &&
+          res.statusCode < 400 &&
+          res.headers.location
+        ) {
+          attempt(res.headers.location, hops + 1);
+          return;
+        }
+        if (!res.statusCode || res.statusCode >= 400) {
+          resolve(null);
+          return;
+        }
+        const chunks: Buffer[] = [];
+        res.on('data', (c: Buffer) => chunks.push(c));
+        res.on('end', () => resolve(Buffer.concat(chunks)));
+        res.on('error', () => resolve(null));
+      });
+      req.on('error', () => resolve(null));
+      req.on('timeout', () => {
+        req.destroy();
+        resolve(null);
+      });
+    };
+    attempt(url);
+  });
+}
+
+// ── Sidebar section heading ────────────────────────────────────────────────
 function sbSection(doc: PDFKit.PDFDocument, title: string, y: number): number {
   doc
     .font('Helvetica-Bold')
     .fontSize(7)
-    .fillColor(rgb(ACCENT))
-    .text(title.toUpperCase(), SB_INN, y, { characterSpacing: 1.2 });
-  y += 11;
+    .fillColor([147, 197, 253] as unknown as string)
+    .text(title.toUpperCase(), SB_INN, y, { characterSpacing: 1.5 });
+  y += 10;
   doc
-    .rect(SB_INN, y, SB_W - 4, 0.75)
-    .fillColor(rgb(ACCENT))
+    .rect(SB_INN, y, SB_W, 0.5)
+    .fillColor([37, 99, 235] as unknown as string)
     .fill();
   return y + 7;
 }
@@ -145,16 +182,16 @@ function sbSection(doc: PDFKit.PDFDocument, title: string, y: number): number {
 function sbRow(doc: PDFKit.PDFDocument, label: string, value: string, y: number): number {
   doc
     .font('Helvetica-Bold')
-    .fontSize(7)
-    .fillColor(rgb(LIGHT))
-    .text(label.toUpperCase(), SB_INN, y, { characterSpacing: 0.5 });
-  y += 9;
+    .fontSize(6.5)
+    .fillColor([100, 116, 139] as unknown as string)
+    .text(label.toUpperCase(), SB_INN, y, { characterSpacing: 0.8 });
+  y += 8;
   doc
     .font('Helvetica')
     .fontSize(8.5)
-    .fillColor(rgb(DARK))
-    .text(value, SB_INN, y, { width: SB_W - 4, lineGap: 1 });
-  y = doc.y + 6;
+    .fillColor([226, 232, 240] as unknown as string)
+    .text(value, SB_INN, y, { width: SB_W, lineGap: 1.5 });
+  y = doc.y + 7;
   return y;
 }
 
@@ -163,108 +200,161 @@ function mainSection(
   doc: PDFKit.PDFDocument,
   title: string,
   y: number,
-  accentColor: string = TEAL
+  color: string = TEAL
 ): number {
-  // Left accent bar
-  doc.rect(MAIN_X, y, 3, 13).fillColor(rgb(accentColor)).fill();
+  doc.rect(MAIN_X, y, 3, 12).fillColor(rgb(color)).fill();
   doc
     .font('Helvetica-Bold')
-    .fontSize(8.5)
-    .fillColor(rgb(accentColor))
-    .text(title.toUpperCase(), MAIN_X + 8, y + 2, { characterSpacing: 1 });
-  y += 14;
-  doc.rect(MAIN_X, y, MAIN_W, 0.75).fillColor(rgb(DIVIDER)).fill();
-  return y + 8;
+    .fontSize(8)
+    .fillColor(rgb(color))
+    .text(title.toUpperCase(), MAIN_X + 9, y + 2, { characterSpacing: 1.2 });
+  y += 13;
+  doc.rect(MAIN_X, y, MAIN_W, 0.5).fillColor(rgb(DIVIDER)).fill();
+  return y + 9;
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
 export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
+  const imageBuffer = data.image ? await fetchImage(data.image) : null;
+
   const doc = new PDFDocument({ size: 'A4', margin: 0, autoFirstPage: true });
   const chunks: Buffer[] = [];
-
   doc.on('data', (c: Buffer) => chunks.push(c));
 
   await new Promise<void>((resolve, reject) => {
     doc.on('end', resolve);
     doc.on('error', reject);
 
-    // ────────────────────────────────────────────────────────────────────
-    // HEADER
-    // ────────────────────────────────────────────────────────────────────
-    // Dark background
-    doc.rect(0, 0, PAGE_W, HEADER_H).fillColor(rgb(DARK)).fill();
-    // Teal top stripe
-    doc.rect(0, 0, PAGE_W, 4).fillColor(rgb(TEAL)).fill();
-    // Blue bottom stripe
+    // ── FULL-HEIGHT DARK SIDEBAR ──────────────────────────────────────────
+    doc.rect(0, 0, SIDEBAR_W, PAGE_H).fillColor(rgb(DARK)).fill();
     doc
-      .rect(0, HEADER_H - 3, PAGE_W, 3)
+      .rect(SIDEBAR_W - 2, 0, 2, PAGE_H)
+      .fillColor(rgb(TEAL))
+      .fill();
+
+    // ── HEADER BAND (right side) ──────────────────────────────────────────
+    doc
+      .rect(SIDEBAR_W, 0, PAGE_W - SIDEBAR_W, HEADER_H)
+      .fillColor(rgb(DARK))
+      .fill();
+    doc
+      .rect(SIDEBAR_W, HEADER_H - 3, PAGE_W - SIDEBAR_W, 3)
       .fillColor(rgb(ACCENT))
       .fill();
 
-    // Name
+    // ── PROFILE PHOTO — no ring border, bigger size ───────────────────────
+    // CHANGE 1: removed teal + white ring, increased size from 100→116
+    const photoSize = 116;
+    const photoX = (SIDEBAR_W - photoSize) / 2;
+    const photoY = 20;
+    const cx = photoX + photoSize / 2;
+    const cy_photo = photoY + photoSize / 2;
+
+    if (imageBuffer) {
+      try {
+        doc.save();
+        doc.circle(cx, cy_photo, photoSize / 2).clip();
+        doc.image(imageBuffer, photoX, photoY, {
+          width: photoSize,
+          height: photoSize,
+          cover: [photoSize, photoSize],
+        });
+        doc.restore();
+      } catch {
+        doc
+          .circle(cx, cy_photo, photoSize / 2)
+          .fillColor(rgb(ACCENT))
+          .fill();
+        const initials = data.name
+          .split(' ')
+          .map((w) => w[0])
+          .slice(0, 2)
+          .join('')
+          .toUpperCase();
+        doc
+          .font('Helvetica-Bold')
+          .fontSize(30)
+          .fillColor(rgb(WHITE))
+          .text(initials, photoX, cy_photo - 16, { width: photoSize, align: 'center' });
+      }
+    } else {
+      doc
+        .circle(cx, cy_photo, photoSize / 2)
+        .fillColor(rgb(ACCENT))
+        .fill();
+      const initials = data.name
+        .split(' ')
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(30)
+        .fillColor(rgb(WHITE))
+        .text(initials, photoX, cy_photo - 16, { width: photoSize, align: 'center' });
+    }
+
+    // ── NAME + SUBTITLE in header ─────────────────────────────────────────
+    const hx = SIDEBAR_W + 28;
+    const hWidth = PAGE_W - hx - 20;
+
     doc
       .font('Helvetica-Bold')
-      .fontSize(24)
+      .fontSize(26)
       .fillColor(rgb(WHITE))
-      .text(data.name, MARGIN, 18, { width: PAGE_W - 2 * MARGIN });
+      .text(data.name, hx, 22, { width: hWidth });
 
-    // Subtitle
     const subtitle = [data.department, data.university].filter(Boolean).join('  ·  ');
     if (subtitle) {
       doc
         .font('Helvetica')
-        .fontSize(10)
-        .fillColor(rgb(LIGHT))
-        .text(subtitle, MARGIN, 48, { width: PAGE_W - 2 * MARGIN });
+        .fontSize(10.5)
+        .fillColor([147, 197, 253] as unknown as string)
+        .text(subtitle, hx, 56, { width: hWidth });
     }
 
-    // Contact row
-    const contacts = [data.email, data.phone, data.city].filter(Boolean).join('   |   ');
-    if (contacts) {
+    // CHANGE 2: use · as separator between contact items
+    const contactParts: string[] = [];
+    if (data.email) contactParts.push(data.email);
+    if (data.phone) contactParts.push(data.phone);
+    if (data.city) contactParts.push(data.city);
+    if (contactParts.length > 0) {
       doc
         .font('Helvetica')
-        .fontSize(8.5)
-        .fillColor(rgb(MUTED))
-        .text(contacts, MARGIN, 66, { width: PAGE_W - 2 * MARGIN });
+        .fontSize(8)
+        .fillColor([148, 163, 184] as unknown as string)
+        .text(contactParts.join('   ·   '), hx, 80, { width: hWidth });
     }
 
-    // ────────────────────────────────────────────────────────────────────
-    // SIDEBAR BACKGROUND
-    // ────────────────────────────────────────────────────────────────────
-    doc
-      .rect(SB_X, HEADER_H, SIDEBAR_W, PAGE_H - HEADER_H)
-      .fillColor(rgb(SIDEBAR))
-      .fill();
-    // thin accent border on right edge of sidebar
-    doc
-      .rect(SB_X + SIDEBAR_W - 1, HEADER_H, 1, PAGE_H - HEADER_H)
-      .fillColor(rgb(DIVIDER))
-      .fill();
+    // Link row in header
+    const linkParts: string[] = [];
+    if (data.linkedinUrl) linkParts.push(data.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''));
+    if (data.githubUrl) linkParts.push(data.githubUrl.replace(/^https?:\/\/(www\.)?/, ''));
+    if (data.portfolioUrl) linkParts.push(data.portfolioUrl.replace(/^https?:\/\/(www\.)?/, ''));
+    if (linkParts.length > 0) {
+      doc
+        .font('Helvetica')
+        .fontSize(7.5)
+        .fillColor([99, 179, 237] as unknown as string)
+        .text(linkParts.join('   ·   '), hx, 98, { width: hWidth });
+    }
 
-    let sy = HEADER_H + 16;
+    // ── SIDEBAR CONTENT ───────────────────────────────────────────────────
+    let sy = photoY + photoSize + 16;
 
-    // ── Contact (sidebar) ──
+    // CHANGE 3 & 4: Contact section FIRST, includes all links
     sy = sbSection(doc, 'Contact', sy);
     if (data.email) sy = sbRow(doc, 'Email', data.email, sy);
     if (data.phone) sy = sbRow(doc, 'Phone', data.phone, sy);
     if (data.city) sy = sbRow(doc, 'City', data.city, sy);
-    sy += 4;
-
-    // ── Links ──
-    const links: [string, string][] = [];
     if (data.linkedinUrl)
-      links.push(['LinkedIn', data.linkedinUrl.replace(/^https?:\/\/(www\.)?/, '')]);
-    if (data.githubUrl) links.push(['GitHub', data.githubUrl.replace(/^https?:\/\/(www\.)?/, '')]);
+      sy = sbRow(doc, 'LinkedIn', data.linkedinUrl.replace(/^https?:\/\/(www\.)?/, ''), sy);
+    if (data.githubUrl)
+      sy = sbRow(doc, 'GitHub', data.githubUrl.replace(/^https?:\/\/(www\.)?/, ''), sy);
     if (data.portfolioUrl)
-      links.push(['Portfolio', data.portfolioUrl.replace(/^https?:\/\/(www\.)?/, '')]);
-
-    if (links.length > 0) {
-      sy = sbSection(doc, 'Links', sy);
-      links.forEach(([label, url]) => {
-        sy = sbRow(doc, label, url, sy);
-      });
-      sy += 4;
-    }
+      sy = sbRow(doc, 'Portfolio', data.portfolioUrl.replace(/^https?:\/\/(www\.)?/, ''), sy);
+    sy += 4;
 
     // ── Education ──
     sy = sbSection(doc, 'Education', sy);
@@ -272,12 +362,16 @@ export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
       doc
         .font('Helvetica-Bold')
         .fontSize(9)
-        .fillColor(rgb(DARK))
-        .text(data.university, SB_INN, sy, { width: SB_W - 4 });
+        .fillColor([248, 250, 252] as unknown as string)
+        .text(data.university, SB_INN, sy, { width: SB_W });
       sy = doc.y + 3;
     }
     if (data.department) {
-      doc.font('Helvetica').fontSize(8.5).fillColor(rgb(MID)).text(data.department, SB_INN, sy);
+      doc
+        .font('Helvetica')
+        .fontSize(8.5)
+        .fillColor([203, 213, 225] as unknown as string)
+        .text(data.department, SB_INN, sy);
       sy = doc.y + 3;
     }
     const acadMeta = [
@@ -287,91 +381,94 @@ export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
       .filter(Boolean)
       .join('  ·  ');
     if (acadMeta) {
-      doc.font('Helvetica').fontSize(7.5).fillColor(rgb(LIGHT)).text(acadMeta, SB_INN, sy);
-      sy = doc.y + 4;
-    }
-    if (data.cgpa != null) {
-      // CGPA pill
-      const pillW = SB_W - 8;
-      doc.rect(SB_INN, sy, pillW, 18).fillColor(rgb(ACCENT)).fill();
-      doc
-        .font('Helvetica-Bold')
-        .fontSize(9)
-        .fillColor(rgb(WHITE))
-        .text(`CGPA  ${data.cgpa.toFixed(2)} / 4.00`, SB_INN + 6, sy + 4, { width: pillW - 8 });
-      sy += 24;
-    }
-    if (data.studentId) {
       doc
         .font('Helvetica')
         .fontSize(7.5)
-        .fillColor(rgb(LIGHT))
-        .text(`ID: ${data.studentId}`, SB_INN, sy);
-      sy = doc.y + 6;
+        .fillColor([100, 116, 139] as unknown as string)
+        .text(acadMeta, SB_INN, sy);
+      sy = doc.y + 5;
     }
-    sy += 4;
+    if (data.cgpa != null) {
+      const pillW = SB_W;
+      doc.rect(SB_INN, sy, pillW, 20).fillColor(rgb(ACCENT)).fill();
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(9.5)
+        .fillColor(rgb(WHITE))
+        .text(`CGPA  ${data.cgpa.toFixed(2)} / 4.00`, SB_INN, sy + 5, {
+          width: pillW,
+          align: 'center',
+        });
+      sy += 27;
+    }
+    sy += 8;
 
     // ── Skills ──
     if (data.skills.length > 0) {
       sy = sbSection(doc, 'Skills', sy);
       data.skills.forEach((skill) => {
-        // Bullet dot
         doc
-          .circle(SB_INN + 3, sy + 4.5, 2)
+          .circle(SB_INN + 3.5, sy + 5, 2.5)
           .fillColor(rgb(TEAL))
           .fill();
         doc
           .font('Helvetica')
           .fontSize(8.5)
-          .fillColor(rgb(MID))
-          .text(skill, SB_INN + 10, sy, { width: SB_W - 12 });
-        sy = doc.y + 2;
+          .fillColor([203, 213, 225] as unknown as string)
+          .text(skill, SB_INN + 12, sy, { width: SB_W - 14 });
+        sy = doc.y + 3;
       });
-      sy += 6;
+      sy += 8;
     }
 
-    // ── Courses ──
+    // ── Completed Courses ──
     if (data.completedCourses.length > 0) {
-      sy = sbSection(doc, 'Courses', sy);
+      sy = sbSection(doc, 'Completed Courses', sy);
       data.completedCourses.forEach((c) => {
         doc
-          .circle(SB_INN + 3, sy + 4.5, 2)
-          .fillColor(rgb(MUTED))
+          .circle(SB_INN + 3.5, sy + 5, 2)
+          .fillColor([71, 85, 105] as unknown as string)
           .fill();
         doc
           .font('Helvetica')
           .fontSize(8)
-          .fillColor(rgb(MID))
-          .text(c, SB_INN + 10, sy, { width: SB_W - 12 });
-        sy = doc.y + 2;
+          .fillColor([148, 163, 184] as unknown as string)
+          .text(c, SB_INN + 12, sy, { width: SB_W - 14 });
+        sy = doc.y + 3;
       });
-      sy += 6;
+      sy += 8;
     }
 
     // ── Nextern Score ──
     if (data.opportunityScore && data.opportunityScore > 0) {
       sy = sbSection(doc, 'Nextern Score', sy);
-      const barW = SB_W - 8;
+      const barW = SB_W;
       const fillW = Math.round((data.opportunityScore / 100) * barW);
-      // Track
-      doc.rect(SB_INN, sy, barW, 8).fillColor(rgb(DIVIDER)).fill();
-      // Fill
+      doc
+        .rect(SB_INN, sy, barW, 9)
+        .fillColor([30, 41, 59] as unknown as string)
+        .fill();
       const barColor =
         data.opportunityScore >= 70 ? SUCCESS : data.opportunityScore >= 40 ? ACCENT : WARNING;
-      doc.rect(SB_INN, sy, fillW, 8).fillColor(rgb(barColor)).fill();
-      sy += 12;
+      doc.rect(SB_INN, sy, fillW, 9).fillColor(rgb(barColor)).fill();
+      sy += 14;
       doc
         .font('Helvetica-Bold')
         .fontSize(9)
-        .fillColor(rgb(DARK))
+        .fillColor([226, 232, 240] as unknown as string)
         .text(`${data.opportunityScore} / 100`, SB_INN, sy);
-      sy = doc.y + 8;
+      sy = doc.y + 10;
     }
 
     // ────────────────────────────────────────────────────────────────────
     // MAIN CONTENT
     // ────────────────────────────────────────────────────────────────────
-    let cy = HEADER_H + 16;
+    doc
+      .rect(SIDEBAR_W, HEADER_H, PAGE_W - SIDEBAR_W, PAGE_H - HEADER_H)
+      .fillColor(rgb(WHITE))
+      .fill();
+
+    let cy = HEADER_H + 20;
 
     // ── Professional Summary ──
     if (data.bio) {
@@ -380,8 +477,8 @@ export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
         .font('Helvetica')
         .fontSize(9.5)
         .fillColor(rgb(MID))
-        .text(data.bio, MAIN_X, cy, { width: MAIN_W, lineGap: 2.5 });
-      cy = doc.y + 14;
+        .text(data.bio, MAIN_X, cy, { width: MAIN_W, lineGap: 3 });
+      cy = doc.y + 16;
     }
 
     // ── Projects ──
@@ -390,12 +487,10 @@ export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
       data.projects.forEach((proj, i) => {
         if (i > 0) {
           doc.rect(MAIN_X, cy, MAIN_W, 0.5).fillColor(rgb(DIVIDER)).fill();
-          cy += 8;
+          cy += 9;
         }
-        // Title
         doc.font('Helvetica-Bold').fontSize(10.5).fillColor(rgb(DARK)).text(proj.title, MAIN_X, cy);
         cy = doc.y + 2;
-        // Tech stack
         if (proj.techStack?.length > 0) {
           doc
             .font('Helvetica')
@@ -404,16 +499,14 @@ export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
             .text(proj.techStack.join('  ·  '), MAIN_X, cy);
           cy = doc.y + 4;
         }
-        // Description
         if (proj.description) {
           doc
             .font('Helvetica')
             .fontSize(9)
             .fillColor(rgb(MID))
-            .text(proj.description, MAIN_X, cy, { width: MAIN_W, lineGap: 2 });
+            .text(proj.description, MAIN_X, cy, { width: MAIN_W, lineGap: 2.5 });
           cy = doc.y + 4;
         }
-        // Links
         const lnks: string[] = [];
         if (proj.projectUrl) lnks.push(`Live: ${proj.projectUrl.replace(/^https?:\/\//, '')}`);
         if (proj.repoUrl) lnks.push(`Repo: ${proj.repoUrl.replace(/^https?:\/\//, '')}`);
@@ -426,14 +519,14 @@ export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
           cy = doc.y + 4;
         }
       });
-      cy += 10;
+      cy += 12;
     }
 
     // ── Certifications ──
     if (data.certifications.length > 0) {
       cy = mainSection(doc, 'Certifications', cy);
       data.certifications.forEach((cert, i) => {
-        if (i > 0) cy += 5;
+        if (i > 0) cy += 6;
         doc.font('Helvetica-Bold').fontSize(10).fillColor(rgb(DARK)).text(cert.name, MAIN_X, cy);
         cy = doc.y + 1;
         const meta = [cert.issuedBy, cert.issueDate ? fmtDate(cert.issueDate) : '']
@@ -450,7 +543,7 @@ export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
           cy = doc.y + 3;
         }
       });
-      cy += 10;
+      cy += 12;
     }
 
     // ── Platform Activity: Job Applications ──
@@ -460,24 +553,17 @@ export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
       jobs.forEach((app, i) => {
         if (i > 0) {
           doc.rect(MAIN_X, cy, MAIN_W, 0.5).fillColor(rgb(DIVIDER)).fill();
-          cy += 8;
+          cy += 9;
         }
         const job = app.job!;
-        // Row: title + status pill
         const statusColor =
           app.status === 'hired'
             ? SUCCESS
             : app.status === 'shortlisted' || app.status === 'interview_scheduled'
               ? ACCENT
               : MUTED;
-        doc
-          .font('Helvetica-Bold')
-          .fontSize(10)
-          .fillColor(rgb(DARK))
-          .text(job.title, MAIN_X, cy, { continued: false });
+        doc.font('Helvetica-Bold').fontSize(10).fillColor(rgb(DARK)).text(job.title, MAIN_X, cy);
         cy = doc.y + 1;
-
-        // Company · type · location
         const meta = [
           job.companyName,
           jobTypeLabel(job.type),
@@ -485,17 +571,14 @@ export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
         ].join('  ·  ');
         doc.font('Helvetica').fontSize(8.5).fillColor(rgb(MUTED)).text(meta, MAIN_X, cy);
         cy = doc.y + 2;
-
-        // Status + date row
         const statusText = statusLabel(app.status);
         const dateText = app.appliedAt ? fmtDate(app.appliedAt) : '';
         const fitText = app.fitScore != null ? `Fit: ${app.fitScore}%` : '';
-
         doc
           .font('Helvetica-Bold')
           .fontSize(7.5)
           .fillColor(rgb(statusColor))
-          .text(statusText, MAIN_X, cy, { continued: true });
+          .text(statusText, MAIN_X, cy, { continued: !!(dateText || fitText) });
         if (dateText) {
           doc
             .font('Helvetica')
@@ -506,20 +589,20 @@ export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
         if (fitText) {
           doc.font('Helvetica-Bold').fontSize(7.5).fillColor(rgb(TEAL)).text(`   ${fitText}`);
         }
-        cy = doc.y + 4;
+        cy = doc.y + 5;
       });
-      cy += 10;
+      cy += 12;
     }
 
-    // ── Platform Activity: Events & Webinars ──
+    // ── Platform Activity: Events ──
     const events = data.eventRegistrations?.filter((e) => e.job) ?? [];
     if (events.length > 0) {
       cy = mainSection(doc, 'Platform Activity — Events & Webinars', cy, TEAL);
       events.forEach((evt, i) => {
-        if (i > 0) cy += 4;
+        if (i > 0) cy += 5;
         const job = evt.job!;
         doc
-          .circle(MAIN_X + 4, cy + 4.5, 2.5)
+          .circle(MAIN_X + 4, cy + 5, 2.5)
           .fillColor(rgb(TEAL))
           .fill();
         doc
@@ -535,16 +618,14 @@ export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
           .fontSize(8)
           .fillColor(rgb(MUTED))
           .text(`${meta2}${dateStr}`, MAIN_X + 12, cy);
-        cy = doc.y + 4;
+        cy = doc.y + 5;
       });
-      cy += 6;
+      cy += 8;
     }
 
-    // ────────────────────────────────────────────────────────────────────
-    // FOOTER
-    // ────────────────────────────────────────────────────────────────────
-    const footerY = PAGE_H - 26;
-    doc.rect(0, footerY, PAGE_W, 26).fillColor(rgb(DARK)).fill();
+    // ── FOOTER ────────────────────────────────────────────────────────────
+    const footerY = PAGE_H - 28;
+    doc.rect(0, footerY, PAGE_W, 28).fillColor(rgb(DARK)).fill();
     doc.rect(0, footerY, PAGE_W, 2).fillColor(rgb(ACCENT)).fill();
     const generated = new Date().toLocaleDateString('en-US', {
       day: 'numeric',
@@ -557,9 +638,9 @@ export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
       .fillColor(rgb(MUTED))
       .text(
         `Generated by Nextern  ·  nextern-virid.vercel.app  ·  ${generated}`,
-        MARGIN,
-        footerY + 10,
-        { width: PAGE_W - 2 * MARGIN, align: 'center' }
+        36,
+        footerY + 11,
+        { width: PAGE_W - 72, align: 'center' }
       );
 
     doc.end();

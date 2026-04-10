@@ -665,7 +665,7 @@ export default function StudentProfilePage() {
   const [badges, setBadges] = useState<
     { badgeName: string; badgeIcon: string; awardedAt: string; badgeSlug: string }[]
   >([]);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   // ── Resume upload state ──
   const { startUpload, isUploading } = useUploadThing('resumeUploader');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -674,7 +674,7 @@ export default function StudentProfilePage() {
   const [resumeSaved, setResumeSaved] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const uploading = resumeUploading || isUploading;
-
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const resumeUrlRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -852,11 +852,10 @@ export default function StudentProfilePage() {
         setShowDeleteConfirm(false);
       }
     } catch {
-      setResumeError('Failed to delete resume. Please try again.');
+      setResumeError('Failed to delete resume.');
       setShowDeleteConfirm(false);
     }
   }
-
   // ── Save profile ─────────────────────────────────────────────────────
   async function handleSave() {
     setSaving(true);

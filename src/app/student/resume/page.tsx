@@ -449,7 +449,7 @@ function ResumePreviewModal({
 
             {/* Courses */}
             {profile.completedCourses.length > 0 && (
-              <SBSection title="Courses">
+              <SBSection title="Completed Courses">
                 {profile.completedCourses.map((c) => (
                   <div
                     key={c}
@@ -1340,7 +1340,7 @@ export default function StudentResumePage() {
                 onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.14)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
               >
-                <Eye size={14} /> View Resume
+                <Eye size={14} /> View In-Platform Resume
               </button>
 
               <button
