@@ -7,7 +7,8 @@ import { UploadThingError } from 'uploadthing/server';
 const f = createUploadthing();
 
 export const ourFileRouter = {
-  // 📄 Resume Upload
+  // ── Resume Upload (manual PDF upload by student from profile page) ─────
+  // Saves to: User.resumeUrl — the "actual resume" attached to job applications
   resumeUploader: f({ pdf: { maxFileSize: '8MB' } })
     .middleware(async () => {
       const session = await auth();
@@ -22,7 +23,25 @@ export const ourFileRouter = {
       return { resumeUrl: file.ufsUrl };
     }),
 
-  // 🖼️ Profile Picture Upload
+  // ── Generated Resume Upload (auto-generated PDF from Resume Builder) ───
+  // Saves to: User.generatedResumeUrl — completely separate from actual resume
+  generatedResumeUploader: f({ pdf: { maxFileSize: '8MB' } })
+    .middleware(async () => {
+      const session = await auth();
+      if (!session?.user?.id) throw new UploadThingError('Unauthorized');
+      if (session.user.role !== 'student') throw new UploadThingError('Students only');
+      return { userId: session.user.id };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      await connectDB();
+      await User.findByIdAndUpdate(metadata.userId, {
+        generatedResumeUrl: file.ufsUrl,
+      });
+      return { generatedResumeUrl: file.ufsUrl };
+    }),
+
+  // ── Profile Picture Upload (students, advisors, dept heads) ───────────
+  // Saves to: User.image
   profilePictureUploader: f({
     image: { maxFileSize: '2MB', maxFileCount: 1 },
   })
@@ -39,7 +58,8 @@ export const ourFileRouter = {
       return { imageUrl: file.ufsUrl };
     }),
 
-  // 🏢 Company Logo Upload
+  // ── Company Logo Upload (employers only) ──────────────────────────────
+  // Saves to: User.companyLogo
   companyLogoUploader: f({
     image: { maxFileSize: '2MB', maxFileCount: 1 },
   })

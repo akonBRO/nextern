@@ -64,8 +64,16 @@ export const UpdateStudentProfileSchema = z.object({
     .or(z.literal('')),
   bio: z.string().max(500).optional(),
 
-  // Profile image for students
+  // Profile image
   image: z.string().url().optional(),
+
+  // ── Resume URLs ──────────────────────────────────────────────────────────
+  // resumeUrl          → manually uploaded PDF (from student/profile page)
+  // generatedResumeUrl → auto-generated PDF saved from Resume Builder page
+  // These are intentionally separate — saving generated resume must NEVER
+  // overwrite the student's manually uploaded resume.
+  resumeUrl: z.string().url().optional().nullable(),
+  generatedResumeUrl: z.string().url().optional().nullable(),
 
   university: z.string().max(120).optional(),
   department: z.string().max(60).optional(),
@@ -78,6 +86,7 @@ export const UpdateStudentProfileSchema = z.object({
   githubUrl: z.string().url().optional().or(z.literal('')),
   portfolioUrl: z.string().url().optional().or(z.literal('')),
   city: z.string().max(60).optional(),
+  isGraduated: z.boolean().optional(),
 });
 
 export const UpdateEmployerProfileSchema = z.object({

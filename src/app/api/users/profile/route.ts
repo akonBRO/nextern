@@ -143,6 +143,7 @@ function calculateStudentCompleteness(user: Record<string, unknown>): number {
     { field: 'department', weight: 10 },
     { field: 'cgpa', weight: 10 },
     { field: 'resumeUrl', weight: 15 },
+    { field: 'generatedResumeUrl', weight: 15 },
     { field: 'skills', weight: 10, isArray: true },
     { field: 'completedCourses', weight: 5, isArray: true },
     { field: 'projects', weight: 5, isArray: true },

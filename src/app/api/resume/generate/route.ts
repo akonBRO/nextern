@@ -1,13 +1,16 @@
 // src/app/api/resume/generate/route.ts
 // GET /api/resume/generate
+// Generates a professional PDF resume from the student's profile + platform activity
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
+import { Application } from '@/models/Application';
 import { generateResumePDF, type ResumeData } from '@/lib/resume-pdf';
+import mongoose from 'mongoose';
 
-type Project = {
+type ProjectDoc = {
   title?: string;
   description?: string;
   techStack?: string[];
@@ -15,7 +18,7 @@ type Project = {
   repoUrl?: string;
 };
 
-type Certification = {
+type CertDoc = {
   name?: string;
   issuedBy?: string;
   issueDate?: Date;
@@ -25,7 +28,6 @@ type Certification = {
 export async function GET() {
   try {
     const session = await auth();
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -33,11 +35,9 @@ export async function GET() {
     await connectDB();
 
     const user = await User.findById(session.user.id).select('-password').lean();
-
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-
     if (user.role !== 'student') {
       return NextResponse.json(
         { error: 'Resume generation is only available for students.' },
@@ -45,13 +45,61 @@ export async function GET() {
       );
     }
 
+    const oid = new mongoose.Types.ObjectId(session.user.id);
+
+    // ── Fetch platform activity ──────────────────────────────────────────
+    const applications = await Application.find({ studentId: oid })
+      .populate('jobId', 'title type companyName city locationType stipendBDT durationMonths')
+      .sort({ appliedAt: -1 })
+      .lean();
+
+    const jobApplications = applications
+      .filter((a) => !a.isEventRegistration)
+      .map((a) => {
+        const job = a.jobId as Record<string, unknown> | null;
+        return {
+          status: a.status,
+          appliedAt: a.appliedAt ? (a.appliedAt as Date).toISOString() : null,
+          fitScore: (a.fitScore as number) ?? null,
+          job: job
+            ? {
+                title: job.title as string,
+                type: job.type as string,
+                companyName: job.companyName as string,
+                city: (job.city as string) ?? null,
+                locationType: job.locationType as string,
+                stipendBDT: (job.stipendBDT as number) ?? null,
+                durationMonths: (job.durationMonths as number) ?? null,
+              }
+            : null,
+        };
+      });
+
+    const eventRegistrations = applications
+      .filter((a) => a.isEventRegistration)
+      .map((a) => {
+        const job = a.jobId as Record<string, unknown> | null;
+        return {
+          status: a.status,
+          appliedAt: a.appliedAt ? (a.appliedAt as Date).toISOString() : null,
+          job: job
+            ? {
+                title: job.title as string,
+                type: job.type as string,
+                companyName: job.companyName as string,
+              }
+            : null,
+        };
+      });
+
+    // ── Build ResumeData ─────────────────────────────────────────────────
     const resumeData: ResumeData = {
       name: user.name ?? 'Student',
       email: user.email ?? '',
       phone: user.phone ?? undefined,
       city: user.city ?? undefined,
       bio: user.bio ?? undefined,
-      image: user.image ?? undefined, // ← profile photo for PDF
+      image: user.image ?? undefined,
       university: user.university ?? undefined,
       department: user.department ?? undefined,
       yearOfStudy: user.yearOfStudy ?? undefined,
@@ -65,7 +113,7 @@ export async function GET() {
       skills: user.skills ?? [],
       completedCourses: user.completedCourses ?? [],
 
-      projects: (user.projects ?? []).map((p: Project) => ({
+      projects: (user.projects ?? []).map((p: ProjectDoc) => ({
         title: p.title ?? '',
         description: p.description ?? '',
         techStack: p.techStack ?? [],
@@ -73,20 +121,21 @@ export async function GET() {
         repoUrl: p.repoUrl ?? undefined,
       })),
 
-      certifications: (user.certifications ?? []).map((c: Certification) => ({
+      certifications: (user.certifications ?? []).map((c: CertDoc) => ({
         name: c.name ?? '',
         issuedBy: c.issuedBy ?? '',
         issueDate: c.issueDate ? new Date(c.issueDate).toISOString() : undefined,
         credentialUrl: c.credentialUrl ?? undefined,
       })),
+
+      jobApplications,
+      eventRegistrations,
     };
 
-    // generateResumePDF is now async — fetches profile image internally
     const pdfBuffer = await generateResumePDF(resumeData);
-    const uint8Array = new Uint8Array(pdfBuffer);
     const safeName = (user.name ?? 'Resume').replace(/\s+/g, '_');
 
-    return new NextResponse(uint8Array, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
