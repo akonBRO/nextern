@@ -1,3 +1,5 @@
+// src/app/api/jobs/[jobId]/apply/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
@@ -13,12 +15,17 @@ import { FeatureUsage } from '@/models/FeatureUsage';
 
 type Params = { params: Promise<{ jobId: string }> };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/jobs/[jobId]/apply
+// ─────────────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest, { params }: Params) {
   try {
     const session = await auth();
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
     if (session.user.role !== 'student') {
       return NextResponse.json({ error: 'Only students can apply to jobs' }, { status: 403 });
     }
@@ -27,46 +34,71 @@ export async function POST(req: NextRequest, { params }: Params) {
     await connectDB();
 
     const job = await Job.findById(jobId);
-    if (!job) return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+
+    if (!job) {
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+    }
+
     if (!job.isActive) {
       return NextResponse.json(
         { error: 'This listing is no longer accepting applications' },
         { status: 400 }
       );
     }
+
     if (job.applicationDeadline && new Date() > job.applicationDeadline) {
       return NextResponse.json({ error: 'Application deadline has passed' }, { status: 400 });
     }
 
-    const existing = await Application.findOne({ jobId, studentId: session.user.id });
+    // Duplicate check
+    const existing = await Application.findOne({
+      jobId,
+      studentId: session.user.id,
+    });
+
     if (existing) {
       return NextResponse.json({ error: 'You have already applied to this job' }, { status: 409 });
     }
 
     const body = await req.json();
     const parsed = ApplyJobSchema.safeParse(body);
+
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        {
+          error: 'Validation failed',
+          details: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // USER SNAPSHOT (BOTH VERSIONS COMBINED)
+    // ─────────────────────────────────────────────────────────────
     const student = await User.findById(session.user.id)
-      .select('resumeUrl skills cgpa completedCourses')
+      .select('resumeUrl generatedResumeUrl skills cgpa completedCourses')
       .lean();
 
     const isEvent = job.type === 'webinar' || job.type === 'workshop';
 
+    // ─────────────────────────────────────────────────────────────
+    // CREATE APPLICATION (MERGED SCHEMA)
+    // ─────────────────────────────────────────────────────────────
     const application = await Application.create({
       studentId: session.user.id,
       jobId,
       employerId: job.employerId,
       coverLetter: parsed.data.coverLetter,
+
+      // legacy + new snapshot support (KEEP BOTH)
       resumeUrlSnapshot: student?.resumeUrl ?? '',
+      generatedResumeUrlSnapshot: student?.generatedResumeUrl ?? '',
+
       isEventRegistration: isEvent,
       status: 'applied',
       appliedAt: new Date(),
+
       statusHistory: [
         {
           status: 'applied',
@@ -77,8 +109,13 @@ export async function POST(req: NextRequest, { params }: Params) {
     });
 
     const appliedAt = new Date();
+
+    // ─────────────────────────────────────────────────────────────
+    // JOB METRICS + VIEW TRACKING (FROM FIRST VERSION)
+    // ─────────────────────────────────────────────────────────────
     await Promise.all([
       Job.findByIdAndUpdate(jobId, { $inc: { applicationCount: 1 } }),
+
       JobView.findOneAndUpdate(
         { studentId: session.user.id, jobId },
         {
@@ -96,12 +133,17 @@ export async function POST(req: NextRequest, { params }: Params) {
         { upsert: true }
       ),
     ]);
+
     await onJobApplied(session.user.id, jobId).catch(() => {});
 
+    // ─────────────────────────────────────────────────────────────
+    // SKILL GAP ANALYSIS (FROM FIRST VERSION - OPTIONAL FEATURE)
+    // ─────────────────────────────────────────────────────────────
     let appliedFitScore: number | null = null;
 
     try {
       const access = await checkFeatureAccess(session.user.id, 'skillGapAnalysis');
+
       if (access.allowed && student) {
         const result = await analyzeSkillGap({
           studentSkills: student.skills ?? [],
@@ -154,14 +196,19 @@ export async function POST(req: NextRequest, { params }: Params) {
     if ((error as { code?: number }).code === 11000) {
       return NextResponse.json({ error: 'You have already applied to this job' }, { status: 409 });
     }
+
     console.error('[APPLY JOB ERROR]', error);
     return NextResponse.json({ error: 'Failed to submit application' }, { status: 500 });
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE /api/jobs/[jobId]/apply (withdraw application)
+// ─────────────────────────────────────────────────────────────────────────────
 export async function DELETE(req: NextRequest, { params }: Params) {
   try {
     const session = await auth();
+
     if (!session?.user?.id || session.user.role !== 'student') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -169,10 +216,15 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     const { jobId } = await params;
     await connectDB();
 
-    const application = await Application.findOne({ jobId, studentId: session.user.id });
+    const application = await Application.findOne({
+      jobId,
+      studentId: session.user.id,
+    });
+
     if (!application) {
       return NextResponse.json({ error: 'Application not found' }, { status: 404 });
     }
+
     if (['hired', 'rejected'].includes(application.status)) {
       return NextResponse.json(
         { error: 'Cannot withdraw from a finalised application' },
@@ -192,9 +244,13 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       },
     });
 
-    await Job.findByIdAndUpdate(jobId, { $inc: { applicationCount: -1 } });
+    await Job.findByIdAndUpdate(jobId, {
+      $inc: { applicationCount: -1 },
+    });
 
-    return NextResponse.json({ message: 'Application withdrawn successfully' });
+    return NextResponse.json({
+      message: 'Application withdrawn successfully',
+    });
   } catch (error) {
     console.error('[WITHDRAW ERROR]', error);
     return NextResponse.json({ error: 'Failed to withdraw application' }, { status: 500 });

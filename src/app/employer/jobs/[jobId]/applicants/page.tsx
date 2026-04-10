@@ -46,7 +46,7 @@ async function getApplicantsData(jobId: string, employerId: string) {
     Application.find({ jobId: jid, employerId: oid, isEventRegistration: false })
       .populate(
         'studentId',
-        'name email university department cgpa skills opportunityScore resumeUrl image yearOfStudy'
+        'name email university department cgpa skills opportunityScore resumeUrl generatedResumeUrl image yearOfStudy'
       )
       .sort({ fitScore: -1, appliedAt: -1 })
       .lean(),
@@ -161,6 +161,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
       cgpa?: number;
       skills?: string[];
       resumeUrl?: string;
+      generatedResumeUrl?: string;
       image?: string;
       yearOfStudy?: number;
     };
@@ -170,6 +171,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
       fitScore: app.fitScore ?? 0,
       appliedAt: app.appliedAt?.toISOString() ?? '',
       resumeUrlSnapshot: app.resumeUrlSnapshot || student?.resumeUrl || '',
+      generatedResumeUrlSnapshot: student?.generatedResumeUrl || '',
       student: {
         _id: student?._id?.toString() ?? '',
         name: student?.name ?? 'Unknown',
