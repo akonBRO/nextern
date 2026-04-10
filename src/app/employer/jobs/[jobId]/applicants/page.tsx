@@ -10,24 +10,20 @@ import { Application } from '@/models/Application';
 import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { User } from '@/models/User';
+import { getUsageSummary } from '@/lib/premium';
 import mongoose from 'mongoose';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
   DashboardPage,
-  DashboardSection,
-  EmptyState,
   HeroCard,
   ActionLink,
   Panel,
   StatCard,
-  Tag,
   formatCompactNumber,
   formatShortDate,
   formatStatusLabel,
 } from '@/components/dashboard/DashboardContent';
 import { Users, CheckCircle2, Clock3, Trophy } from 'lucide-react';
-import Link from 'next/link';
-import ApplicantActions from './ApplicantActions';
 import BatchHiringPanel from './BatchHiringPanel';
 
 const navItems = [
@@ -145,7 +141,10 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
   if (session.user.role !== 'employer') redirect('/employer/dashboard');
 
   const { jobId } = await params;
-  const data = await getApplicantsData(jobId, session.user.id);
+  const [data, usage] = await Promise.all([
+    getApplicantsData(jobId, session.user.id),
+    getUsageSummary(session.user.id),
+  ]);
   if (!data) redirect('/employer/jobs');
 
   const { employer, job, applications, stats, universityStats, chrome } = data;
@@ -300,6 +299,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
             pipeline: u.pipeline,
           }))}
           totalApplications={stats.total}
+          usage={JSON.parse(JSON.stringify(usage))}
         />
 
         <style>{`

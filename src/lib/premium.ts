@@ -15,6 +15,7 @@ export type PremiumFeature =
   | 'mockInterview'
   | 'mentorshipRequest'
   | 'jobPosting'
+  | 'aiApplicantShortlist'
   | 'trainingPath'
   | 'advancedAnalytics'
   | 'priorityRecommendations';
@@ -35,6 +36,7 @@ export type UsageSummary = {
     mockInterview: number;
     mentorshipRequest: number;
     jobPosting: number;
+    aiApplicantShortlist: number;
   };
   limits: {
     skillGapAnalysis: number | null;
@@ -42,6 +44,7 @@ export type UsageSummary = {
     mockInterview: number | null;
     mentorshipRequest: number | null;
     jobPosting: number | null;
+    aiApplicantShortlist: number | null;
   };
   remaining: {
     skillGapAnalysis: number | null;
@@ -49,6 +52,7 @@ export type UsageSummary = {
     mockInterview: number | null;
     mentorshipRequest: number | null;
     jobPosting: number | null;
+    aiApplicantShortlist: number | null;
   };
 };
 
@@ -119,31 +123,42 @@ export async function getUsageSummary(userId: string): Promise<UsageSummary> {
     Promise.resolve(getCurrentMonthWindow()),
   ]);
 
-  const [skillGapAnalysis, smartJobRecommendation, mockInterview, mentorshipRequest, jobPosting] =
-    await Promise.all([
-      FeatureUsage.countDocuments({
-        userId,
-        feature: 'skill_gap_analysis',
-        createdAt: { $gte: window.start, $lt: window.end },
-      }),
-      FeatureUsage.countDocuments({
-        userId,
-        feature: 'smart_job_recommendation',
-        createdAt: { $gte: window.start, $lt: window.end },
-      }),
-      MockInterviewSession.countDocuments({
-        studentId: userId,
-        createdAt: { $gte: window.start, $lt: window.end },
-      }),
-      MentorSession.countDocuments({
-        studentId: userId,
-        createdAt: { $gte: window.start, $lt: window.end },
-      }),
-      Job.countDocuments({
-        employerId: userId,
-        createdAt: { $gte: window.start, $lt: window.end },
-      }),
-    ]);
+  const [
+    skillGapAnalysis,
+    smartJobRecommendation,
+    mockInterview,
+    mentorshipRequest,
+    jobPosting,
+    aiApplicantShortlist,
+  ] = await Promise.all([
+    FeatureUsage.countDocuments({
+      userId,
+      feature: 'skill_gap_analysis',
+      createdAt: { $gte: window.start, $lt: window.end },
+    }),
+    FeatureUsage.countDocuments({
+      userId,
+      feature: 'smart_job_recommendation',
+      createdAt: { $gte: window.start, $lt: window.end },
+    }),
+    MockInterviewSession.countDocuments({
+      studentId: userId,
+      createdAt: { $gte: window.start, $lt: window.end },
+    }),
+    MentorSession.countDocuments({
+      studentId: userId,
+      createdAt: { $gte: window.start, $lt: window.end },
+    }),
+    Job.countDocuments({
+      employerId: userId,
+      createdAt: { $gte: window.start, $lt: window.end },
+    }),
+    FeatureUsage.countDocuments({
+      userId,
+      feature: 'ai_applicant_shortlist',
+      createdAt: { $gte: window.start, $lt: window.end },
+    }),
+  ]);
 
   const limits = getFeatureLimit(premiumStatus.isPremium);
 
@@ -155,6 +170,7 @@ export async function getUsageSummary(userId: string): Promise<UsageSummary> {
       mockInterview,
       mentorshipRequest,
       jobPosting,
+      aiApplicantShortlist,
     },
     limits: {
       skillGapAnalysis: normalizeLimit(limits.skillGapAnalysisPerMonth),
@@ -162,6 +178,7 @@ export async function getUsageSummary(userId: string): Promise<UsageSummary> {
       mockInterview: normalizeLimit(limits.mockInterviewsPerMonth),
       mentorshipRequest: normalizeLimit(limits.mentorshipRequestsPerMonth),
       jobPosting: normalizeLimit(limits.jobPostingsPerMonth),
+      aiApplicantShortlist: normalizeLimit(limits.aiApplicantShortlistsPerMonth),
     },
     remaining: {
       skillGapAnalysis: normalizeRemaining(limits.skillGapAnalysisPerMonth, skillGapAnalysis),
@@ -172,6 +189,10 @@ export async function getUsageSummary(userId: string): Promise<UsageSummary> {
       mockInterview: normalizeRemaining(limits.mockInterviewsPerMonth, mockInterview),
       mentorshipRequest: normalizeRemaining(limits.mentorshipRequestsPerMonth, mentorshipRequest),
       jobPosting: normalizeRemaining(limits.jobPostingsPerMonth, jobPosting),
+      aiApplicantShortlist: normalizeRemaining(
+        limits.aiApplicantShortlistsPerMonth,
+        aiApplicantShortlist
+      ),
     },
   };
 }
@@ -201,6 +222,7 @@ export async function checkFeatureAccess(userId: string, feature: PremiumFeature
     mockInterview: usage.remaining.mockInterview,
     mentorshipRequest: usage.remaining.mentorshipRequest,
     jobPosting: usage.remaining.jobPosting,
+    aiApplicantShortlist: usage.remaining.aiApplicantShortlist,
   } as const;
 
   const humanLabels: Record<
@@ -212,6 +234,7 @@ export async function checkFeatureAccess(userId: string, feature: PremiumFeature
     mockInterview: 'mock interviews',
     mentorshipRequest: 'mentorship requests',
     jobPosting: 'job postings',
+    aiApplicantShortlist: 'AI applicant shortlists',
   };
 
   if (feature in remainingMap) {

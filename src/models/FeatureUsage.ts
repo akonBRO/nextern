@@ -9,8 +9,9 @@ export interface IFeatureUsage extends Document {
     | 'training_path'
     | 'career_advice'
     | 'job_posting'
-    | 'mentorship_request';
-  metadata?: Record<string, string>;
+    | 'mentorship_request'
+    | 'ai_applicant_shortlist';
+  metadata?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +29,7 @@ const FeatureUsageSchema = new Schema<IFeatureUsage>(
         'career_advice',
         'job_posting',
         'mentorship_request',
+        'ai_applicant_shortlist',
       ],
       required: true,
     },

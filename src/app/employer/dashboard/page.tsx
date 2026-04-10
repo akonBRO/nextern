@@ -8,6 +8,7 @@ import {
   EmptyState,
   HeroCard,
   Panel,
+  ProgressBar,
   StatCard,
   Tag,
   formatCompactNumber,
@@ -15,13 +16,17 @@ import {
   formatStatusLabel,
 } from '@/components/dashboard/DashboardContent';
 import { getEmployerDashboardData } from '@/lib/role-dashboard';
+import { getUsageSummary } from '@/lib/premium';
 import {
   BriefcaseBusiness,
   CheckCircle2,
   Clock3,
+  CreditCard,
+  Crown,
   Globe,
   MapPin,
   Sparkles,
+  Target,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -72,20 +77,27 @@ function statusTone(isActive: boolean): 'success' | 'warning' {
   return isActive ? 'success' : 'warning';
 }
 
-// Conversion rate helper
-function conversionRate(numerator: number, denominator: number): string {
-  if (denominator === 0) return '0%';
-  return `${Math.round((numerator / denominator) * 100)}%`;
+function usageLabel(value: number | null) {
+  return value === null ? 'Unlimited' : `${value} left`;
+}
+
+function usagePercent(count: number, limit: number | null) {
+  if (limit === null) return 100;
+  if (limit === 0) return 0;
+  return Math.min(100, Math.round((count / limit) * 100));
 }
 
 export default async function EmployerDashboard() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
-  const data = await getEmployerDashboardData({
-    userId: session.user.id,
-    email: session.user.email ?? undefined,
-  });
+  const [data, usage] = await Promise.all([
+    getEmployerDashboardData({
+      userId: session.user.id,
+      email: session.user.email ?? undefined,
+    }),
+    getUsageSummary(session.user.id),
+  ]);
 
   // Profile completeness score
   const profileItems = [
@@ -98,26 +110,13 @@ export default async function EmployerDashboard() {
     (profileItems.filter(Boolean).length / profileItems.length) * 100
   );
 
-  // Hiring health score (simple calculation)
-  const hiringHealth =
-    data.stats.totalApplications > 0
-      ? Math.min(
-          100,
-          Math.round(
-            (data.stats.shortlisted / Math.max(data.stats.totalApplications, 1)) * 40 +
-              (data.stats.interviews / Math.max(data.stats.totalApplications, 1)) * 30 +
-              (data.stats.hired / Math.max(data.stats.totalApplications, 1)) * 30 * 3
-          )
-        )
-      : 0;
-
   return (
     <DashboardShell
       role="employer"
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"
       navItems={navItems}
-      user={data.chromeUser}
+      user={{ ...data.chromeUser, isPremium: usage.isPremium }}
     >
       <DashboardPage>
         {/* ── Hero ── */}
@@ -183,6 +182,7 @@ export default async function EmployerDashboard() {
             <>
               <ActionLink href="/employer/jobs/new" label="Post new job" />
               <ActionLink href="/employer/jobs" label="View listings" tone="ghost" />
+              <ActionLink href="/employer/ai" label="AI hiring" tone="ghost" />
             </>
           }
           aside={
@@ -401,6 +401,148 @@ export default async function EmployerDashboard() {
             />
           </div>
         </section>
+
+        <DashboardSection
+          id="ai-hiring"
+          title="AI hiring & premium access"
+          description="Employer AI is visible from your dashboard. Premium employers get unlimited shortlists and postings; regular employers keep monthly free limits."
+        >
+          <div
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}
+            className="dashboard-grid-three"
+          >
+            <Panel
+              title="AI applicant shortlist"
+              description="Rank applicants from each job pipeline using fit scores, gaps, and student profile signals."
+              action={
+                <Link
+                  href="/employer/ai"
+                  style={{
+                    color: '#2563EB',
+                    textDecoration: 'none',
+                    fontSize: 13,
+                    fontWeight: 800,
+                  }}
+                >
+                  Open AI center
+                </Link>
+              }
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                <Target size={22} color="#2563EB" />
+                <div>
+                  <div
+                    style={{
+                      fontSize: 30,
+                      lineHeight: 1,
+                      color: '#1E293B',
+                      fontWeight: 900,
+                      fontFamily: 'var(--font-display)',
+                    }}
+                  >
+                    {usageLabel(usage.remaining.aiApplicantShortlist)}
+                  </div>
+                  <div style={{ marginTop: 4, fontSize: 12, color: '#64748B', fontWeight: 700 }}>
+                    {usage.limits.aiApplicantShortlist === null
+                      ? `${usage.counts.aiApplicantShortlist} generated this month`
+                      : `${usage.counts.aiApplicantShortlist}/${usage.limits.aiApplicantShortlist} used this month`}
+                  </div>
+                </div>
+              </div>
+              <ProgressBar
+                value={usagePercent(
+                  usage.counts.aiApplicantShortlist,
+                  usage.limits.aiApplicantShortlist
+                )}
+              />
+            </Panel>
+
+            <Panel
+              title="Premium status"
+              description={
+                usage.isPremium
+                  ? 'Employer AI tools are unlocked without monthly caps.'
+                  : 'Upgrade when you need unlimited AI shortlists, postings, and priority visibility.'
+              }
+              action={
+                <Link
+                  href={usage.isPremium ? '/employer/subscription' : '/employer/premium'}
+                  style={{
+                    color: '#2563EB',
+                    textDecoration: 'none',
+                    fontSize: 13,
+                    fontWeight: 800,
+                  }}
+                >
+                  {usage.isPremium ? 'Billing' : 'Upgrade'}
+                </Link>
+              }
+            >
+              <div style={{ display: 'grid', gap: 12 }}>
+                <Tag
+                  label={usage.isPremium ? 'Premium active' : 'Regular employer'}
+                  tone={usage.isPremium ? 'success' : 'warning'}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Crown size={22} color={usage.isPremium ? '#F59E0B' : '#64748B'} />
+                  <div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: '#1E293B' }}>
+                      {usageLabel(usage.remaining.jobPosting)}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>
+                      Job postings this month
+                    </div>
+                  </div>
+                </div>
+                <ProgressBar
+                  value={usagePercent(usage.counts.jobPosting, usage.limits.jobPosting)}
+                  tone="success"
+                />
+              </div>
+            </Panel>
+
+            <Panel
+              title="Payment options"
+              description="Employer Premium checkout is available through local mobile payment and cards."
+              action={
+                <Link
+                  href="/employer/subscription"
+                  style={{
+                    color: '#2563EB',
+                    textDecoration: 'none',
+                    fontSize: 13,
+                    fontWeight: 800,
+                  }}
+                >
+                  Billing
+                </Link>
+              }
+            >
+              <div style={{ display: 'grid', gap: 10 }}>
+                {['bKash', 'Visa', 'Mastercard'].map((method) => (
+                  <div
+                    key={method}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '10px 12px',
+                      borderRadius: 12,
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      fontSize: 13,
+                      fontWeight: 800,
+                      color: '#1E293B',
+                    }}
+                  >
+                    <CreditCard size={15} color="#2563EB" />
+                    {method}
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          </div>
+        </DashboardSection>
 
         {/* ── Hiring pipeline ── */}
         <DashboardSection
@@ -863,7 +1005,7 @@ export default async function EmployerDashboard() {
             .dashboard-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
           }
           @media (max-width: 900px) {
-            .dashboard-stats-grid, .dashboard-grid-two, .dashboard-inline-grid { grid-template-columns: 1fr !important; }
+            .dashboard-stats-grid, .dashboard-grid-two, .dashboard-grid-three, .dashboard-inline-grid { grid-template-columns: 1fr !important; }
           }
         `}</style>
       </DashboardPage>
