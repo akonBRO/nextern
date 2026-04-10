@@ -6,7 +6,7 @@ import {
   type AIResult,
 } from '@/lib/ai-meta';
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-3.1-flash-lite-preview';
 const LOCAL_SKILL_GAP_MODEL = 'local-skill-gap';
 const LOCAL_TRAINING_MODEL = 'local-training-path';
 const LOCAL_CAREER_MODEL = 'local-career-advice';
