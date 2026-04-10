@@ -78,6 +78,7 @@ export default function ApplicantActions({
           📄 View Resume
         </a>
       )}
+
       <select
         value={status}
         disabled={saving}

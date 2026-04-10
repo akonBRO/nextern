@@ -1,8 +1,7 @@
 'use client';
 // src/app/student/profile/page.tsx
-// Student profile — view + edit all academic and career fields
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
@@ -23,11 +22,19 @@ import {
   FileText,
   Upload,
   ExternalLink,
+  Eye,
+  Layers,
+  MapPin,
+  Mail,
+  Phone,
 } from 'lucide-react';
 import { useUploadThing } from '@/lib/uploadthing';
 
 const C = {
   blue: '#2563EB',
+  blueDark: '#1D4ED8',
+  teal: '#0D9488',
+  tealDark: '#0F766E',
   indigo: '#1E293B',
   bg: '#F1F5F9',
   gray: '#64748B',
@@ -35,6 +42,7 @@ const C = {
   warning: '#F59E0B',
   white: '#fff',
   dark: '#0F172A',
+  mid: '#334155',
   border: '#E2E8F0',
   text: '#0F172A',
   muted: '#374151',
@@ -46,6 +54,8 @@ const C = {
   successBorder: '#A7F3D0',
   blueBg: '#EFF6FF',
   blueBorder: '#BFDBFE',
+  tealBg: '#F0FDFA',
+  tealBorder: '#99F6E4',
 };
 
 const inputBase: React.CSSProperties = {
@@ -95,6 +105,7 @@ const BD_DEPTS = [
   'Accounting',
 ];
 
+// ── Sub-components ─────────────────────────────────────────────────────────
 function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <div
@@ -253,6 +264,364 @@ function TagInput({
   );
 }
 
+const RS = ({ title }: { title: string }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '14px 0 8px' }}>
+    <div style={{ width: 3, height: 13, background: C.teal, borderRadius: 2, flexShrink: 0 }} />
+    <div
+      style={{
+        fontSize: 9,
+        fontWeight: 800,
+        color: C.teal,
+        letterSpacing: 1.1,
+        textTransform: 'uppercase' as const,
+      }}
+    >
+      {title}
+    </div>
+    <div style={{ flex: 1, height: 0.75, background: C.border }} />
+  </div>
+);
+
+const Pill = ({
+  label,
+  color,
+  bg,
+  border,
+}: {
+  label: string;
+  color: string;
+  bg: string;
+  border: string;
+}) => (
+  <span
+    style={{
+      display: 'inline-block',
+      background: bg,
+      color,
+      border: `0.75px solid ${border}`,
+      padding: '2px 8px',
+      borderRadius: 999,
+      fontSize: 8,
+      fontWeight: 600,
+      marginRight: 4,
+      marginBottom: 4,
+    }}
+  >
+    {label}
+  </span>
+);
+
+// ── In-Platform Resume Preview Card ───────────────────────────────────────
+function InPlatformResume({ user }: { user: UserData | null }) {
+  if (!user) return null;
+
+  const hasContent =
+    user.bio || user.university || user.skills.length > 0 || user.projects.length > 0;
+
+  return (
+    <div
+      style={{
+        border: `1px solid ${C.border}`,
+        borderRadius: 14,
+        overflow: 'hidden',
+        background: C.white,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+      }}
+    >
+      {/* Resume header band */}
+      <div
+        style={{
+          background: `linear-gradient(135deg, ${C.dark}, ${C.indigo})`,
+          padding: '20px 24px 16px',
+          borderBottom: `3px solid ${C.blue}`,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          {/* Avatar */}
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #2563EB, #0D9488)',
+              border: '2px solid rgba(255,255,255,0.15)',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 20,
+              fontWeight: 900,
+              color: '#fff',
+              fontFamily: 'var(--font-display)',
+              flexShrink: 0,
+            }}
+          >
+            {user.image ? (
+              <Image
+                src={user.image}
+                alt={user.name}
+                width={52}
+                height={52}
+                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+              />
+            ) : (
+              user.name.charAt(0).toUpperCase()
+            )}
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 17,
+                fontWeight: 900,
+                color: '#F8FAFC',
+                fontFamily: 'var(--font-display)',
+                letterSpacing: '-0.2px',
+              }}
+            >
+              {user.name}
+            </div>
+            {(user.department || user.university) && (
+              <div style={{ fontSize: 9.5, color: '#93C5FD', marginTop: 2 }}>
+                {[user.department, user.university].filter(Boolean).join('  ·  ')}
+              </div>
+            )}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
+              {user.email && (
+                <span
+                  style={{
+                    fontSize: 8,
+                    color: '#94A3B8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 3,
+                  }}
+                >
+                  <Mail size={9} />
+                  {user.email}
+                </span>
+              )}
+              {user.phone && (
+                <span
+                  style={{
+                    fontSize: 8,
+                    color: '#94A3B8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 3,
+                  }}
+                >
+                  <Phone size={9} />
+                  {user.phone}
+                </span>
+              )}
+              {user.city && (
+                <span
+                  style={{
+                    fontSize: 8,
+                    color: '#94A3B8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 3,
+                  }}
+                >
+                  <MapPin size={9} />
+                  {user.city}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Resume body */}
+      <div style={{ padding: '4px 24px 20px', fontFamily: 'var(--font-body)' }}>
+        {!hasContent && (
+          <div style={{ textAlign: 'center', padding: '28px 0', color: C.light, fontSize: 13 }}>
+            Fill in your profile details above and save — your in-platform resume will appear here.
+          </div>
+        )}
+
+        {/* Summary */}
+        {user.bio && (
+          <>
+            <RS title="Professional Summary" />
+            <p style={{ fontSize: 9.5, color: C.mid, lineHeight: 1.75, margin: 0 }}>{user.bio}</p>
+          </>
+        )}
+
+        {/* Education */}
+        {(user.university || user.cgpa != null) && (
+          <>
+            <RS title="Education" />
+            <div
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+            >
+              <div>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: C.dark }}>
+                  {user.university}
+                </div>
+                <div style={{ fontSize: 9, color: C.gray, marginTop: 2 }}>
+                  {[
+                    user.department,
+                    user.yearOfStudy ? `Year ${user.yearOfStudy}` : '',
+                    user.currentSemester,
+                  ]
+                    .filter(Boolean)
+                    .join('  ·  ')}
+                </div>
+              </div>
+              {user.cgpa != null && (
+                <div
+                  style={{
+                    background: C.blueBg,
+                    border: `1px solid ${C.blueBorder}`,
+                    borderRadius: 7,
+                    padding: '4px 10px',
+                    fontSize: 9,
+                    fontWeight: 800,
+                    color: C.blue,
+                  }}
+                >
+                  CGPA {user.cgpa.toFixed(2)} / 4.00
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Skills */}
+        {user.skills.length > 0 && (
+          <>
+            <RS title="Skills" />
+            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+              {user.skills.map((s) => (
+                <Pill key={s} label={s} color={C.tealDark} bg={C.tealBg} border={C.tealBorder} />
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Projects */}
+        {user.projects.length > 0 && (
+          <>
+            <RS title="Projects" />
+            {user.projects.map((proj, i) => (
+              <div
+                key={i}
+                style={{
+                  marginBottom: 10,
+                  paddingBottom: 10,
+                  borderBottom: i < user.projects.length - 1 ? `1px solid ${C.border}` : 'none',
+                }}
+              >
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: C.dark }}>{proj.title}</div>
+                {proj.techStack?.length > 0 && (
+                  <div style={{ fontSize: 8, color: C.teal, fontWeight: 600, margin: '3px 0' }}>
+                    {proj.techStack.join('  ·  ')}
+                  </div>
+                )}
+                {proj.description && (
+                  <div style={{ fontSize: 9, color: C.gray, lineHeight: 1.65 }}>
+                    {proj.description}
+                  </div>
+                )}
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* Certifications */}
+        {user.certifications.length > 0 && (
+          <>
+            <RS title="Certifications" />
+            {user.certifications.map((cert, i) => (
+              <div
+                key={i}
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 7 }}
+              >
+                <div
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: C.blue,
+                    marginTop: 4,
+                    flexShrink: 0,
+                  }}
+                />
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: C.dark }}>{cert.name}</div>
+                  <div style={{ fontSize: 8.5, color: C.light }}>{cert.issuedBy}</div>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* Completed Courses */}
+        {user.completedCourses.length > 0 && (
+          <>
+            <RS title="Completed Courses" />
+            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+              {user.completedCourses.map((c) => (
+                <Pill key={c} label={c} color={C.gray} bg="#F8FAFC" border={C.border} />
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Online Presence */}
+        {(user.linkedinUrl || user.githubUrl || user.portfolioUrl) && (
+          <>
+            <RS title="Online Presence" />
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+              {user.linkedinUrl && (
+                <span style={{ fontSize: 9, color: C.blue }}>
+                  {user.linkedinUrl.replace(/^https?:\/\/(www\.)?/, '')}
+                </span>
+              )}
+              {user.githubUrl && (
+                <span style={{ fontSize: 9, color: C.blue }}>
+                  {user.githubUrl.replace(/^https?:\/\/(www\.)?/, '')}
+                </span>
+              )}
+              {user.portfolioUrl && (
+                <span style={{ fontSize: 9, color: C.blue }}>
+                  {user.portfolioUrl.replace(/^https?:\/\/(www\.)?/, '')}
+                </span>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Footer */}
+        {hasContent && (
+          <div
+            style={{
+              marginTop: 16,
+              paddingTop: 12,
+              borderTop: `1px solid ${C.border}`,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <div style={{ fontSize: 7.5, color: C.light }}>Generated by Nextern</div>
+            <div style={{ fontSize: 7.5, color: C.light }}>
+              {new Date().toLocaleDateString('en-US', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Types ──────────────────────────────────────────────────────────────────
 type UserData = {
   name: string;
   email: string;
@@ -272,6 +641,7 @@ type UserData = {
   portfolioUrl?: string;
   city?: string;
   resumeUrl?: string;
+  generatedResumeUrl?: string;
   isGraduated?: boolean;
   profileCompleteness?: number;
   opportunityScore?: number;
@@ -285,6 +655,7 @@ type UserData = {
   certifications: { name: string; issuedBy: string; credentialUrl?: string }[];
 };
 
+// ── Main page ──────────────────────────────────────────────────────────────
 export default function StudentProfilePage() {
   const [user, setUser] = useState<UserData | null>(null);
   const [fetching, setFetching] = useState(true);
@@ -294,19 +665,26 @@ export default function StudentProfilePage() {
   const [badges, setBadges] = useState<
     { badgeName: string; badgeIcon: string; awardedAt: string; badgeSlug: string }[]
   >([]);
-
-  // ── Resume upload state ──
-  const { startUpload, isUploading } = useUploadThing('resumeUploader');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeUploading, setResumeUploading] = useState(false);
-  const uploading = resumeUploading || isUploading;
   const [resumeError, setResumeError] = useState('');
   const [resumeSaved, setResumeSaved] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [showUploadZone, setShowUploadZone] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const [form, setForm] = useState({
+  const { startUpload, isUploading } = useUploadThing('resumeUploader');
+  const uploading = resumeUploading || isUploading;
+
+  const resumeUrlRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    resumeUrlRef.current = user?.resumeUrl;
+  }, [user?.resumeUrl]);
+
+  // ── Live preview of in-platform resume (updates on save) ──
+  const [previewUser, setPreviewUser] = useState<UserData | null>(null);
+
+  const [form, setFormState] = useState({
     name: '',
     phone: '',
     bio: '',
@@ -339,7 +717,8 @@ export default function StudentProfilePage() {
       .then((data) => {
         const u = data.user;
         setUser(u);
-        setForm({
+        setPreviewUser(u); // initialise preview with saved data
+        setFormState({
           name: u.name ?? '',
           phone: u.phone ?? '',
           bio: u.bio ?? '',
@@ -382,11 +761,12 @@ export default function StudentProfilePage() {
   }, []);
 
   function set(field: string, value: unknown) {
-    setForm((p) => ({ ...p, [field]: value }));
+    setFormState((p) => ({ ...p, [field]: value }));
   }
 
+  // Projects
   function addProject() {
-    setForm((p) => ({
+    setFormState((p) => ({
       ...p,
       projects: [
         ...p.projects,
@@ -395,34 +775,35 @@ export default function StudentProfilePage() {
     }));
   }
   function removeProject(i: number) {
-    setForm((p) => ({ ...p, projects: p.projects.filter((_, idx) => idx !== i) }));
+    setFormState((p) => ({ ...p, projects: p.projects.filter((_, idx) => idx !== i) }));
   }
   function setProject(i: number, field: string, value: unknown) {
-    setForm((p) => {
-      const updated = [...p.projects];
-      updated[i] = { ...updated[i], [field]: value };
-      return { ...p, projects: updated };
+    setFormState((p) => {
+      const u = [...p.projects];
+      u[i] = { ...u[i], [field]: value };
+      return { ...p, projects: u };
     });
   }
 
+  // Certifications
   function addCert() {
-    setForm((p) => ({
+    setFormState((p) => ({
       ...p,
       certifications: [...p.certifications, { name: '', issuedBy: '', credentialUrl: '' }],
     }));
   }
   function removeCert(i: number) {
-    setForm((p) => ({ ...p, certifications: p.certifications.filter((_, idx) => idx !== i) }));
+    setFormState((p) => ({ ...p, certifications: p.certifications.filter((_, idx) => idx !== i) }));
   }
   function setCert(i: number, field: string, value: string) {
-    setForm((p) => {
-      const updated = [...p.certifications];
-      updated[i] = { ...updated[i], [field]: value };
-      return { ...p, certifications: updated };
+    setFormState((p) => {
+      const u = [...p.certifications];
+      u[i] = { ...u[i], [field]: value };
+      return { ...p, certifications: u };
     });
   }
 
-  // ── Resume upload handler ──
+  // Resume upload
   function handleFileSelect(file: File) {
     setResumeError('');
     setResumeSaved(false);
@@ -448,41 +829,35 @@ export default function StudentProfilePage() {
         setResumeError('Upload failed. Please try again.');
         return;
       }
-      const uploadedUrl = res[0].ufsUrl;
-      setUser((prev) => (prev ? { ...prev, resumeUrl: uploadedUrl } : prev));
+      setUser((prev) => (prev ? { ...prev, resumeUrl: res[0].ufsUrl } : prev));
       setResumeFile(null);
       setResumeSaved(true);
-      setShowUploadZone(false);
       setTimeout(() => setResumeSaved(false), 4000);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Upload failed. Please try again.';
-      setResumeError(message);
+      setResumeError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
     } finally {
       setResumeUploading(false);
     }
   }
 
   async function handleResumeDelete() {
-    if (!confirm('Are you sure you want to delete your resume?')) return;
-
     try {
       const res = await fetch('/api/users/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resumeUrl: null }), // Telling the server to clear the URL
+        body: JSON.stringify({ resumeUrl: null }),
       });
-
       if (res.ok) {
         setUser((prev) => (prev ? { ...prev, resumeUrl: undefined } : prev));
         setShowDeleteConfirm(false);
-      } else {
-        setResumeError('Failed to delete resume.');
       }
-    } catch (err) {
-      setResumeError('Network error while deleting.');
+    } catch {
+      setResumeError('Failed to delete resume.');
+      setShowDeleteConfirm(false);
     }
   }
 
+  // ── Save profile ─────────────────────────────────────────────────────
   async function handleSave() {
     setSaving(true);
     setError('');
@@ -515,7 +890,18 @@ export default function StudentProfilePage() {
         setError(data.error ?? 'Failed to save');
         return;
       }
-      setUser(data.user);
+
+      // ── Preserve uploaded resumeUrl — Save Profile never touches it ──
+      setUser((prev) => ({ ...data.user, resumeUrl: prev?.resumeUrl }));
+
+      // ── Update the in-platform resume preview with the full saved data including projects/certs ──
+      setPreviewUser((prev) => ({
+        ...data.user,
+        resumeUrl: prev?.resumeUrl ?? user?.resumeUrl,
+        projects: form.projects,
+        certifications: form.certifications,
+      }));
+
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch {
@@ -525,7 +911,7 @@ export default function StudentProfilePage() {
     }
   }
 
-  if (fetching)
+  if (fetching) {
     return (
       <div
         style={{
@@ -541,12 +927,13 @@ export default function StudentProfilePage() {
         </div>
       </div>
     );
+  }
 
   const completeness = user?.profileCompleteness ?? 0;
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
-      {/* Header */}
+      {/* ── Header ── */}
       <div
         style={{
           background: `linear-gradient(145deg, ${C.dark}, ${C.indigo})`,
@@ -578,10 +965,12 @@ export default function StudentProfilePage() {
                 radius="50%"
                 gradient="linear-gradient(135deg, #2563EB, #22D3EE)"
                 onUploaded={(url) => {
-                  setUser((prev) => (prev ? { ...prev, image: url } : prev));
+                  setUser((p) => (p ? { ...p, image: url } : p));
+                  setPreviewUser((p) => (p ? { ...p, image: url } : p));
                 }}
                 onRemoved={() => {
-                  setUser((prev) => (prev ? { ...prev, image: undefined } : prev));
+                  setUser((p) => (p ? { ...p, image: undefined } : p));
+                  setPreviewUser((p) => (p ? { ...p, image: undefined } : p));
                 }}
               />
               <div>
@@ -603,7 +992,6 @@ export default function StudentProfilePage() {
                 </div>
               </div>
             </div>
-
             {/* Completeness */}
             <div
               style={{
@@ -649,8 +1037,8 @@ export default function StudentProfilePage() {
                     height: '100%',
                     background:
                       completeness >= 80
-                        ? 'linear-gradient(90deg, #10B981, #34D399)'
-                        : 'linear-gradient(90deg, #F59E0B, #FBBF24)',
+                        ? 'linear-gradient(90deg,#10B981,#34D399)'
+                        : 'linear-gradient(90deg,#F59E0B,#FBBF24)',
                     borderRadius: 999,
                     transition: 'width 0.4s ease',
                   }}
@@ -661,6 +1049,7 @@ export default function StudentProfilePage() {
         </div>
       </div>
 
+      {/* ── Body ── */}
       <div
         style={{
           maxWidth: 900,
@@ -708,7 +1097,7 @@ export default function StudentProfilePage() {
           </div>
         )}
 
-        {/* ── Section 1: Personal Info ── */}
+        {/* 1 — Personal Info */}
         <div
           style={{
             background: C.white,
@@ -771,7 +1160,7 @@ export default function StudentProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 2: Academic Info ── */}
+        {/* 2 — Academic Info */}
         <div
           style={{
             background: C.white,
@@ -888,7 +1277,7 @@ export default function StudentProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 3: Resume Upload ── */}
+        {/* 3 — Resume (PDF Upload) */}
         <div
           style={{
             background: C.white,
@@ -1042,7 +1431,7 @@ export default function StudentProfilePage() {
             </div>
           )}
 
-          {/* Drag & drop upload zone */}
+          {/* Drop zone */}
           <label
             htmlFor="resume-upload"
             style={{
@@ -1067,8 +1456,8 @@ export default function StudentProfilePage() {
             onDrop={(e) => {
               e.preventDefault();
               setDragOver(false);
-              const file = e.dataTransfer.files?.[0];
-              if (file) handleFileSelect(file);
+              const f = e.dataTransfer.files?.[0];
+              if (f) handleFileSelect(f);
             }}
           >
             <input
@@ -1078,12 +1467,11 @@ export default function StudentProfilePage() {
               disabled={uploading}
               style={{ display: 'none' }}
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleFileSelect(file);
+                const f = e.target.files?.[0];
+                if (f) handleFileSelect(f);
                 e.target.value = '';
               }}
             />
-
             <div
               style={{
                 width: 56,
@@ -1095,7 +1483,6 @@ export default function StudentProfilePage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: resumeFile ? C.blue : C.light,
-                transition: 'all 0.2s',
               }}
             >
               {resumeUploading ? (
@@ -1114,7 +1501,6 @@ export default function StudentProfilePage() {
                 <FileText size={24} />
               )}
             </div>
-
             {resumeFile ? (
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: C.blue }}>
@@ -1134,7 +1520,7 @@ export default function StudentProfilePage() {
                   <span style={{ color: C.blue, fontWeight: 700, textDecoration: 'underline' }}>
                     click to browse
                   </span>{' '}
-                  — PDF only, max 4MB
+                  — PDF only, max 8MB
                 </div>
               </div>
             )}
@@ -1171,7 +1557,7 @@ export default function StudentProfilePage() {
                   gap: 7,
                   background: resumeUploading
                     ? '#93C5FD'
-                    : `linear-gradient(135deg, ${C.blue}, #1D4ED8)`,
+                    : `linear-gradient(135deg,${C.blue},#1D4ED8)`,
                   color: '#fff',
                   border: 'none',
                   borderRadius: 10,
@@ -1181,7 +1567,6 @@ export default function StudentProfilePage() {
                   cursor: uploading ? 'not-allowed' : 'pointer',
                   fontFamily: 'var(--font-display)',
                   boxShadow: resumeUploading ? 'none' : '0 4px 12px rgba(37,99,235,0.3)',
-                  transition: 'all 0.15s',
                 }}
               >
                 {resumeUploading ? (
@@ -1227,14 +1612,75 @@ export default function StudentProfilePage() {
               </button>
             </div>
           )}
-
           <div style={{ fontSize: 12, color: C.light, marginTop: 12 }}>
             📎 Your resume is automatically attached to every job application you submit on Nextern.
             {user?.resumeUrl ? ' Upload a new file to replace the current one.' : ''}
           </div>
         </div>
 
-        {/* ── Section 4: Skills ── */}
+        {/* ── NEW: In-Platform Resume ── */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 16,
+              paddingBottom: 14,
+              borderBottom: `1px solid ${C.bg}`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ color: C.teal }}>
+                <Layers size={18} />
+              </div>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 800,
+                  color: C.text,
+                  fontFamily: 'var(--font-display)',
+                }}
+              >
+                In-Platform Resume
+              </div>
+            </div>
+            <Link
+              href="/student/resume"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: C.tealBg,
+                color: C.teal,
+                border: `1px solid ${C.tealBorder}`,
+                padding: '7px 14px',
+                borderRadius: 9,
+                fontSize: 12,
+                fontWeight: 700,
+                textDecoration: 'none',
+              }}
+            >
+              <Eye size={13} /> Full View & Download
+            </Link>
+          </div>
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16, lineHeight: 1.6 }}>
+            This is your Nextern-generated resume — built from your profile data above. It updates
+            every time you <strong>Save Profile</strong>. Use the Resume Builder to download it as a
+            PDF.
+          </div>
+          <InPlatformResume user={previewUser} />
+        </div>
+
+        {/* 4 — Skills */}
         <div
           style={{
             background: C.white,
@@ -1258,7 +1704,7 @@ export default function StudentProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 5: Projects ── */}
+        {/* 5 — Projects */}
         <div
           style={{
             background: C.white,
@@ -1412,7 +1858,7 @@ export default function StudentProfilePage() {
           ))}
         </div>
 
-        {/* ── Section 6: Certifications ── */}
+        {/* 6 — Certifications */}
         <div
           style={{
             background: C.white,
@@ -1548,7 +1994,7 @@ export default function StudentProfilePage() {
           ))}
         </div>
 
-        {/* ── Section 7: Online Presence ── */}
+        {/* 7 — Online Presence */}
         <div
           style={{
             background: C.white,
@@ -1629,7 +2075,7 @@ export default function StudentProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 7: Badges & Achievements ── */}
+        {/* 8 — Badges */}
         <div
           style={{
             background: C.white,
@@ -1661,7 +2107,7 @@ export default function StudentProfilePage() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))',
                 gap: 12,
               }}
             >
@@ -1703,7 +2149,7 @@ export default function StudentProfilePage() {
               alignItems: 'center',
               gap: 8,
               padding: '13px 32px',
-              background: saving ? '#93C5FD' : `linear-gradient(135deg, ${C.blue}, #1D4ED8)`,
+              background: saving ? '#93C5FD' : `linear-gradient(135deg,${C.blue},#1D4ED8)`,
               color: C.white,
               border: 'none',
               borderRadius: 12,
@@ -1720,7 +2166,7 @@ export default function StudentProfilePage() {
         </div>
       </div>
 
-      {/* ── Delete Resume Confirmation Modal ── */}
+      {/* Delete resume modal */}
       {showDeleteConfirm && (
         <div
           style={{
@@ -1829,9 +2275,7 @@ export default function StudentProfilePage() {
         </div>
       )}
 
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

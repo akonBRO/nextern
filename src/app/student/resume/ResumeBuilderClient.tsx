@@ -2,7 +2,7 @@
 // src/app/student/resume/ResumeBuilderClient.tsx
 // Full resume builder UI — live section preview, readiness sidebar, download & save.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import {
   AlertCircle,
@@ -69,6 +69,7 @@ type Profile = {
   opportunityScore: number;
   profileCompleteness: number;
   resumeUrl?: string;
+  generatedResumeUrl?: string;
   projects: {
     title: string;
     description: string;
@@ -262,7 +263,15 @@ export default function ResumeBuilderClient() {
         setError('Upload failed. Please try again.');
         return;
       }
-      setProfile((prev) => (prev ? { ...prev, resumeUrl: uploaded[0].ufsUrl } : prev));
+      await fetch('/api/users/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          generatedResumeUrl: uploaded[0].ufsUrl,
+        }),
+      });
+
+      setProfile((prev) => (prev ? { ...prev, generatedResumeUrl: uploaded[0].ufsUrl } : prev));
       setSaved(true);
       setTimeout(() => setSaved(false), 4500);
     } catch {
@@ -912,7 +921,7 @@ export default function ResumeBuilderClient() {
               />
             </div>
 
-            {profile.resumeUrl && (
+            {(profile.resumeUrl || profile.generatedResumeUrl) && (
               <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.border}` }}>
                 <div
                   style={{
@@ -927,7 +936,7 @@ export default function ResumeBuilderClient() {
                   Current resume
                 </div>
                 <a
-                  href={profile.resumeUrl}
+                  href={profile.generatedResumeUrl || profile.resumeUrl}
                   target="_blank"
                   rel="noreferrer"
                   style={{
