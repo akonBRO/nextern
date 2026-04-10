@@ -46,11 +46,11 @@ export const STUDENT_NAV_ITEMS: DashboardNavItem[] = [
     ],
   },
   {
-    label: 'Resume & GER',
+    label: 'Portfolio',
     icon: 'file',
     items: [
       {
-        label: 'Resume Builder',
+        label: 'In-platform Resume',
         href: '/student/resume',
         description: 'Generate and download your professional resume as a PDF.',
         icon: 'file',
