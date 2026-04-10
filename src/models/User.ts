@@ -55,6 +55,7 @@ export interface IUser extends Document {
   verifiedPortfolioItems: IVerifiedPortfolioItem[]; // from completed FreelanceOrders
   bio?: string;
   resumeUrl?: string; // Uploadthing URL of latest resume
+  generatedResumeUrl?: string;
   linkedinUrl?: string;
   githubUrl?: string;
   portfolioUrl?: string;
@@ -134,6 +135,7 @@ const UserSchema = new Schema<IUser>(
     ],
     bio: { type: String, maxlength: 500 },
     resumeUrl: { type: String },
+    generatedResumeUrl: { type: String },
     linkedinUrl: { type: String },
     githubUrl: { type: String },
     portfolioUrl: { type: String },
