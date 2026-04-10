@@ -13,6 +13,7 @@ import {
   UserCircle2,
 } from 'lucide-react';
 import { useState } from 'react';
+import { NexternLogo } from '@/components/brand/NexternLogo';
 
 interface NavbarProps {
   user: {
@@ -73,27 +74,14 @@ export default function StudentNavbar({ user }: NavbarProps) {
             textDecoration: 'none',
           }}
         >
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 12,
-              background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <span style={{ color: '#FFFFFF', fontWeight: 900, fontFamily: 'var(--font-display)' }}>
-              N
-            </span>
-          </div>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-display)' }}>
-              nextern<span style={{ color: '#22D3EE' }}>.</span>
-            </div>
-            <div style={{ fontSize: 12, color: '#94A3B8' }}>Student dashboard</div>
-          </div>
+          <NexternLogo
+            markSize={38}
+            markRadius={12}
+            textSize={18}
+            textColor="#FFFFFF"
+            subtitle="Student dashboard"
+            subtitleColor="#94A3B8"
+          />
         </Link>
 
         {/* ── Nav links + user menu ── */}

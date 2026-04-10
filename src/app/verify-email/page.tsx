@@ -4,6 +4,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { NexternLogo } from '@/components/brand/NexternLogo';
 
 /* ── ICONS ─────────────────────────────────────────────────────────── */
 const MailOpenIcon = () => (
@@ -279,40 +280,14 @@ export default function VerifyEmailPage() {
               gap: 10,
             }}
           >
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                background: 'linear-gradient(135deg,#2563EB,#22D3EE)',
-                borderRadius: 10,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(37,99,235,0.3)',
-              }}
-            >
-              <span
-                style={{
-                  color: '#fff',
-                  fontSize: 18,
-                  fontWeight: 900,
-                  fontFamily: 'var(--font-display)',
-                }}
-              >
-                N
-              </span>
-            </div>
-            <span
-              style={{
-                color: '#0F172A',
-                fontSize: 21,
-                fontWeight: 800,
-                fontFamily: 'var(--font-display)',
-                letterSpacing: '-0.5px',
-              }}
-            >
-              nextern<span style={{ color: '#2563EB' }}>.</span>
-            </span>
+            <NexternLogo
+              markSize={36}
+              markRadius={10}
+              markShadow="0 4px 12px rgba(37,99,235,0.3)"
+              textSize={21}
+              textColor="#0F172A"
+              dotColor="#2563EB"
+            />
           </Link>
         </div>
 

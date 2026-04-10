@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { PLANS } from '@/lib/subscription-plans';
 import StripeCheckoutModal from '@/components/payments/StripeCheckoutModal';
+import { NexternLogo } from '@/components/brand/NexternLogo';
 
 const plan = PLANS.student_premium;
 
@@ -174,42 +175,15 @@ export default function StudentPremiumPage() {
             href="/student/dashboard"
             style={{ display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none' }}
           >
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 14,
-                background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 12px 24px rgba(34,211,238,0.2)',
-              }}
-            >
-              <span
-                style={{
-                  color: '#fff',
-                  fontSize: 18,
-                  fontWeight: 900,
-                  fontFamily: 'var(--font-display)',
-                }}
-              >
-                N
-              </span>
-            </div>
-            <div>
-              <div
-                style={{
-                  color: '#fff',
-                  fontSize: 20,
-                  fontWeight: 800,
-                  fontFamily: 'var(--font-display)',
-                }}
-              >
-                nextern<span style={{ color: '#22D3EE' }}>.</span>
-              </div>
-              <div style={{ color: '#9FB4D0', fontSize: 12 }}>Student</div>
-            </div>
+            <NexternLogo
+              markSize={40}
+              markRadius={14}
+              markShadow="0 12px 24px rgba(34,211,238,0.2)"
+              textSize={20}
+              textColor="#fff"
+              subtitle="Student"
+              subtitleColor="#9FB4D0"
+            />
           </Link>
 
           <Link
@@ -805,21 +779,16 @@ export default function StudentPremiumPage() {
             flexWrap: 'wrap',
           }}
         >
-          <div>
-            <div
-              style={{
-                color: '#fff',
-                fontSize: 14,
-                fontWeight: 700,
-                fontFamily: 'var(--font-display)',
-              }}
-            >
-              nextern<span style={{ color: '#22D3EE' }}>.</span>
-            </div>
-            <div style={{ color: '#94A3B8', fontSize: 12, marginTop: 4 }}>
-              Premium unlocks your full potential.
-            </div>
-          </div>
+          <NexternLogo
+            markSize={28}
+            markRadius={7}
+            textSize={14}
+            textWeight={700}
+            textColor="#fff"
+            subtitle="Premium unlocks your full potential."
+            subtitleColor="#94A3B8"
+            subtitleGap={4}
+          />
           <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
             <Link
               href="/student/dashboard"

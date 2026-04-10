@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { getSession, signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { NexternLogo } from '@/components/brand/NexternLogo';
 import { getPostLoginRedirect } from '@/lib/role-routing';
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -357,40 +358,13 @@ export default function LoginPage() {
               gap: 10,
             }}
           >
-            <div
-              style={{
-                width: 38,
-                height: 38,
-                background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
-                borderRadius: 11,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 14px rgba(37,99,235,0.4)',
-              }}
-            >
-              <span
-                style={{
-                  color: '#fff',
-                  fontSize: 19,
-                  fontWeight: 900,
-                  fontFamily: 'var(--font-display)',
-                }}
-              >
-                N
-              </span>
-            </div>
-            <span
-              style={{
-                color: '#fff',
-                fontSize: 22,
-                fontWeight: 800,
-                fontFamily: 'var(--font-display)',
-                letterSpacing: '-0.5px',
-              }}
-            >
-              nextern<span style={{ color: '#22D3EE' }}>.</span>
-            </span>
+            <NexternLogo
+              markSize={38}
+              markRadius={11}
+              markShadow="0 4px 14px rgba(37,99,235,0.4)"
+              textSize={22}
+              textColor="#fff"
+            />
           </Link>
         </div>
 

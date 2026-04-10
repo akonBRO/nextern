@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { NexternLogo } from '@/components/brand/NexternLogo';
 
 type Role = 'student' | 'employer' | 'advisor' | 'dept_head';
 
@@ -674,40 +675,13 @@ export default function RegisterPage() {
             marginBottom: 'auto',
           }}
         >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              background: 'linear-gradient(135deg,#2563EB,#22D3EE)',
-              borderRadius: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(37,99,235,0.4)',
-            }}
-          >
-            <span
-              style={{
-                color: '#fff',
-                fontSize: 18,
-                fontWeight: 900,
-                fontFamily: 'var(--font-display)',
-              }}
-            >
-              N
-            </span>
-          </div>
-          <span
-            style={{
-              color: '#fff',
-              fontSize: 21,
-              fontWeight: 800,
-              fontFamily: 'var(--font-display)',
-              letterSpacing: '-0.5px',
-            }}
-          >
-            nextern<span style={{ color: '#22D3EE' }}>.</span>
-          </span>
+          <NexternLogo
+            markSize={36}
+            markRadius={10}
+            markShadow="0 4px 12px rgba(37,99,235,0.4)"
+            textSize={21}
+            textColor="#fff"
+          />
         </Link>
 
         {/* Dynamic role preview OR default content */}

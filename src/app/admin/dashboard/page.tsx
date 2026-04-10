@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import React from 'react';
+import { NexternLogo } from '@/components/brand/NexternLogo';
 
 type User = {
   _id: string;
@@ -503,42 +504,13 @@ export default function AdminDashboard() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  background: 'linear-gradient(135deg,#2563EB,#22D3EE)',
-                  borderRadius: 9,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 2px 8px rgba(37,99,235,0.4)',
-                }}
-              >
-                <span
-                  style={{
-                    color: '#fff',
-                    fontSize: 16,
-                    fontWeight: 900,
-                    fontFamily: 'var(--font-display)',
-                  }}
-                >
-                  N
-                </span>
-              </div>
-              <span
-                style={{
-                  color: '#fff',
-                  fontSize: 18,
-                  fontWeight: 800,
-                  fontFamily: 'var(--font-display)',
-                  letterSpacing: '-0.3px',
-                }}
-              >
-                nextern<span style={{ color: '#22D3EE' }}>.</span>
-              </span>
-            </div>
+            <NexternLogo
+              markSize={32}
+              markRadius={9}
+              markShadow="0 2px 8px rgba(37,99,235,0.4)"
+              textSize={18}
+              textColor="#fff"
+            />
             <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.1)' }} />
             <div
               style={{

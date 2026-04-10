@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import React from 'react';
+import { NexternLogo } from '@/components/brand/NexternLogo';
 import { getDefaultAuthenticatedRoute } from '@/lib/role-routing';
 
 const CURRENT_YEAR = 2026;
@@ -658,41 +659,14 @@ export default async function LandingPage() {
             href="/"
             style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}
           >
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
-                borderRadius: 10,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(37,99,235,0.4)',
-              }}
-            >
-              <span
-                style={{
-                  color: '#fff',
-                  fontSize: 18,
-                  fontWeight: 900,
-                  fontFamily: 'var(--font-display)',
-                  letterSpacing: '-1px',
-                }}
-              >
-                N
-              </span>
-            </div>
-            <span
-              style={{
-                color: '#fff',
-                fontSize: 21,
-                fontWeight: 800,
-                fontFamily: 'var(--font-display)',
-                letterSpacing: '-0.5px',
-              }}
-            >
-              nextern<span style={{ color: '#22D3EE' }}>.</span>
-            </span>
+            <NexternLogo
+              markSize={36}
+              markRadius={10}
+              markShadow="0 4px 12px rgba(37,99,235,0.4)"
+              textSize={21}
+              textColor="#fff"
+              priority
+            />
           </Link>
 
           {/* Nav links */}
@@ -2346,31 +2320,13 @@ export default async function LandingPage() {
           >
             {/* Brand */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
-                    borderRadius: 9,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <span style={{ color: '#fff', fontSize: 16, fontWeight: 900 }}>N</span>
-                </div>
-                <span
-                  style={{
-                    color: '#fff',
-                    fontSize: 20,
-                    fontWeight: 800,
-                    fontFamily: 'var(--font-display)',
-                  }}
-                >
-                  nextern<span style={{ color: '#22D3EE' }}>.</span>
-                </span>
-              </div>
+              <NexternLogo
+                markSize={32}
+                markRadius={9}
+                textSize={20}
+                textColor="#fff"
+                style={{ marginBottom: 16 }}
+              />
               <p
                 style={{
                   color: '#475569',
