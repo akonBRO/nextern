@@ -50,13 +50,18 @@ export default async function StudentBadgesPage() {
     })
   );
 
-  const totalMarks = definitions
+  const earnedMarksRaw = definitions
     .filter((def: IBadgeDefinition & Record<string, unknown>) => earnedSlugs.has(def.badgeSlug))
     .reduce(
       (sum: number, def: IBadgeDefinition & Record<string, unknown>) =>
         sum + ((def.marksReward as number) || 0),
       0
     );
+
+  // The Peer Recognition category has a 10% weight in the final GER total.
+  // We cap the raw category score at 100, then scale it by 10%.
+  const categoryScore = Math.min(earnedMarksRaw, 100);
+  const totalMarks = (categoryScore * 10) / 100;
 
   return (
     <DashboardShell
