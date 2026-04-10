@@ -14,9 +14,16 @@ import {
 } from 'lucide-react';
 import { PLANS } from '@/lib/subscription-plans';
 import StripeCheckoutModal from '@/components/payments/StripeCheckoutModal';
+import { PaymentMethodLogo, type PaymentMethodId } from '@/components/payments/PaymentMethodLogo';
 
 const plan = PLANS.employer_premium;
-type PayMethod = 'bkash' | 'visa' | 'mastercard';
+type PayMethod = PaymentMethodId;
+
+const PAY_METHODS: { id: PayMethod; label: string }[] = [
+  { id: 'bkash', label: 'bKash' },
+  { id: 'visa', label: 'Visa' },
+  { id: 'mastercard', label: 'Mastercard' },
+];
 
 const C = {
   blue: '#2563EB',
@@ -282,10 +289,10 @@ export default function EmployerPremiumClient({ isPremium }: { isPremium: boolea
               Payment Method
             </label>
             <div style={{ display: 'flex', gap: 8 }}>
-              {(['bkash', 'visa', 'mastercard'] as PayMethod[]).map((paymentMethod) => (
+              {PAY_METHODS.map((paymentMethod) => (
                 <button
-                  key={paymentMethod}
-                  onClick={() => setMethod(paymentMethod)}
+                  key={paymentMethod.id}
+                  onClick={() => setMethod(paymentMethod.id)}
                   style={{
                     flex: 1,
                     padding: '11px 8px',
@@ -293,16 +300,17 @@ export default function EmployerPremiumClient({ isPremium }: { isPremium: boolea
                     cursor: 'pointer',
                     fontSize: 12,
                     fontWeight: 700,
-                    border: `2px solid ${method === paymentMethod ? C.blue : C.border}`,
-                    background: method === paymentMethod ? '#EFF6FF' : '#fff',
-                    color: method === paymentMethod ? C.blue : C.muted,
+                    border: `2px solid ${method === paymentMethod.id ? C.blue : C.border}`,
+                    background: method === paymentMethod.id ? '#EFF6FF' : '#fff',
+                    color: method === paymentMethod.id ? C.blue : C.muted,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 5,
                   }}
                 >
-                  {paymentMethod === 'bkash'
-                    ? '🔴 bKash'
-                    : paymentMethod === 'visa'
-                      ? '💳 Visa'
-                      : '💳 MC'}
+                  <PaymentMethodLogo method={paymentMethod.id} height={24} />
+                  <span>{paymentMethod.label}</span>
                 </button>
               ))}
             </div>

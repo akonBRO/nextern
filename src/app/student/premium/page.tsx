@@ -22,6 +22,7 @@ import {
 import { PLANS } from '@/lib/subscription-plans';
 import StripeCheckoutModal from '@/components/payments/StripeCheckoutModal';
 import { NexternLogo } from '@/components/brand/NexternLogo';
+import { PaymentMethodLogo, type PaymentMethodId } from '@/components/payments/PaymentMethodLogo';
 
 const plan = PLANS.student_premium;
 
@@ -34,12 +35,12 @@ const C = {
   success: '#10B981',
 };
 
-type PayMethod = 'bkash' | 'visa' | 'mastercard';
+type PayMethod = PaymentMethodId;
 
-const PAY_METHODS: { id: PayMethod; label: string; logo: string; hint: string }[] = [
-  { id: 'bkash', label: 'bKash', logo: '🔴', hint: 'Redirect to bKash checkout' },
-  { id: 'visa', label: 'Visa', logo: '💳', hint: 'Secure card payment via Stripe' },
-  { id: 'mastercard', label: 'Mastercard', logo: '💳', hint: 'Secure card payment via Stripe' },
+const PAY_METHODS: { id: PayMethod; label: string; hint: string }[] = [
+  { id: 'bkash', label: 'bKash', hint: 'Redirect to bKash checkout' },
+  { id: 'visa', label: 'Visa', hint: 'Secure card payment via Stripe' },
+  { id: 'mastercard', label: 'Mastercard', hint: 'Secure card payment via Stripe' },
 ];
 
 const FEATURE_ICONS: Record<string, ElementType> = {
@@ -648,7 +649,7 @@ export default function StudentPremiumPage() {
                       gap: 4,
                     }}
                   >
-                    <span style={{ fontSize: 20 }}>{paymentMethod.logo}</span>
+                    <PaymentMethodLogo method={paymentMethod.id} height={28} />
                     <span
                       style={{
                         fontSize: 12,
