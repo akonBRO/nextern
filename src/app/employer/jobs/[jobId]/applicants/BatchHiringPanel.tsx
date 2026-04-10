@@ -10,13 +10,12 @@ import {
   ChevronDown,
   ChevronUp,
   Users,
-  Target,
   CheckCircle2,
-  Trophy,
   BarChart3,
-  Filter,
   Zap,
   Eye,
+  Sparkles,
+  Crown,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -50,6 +49,38 @@ type UniversityStat = {
   pipeline: Record<string, number>;
 };
 
+type EmployerAiUsage = {
+  isPremium: boolean;
+  counts: {
+    aiApplicantShortlist: number;
+    jobPosting: number;
+  };
+  limits: {
+    aiApplicantShortlist: number | null;
+    jobPosting: number | null;
+  };
+  remaining: {
+    aiApplicantShortlist: number | null;
+    jobPosting: number | null;
+  };
+};
+
+type AiShortlistItem = {
+  applicationId: string;
+  studentId: string;
+  studentName: string;
+  email: string;
+  university: string;
+  department: string;
+  status: string;
+  fitScore: number;
+  recommendation: string;
+  reasons: string[];
+  hardGaps: string[];
+  softGaps: string[];
+  resumeUrl: string;
+};
+
 type Props = {
   jobId: string;
   isBatchHiring: boolean;
@@ -57,6 +88,7 @@ type Props = {
   applications: AppData[];
   universityStats: UniversityStat[];
   totalApplications: number;
+  usage: EmployerAiUsage;
 };
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -576,10 +608,10 @@ function ApplicantCard({
 export default function BatchHiringPanel({
   jobId,
   isBatchHiring,
-  batchUniversities,
   applications,
   universityStats,
   totalApplications,
+  usage,
 }: Props) {
   const [activeTab, setActiveTab] = useState('all');
   const [selectedApps, setSelectedApps] = useState<Set<string>>(new Set());
@@ -587,6 +619,10 @@ export default function BatchHiringPanel({
   const [batchSaving, setBatchSaving] = useState(false);
   const [batchSaved, setBatchSaved] = useState(false);
   const [expandedUniPanel, setExpandedUniPanel] = useState(true);
+  const [usageState, setUsageState] = useState(usage);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState('');
+  const [aiShortlist, setAiShortlist] = useState<AiShortlistItem[]>([]);
 
   // Filter applications by selected university tab
   const filteredApps = useMemo(() => {
@@ -643,6 +679,42 @@ export default function BatchHiringPanel({
   }
 
   const allSelected = filteredApps.length > 0 && selectedApps.size === filteredApps.length;
+  const aiRemaining = usageState.remaining.aiApplicantShortlist;
+  const aiLimit = usageState.limits.aiApplicantShortlist;
+  const aiLimitReached = aiRemaining !== null && aiRemaining <= 0;
+  const aiUsageLabel = usageState.isPremium
+    ? 'Premium: unlimited AI shortlists'
+    : `${aiRemaining ?? 0}/${aiLimit ?? 0} AI shortlists left this month`;
+
+  async function handleAiShortlist() {
+    setAiLoading(true);
+    setAiError('');
+
+    try {
+      const res = await fetch('/api/ai/employer-shortlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId, limit: 8 }),
+      });
+      const data = (await res.json()) as {
+        error?: string;
+        shortlist?: AiShortlistItem[];
+        usage?: EmployerAiUsage;
+      };
+
+      if (data.usage) setUsageState(data.usage);
+      if (!res.ok) {
+        setAiError(data.error ?? 'Failed to generate AI shortlist.');
+        return;
+      }
+
+      setAiShortlist(data.shortlist ?? []);
+    } catch {
+      setAiError('Network error. Please try again.');
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 8 }}>
@@ -925,6 +997,265 @@ export default function BatchHiringPanel({
       )}
 
       {/* ── Applicant list section ── */}
+      <div
+        id="ai-shortlist"
+        style={{
+          background: 'linear-gradient(135deg, #0F172A, #1E293B)',
+          borderRadius: 20,
+          border: '1px solid rgba(37,99,235,0.32)',
+          overflow: 'hidden',
+          boxShadow: '0 18px 42px rgba(15,23,42,0.14)',
+        }}
+      >
+        <div
+          style={{
+            padding: '20px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            flexWrap: 'wrap',
+            borderBottom: aiShortlist.length > 0 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 14,
+                background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#FFFFFF',
+                flexShrink: 0,
+              }}
+            >
+              <Sparkles size={18} />
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 17,
+                  fontWeight: 900,
+                  color: '#F8FAFC',
+                  fontFamily: 'var(--font-display)',
+                }}
+              >
+                AI applicant shortlist
+              </div>
+              <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 3, lineHeight: 1.5 }}>
+                Ranks applicants using fit scores, matched requirements, gaps, and profile signals.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: usageState.isPremium ? '#FEF3C7' : 'rgba(255,255,255,0.08)',
+                color: usageState.isPremium ? '#92400E' : '#CBD5E1',
+                border: usageState.isPremium
+                  ? '1px solid #FDE68A'
+                  : '1px solid rgba(255,255,255,0.1)',
+                padding: '7px 11px',
+                borderRadius: 999,
+                fontSize: 12,
+                fontWeight: 800,
+              }}
+            >
+              {usageState.isPremium ? <Crown size={13} /> : <Sparkles size={13} />}
+              {aiUsageLabel}
+            </span>
+            {aiLimitReached ? (
+              <Link
+                href="/employer/premium"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  background: '#F59E0B',
+                  color: '#111827',
+                  borderRadius: 12,
+                  padding: '10px 14px',
+                  fontSize: 12,
+                  fontWeight: 900,
+                  textDecoration: 'none',
+                }}
+              >
+                <Crown size={14} /> Upgrade for unlimited
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAiShortlist}
+                disabled={aiLoading || applications.length === 0}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  background:
+                    aiLoading || applications.length === 0
+                      ? 'rgba(148,163,184,0.24)'
+                      : 'linear-gradient(135deg, #2563EB, #22D3EE)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: 12,
+                  padding: '10px 14px',
+                  fontSize: 12,
+                  fontWeight: 900,
+                  cursor: aiLoading || applications.length === 0 ? 'not-allowed' : 'pointer',
+                  boxShadow:
+                    aiLoading || applications.length === 0
+                      ? 'none'
+                      : '0 8px 18px rgba(37,99,235,0.28)',
+                }}
+              >
+                <Sparkles size={14} />
+                {aiLoading ? 'Generating...' : 'Generate shortlist'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {aiError ? (
+          <div
+            style={{
+              margin: '0 24px 18px',
+              background: '#FEF2F2',
+              color: '#991B1B',
+              border: '1px solid #FECACA',
+              borderRadius: 12,
+              padding: '10px 12px',
+              fontSize: 13,
+              fontWeight: 700,
+            }}
+          >
+            {aiError}
+          </div>
+        ) : null}
+
+        {aiShortlist.length > 0 ? (
+          <div style={{ padding: '18px 24px 22px', display: 'grid', gap: 10 }}>
+            {aiShortlist.map((candidate, index) => {
+              const scoreColor =
+                candidate.fitScore >= 80
+                  ? '#10B981'
+                  : candidate.fitScore >= 65
+                    ? '#22D3EE'
+                    : candidate.fitScore >= 45
+                      ? '#F59E0B'
+                      : '#EF4444';
+              return (
+                <div
+                  key={candidate.applicationId}
+                  style={{
+                    background: 'rgba(255,255,255,0.07)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 16,
+                    padding: '14px 16px',
+                    display: 'grid',
+                    gridTemplateColumns: '42px minmax(0, 1fr) auto',
+                    gap: 14,
+                    alignItems: 'center',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 12,
+                      background: index < 3 ? '#F59E0B' : 'rgba(255,255,255,0.1)',
+                      color: index < 3 ? '#111827' : '#CBD5E1',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 13,
+                      fontWeight: 900,
+                    }}
+                  >
+                    {index + 1}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}
+                    >
+                      <Link
+                        href={`/employer/jobs/${jobId}/applicants/${candidate.studentId}`}
+                        style={{
+                          color: '#F8FAFC',
+                          fontSize: 14,
+                          fontWeight: 900,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        {candidate.studentName}
+                      </Link>
+                      <span
+                        style={{
+                          background: 'rgba(34,211,238,0.12)',
+                          border: '1px solid rgba(34,211,238,0.22)',
+                          color: '#67E8F9',
+                          borderRadius: 999,
+                          padding: '3px 8px',
+                          fontSize: 11,
+                          fontWeight: 800,
+                        }}
+                      >
+                        {candidate.recommendation}
+                      </span>
+                    </div>
+                    <div style={{ marginTop: 4, fontSize: 12, color: '#94A3B8' }}>
+                      {[candidate.university, candidate.department].filter(Boolean).join(' / ')}
+                    </div>
+                    {candidate.reasons.length > 0 ? (
+                      <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {candidate.reasons.map((reason) => (
+                          <span
+                            key={reason}
+                            style={{
+                              background: 'rgba(255,255,255,0.08)',
+                              color: '#CBD5E1',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              padding: '3px 8px',
+                              borderRadius: 999,
+                              fontSize: 11,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {reason}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div
+                      style={{
+                        fontSize: 26,
+                        lineHeight: 1,
+                        fontWeight: 900,
+                        color: scoreColor,
+                        fontFamily: 'var(--font-display)',
+                      }}
+                    >
+                      {candidate.fitScore}%
+                    </div>
+                    <div style={{ marginTop: 4, fontSize: 11, color: '#64748B', fontWeight: 800 }}>
+                      AI fit
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
+
       <div
         style={{
           background: '#fff',
