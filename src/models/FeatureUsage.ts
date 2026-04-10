@@ -4,6 +4,7 @@ export interface IFeatureUsage extends Document {
   userId: mongoose.Types.ObjectId;
   feature:
     | 'skill_gap_analysis'
+    | 'smart_job_recommendation'
     | 'mock_interview'
     | 'training_path'
     | 'career_advice'
@@ -21,6 +22,7 @@ const FeatureUsageSchema = new Schema<IFeatureUsage>(
       type: String,
       enum: [
         'skill_gap_analysis',
+        'smart_job_recommendation',
         'mock_interview',
         'training_path',
         'career_advice',

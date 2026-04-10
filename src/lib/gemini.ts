@@ -11,12 +11,16 @@ const LOCAL_SKILL_GAP_MODEL = 'local-skill-gap';
 const LOCAL_TRAINING_MODEL = 'local-training-path';
 const LOCAL_CAREER_MODEL = 'local-career-advice';
 const LOCAL_QUESTION_MODEL = 'local-interview-questions';
+const LOCAL_RECOMMENDATION_MODEL = 'local-smart-job-recommendations';
 const GEMINI_RETRY_DELAYS_MS = [800, 1600];
 
-function getGeminiModel(generationConfig?: Record<string, unknown>) {
-  const apiKey = process.env.GEMINI_API_KEY;
+function getGeminiModel(
+  generationConfig?: Record<string, unknown>,
+  apiKey = process.env.GEMINI_API_KEY,
+  apiKeyName = 'GEMINI_API_KEY'
+) {
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured.');
+    throw new Error(`${apiKeyName} is not configured.`);
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
@@ -49,12 +53,17 @@ function isRetryableGeminiError(error: unknown) {
   );
 }
 
-async function generateGeminiContent(prompt: string, generationConfig?: Record<string, unknown>) {
+async function generateGeminiContent(
+  prompt: string,
+  generationConfig?: Record<string, unknown>,
+  apiKey?: string,
+  apiKeyName?: string
+) {
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt += 1) {
     try {
-      return await getGeminiModel(generationConfig).generateContent(prompt);
+      return await getGeminiModel(generationConfig, apiKey, apiKeyName).generateContent(prompt);
     } catch (error) {
       lastError = error;
       const retryDelay = GEMINI_RETRY_DELAYS_MS[attempt];
@@ -234,12 +243,19 @@ async function askGeminiJSON<T>(prompt: string): Promise<T> {
 
 async function askGeminiJSONWithConfig<T>(
   prompt: string,
-  generationConfig?: Record<string, unknown>
+  generationConfig?: Record<string, unknown>,
+  apiKey?: string,
+  apiKeyName?: string
 ): Promise<T> {
-  const result = await generateGeminiContent(prompt, {
-    responseMimeType: 'application/json',
-    ...generationConfig,
-  });
+  const result = await generateGeminiContent(
+    prompt,
+    {
+      responseMimeType: 'application/json',
+      ...generationConfig,
+    },
+    apiKey,
+    apiKeyName
+  );
   const raw = result.response.text().trim();
   if (!raw) {
     throw new Error('Gemini returned an empty response.');
@@ -500,6 +516,482 @@ Return this exact JSON structure - no markdown, no extra text:
         'gemini',
         sanitizeAIProviderError('gemini', error),
         LOCAL_SKILL_GAP_MODEL
+      ),
+    };
+  }
+}
+
+export interface SmartJobRecommendationCandidate {
+  jobId: string;
+  title: string;
+  companyName: string;
+  type: string;
+  locationType: string;
+  city?: string;
+  requiredSkills: string[];
+  requiredCourses: string[];
+  preferredCertifications: string[];
+  targetUniversities: string[];
+  targetDepartments: string[];
+  targetYears: number[];
+  minimumCGPA?: number;
+  stipendBDT?: number;
+  isStipendNegotiable?: boolean;
+  applicationCount: number;
+  viewCount: number;
+  createdAt?: string;
+  localFitScore: number | null;
+  behaviorScore: number;
+}
+
+export interface SmartRecommendationBehavior {
+  viewedJobTitles: string[];
+  savedJobTitles: string[];
+  appliedJobTitles: string[];
+  preferredSkills: string[];
+  preferredTypes: string[];
+  preferredLocations: string[];
+  engagementLevel: 'new' | 'active';
+}
+
+export interface SmartJobRecommendation {
+  jobId: string;
+  rankScore: number;
+  whyRecommended: string;
+  matchedSignals: string[];
+}
+
+export interface SmartJobRecommendationResult {
+  recommendations: SmartJobRecommendation[];
+  summary: string;
+}
+
+export interface SmartJobRecommendationParams {
+  studentProfile: {
+    university?: string;
+    department?: string;
+    yearOfStudy?: number;
+    cgpa?: number;
+    city?: string;
+    skills: string[];
+    completedCourses: string[];
+    certifications: string[];
+    projectTechStacks: string[];
+  };
+  behavior: SmartRecommendationBehavior;
+  candidateJobs: SmartJobRecommendationCandidate[];
+  limit?: number;
+}
+
+const SMART_RECOMMENDATION_ITEM_SCHEMA: ResponseSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    jobId: { type: SchemaType.STRING },
+    rankScore: { type: SchemaType.INTEGER },
+    whyRecommended: { type: SchemaType.STRING },
+    matchedSignals: {
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.STRING },
+    },
+  },
+  required: ['jobId', 'rankScore', 'whyRecommended', 'matchedSignals'],
+};
+
+const SMART_RECOMMENDATION_RESPONSE_SCHEMA: ResponseSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    recommendations: {
+      type: SchemaType.ARRAY,
+      items: SMART_RECOMMENDATION_ITEM_SCHEMA,
+    },
+    summary: { type: SchemaType.STRING },
+  },
+  required: ['recommendations', 'summary'],
+};
+
+function intersectsNormalized(left: string[], right: string[]) {
+  const rightSet = new Set(right.map(normalizeToken));
+  return left.some((item) => rightSet.has(normalizeToken(item)));
+}
+
+function getMatchedNormalized(left: string[], right: string[]) {
+  const rightSet = new Set(right.map(normalizeToken));
+  return left.filter((item) => rightSet.has(normalizeToken(item)));
+}
+
+function tokenizeRecommendationText(value: string) {
+  return value
+    .toLowerCase()
+    .split(/[^a-z0-9+#.]+/)
+    .map((item) => item.trim())
+    .filter((item) => item.length >= 3);
+}
+
+function buildFallbackWhyForCandidate(
+  job: SmartJobRecommendationCandidate,
+  params: SmartJobRecommendationParams
+) {
+  const studentSkills = normalizeStringArray([
+    ...params.studentProfile.skills,
+    ...params.studentProfile.projectTechStacks,
+  ]);
+  const matchedSkills = getMatchedNormalized(job.requiredSkills, studentSkills);
+
+  if (matchedSkills[0]) return `Matches your ${matchedSkills[0]} skill`;
+  if (intersectsNormalized(job.requiredSkills, params.behavior.preferredSkills)) {
+    return 'Similar to roles you explored';
+  }
+  if (
+    params.studentProfile.department &&
+    job.targetDepartments
+      .map(normalizeToken)
+      .includes(normalizeToken(params.studentProfile.department))
+  ) {
+    return `Fits your ${params.studentProfile.department} profile`;
+  }
+  if (
+    params.studentProfile.yearOfStudy &&
+    job.targetYears.includes(params.studentProfile.yearOfStudy)
+  ) {
+    return 'Suits your academic year';
+  }
+  if (
+    params.studentProfile.city &&
+    job.city &&
+    normalizeToken(params.studentProfile.city) === normalizeToken(job.city)
+  ) {
+    return `Near ${params.studentProfile.city}`;
+  }
+  if (job.locationType === 'remote') return 'Remote friendly role';
+  if (job.minimumCGPA && (params.studentProfile.cgpa ?? 0) >= job.minimumCGPA) {
+    return 'Meets your CGPA profile';
+  }
+
+  return 'Strong profile match';
+}
+
+function buildFallbackSmartJobRecommendations(
+  params: SmartJobRecommendationParams
+): SmartJobRecommendationResult {
+  const limit = clamp(params.limit ?? 12, 1, 20);
+  const profileSkills = normalizeStringArray([
+    ...params.studentProfile.skills,
+    ...params.studentProfile.projectTechStacks,
+  ]);
+  const completedCourses = normalizeStringArray(params.studentProfile.completedCourses);
+  const certifications = normalizeStringArray(params.studentProfile.certifications);
+  const preferredSkills = normalizeStringArray(params.behavior.preferredSkills);
+  const preferredTypes = normalizeStringArray(params.behavior.preferredTypes);
+  const preferredLocations = normalizeStringArray(params.behavior.preferredLocations);
+  const profileSkillSet = new Set(profileSkills.map(normalizeToken));
+  const courseSet = new Set(completedCourses.map(normalizeToken));
+  const certSet = new Set(certifications.map(normalizeToken));
+  const preferredTitleTokens = tokenizeRecommendationText(
+    [
+      ...params.behavior.viewedJobTitles,
+      ...params.behavior.savedJobTitles,
+      ...params.behavior.appliedJobTitles,
+    ].join(' ')
+  );
+
+  const recommendations = params.candidateJobs
+    .map((job) => {
+      const requiredSkills = normalizeStringArray(job.requiredSkills);
+      const requiredCourses = normalizeStringArray(job.requiredCourses);
+      const preferredCertifications = normalizeStringArray(job.preferredCertifications);
+      const matchedSkills = requiredSkills.filter((skill) =>
+        profileSkillSet.has(normalizeToken(skill))
+      );
+      const matchedCourses = requiredCourses.filter((course) =>
+        courseSet.has(normalizeToken(course))
+      );
+      const matchedCerts = preferredCertifications.filter((certification) =>
+        certSet.has(normalizeToken(certification))
+      );
+
+      const skillScore =
+        requiredSkills.length > 0 ? (matchedSkills.length / requiredSkills.length) * 42 : 18;
+      const courseScore =
+        requiredCourses.length > 0 ? (matchedCourses.length / requiredCourses.length) * 12 : 8;
+      const certScore =
+        preferredCertifications.length > 0
+          ? (matchedCerts.length / preferredCertifications.length) * 8
+          : 4;
+      const cgpaScore =
+        job.minimumCGPA && job.minimumCGPA > 0
+          ? clamp(((params.studentProfile.cgpa ?? 0) / job.minimumCGPA) * 8, 0, 8)
+          : 5;
+      const departmentScore =
+        params.studentProfile.department &&
+        job.targetDepartments
+          .map(normalizeToken)
+          .includes(normalizeToken(params.studentProfile.department))
+          ? 8
+          : job.targetDepartments.length === 0
+            ? 3
+            : 0;
+      const yearScore =
+        params.studentProfile.yearOfStudy &&
+        job.targetYears.includes(params.studentProfile.yearOfStudy)
+          ? 6
+          : job.targetYears.length === 0
+            ? 3
+            : 0;
+      const locationScore =
+        job.locationType === 'remote'
+          ? 6
+          : params.studentProfile.city &&
+              job.city &&
+              normalizeToken(params.studentProfile.city) === normalizeToken(job.city)
+            ? 6
+            : 1;
+      const behaviorSkillScore = intersectsNormalized(requiredSkills, preferredSkills) ? 10 : 0;
+      const behaviorTypeScore = preferredTypes
+        .map(normalizeToken)
+        .includes(normalizeToken(job.type))
+        ? 6
+        : 0;
+      const behaviorLocationScore =
+        job.city && preferredLocations.map(normalizeToken).includes(normalizeToken(job.city))
+          ? 4
+          : 0;
+      const titleTokens = new Set(tokenizeRecommendationText(job.title));
+      const titleBehaviorScore = preferredTitleTokens.some((token) => titleTokens.has(token))
+        ? 5
+        : 0;
+      const popularityScore = clamp(job.applicationCount / 20 + job.viewCount / 50, 0, 3);
+      const aiSeedScore = typeof job.localFitScore === 'number' ? job.localFitScore * 0.08 : 0;
+      const behaviorSeedScore = clamp(job.behaviorScore, 0, 100) * 0.08;
+
+      const rankScore = clamp(
+        Math.round(
+          skillScore +
+            courseScore +
+            certScore +
+            cgpaScore +
+            departmentScore +
+            yearScore +
+            locationScore +
+            behaviorSkillScore +
+            behaviorTypeScore +
+            behaviorLocationScore +
+            titleBehaviorScore +
+            popularityScore +
+            aiSeedScore +
+            behaviorSeedScore
+        ),
+        0,
+        100
+      );
+
+      const signals = normalizeStringArray([
+        matchedSkills[0] ? `Skill match: ${matchedSkills[0]}` : '',
+        departmentScore >= 8 && params.studentProfile.department
+          ? `Department match: ${params.studentProfile.department}`
+          : '',
+        yearScore >= 6 ? 'Academic year match' : '',
+        behaviorSkillScore > 0 ? 'Similar to roles you explored' : '',
+        locationScore >= 6 ? 'Location preference match' : '',
+        matchedCourses[0] ? `Course match: ${matchedCourses[0]}` : '',
+      ]).slice(0, 4);
+
+      return {
+        jobId: job.jobId,
+        rankScore,
+        whyRecommended: buildFallbackWhyForCandidate(job, params),
+        matchedSignals: signals.length > 0 ? signals : ['Matches your profile data'],
+      } satisfies SmartJobRecommendation;
+    })
+    .sort((a, b) => b.rankScore - a.rankScore)
+    .slice(0, limit);
+
+  const summary =
+    params.behavior.engagementLevel === 'active'
+      ? 'Ranked using your profile plus recent views, saves, and applications.'
+      : 'Ranked from your academic profile because there is not much job activity yet.';
+
+  return { recommendations, summary };
+}
+
+function extractRecommendationArray(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (!isPlainObject(value)) {
+    throw new Error('Gemini did not return job recommendations.');
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const keys = ['recommendations', 'jobs', 'results', 'rankedJobs', 'items'];
+  for (const key of keys) {
+    if (Array.isArray(candidate[key])) return candidate[key] as unknown[];
+  }
+
+  throw new Error('Gemini did not return a recommendations array.');
+}
+
+function normalizeSmartJobRecommendationResult(
+  value: unknown,
+  params: SmartJobRecommendationParams
+): SmartJobRecommendationResult {
+  const fallback = buildFallbackSmartJobRecommendations(params);
+  const fallbackById = new Map(fallback.recommendations.map((item) => [item.jobId, item]));
+  const candidateIds = new Set(params.candidateJobs.map((job) => job.jobId));
+  const recommended = extractRecommendationArray(value);
+  const seen = new Set<string>();
+  const normalized: SmartJobRecommendation[] = [];
+
+  recommended.forEach((item, index) => {
+    if (!isPlainObject(item)) return;
+
+    const candidate = item as Record<string, unknown>;
+    const jobId = normalizeText(candidate.jobId ?? candidate.id ?? candidate._id);
+    if (!jobId || !candidateIds.has(jobId) || seen.has(jobId)) return;
+
+    const fallbackItem = fallbackById.get(jobId);
+    const rankScoreValue = Number(
+      candidate.rankScore ?? candidate.score ?? candidate.fitScore ?? fallbackItem?.rankScore ?? 0
+    );
+    const matchedSignals = normalizeStringArray(
+      candidate.matchedSignals ?? candidate.signals ?? candidate.reasons
+    ).slice(0, 4);
+    const whyRecommended = normalizeText(
+      candidate.whyRecommended ?? candidate.why ?? candidate.reason ?? candidate.tag
+    );
+
+    seen.add(jobId);
+    normalized.push({
+      jobId,
+      rankScore: Number.isFinite(rankScoreValue)
+        ? clamp(Math.round(rankScoreValue), 0, 100)
+        : (fallbackItem?.rankScore ?? clamp(100 - index * 3, 0, 100)),
+      whyRecommended:
+        whyRecommended.replace(/\s+/g, ' ').slice(0, 120) ||
+        fallbackItem?.whyRecommended ||
+        'Strong profile match',
+      matchedSignals:
+        matchedSignals.length > 0
+          ? matchedSignals
+          : (fallbackItem?.matchedSignals ?? ['Matches your profile data']),
+    });
+  });
+
+  for (const fallbackItem of fallback.recommendations) {
+    if (normalized.length >= (params.limit ?? 12)) break;
+    if (seen.has(fallbackItem.jobId)) continue;
+    normalized.push(fallbackItem);
+    seen.add(fallbackItem.jobId);
+  }
+
+  if (normalized.length === 0) {
+    throw new Error('Gemini did not return usable job recommendations.');
+  }
+
+  const summaryCandidate = isPlainObject(value)
+    ? normalizeText(
+        (value as Record<string, unknown>).summary ??
+          (value as Record<string, unknown>).overview ??
+          (value as Record<string, unknown>).reasoning
+      )
+    : '';
+
+  return {
+    recommendations: normalized
+      .sort((a, b) => b.rankScore - a.rankScore)
+      .slice(0, clamp(params.limit ?? 12, 1, 20)),
+    summary: summaryCandidate || fallback.summary,
+  };
+}
+
+export async function generateSmartJobRecommendations(
+  params: SmartJobRecommendationParams
+): Promise<AIResult<SmartJobRecommendationResult>> {
+  const limit = clamp(params.limit ?? 12, 1, 20);
+  const candidateJobs = params.candidateJobs.slice(0, 40);
+  const prompt = `
+You are a career recommendation engine for Bangladesh university students.
+Rank the best jobs for this student and return ONLY valid JSON.
+
+Core behavior:
+- On first use, rank by profile data: department/major, skills, CGPA, year, university, location.
+- If the student has activity, adjust the ranking using behavior. Applications and saves matter most, then repeated views.
+- Explain every recommendation with one short "whyRecommended" tag such as "Matches your React skill" or "Suits your academic year".
+- Do not invent job IDs. Use only candidate jobId values from the list.
+
+STUDENT PROFILE:
+${JSON.stringify(params.studentProfile, null, 2)}
+
+STUDENT BEHAVIOR SIGNALS:
+${JSON.stringify(params.behavior, null, 2)}
+
+CANDIDATE JOBS:
+${JSON.stringify(
+  candidateJobs.map((job) => ({
+    jobId: job.jobId,
+    title: job.title,
+    companyName: job.companyName,
+    type: job.type,
+    locationType: job.locationType,
+    city: job.city ?? '',
+    requiredSkills: job.requiredSkills,
+    requiredCourses: job.requiredCourses,
+    preferredCertifications: job.preferredCertifications,
+    targetUniversities: job.targetUniversities,
+    targetDepartments: job.targetDepartments,
+    targetYears: job.targetYears,
+    minimumCGPA: job.minimumCGPA ?? 0,
+    stipendBDT: job.stipendBDT ?? null,
+    applicationCount: job.applicationCount,
+    localFitScore: job.localFitScore,
+    behaviorScore: job.behaviorScore,
+    createdAt: job.createdAt,
+  })),
+  null,
+  2
+)}
+
+Return this exact JSON object:
+{
+  "recommendations": [
+    {
+      "jobId": "<candidate jobId>",
+      "rankScore": <integer 0-100>,
+      "whyRecommended": "<short user-facing reason tag>",
+      "matchedSignals": ["<1-4 short concrete reasons>"]
+    }
+  ],
+  "summary": "<one sentence explaining what influenced the ranking>"
+}
+
+Rules:
+- Return at most ${limit} recommendations.
+- Prefer open, realistic matches over glamorous but weak matches.
+- Use behavior only to find similar opportunities; do not recommend a job only because it is popular.
+- Keep whyRecommended under 9 words when possible.
+`;
+
+  try {
+    const result = await askGeminiJSONWithConfig<SmartJobRecommendationResult>(
+      prompt,
+      {
+        responseSchema: SMART_RECOMMENDATION_RESPONSE_SCHEMA,
+        temperature: 0.2,
+        maxOutputTokens: 2048,
+      },
+      process.env.GEMINI_RECOMMENDATION_API_KEY,
+      'GEMINI_RECOMMENDATION_API_KEY'
+    );
+
+    return {
+      data: normalizeSmartJobRecommendationResult(result, { ...params, candidateJobs, limit }),
+      meta: buildAIProviderMeta('gemini', GEMINI_MODEL),
+    };
+  } catch (error) {
+    console.warn('[GEMINI JOB RECOMMENDATION FALLBACK]', error);
+    return {
+      data: buildFallbackSmartJobRecommendations({ ...params, candidateJobs, limit }),
+      meta: buildAIFallbackMeta(
+        'gemini',
+        sanitizeAIProviderError('gemini', error),
+        LOCAL_RECOMMENDATION_MODEL
       ),
     };
   }

@@ -11,6 +11,7 @@ type CountWindow = { start: Date; end: Date };
 
 export type PremiumFeature =
   | 'skillGapAnalysis'
+  | 'smartJobRecommendation'
   | 'mockInterview'
   | 'mentorshipRequest'
   | 'jobPosting'
@@ -30,18 +31,21 @@ export type UsageSummary = {
   premiumExpiresAt: string | null;
   counts: {
     skillGapAnalysis: number;
+    smartJobRecommendation: number;
     mockInterview: number;
     mentorshipRequest: number;
     jobPosting: number;
   };
   limits: {
     skillGapAnalysis: number | null;
+    smartJobRecommendation: number | null;
     mockInterview: number | null;
     mentorshipRequest: number | null;
     jobPosting: number | null;
   };
   remaining: {
     skillGapAnalysis: number | null;
+    smartJobRecommendation: number | null;
     mockInterview: number | null;
     mentorshipRequest: number | null;
     jobPosting: number | null;
@@ -115,25 +119,31 @@ export async function getUsageSummary(userId: string): Promise<UsageSummary> {
     Promise.resolve(getCurrentMonthWindow()),
   ]);
 
-  const [skillGapAnalysis, mockInterview, mentorshipRequest, jobPosting] = await Promise.all([
-    FeatureUsage.countDocuments({
-      userId,
-      feature: 'skill_gap_analysis',
-      createdAt: { $gte: window.start, $lt: window.end },
-    }),
-    MockInterviewSession.countDocuments({
-      studentId: userId,
-      createdAt: { $gte: window.start, $lt: window.end },
-    }),
-    MentorSession.countDocuments({
-      studentId: userId,
-      createdAt: { $gte: window.start, $lt: window.end },
-    }),
-    Job.countDocuments({
-      employerId: userId,
-      createdAt: { $gte: window.start, $lt: window.end },
-    }),
-  ]);
+  const [skillGapAnalysis, smartJobRecommendation, mockInterview, mentorshipRequest, jobPosting] =
+    await Promise.all([
+      FeatureUsage.countDocuments({
+        userId,
+        feature: 'skill_gap_analysis',
+        createdAt: { $gte: window.start, $lt: window.end },
+      }),
+      FeatureUsage.countDocuments({
+        userId,
+        feature: 'smart_job_recommendation',
+        createdAt: { $gte: window.start, $lt: window.end },
+      }),
+      MockInterviewSession.countDocuments({
+        studentId: userId,
+        createdAt: { $gte: window.start, $lt: window.end },
+      }),
+      MentorSession.countDocuments({
+        studentId: userId,
+        createdAt: { $gte: window.start, $lt: window.end },
+      }),
+      Job.countDocuments({
+        employerId: userId,
+        createdAt: { $gte: window.start, $lt: window.end },
+      }),
+    ]);
 
   const limits = getFeatureLimit(premiumStatus.isPremium);
 
@@ -141,18 +151,24 @@ export async function getUsageSummary(userId: string): Promise<UsageSummary> {
     ...premiumStatus,
     counts: {
       skillGapAnalysis,
+      smartJobRecommendation,
       mockInterview,
       mentorshipRequest,
       jobPosting,
     },
     limits: {
       skillGapAnalysis: normalizeLimit(limits.skillGapAnalysisPerMonth),
+      smartJobRecommendation: normalizeLimit(limits.smartJobRecommendationsPerMonth),
       mockInterview: normalizeLimit(limits.mockInterviewsPerMonth),
       mentorshipRequest: normalizeLimit(limits.mentorshipRequestsPerMonth),
       jobPosting: normalizeLimit(limits.jobPostingsPerMonth),
     },
     remaining: {
       skillGapAnalysis: normalizeRemaining(limits.skillGapAnalysisPerMonth, skillGapAnalysis),
+      smartJobRecommendation: normalizeRemaining(
+        limits.smartJobRecommendationsPerMonth,
+        smartJobRecommendation
+      ),
       mockInterview: normalizeRemaining(limits.mockInterviewsPerMonth, mockInterview),
       mentorshipRequest: normalizeRemaining(limits.mentorshipRequestsPerMonth, mentorshipRequest),
       jobPosting: normalizeRemaining(limits.jobPostingsPerMonth, jobPosting),
@@ -181,6 +197,7 @@ export async function checkFeatureAccess(userId: string, feature: PremiumFeature
 
   const remainingMap = {
     skillGapAnalysis: usage.remaining.skillGapAnalysis,
+    smartJobRecommendation: usage.remaining.smartJobRecommendation,
     mockInterview: usage.remaining.mockInterview,
     mentorshipRequest: usage.remaining.mentorshipRequest,
     jobPosting: usage.remaining.jobPosting,
@@ -191,6 +208,7 @@ export async function checkFeatureAccess(userId: string, feature: PremiumFeature
     string
   > = {
     skillGapAnalysis: 'skill gap analyses',
+    smartJobRecommendation: 'smart job recommendations',
     mockInterview: 'mock interviews',
     mentorshipRequest: 'mentorship requests',
     jobPosting: 'job postings',

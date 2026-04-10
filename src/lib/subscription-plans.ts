@@ -29,7 +29,7 @@ export const PLANS: Record<PlanId, SubscriptionPlan> = {
       'Full Internship Fit Score for all jobs',
       'AI-generated personalized training paths',
       'Unlimited Mock Interview sessions with Nextern AI',
-      'Priority job recommendations in feed',
+      'Unlimited smart job recommendations',
       'AI-powered resume review & suggestions',
       'Unlimited mentorship requests (vs 2/month free)',
       'Advanced analytics on application performance',
@@ -69,12 +69,14 @@ export function getPlanByRole(role: string): SubscriptionPlan | null {
 export const PREMIUM_LIMITS = {
   free: {
     skillGapAnalysisPerMonth: 5,
+    smartJobRecommendationsPerMonth: 10,
     mockInterviewsPerMonth: 2,
     mentorshipRequestsPerMonth: 2,
     jobPostingsPerMonth: 3, // employers
   },
   premium: {
     skillGapAnalysisPerMonth: Infinity,
+    smartJobRecommendationsPerMonth: Infinity,
     mockInterviewsPerMonth: Infinity,
     mentorshipRequestsPerMonth: Infinity,
     jobPostingsPerMonth: Infinity,

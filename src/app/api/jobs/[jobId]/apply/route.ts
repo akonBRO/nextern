@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Job } from '@/models/Job';
+import { JobView } from '@/models/JobView';
 import { Application } from '@/models/Application';
 import { User } from '@/models/User';
 import { ApplyJobSchema } from '@/lib/validations';
@@ -75,7 +76,26 @@ export async function POST(req: NextRequest, { params }: Params) {
       ],
     });
 
-    await Job.findByIdAndUpdate(jobId, { $inc: { applicationCount: 1 } });
+    const appliedAt = new Date();
+    await Promise.all([
+      Job.findByIdAndUpdate(jobId, { $inc: { applicationCount: 1 } }),
+      JobView.findOneAndUpdate(
+        { studentId: session.user.id, jobId },
+        {
+          $set: {
+            isApplied: true,
+            lastViewedAt: appliedAt,
+          },
+          $setOnInsert: {
+            studentId: session.user.id,
+            jobId,
+            viewCount: 0,
+            firstViewedAt: appliedAt,
+          },
+        },
+        { upsert: true }
+      ),
+    ]);
     await onJobApplied(session.user.id, jobId).catch(() => {});
 
     let appliedFitScore: number | null = null;

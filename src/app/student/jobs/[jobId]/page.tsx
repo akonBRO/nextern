@@ -7,6 +7,7 @@ import { getUsageSummary } from '@/lib/premium';
 import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
 import { Job } from '@/models/Job';
+import { JobView } from '@/models/JobView';
 import { Application } from '@/models/Application';
 import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
@@ -61,8 +62,26 @@ async function getJobData(jobId: string, userId: string) {
 
   if (!job) return null;
 
-  // Increment view count
-  Job.findByIdAndUpdate(jobId, { $inc: { viewCount: 1 } }).exec();
+  const viewedAt = new Date();
+  const jobViewSet: Record<string, unknown> = { lastViewedAt: viewedAt };
+  if (existingApp) jobViewSet.isApplied = true;
+
+  await Promise.all([
+    Job.findByIdAndUpdate(jobId, { $inc: { viewCount: 1 } }),
+    JobView.findOneAndUpdate(
+      { studentId: oid, jobId },
+      {
+        $inc: { viewCount: 1 },
+        $set: jobViewSet,
+        $setOnInsert: {
+          studentId: oid,
+          jobId,
+          firstViewedAt: viewedAt,
+        },
+      },
+      { upsert: true }
+    ),
+  ]);
 
   // Compute fit score
   const userSkills = new Set((student?.skills ?? []).map((s: string) => s.toLowerCase()));

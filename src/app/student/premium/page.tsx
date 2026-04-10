@@ -519,7 +519,7 @@ export default function StudentPremiumPage() {
                   { feature: 'Training Paths', free: 'No', premium: 'Yes' },
                   { feature: 'Resume AI Review', free: 'No', premium: 'Yes' },
                   { feature: 'GER PDF Export', free: 'No', premium: 'Yes' },
-                  { feature: 'Priority Job Feed', free: 'No', premium: 'Yes' },
+                  { feature: 'Smart Job Recommendations', free: '10/month', premium: 'Unlimited' },
                 ].map((row) => (
                   <div key={row.feature} style={{ display: 'contents' }}>
                     <div

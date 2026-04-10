@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Job } from '@/models/Job';
+import { JobView } from '@/models/JobView';
 import { Application } from '@/models/Application';
 import { UpdateJobSchema } from '@/lib/validations';
 
@@ -21,9 +22,6 @@ export async function GET(req: NextRequest, { params }: Params) {
     const job = await Job.findById(jobId).lean();
     if (!job) return NextResponse.json({ error: 'Job not found' }, { status: 404 });
 
-    // Increment view count (fire and forget)
-    Job.findByIdAndUpdate(jobId, { $inc: { viewCount: 1 } }).exec();
-
     let hasApplied = false;
     const session = await auth();
     if (session?.user?.id && session.user.role === 'student') {
@@ -33,6 +31,29 @@ export async function GET(req: NextRequest, { params }: Params) {
       }).lean();
       hasApplied = !!existing;
     }
+
+    const viewedAt = new Date();
+    await Promise.all([
+      Job.findByIdAndUpdate(jobId, { $inc: { viewCount: 1 } }),
+      session?.user?.id && session.user.role === 'student'
+        ? JobView.findOneAndUpdate(
+            { studentId: session.user.id, jobId },
+            {
+              $inc: { viewCount: 1 },
+              $set: {
+                lastViewedAt: viewedAt,
+                ...(hasApplied ? { isApplied: true } : {}),
+              },
+              $setOnInsert: {
+                studentId: session.user.id,
+                jobId,
+                firstViewedAt: viewedAt,
+              },
+            },
+            { upsert: true }
+          )
+        : Promise.resolve(),
+    ]);
 
     return NextResponse.json({ job, hasApplied });
   } catch (error) {

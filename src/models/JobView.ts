@@ -30,6 +30,8 @@ const JobViewSchema = new Schema<IJobView>(
 
 JobViewSchema.index({ studentId: 1, jobId: 1 }, { unique: true });
 JobViewSchema.index({ studentId: 1, isSaved: 1 });
+JobViewSchema.index({ studentId: 1, isApplied: 1 });
+JobViewSchema.index({ studentId: 1, lastViewedAt: -1 });
 
 export const JobView: Model<IJobView> =
   mongoose.models.JobView || mongoose.model<IJobView>('JobView', JobViewSchema);
