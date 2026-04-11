@@ -108,6 +108,9 @@ export async function PATCH(req: NextRequest) {
     }
 
     const updates: Record<string, unknown> = { ...parsed.data };
+    if ('isGraduated' in parsed.data) {
+      updates.isGraduated = parsed.data.isGraduated;
+    }
 
     // Recalculate profile completeness for students
     if (user.role === 'student') {
@@ -122,7 +125,7 @@ export async function PATCH(req: NextRequest) {
     ).select('-password');
 
     // Trigger badge evaluation
-    if (user.role === 'student') {
+    if (user.role === 'student' && updated?.cgpa >= 3.5) {
       await onProfileVerified(user._id.toString()).catch(console.error);
     }
 
@@ -142,8 +145,8 @@ function calculateStudentCompleteness(user: Record<string, unknown>): number {
     { field: 'university', weight: 10 },
     { field: 'department', weight: 10 },
     { field: 'cgpa', weight: 10 },
-    { field: 'resumeUrl', weight: 15 },
-    { field: 'generatedResumeUrl', weight: 15 },
+    { field: 'resumeUrl', weight: 10 },
+    { field: 'generatedResumeUrl', weight: 5 },
     { field: 'skills', weight: 10, isArray: true },
     { field: 'completedCourses', weight: 5, isArray: true },
     { field: 'projects', weight: 5, isArray: true },
