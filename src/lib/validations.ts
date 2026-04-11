@@ -81,6 +81,7 @@ export const UpdateStudentProfileSchema = z.object({
   yearOfStudy: z.number().int().min(1).max(5).optional(),
   currentSemester: z.string().max(30).optional(),
   cgpa: z.number().min(0).max(4.0).optional(),
+  studentId: z.string().max(20).optional(),
   completedCourses: z.array(z.string()).optional(),
   skills: z.array(z.string()).optional(),
   linkedinUrl: z.string().url().optional().or(z.literal('')),
@@ -88,6 +89,29 @@ export const UpdateStudentProfileSchema = z.object({
   portfolioUrl: z.string().url().optional().or(z.literal('')),
   city: z.string().max(60).optional(),
   isGraduated: z.boolean().optional(),
+
+  // ── Projects & certifications (saved from student profile form) ────────────
+  projects: z
+    .array(
+      z.object({
+        title: z.string().max(120),
+        description: z.string().max(1000).optional().default(''),
+        techStack: z.array(z.string()).optional().default([]),
+        projectUrl: z.string().url().optional().or(z.literal('')),
+        repoUrl: z.string().url().optional().or(z.literal('')),
+      })
+    )
+    .optional(),
+
+  certifications: z
+    .array(
+      z.object({
+        name: z.string().max(120),
+        issuedBy: z.string().max(120),
+        credentialUrl: z.string().url().optional().or(z.literal('')),
+      })
+    )
+    .optional(),
 });
 
 export const UpdateEmployerProfileSchema = z.object({

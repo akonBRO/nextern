@@ -845,8 +845,12 @@ export default function StudentProfilePage() {
       const res = await fetch('/api/users/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resumeUrl: null }),
+        body: JSON.stringify({
+          resumeUrl: null,
+          isGraduated: user?.isGraduated, // ✅ ADD THIS
+        }),
       });
+
       if (res.ok) {
         setUser((prev) => (prev ? { ...prev, resumeUrl: undefined } : prev));
         setShowDeleteConfirm(false);
@@ -866,6 +870,7 @@ export default function StudentProfilePage() {
         name: form.name,
         phone: form.phone || undefined,
         bio: form.bio || undefined,
+        studentId: form.studentId || undefined,
         university: form.university || undefined,
         department: form.department || undefined,
         yearOfStudy: form.yearOfStudy ? parseInt(form.yearOfStudy) : undefined,
@@ -878,30 +883,36 @@ export default function StudentProfilePage() {
         portfolioUrl: form.portfolioUrl || undefined,
         city: form.city || undefined,
         isGraduated: form.isGraduated,
+        projects: form.projects.map((p) => ({
+          title: p.title,
+          description: p.description || '',
+          techStack: p.techStack,
+          projectUrl: p.projectUrl || undefined,
+          repoUrl: p.repoUrl || undefined,
+        })),
+        certifications: form.certifications.map((c) => ({
+          name: c.name,
+          issuedBy: c.issuedBy,
+          credentialUrl: c.credentialUrl || undefined,
+        })),
       };
+
       const res = await fetch('/api/users/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
+
       if (!res.ok) {
         setError(data.error ?? 'Failed to save');
         return;
       }
-
-      // ── Preserve uploaded resumeUrl — Save Profile never touches it ──
+      set('isGraduated', data.user.isGraduated ?? false);
       setUser((prev) => ({ ...data.user, resumeUrl: prev?.resumeUrl }));
-
-      // ── Update the in-platform resume preview with the full saved data including projects/certs ──
-      setPreviewUser((prev) => ({
-        ...data.user,
-        resumeUrl: prev?.resumeUrl ?? user?.resumeUrl,
-        projects: form.projects,
-        certifications: form.certifications,
-      }));
-
+      setPreviewUser({ ...data.user, resumeUrl: user?.resumeUrl });
       setSaved(true);
+      set('isGraduated', data.user.isGraduated ?? false);
       setTimeout(() => setSaved(false), 3000);
     } catch {
       setError('Network error. Please try again.');
