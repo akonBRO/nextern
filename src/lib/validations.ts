@@ -74,6 +74,7 @@ export const UpdateStudentProfileSchema = z.object({
   // overwrite the student's manually uploaded resume.
   resumeUrl: z.string().url().optional().nullable(),
   generatedResumeUrl: z.string().url().optional().nullable(),
+  gerUrl: z.string().url().optional().nullable(),
 
   university: z.string().max(120).optional(),
   department: z.string().max(60).optional(),

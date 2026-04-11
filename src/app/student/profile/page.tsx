@@ -852,11 +852,11 @@ export default function StudentProfilePage() {
         setShowDeleteConfirm(false);
       }
     } catch {
-      setResumeError('Failed to delete resume.');
+      setResumeError('Failed to delete resume. Please try again.');
       setShowDeleteConfirm(false);
     }
   }
-  // ── Save profile ─────────────────────────────────────────────────────
+
   async function handleSave() {
     setSaving(true);
     setError('');
