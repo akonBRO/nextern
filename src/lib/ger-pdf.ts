@@ -5,42 +5,48 @@
 import PDFDocument from 'pdfkit';
 
 // ── Palette ────────────────────────────────────────────────────────────────
-const DARK = '#0F172A';
-const INDIGO = '#1E293B';
+const NAVY = '#0A1628';
+const NAVY_MID = '#112240';
+const NAVY_LIGHT = '#1B3461';
+const GOLD = '#C9A84C';
+const GOLD_LIGHT = '#E8C97A';
+const GOLD_PALE = '#F5E6BB';
 const WHITE = '#FFFFFF';
-const MUTED = '#64748B';
-const LIGHT = '#94A3B8';
+const OFF_WHITE = '#F8F6F0';
+const SLATE_TEXT = '#4A5568';
+const MUTED_TEXT = '#718096';
+const LIGHT_TEXT = '#A0AEC0';
 const DIVIDER = '#E2E8F0';
-const SLATE = '#F1F5F9';
+const DIVIDER_WARM = '#DDD0B8';
 
-// Category accent colours — one per category
+// Category accent colours
 const CAT_COLORS = [
-  '#2563EB', // Academic Performance   — blue
+  '#1A56DB', // Academic Performance   — royal blue
   '#0D9488', // Skill Growth           — teal
-  '#7C3AED', // Platform Engagement    — violet
+  '#6D28D9', // Platform Engagement    — violet
   '#059669', // Mentorship Activity    — emerald
-  '#D97706', // Freelance Work         — amber
-  '#DB2777', // Peer Recognition       — pink
-  '#0EA5E9', // Employer Endorsements  — sky
-  '#6366F1', // Opportunity Score      — indigo
+  '#B45309', // Freelance Work         — amber dark
+  '#BE185D', // Peer Recognition       — rose
+  '#0369A1', // Employer Endorsements  — sky
+  '#4338CA', // Opportunity Score      — indigo
 ];
 
 // ── Layout constants ───────────────────────────────────────────────────────
-const PW = 595.28; // A4 width
-const PH = 841.89; // A4 height
-const ML = 44; // margin left
-const MR = 44; // margin right
+const PW = 595.28;
+const PH = 841.89;
+const ML = 48;
+const MR = 48;
 const INNER = PW - ML - MR;
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export type GERCategory = {
   key: string;
   label: string;
-  weight: number; // out of 100 total weight
-  rawScore: number; // 0–100 within this category
+  weight: number;
+  rawScore: number;
   weightedScore: number;
-  detail: string; // one-line explanation
-  items: string[]; // bullet evidence items
+  detail: string;
+  items: string[];
 };
 
 export type GERData = {
@@ -50,12 +56,11 @@ export type GERData = {
   university?: string;
   department?: string;
   cgpa?: number;
-  image?: string;
-  graduatedAt: string; // ISO date string
-  totalScore: number; // 0–100 final GER score
-  grade: string; // A+, A, B+, B, C, F
+  graduatedAt: string;
+  totalScore: number;
+  grade: string;
   categories: GERCategory[];
-  generatedAt: string; // ISO date string
+  generatedAt: string;
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -78,9 +83,9 @@ function fmtDate(iso: string) {
 
 function gradeColor(g: string): string {
   if (g === 'A+' || g === 'A') return '#059669';
-  if (g === 'B+' || g === 'B') return '#2563EB';
-  if (g === 'C') return '#D97706';
-  return '#EF4444';
+  if (g === 'B+' || g === 'B') return '#1A56DB';
+  if (g === 'C') return '#B45309';
+  return '#DC2626';
 }
 
 function scoreGrade(score: number): string {
@@ -92,7 +97,72 @@ function scoreGrade(score: number): string {
   return 'F';
 }
 
-// ── Draw a horizontal progress bar ─────────────────────────────────────────
+// ── Draw decorative corner ornaments ───────────────────────────────────────
+function drawCornerOrnaments(
+  doc: PDFKit.PDFDocument,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  color: string,
+  size = 18
+) {
+  const s = size;
+  const corners = [
+    [x, y, x + s, y, x, y + s],
+    [x + w, y, x + w - s, y, x + w, y + s],
+    [x, y + h, x + s, y + h, x, y + h - s],
+    [x + w, y + h, x + w - s, y + h, x + w, y + h - s],
+  ];
+  corners.forEach(([cx, cy, ex1, ey1, ex2, ey2]) => {
+    doc.moveTo(cx, cy).lineTo(ex1, ey1).strokeColor(hex(color)).lineWidth(1.5).stroke();
+    doc.moveTo(cx, cy).lineTo(ex2, ey2).strokeColor(hex(color)).lineWidth(1.5).stroke();
+  });
+}
+
+// ── Draw thin double border ─────────────────────────────────────────────────
+function drawDoubleBorder(
+  doc: PDFKit.PDFDocument,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  color: string
+) {
+  // outer
+  doc.rect(x, y, w, h).strokeColor(hex(color)).lineWidth(1.5).stroke();
+  // inner (4px inset)
+  doc
+    .rect(x + 4, y + 4, w - 8, h - 8)
+    .strokeColor(hex(color))
+    .lineWidth(0.5)
+    .stroke();
+}
+
+// ── Horizontal divider with diamond ────────────────────────────────────────
+function goldenDivider(doc: PDFKit.PDFDocument, x: number, y: number, w: number) {
+  const midX = x + w / 2;
+  doc
+    .moveTo(x, y)
+    .lineTo(midX - 8, y)
+    .strokeColor(hex(GOLD))
+    .lineWidth(0.75)
+    .stroke();
+  doc
+    .moveTo(midX + 8, y)
+    .lineTo(x + w, y)
+    .strokeColor(hex(GOLD))
+    .lineWidth(0.75)
+    .stroke();
+  // diamond
+  doc.save();
+  doc.translate(midX, y);
+  doc.rotate(45);
+  doc.rect(-3.5, -3.5, 7, 7).fillColor(hex(GOLD)).fill();
+  doc.restore();
+}
+
+// ── Progress bar (refined) ─────────────────────────────────────────────────
 function progressBar(
   doc: PDFKit.PDFDocument,
   x: number,
@@ -102,17 +172,20 @@ function progressBar(
   pct: number,
   color: string
 ) {
-  // Track
-  doc.rect(x, y, w, h).fillColor(hex(DIVIDER)).fill();
-  // Fill
+  // Track (warm grey)
+  doc.rect(x, y, w, h).fillColor(hex('#E8E4DC')).fill();
   const filled = Math.max(0, Math.min(1, pct / 100)) * w;
   if (filled > 0) {
     doc.rect(x, y, filled, h).fillColor(hex(color)).fill();
   }
+  // End cap highlight
+  if (filled > 2) {
+    doc.rect(x, y, 2, h).fillColor(hex(WHITE)).opacity(0.25).fill().opacity(1);
+  }
 }
 
-// ── Draw a single category row ─────────────────────────────────────────────
-function categoryRow(
+// ── Single category block ──────────────────────────────────────────────────
+function categoryBlock(
   doc: PDFKit.PDFDocument,
   cat: GERCategory,
   color: string,
@@ -120,64 +193,71 @@ function categoryRow(
   y: number,
   w: number
 ): number {
-  const CARD_PAD = 14;
-  const CARD_H_BASE = 64;
+  const PAD = 12;
+  const H = 58;
 
-  // Background card
-  doc.rect(x, y, w, CARD_H_BASE).fillColor(hex(SLATE)).fill();
-  // Left accent bar
-  doc.rect(x, y, 4, CARD_H_BASE).fillColor(hex(color)).fill();
+  // Card background
+  doc.rect(x, y, w, H).fillColor(hex(OFF_WHITE)).fill();
 
-  // Category label
+  // Left color stripe
+  doc.rect(x, y, 3, H).fillColor(hex(color)).fill();
+
+  // Category name
   doc
     .font('Helvetica-Bold')
-    .fontSize(9)
-    .fillColor(hex(DARK))
-    .text(cat.label.toUpperCase(), x + CARD_PAD + 4, y + 10, { width: 160, characterSpacing: 0.5 });
+    .fontSize(8)
+    .fillColor(hex(NAVY))
+    .text(cat.label.toUpperCase(), x + PAD + 4, y + 9, { width: 155, characterSpacing: 0.4 });
 
-  // Weight badge
-  const badgeX = x + CARD_PAD + 4 + 168;
+  // Weight badge (pill)
+  const bx = x + PAD + 4 + 162;
   doc
-    .rect(badgeX, y + 9, 42, 13)
+    .roundedRect(bx, y + 7, 38, 13, 3)
     .fillColor(hex(color))
     .fill();
   doc
     .font('Helvetica-Bold')
-    .fontSize(7)
+    .fontSize(6.5)
     .fillColor(hex(WHITE))
-    .text(`${cat.weight}% wt`, badgeX + 2, y + 12, { width: 38, align: 'center' });
+    .text(`WT: ${cat.weight}%`, bx, y + 10, { width: 38, align: 'center' });
 
-  // Score
+  // Weighted score (right)
   doc
     .font('Helvetica-Bold')
-    .fontSize(13)
+    .fontSize(14)
     .fillColor(hex(color))
-    .text(`${cat.weightedScore.toFixed(1)}`, x + w - 52, y + 8, { width: 48, align: 'right' });
+    .text(cat.weightedScore.toFixed(1), x + w - 50, y + 7, { width: 46, align: 'right' });
   doc
     .font('Helvetica')
     .fontSize(7)
-    .fillColor(hex(LIGHT))
-    .text('pts', x + w - 52, y + 24, { width: 48, align: 'right' });
+    .fillColor(hex(MUTED_TEXT))
+    .text('pts', x + w - 50, y + 25, { width: 46, align: 'right' });
 
   // Detail text
   doc
     .font('Helvetica')
-    .fontSize(8)
-    .fillColor(hex(MUTED))
-    .text(cat.detail, x + CARD_PAD + 4, y + 28, { width: w - CARD_PAD * 2 - 60 });
+    .fontSize(7.5)
+    .fillColor(hex(MUTED_TEXT))
+    .text(cat.detail, x + PAD + 4, y + 27, { width: w - PAD * 2 - 55, lineGap: 1 });
 
   // Progress bar
-  const barY = y + CARD_H_BASE - 10;
-  progressBar(doc, x + CARD_PAD + 4, barY, w - CARD_PAD * 2 - 8, 5, cat.rawScore, color);
+  const barY = y + H - 11;
+  progressBar(doc, x + PAD + 4, barY, w - PAD * 2 - 8, 5, cat.rawScore, color);
 
-  // Score label on bar
+  // Raw score label
   doc
     .font('Helvetica-Bold')
-    .fontSize(7)
+    .fontSize(6.5)
     .fillColor(hex(color))
     .text(`${cat.rawScore}/100`, x + w - 44, barY - 2, { width: 40, align: 'right' });
 
-  return CARD_H_BASE + 6; // height consumed + gap
+  // Subtle bottom rule
+  doc
+    .rect(x + 3, y + H - 1, w - 3, 0.5)
+    .fillColor(hex(DIVIDER_WARM))
+    .fill();
+
+  return H + 5;
 }
 
 // ── Main generator ─────────────────────────────────────────────────────────
@@ -190,174 +270,257 @@ export async function generateGERPDF(data: GERData): Promise<Buffer> {
     doc.on('end', resolve);
     doc.on('error', reject);
 
-    // ── PAGE 1 ──────────────────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════════
+    // BACKGROUND — warm off-white body
+    // ════════════════════════════════════════════════════════════════════
+    doc.rect(0, 0, PW, PH).fillColor(hex(OFF_WHITE)).fill();
 
-    // ── Hero header ──────────────────────────────────────────────────────
-    doc.rect(0, 0, PW, 200).fillColor(hex(DARK)).fill();
+    // ── HEADER BLOCK ────────────────────────────────────────────────────
+    // Full-width deep navy header
+    doc.rect(0, 0, PW, 210).fillColor(hex(NAVY)).fill();
+    // Subtle secondary gradient layer
+    doc.rect(0, 0, PW, 210).fillColor(hex(NAVY_MID)).opacity(0.5).fill().opacity(1);
 
-    // Decorative arcs
-    doc
-      .circle(PW - 60, -30, 120)
-      .fillColor('rgba(37,99,235,0.08)')
-      .fill();
-    doc
-      .circle(PW - 20, 180, 80)
-      .fillColor('rgba(13,148,136,0.08)')
-      .fill();
-    doc.circle(40, 220, 100).fillColor('rgba(124,58,237,0.06)').fill();
+    // Gold top stripe
+    doc.rect(0, 0, PW, 6).fillColor(hex(GOLD)).fill();
+    // Gold bottom stripe on header
+    doc.rect(0, 204, PW, 3).fillColor(hex(GOLD)).fill();
+    // Thinner accent below
+    doc.rect(0, 208, PW, 1).fillColor(hex(GOLD_PALE)).opacity(0.4).fill().opacity(1);
 
-    // Top teal stripe
-    doc.rect(0, 0, PW, 5).fillColor(hex('#0D9488')).fill();
+    // Fine decorative horizontal lines inside header
+    doc.rect(ML, 22, INNER, 0.4).fillColor(hex(GOLD_PALE)).opacity(0.2).fill().opacity(1);
+    doc.rect(ML, 192, INNER, 0.4).fillColor(hex(GOLD_PALE)).opacity(0.2).fill().opacity(1);
 
-    // Nextern wordmark area
+    // Platform wordmark
     doc
       .font('Helvetica-Bold')
-      .fontSize(11)
-      .fillColor(hex('#0D9488'))
-      .text('NEXTERN', ML, 20, { characterSpacing: 3 });
+      .fontSize(9)
+      .fillColor(hex(GOLD))
+      .text('N E X T E R N', ML, 30, { characterSpacing: 4 });
+    doc
+      .font('Helvetica')
+      .fontSize(7.5)
+      .fillColor(hex(GOLD_PALE))
+      .opacity(0.7)
+      .text('Career Readiness Platform  ·  Bangladesh', ML, 44)
+      .opacity(1);
+
+    // Document type — centered
+    doc
+      .font('Helvetica')
+      .fontSize(9)
+      .fillColor(hex(GOLD_PALE))
+      .opacity(0.8)
+      .text('OFFICIAL ACADEMIC CREDENTIAL', ML, 30, {
+        width: INNER,
+        align: 'right',
+        characterSpacing: 2.5,
+      })
+      .opacity(1);
+
+    // Certificate title — large, centered
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(32)
+      .fillColor(hex(WHITE))
+      .text('Graduation Evaluation', ML, 62, {
+        width: INNER,
+        align: 'center',
+        characterSpacing: -0.5,
+      });
+
+    doc
+      .font('Helvetica')
+      .fontSize(18)
+      .fillColor(hex(GOLD_LIGHT))
+      .text('R E P O R T', ML, 99, { width: INNER, align: 'center', characterSpacing: 8 });
+
+    // Thin gold rule under title
+    const ruleY = 126;
+    const ruleW = 160;
+    const ruleX = (PW - ruleW) / 2;
+    doc.rect(ruleX, ruleY, ruleW, 1).fillColor(hex(GOLD)).fill();
+    doc
+      .rect(ruleX + 20, ruleY + 3, ruleW - 40, 0.4)
+      .fillColor(hex(GOLD_PALE))
+      .opacity(0.5)
+      .fill()
+      .opacity(1);
+
+    // Student name — large, centered
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(19)
+      .fillColor(hex(WHITE))
+      .text(data.name, ML, 138, { width: INNER, align: 'center' });
+
+    // Sub-line: dept · university
+    const subLine = [data.department, data.university].filter(Boolean).join('  ·  ');
+    if (subLine) {
+      doc
+        .font('Helvetica')
+        .fontSize(9.5)
+        .fillColor(hex(GOLD_PALE))
+        .opacity(0.85)
+        .text(subLine, ML, 163, { width: INNER, align: 'center' })
+        .opacity(1);
+    }
+
+    // Meta row: CGPA | Student ID | Graduated
+    const metaParts = [
+      data.cgpa != null ? `CGPA  ${data.cgpa.toFixed(2)} / 4.00` : null,
+      data.studentId ? `ID  ${data.studentId}` : null,
+      `Graduated  ${fmtDate(data.graduatedAt)}`,
+    ].filter(Boolean) as string[];
     doc
       .font('Helvetica')
       .fontSize(8)
-      .fillColor(hex(LIGHT))
-      .text('Career Readiness Platform', ML, 34);
+      .fillColor(hex(LIGHT_TEXT))
+      .text(metaParts.join('     |     '), ML, 180, {
+        width: INNER,
+        align: 'center',
+        characterSpacing: 0.3,
+      });
 
-    // GER title
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(28)
-      .fillColor(hex(WHITE))
-      .text('Graduation Evaluation', ML, 60);
-    doc.font('Helvetica-Bold').fontSize(28).fillColor(hex('#93C5FD')).text('Report', ML, 92);
-
-    // Subtitle
-    doc
-      .font('Helvetica')
-      .fontSize(10)
-      .fillColor(hex(LIGHT))
-      .text('Official Academic Achievement Document', ML, 130);
-
-    // Issue date
-    doc
-      .font('Helvetica')
-      .fontSize(8.5)
-      .fillColor(hex(MUTED))
-      .text(`Issued: ${fmtDate(data.generatedAt)}`, ML, 150);
-
-    // ── Score medallion (right side of header) ────────────────────────
-    const medX = PW - 118;
-    const medY = 28;
-    const medR = 56;
+    // ── SCORE MEDALLION (right of title area) ───────────────────────
+    const medCX = PW - 70;
+    const medCY = 104;
+    const medR = 44;
 
     // Outer glow ring
     doc
-      .circle(medX, medY + medR, medR + 8)
-      .fillColor('rgba(255,255,255,0.04)')
-      .fill();
-    // Dark circle background
+      .circle(medCX, medCY, medR + 10)
+      .fillColor(hex(GOLD))
+      .opacity(0.08)
+      .fill()
+      .opacity(1);
+    // Outer gold ring
     doc
-      .circle(medX, medY + medR, medR)
-      .fillColor(hex(INDIGO))
-      .fill();
-    // Colored ring
+      .circle(medCX, medCY, medR + 5)
+      .strokeColor(hex(GOLD))
+      .lineWidth(0.75)
+      .stroke();
+    // Inner dark circle
+    doc.circle(medCX, medCY, medR).fillColor(hex(NAVY_LIGHT)).fill();
+    // Colored inner ring
     doc
-      .circle(medX, medY + medR, medR)
+      .circle(medCX, medCY, medR)
       .strokeColor(hex(gradeColor(data.grade)))
-      .lineWidth(3)
+      .lineWidth(2.5)
       .stroke();
 
     // Score number
     doc
       .font('Helvetica-Bold')
-      .fontSize(28)
+      .fontSize(26)
       .fillColor(hex(WHITE))
-      .text(`${data.totalScore}`, medX - medR, medY + medR - 20, {
-        width: medR * 2,
-        align: 'center',
-      });
+      .text(`${data.totalScore}`, medCX - medR, medCY - 18, { width: medR * 2, align: 'center' });
     doc
       .font('Helvetica')
-      .fontSize(9)
-      .fillColor(hex(LIGHT))
-      .text('/ 100', medX - medR, medY + medR + 14, { width: medR * 2, align: 'center' });
+      .fontSize(8)
+      .fillColor(hex(LIGHT_TEXT))
+      .text('out of 100', medCX - medR, medCY + 12, { width: medR * 2, align: 'center' });
 
-    // Grade badge
+    // Grade pill below medallion
     const gc = gradeColor(data.grade);
+    const pillW = 40;
+    const pillX = medCX - pillW / 2;
     doc
-      .rect(medX - 18, medY + medR + 28, 36, 18)
+      .roundedRect(pillX, medCY + medR + 8, pillW, 18, 4)
       .fillColor(hex(gc))
       .fill();
     doc
       .font('Helvetica-Bold')
-      .fontSize(11)
+      .fontSize(12)
       .fillColor(hex(WHITE))
-      .text(data.grade, medX - 18, medY + medR + 31, { width: 36, align: 'center' });
+      .text(data.grade, pillX, medCY + medR + 11, { width: pillW, align: 'center' });
 
-    // ── Student info band ─────────────────────────────────────────────
-    doc.rect(0, 200, PW, 68).fillColor(hex(INDIGO)).fill();
-    doc.rect(0, 268, PW, 2).fillColor(hex('#334155')).fill();
+    // ── BODY CONTENT ────────────────────────────────────────────────────
+    let cy = 224;
 
-    doc.font('Helvetica-Bold').fontSize(16).fillColor(hex(WHITE)).text(data.name, ML, 214);
-
-    const sub1 = [data.department, data.university].filter(Boolean).join('  ·  ');
-    if (sub1) {
-      doc.font('Helvetica').fontSize(9).fillColor(hex('#93C5FD')).text(sub1, ML, 234);
-    }
-
-    const sub2Parts = [
-      data.cgpa != null ? `CGPA ${data.cgpa.toFixed(2)} / 4.00` : '',
-      data.studentId ? `ID: ${data.studentId}` : '',
-      `Graduated: ${fmtDate(data.graduatedAt)}`,
-    ].filter(Boolean);
+    // ── OVERALL SCORE BAND ──────────────────────────────────────────────
+    // White card
     doc
-      .font('Helvetica')
-      .fontSize(8.5)
-      .fillColor(hex(MUTED))
-      .text(sub2Parts.join('    |    '), ML, 250);
+      .rect(ML, cy, INNER, 62)
+      .fillColor(hex(WHITE))
+      .strokeColor(hex(DIVIDER_WARM))
+      .lineWidth(0.75)
+      .fillAndStroke();
 
-    // ── Score summary bar ────────────────────────────────────────────
-    let cy = 290;
+    // Section label
     doc
       .font('Helvetica-Bold')
-      .fontSize(8.5)
-      .fillColor(hex(MUTED))
-      .text('OVERALL READINESS SCORE', ML, cy, { characterSpacing: 1 });
+      .fontSize(7.5)
+      .fillColor(hex(GOLD))
+      .text('OVERALL READINESS SCORE', ML + 14, cy + 12, { characterSpacing: 1.5 });
 
-    cy += 14;
-    // Full progress track
-    const FULL_W = INNER;
-    doc.rect(ML, cy, FULL_W, 14).fillColor(hex(DIVIDER)).fill();
+    // Segmented score bar
+    const BAR_X = ML + 14;
+    const BAR_Y = cy + 30;
+    const BAR_W = INNER - 90;
+    const BAR_H = 12;
 
-    // Gradient-like segments from the 8 categories
-    let segX = ML;
+    // Bar background
+    doc.rect(BAR_X, BAR_Y, BAR_W, BAR_H).fillColor(hex('#DDD9CF')).fill();
+
+    // Colour segments
+    let segX = BAR_X;
     data.categories.forEach((cat, i) => {
-      const segW = (cat.weight / 100) * FULL_W;
+      const segW = (cat.weight / 100) * BAR_W;
       const fill = (cat.rawScore / 100) * segW;
       if (fill > 0) {
-        doc.rect(segX, cy, fill, 14).fillColor(hex(CAT_COLORS[i])).fill();
+        doc.rect(segX, BAR_Y, fill, BAR_H).fillColor(hex(CAT_COLORS[i])).fill();
+      }
+      // segment divider
+      if (i < data.categories.length - 1) {
+        doc
+          .rect(segX + segW, BAR_Y, 0.75, BAR_H)
+          .fillColor(hex(WHITE))
+          .opacity(0.4)
+          .fill()
+          .opacity(1);
       }
       segX += segW;
     });
 
-    // Score label over bar
+    // Bar border
+    doc.rect(BAR_X, BAR_Y, BAR_W, BAR_H).strokeColor(hex(DIVIDER_WARM)).lineWidth(0.5).stroke();
+
+    // Score + grade text on right of bar
+    const gc2 = gradeColor(data.grade);
     doc
       .font('Helvetica-Bold')
-      .fontSize(10)
-      .fillColor(hex(DARK))
-      .text(`${data.totalScore} pts  —  ${data.grade}`, ML, cy + 18);
-
-    cy += 42;
-
-    // ── 8 categories grid ────────────────────────────────────────────
+      .fontSize(20)
+      .fillColor(hex(gc2))
+      .text(`${data.totalScore}`, BAR_X + BAR_W + 10, cy + 22, { width: 38, align: 'center' });
+    doc
+      .font('Helvetica')
+      .fontSize(8)
+      .fillColor(hex(MUTED_TEXT))
+      .text('/ 100', BAR_X + BAR_W + 10, cy + 46, { width: 38, align: 'center' });
     doc
       .font('Helvetica-Bold')
-      .fontSize(8.5)
-      .fillColor(hex(MUTED))
-      .text('CATEGORY BREAKDOWN', ML, cy, { characterSpacing: 1 });
-    cy += 14;
+      .fontSize(13)
+      .fillColor(hex(gc2))
+      .text(data.grade, BAR_X + BAR_W + 50, cy + 30, { width: 28, align: 'center' });
 
-    // Two columns
-    const COL_W = (INNER - 10) / 2;
-    const COL2_X = ML + COL_W + 10;
+    cy += 74;
+
+    // ── SECTION HEADING: CATEGORY BREAKDOWN ────────────────────────────
+    goldenDivider(doc, ML, cy, INNER);
+    cy += 10;
+
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(8)
+      .fillColor(hex(NAVY))
+      .text('PERFORMANCE CATEGORY BREAKDOWN', ML, cy, { characterSpacing: 1.5 });
+    cy += 16;
+
+    // ── Two-column category grid ────────────────────────────────────────
+    const COL_W = (INNER - 8) / 2;
+    const COL2_X = ML + COL_W + 8;
     let leftY = cy;
     let rightY = cy;
 
@@ -365,76 +528,200 @@ export async function generateGERPDF(data: GERData): Promise<Buffer> {
       const isLeft = i % 2 === 0;
       const x = isLeft ? ML : COL2_X;
       const y = isLeft ? leftY : rightY;
-      const h = categoryRow(doc, cat, CAT_COLORS[i], x, y, COL_W);
+      const h = categoryBlock(doc, cat, CAT_COLORS[i], x, y, COL_W);
       if (isLeft) leftY += h;
       else rightY += h;
     });
 
     cy = Math.max(leftY, rightY) + 10;
 
-    // ── Evidence bullets per category ──────────────────────────────
+    // ── SUPPORTING EVIDENCE ─────────────────────────────────────────────
     if (cy < PH - 160) {
+      goldenDivider(doc, ML, cy, INNER);
+      cy += 10;
+
       doc
         .font('Helvetica-Bold')
-        .fontSize(8.5)
-        .fillColor(hex(MUTED))
-        .text('SUPPORTING EVIDENCE', ML, cy, { characterSpacing: 1 });
-      cy += 14;
+        .fontSize(8)
+        .fillColor(hex(NAVY))
+        .text('SUPPORTING EVIDENCE', ML, cy, { characterSpacing: 1.5 });
+      cy += 16;
+
+      // Two columns for evidence
+      const E_COL_W = (INNER - 8) / 2;
+      const E_COL2_X = ML + E_COL_W + 8;
+      let eLeft = cy;
+      let eRight = cy;
 
       data.categories.forEach((cat, i) => {
         if (cat.items.length === 0) return;
-        if (cy > PH - 80) return; // overflow guard
+        const isLeft = i % 2 === 0;
+        const ex = isLeft ? ML : E_COL2_X;
+        let ey = isLeft ? eLeft : eRight;
 
+        if (ey > PH - 90) return;
+
+        // Category label for evidence
+        doc.rect(ex, ey, E_COL_W, 14).fillColor(hex(CAT_COLORS[i])).opacity(0.08).fill().opacity(1);
         doc
           .font('Helvetica-Bold')
-          .fontSize(8)
+          .fontSize(7.5)
           .fillColor(hex(CAT_COLORS[i]))
-          .text(cat.label, ML, cy);
-        cy += 11;
+          .text(cat.label, ex + 6, ey + 3, { width: E_COL_W - 8 });
+        ey += 17;
 
         cat.items.forEach((item) => {
-          if (cy > PH - 70) return;
+          if (ey > PH - 80) return;
+          // Bullet dot
           doc
-            .circle(ML + 5, cy + 3.5, 2)
+            .circle(ex + 7, ey + 4, 2)
             .fillColor(hex(CAT_COLORS[i]))
             .fill();
           doc
             .font('Helvetica')
             .fontSize(8)
-            .fillColor(hex(MUTED))
-            .text(item, ML + 13, cy, { width: INNER - 13 });
-          cy = doc.y + 3;
+            .fillColor(hex(SLATE_TEXT))
+            .text(item, ex + 15, ey, { width: E_COL_W - 20 });
+          ey = doc.y + 3;
         });
 
-        cy += 4;
+        ey += 6;
+        if (isLeft) eLeft = ey;
+        else eRight = ey;
       });
+
+      cy = Math.max(eLeft, eRight) + 6;
     }
 
-    // ── Footer ────────────────────────────────────────────────────────
-    const FY = PH - 44;
-    doc.rect(0, FY, PW, 44).fillColor(hex(DARK)).fill();
-    doc.rect(0, FY, PW, 3).fillColor(hex('#2563EB')).fill();
+    // ── CERTIFICATION STATEMENT ─────────────────────────────────────────
+    if (cy < PH - 110) {
+      goldenDivider(doc, ML, cy, INNER);
+      cy += 12;
+
+      const CERT_BOX_H = 42;
+      doc.rect(ML, cy, INNER, CERT_BOX_H).fillColor(hex(NAVY)).fill();
+      doc.rect(ML, cy, INNER, CERT_BOX_H).strokeColor(hex(GOLD)).lineWidth(0.75).stroke();
+
+      doc
+        .font('Helvetica')
+        .fontSize(8.5)
+        .fillColor(hex(GOLD_PALE))
+        .opacity(0.9)
+        .text(
+          `This certifies that ${data.name} has successfully completed the Nextern Career Readiness Program and achieved a Graduation Evaluation Score of ${data.totalScore}/100 (Grade: ${data.grade}), validating professional and academic preparedness for the workforce.`,
+          ML + 16,
+          cy + 9,
+          { width: INNER - 32, align: 'center', lineGap: 2 }
+        )
+        .opacity(1);
+
+      cy += CERT_BOX_H + 8;
+    }
+
+    // ── SIGNATURE ROW ───────────────────────────────────────────────────
+    if (cy < PH - 90) {
+      const sigY = cy + 4;
+
+      // Left: Issue details
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(7.5)
+        .fillColor(hex(MUTED_TEXT))
+        .text('ISSUED BY', ML, sigY, { characterSpacing: 0.8 });
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(9)
+        .fillColor(hex(NAVY))
+        .text('Nextern Platform', ML, sigY + 11);
+      doc
+        .font('Helvetica')
+        .fontSize(7.5)
+        .fillColor(hex(MUTED_TEXT))
+        .text('nextern-virid.vercel.app', ML, sigY + 23);
+
+      // Center: Date
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(7.5)
+        .fillColor(hex(MUTED_TEXT))
+        .text('DATE OF ISSUE', ML, sigY, { width: INNER, align: 'center', characterSpacing: 0.8 });
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(9)
+        .fillColor(hex(NAVY))
+        .text(fmtDate(data.generatedAt), ML, sigY + 11, { width: INNER, align: 'center' });
+
+      // Right: Document ID
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(7.5)
+        .fillColor(hex(MUTED_TEXT))
+        .text('DOCUMENT STATUS', ML + INNER - 110, sigY, {
+          width: 110,
+          align: 'right',
+          characterSpacing: 0.8,
+        });
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(9)
+        .fillColor(hex(NAVY))
+        .text('Official · Verified', ML + INNER - 110, sigY + 11, { width: 110, align: 'right' });
+      doc
+        .font('Helvetica')
+        .fontSize(7.5)
+        .fillColor(hex(MUTED_TEXT))
+        .text('Digitally Certified', ML + INNER - 110, sigY + 23, { width: 110, align: 'right' });
+
+      // Sig line
+      doc
+        .rect(ML, sigY + 36, INNER, 0.75)
+        .fillColor(hex(DIVIDER_WARM))
+        .fill();
+    }
+
+    // ── FOOTER ──────────────────────────────────────────────────────────
+    const FY = PH - 38;
+    doc.rect(0, FY, PW, 38).fillColor(hex(NAVY)).fill();
+    doc.rect(0, FY, PW, 2).fillColor(hex(GOLD)).fill();
+
+    // Fine ornament lines in footer
+    doc
+      .rect(ML, FY + 8, INNER, 0.3)
+      .fillColor(hex(GOLD_PALE))
+      .opacity(0.15)
+      .fill()
+      .opacity(1);
 
     doc
       .font('Helvetica-Bold')
-      .fontSize(7.5)
-      .fillColor(hex(MUTED))
-      .text(
-        'This document is digitally generated by Nextern and certified by the platform.',
-        ML,
-        FY + 10,
-        { width: INNER, align: 'center' }
-      );
+      .fontSize(7)
+      .fillColor(hex(GOLD))
+      .text('NEXTERN', ML, FY + 12, { characterSpacing: 2 });
     doc
       .font('Helvetica')
       .fontSize(7)
-      .fillColor(hex('#334155'))
+      .fillColor(hex(LIGHT_TEXT))
       .text(
-        `nextern-virid.vercel.app  ·  Generated on ${fmtDate(data.generatedAt)}  ·  Confidential`,
+        `Graduation Evaluation Report  ·  ${data.name}  ·  ${fmtDate(data.generatedAt)}`,
+        ML + 52,
+        FY + 12,
+        { width: INNER - 52 }
+      );
+    doc
+      .font('Helvetica')
+      .fontSize(6.5)
+      .fillColor(hex('#4A5568'))
+      .text(
+        'This document is algorithmically generated and digitally certified by Nextern. For verification, visit nextern-virid.vercel.app',
         ML,
         FY + 24,
         { width: INNER, align: 'center' }
       );
+
+    // ── PAGE BORDER (outermost frame) ────────────────────────────────────
+    // Only on the body portion below header
+    drawDoubleBorder(doc, 10, 214, PW - 20, PH - FY - (PH - FY) + FY - 224, GOLD_PALE);
+    drawCornerOrnaments(doc, 10, 214, PW - 20, FY - 214, GOLD, 22);
 
     doc.end();
   });
@@ -473,19 +760,18 @@ export type RawGERInput = {
   cgpa?: number;
   graduatedAt: string;
 
-  // Category inputs
-  opportunityScore: number; // 0–100 from M3 engine
-  skills: string[]; // list of student skills
-  closedSkillGaps: string[]; // skills where gap was closed
-  applicationCount: number; // total job applications
-  eventCount: number; // webinar/workshop registrations
-  hiredCount: number; // applications that reached 'hired'
-  mentorSessionCount: number; // completed mentor sessions
-  freelanceOrderCount: number; // completed freelance orders
+  opportunityScore: number;
+  skills: string[];
+  closedSkillGaps: string[];
+  applicationCount: number;
+  eventCount: number;
+  hiredCount: number;
+  mentorSessionCount: number;
+  freelanceOrderCount: number;
   badges: { badgeName: string; badgeSlug: string }[];
-  employerEndorsementCount: number; // employer reviews received
-  avgEmployerRating: number; // 0–5 employer star rating
-  cgpaScore: number; // alias for cgpa
+  employerEndorsementCount: number;
+  avgEmployerRating: number;
+  cgpaScore: number;
   completedCourses: string[];
   certifications: string[];
   projects: string[];

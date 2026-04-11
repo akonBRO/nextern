@@ -26,6 +26,13 @@ export async function GET() {
       return NextResponse.json({ error: 'GER is only available for students' }, { status: 403 });
     }
 
+    if (!user.isGraduated) {
+      return NextResponse.json(
+        { error: 'GER is only available after marking graduation on your profile.' },
+        { status: 403 }
+      );
+    }
+
     const oid = new mongoose.Types.ObjectId(session.user.id);
 
     // ── Fetch platform data ──────────────────────────────────────────

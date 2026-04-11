@@ -311,7 +311,7 @@ const Pill = ({
   </span>
 );
 
-// ── In-Platform Resume Preview Card ───────────────────────────────────────
+// In-Platform Resume Preview Card
 function InPlatformResume({ user }: { user: UserData | null }) {
   if (!user) return null;
 
@@ -655,18 +655,19 @@ type UserData = {
   certifications: { name: string; issuedBy: string; credentialUrl?: string }[];
 };
 
-// ── Main page ──────────────────────────────────────────────────────────────
+// Main page
 export default function StudentProfilePage() {
   const [user, setUser] = useState<UserData | null>(null);
   const [fetching, setFetching] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [graduationSaving, setGraduationSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [badges, setBadges] = useState<
     { badgeName: string; badgeIcon: string; awardedAt: string; badgeSlug: string }[]
   >([]);
 
-  // ── Resume upload state ──
+  // Resume upload state
   const { startUpload, isUploading } = useUploadThing('resumeUploader');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeUploading, setResumeUploading] = useState(false);
@@ -683,7 +684,6 @@ export default function StudentProfilePage() {
 
   // ── Live preview of in-platform resume (updates on save) ──
   const [previewUser, setPreviewUser] = useState<UserData | null>(null);
-
   const [form, setFormState] = useState({
     name: '',
     phone: '',
@@ -717,7 +717,7 @@ export default function StudentProfilePage() {
       .then((data) => {
         const u = data.user;
         setUser(u);
-        setPreviewUser(u); // initialise preview with saved data
+        setPreviewUser(u);
         setFormState({
           name: u.name ?? '',
           phone: u.phone ?? '',
@@ -847,7 +847,7 @@ export default function StudentProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           resumeUrl: null,
-          isGraduated: user?.isGraduated, // ✅ ADD THIS
+          isGraduated: form.isGraduated,
         }),
       });
 
@@ -858,6 +858,37 @@ export default function StudentProfilePage() {
     } catch {
       setResumeError('Failed to delete resume. Please try again.');
       setShowDeleteConfirm(false);
+    }
+  }
+
+  async function handleGraduationToggle(checked: boolean) {
+    const previous = form.isGraduated;
+    set('isGraduated', checked);
+    setGraduationSaving(true);
+    setError('');
+    try {
+      const res = await fetch('/api/users/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isGraduated: checked }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        set('isGraduated', previous);
+        setError(data.error ?? 'Failed to update graduation status');
+        return;
+      }
+
+      const nextValue = data.user?.isGraduated ?? checked;
+      set('isGraduated', nextValue);
+      setUser((prev) => (prev ? { ...prev, isGraduated: nextValue } : prev));
+      setPreviewUser((prev) => (prev ? { ...prev, isGraduated: nextValue } : prev));
+    } catch {
+      set('isGraduated', previous);
+      setError('Failed to update graduation status. Please try again.');
+    } finally {
+      setGraduationSaving(false);
     }
   }
 
@@ -908,7 +939,6 @@ export default function StudentProfilePage() {
         setError(data.error ?? 'Failed to save');
         return;
       }
-      set('isGraduated', data.user.isGraduated ?? false);
       setUser((prev) => ({ ...data.user, resumeUrl: prev?.resumeUrl }));
       setPreviewUser({ ...data.user, resumeUrl: user?.resumeUrl });
       setSaved(true);
@@ -1270,10 +1300,11 @@ export default function StudentProfilePage() {
               <input
                 type="checkbox"
                 checked={form.isGraduated}
-                onChange={(e) => set('isGraduated', e.target.checked)}
+                onChange={(e) => void handleGraduationToggle(e.target.checked)}
+                disabled={graduationSaving}
                 style={{ width: 16, height: 16, accentColor: C.blue }}
               />
-              I have graduated
+              {graduationSaving ? 'Saving graduation status…' : 'I have graduated'}
             </label>
           </div>
           <div style={{ marginTop: 16 }}>

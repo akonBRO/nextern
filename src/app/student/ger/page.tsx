@@ -329,7 +329,7 @@ export default function GERPage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
-  const { startUpload } = useUploadThing('generatedResumeUploader');
+  const { startUpload } = useUploadThing('resumeUploader');
 
   useEffect(() => {
     fetch('/api/ger/preview')
