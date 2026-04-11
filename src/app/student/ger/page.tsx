@@ -329,7 +329,7 @@ export default function GERPage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
-  const { startUpload } = useUploadThing('resumeUploader');
+  const { startUpload } = useUploadThing('gerUploader');
 
   useEffect(() => {
     fetch('/api/ger/preview')
@@ -393,13 +393,6 @@ export default function GERPage() {
         setError('Upload failed.');
         return;
       }
-
-      // Save gerUrl to user profile
-      await fetch('/api/users/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gerUrl: uploaded[0].ufsUrl }),
-      });
 
       setGerUrl(uploaded[0].ufsUrl);
       setSaved(true);
