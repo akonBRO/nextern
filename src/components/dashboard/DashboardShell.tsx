@@ -6,9 +6,8 @@ import { signOut } from 'next-auth/react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NexternLogo } from '@/components/brand/NexternLogo';
 import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
-import { EMPLOYER_NAV_ITEMS } from '@/lib/employer-navigation';
+import NotificationBell from '@/components/notifications/NotificationBell';
 import {
-  Bell,
   BookOpen,
   BriefcaseBusiness,
   Building2,
@@ -78,8 +77,9 @@ type DashboardShellProps = {
     image?: string;
     subtitle: string;
     isPremium?: boolean;
-    unreadNotifications: number;
+    unreadNotifications: number; // initial count from server (SSR)
     unreadMessages: number;
+    userId?: string; // needed by NotificationBell for Pusher channel
   };
   children: ReactNode;
 };
@@ -105,7 +105,8 @@ function NavIcon({ name, size = 16 }: { name: IconName; size?: number }) {
   return <Icon size={size} strokeWidth={1.9} />;
 }
 
-function CounterChip({ label, value, icon }: { label: string; value: number; icon: ReactNode }) {
+// ── Static chip — used for Messages (non-real-time for now) ───────────────
+function StaticChip({ label, value, icon }: { label: string; value: number; icon: ReactNode }) {
   return (
     <div
       style={{
@@ -144,8 +145,17 @@ export default function DashboardShell({
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [premiumActive, setPremiumActive] = useState(Boolean(user.isPremium));
   const shellRef = useRef<HTMLDivElement>(null);
-  const resolvedNavItems =
-    role === 'student' ? STUDENT_NAV_ITEMS : role === 'employer' ? EMPLOYER_NAV_ITEMS : navItems;
+  const resolvedNavItems = role === 'student' ? STUDENT_NAV_ITEMS : navItems;
+
+  // Derive notifications page href based on role
+  const notificationsHref =
+    role === 'student'
+      ? '/student/notifications'
+      : role === 'employer'
+        ? '/employer/notifications'
+        : role === 'advisor'
+          ? '/advisor/notifications'
+          : '/dept/notifications';
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -154,31 +164,24 @@ export default function DashboardShell({
         setUserMenuOpen(false);
       }
     }
-
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
   useEffect(() => {
-    if (role !== 'student' && role !== 'employer') {
-      return;
-    }
-
+    if (role !== 'student' && role !== 'employer') return;
     let cancelled = false;
 
     async function loadPremiumStatus() {
       try {
         const res = await fetch('/api/premium/status', { cache: 'no-store' });
-        if (!res.ok) {
-          return;
-        }
-
+        if (!res.ok) return;
         const data = (await res.json()) as { isPremium?: boolean };
         if (!cancelled && typeof data.isPremium === 'boolean') {
           setPremiumActive(data.isPremium);
         }
       } catch {
-        // Keep the shell stable if the status endpoint is temporarily unavailable.
+        /* keep shell stable */
       }
     }
 
@@ -196,7 +199,7 @@ export default function DashboardShell({
       cancelled = true;
       window.removeEventListener(PREMIUM_STATUS_EVENT, handlePremiumUpdate as EventListener);
     };
-  }, [pathname, role]);
+  }, [role]);
 
   const initials = user.name
     .split(' ')
@@ -253,6 +256,7 @@ export default function DashboardShell({
               flexWrap: 'wrap',
             }}
           >
+            {/* Left: logo + badges */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <Link
                 href={homeHref}
@@ -301,7 +305,7 @@ export default function DashboardShell({
                 </span>
               </div>
 
-              {premiumActive ? (
+              {premiumActive && (
                 <div
                   style={{
                     display: 'inline-flex',
@@ -317,21 +321,35 @@ export default function DashboardShell({
                   <Crown size={14} />
                   <span style={{ fontSize: 12, fontWeight: 800 }}>Premium active</span>
                 </div>
-              ) : null}
+              )}
             </div>
 
+            {/* Right: chips + bell + user menu */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <CounterChip
+              {/* Messages — static chip (real-time messaging is Sabbir's module) */}
+              <StaticChip
                 label="Messages"
                 value={user.unreadMessages}
                 icon={<Mail size={14} strokeWidth={2} />}
               />
-              <CounterChip
-                label="Alerts"
-                value={user.unreadNotifications}
-                icon={<Bell size={14} strokeWidth={2} />}
-              />
 
+              {/* ── Real-time Notification Bell ── */}
+              {user.userId ? (
+                <NotificationBell
+                  userId={user.userId}
+                  initialUnread={user.unreadNotifications}
+                  notificationsHref={notificationsHref}
+                />
+              ) : (
+                // Fallback static chip if userId not provided
+                <StaticChip
+                  label="Alerts"
+                  value={user.unreadNotifications}
+                  icon={<span style={{ fontSize: 14 }}>🔔</span>}
+                />
+              )}
+
+              {/* User menu */}
               <div style={{ position: 'relative' }}>
                 <button
                   onClick={() => setUserMenuOpen((current) => !current)}
@@ -397,13 +415,13 @@ export default function DashboardShell({
                     >
                       {user.email}
                     </div>
-                    {premiumActive ? (
+                    {premiumActive && (
                       <div
                         style={{ color: '#FDE68A', fontSize: 11, fontWeight: 700, marginTop: 2 }}
                       >
                         Premium active
                       </div>
-                    ) : null}
+                    )}
                   </div>
                   <ChevronDown
                     size={14}
@@ -415,7 +433,7 @@ export default function DashboardShell({
                   />
                 </button>
 
-                {userMenuOpen ? (
+                {userMenuOpen && (
                   <div
                     style={{
                       position: 'absolute',
@@ -430,7 +448,6 @@ export default function DashboardShell({
                       padding: 10,
                     }}
                   >
-                    {/* ── User info header ── */}
                     <div
                       style={{
                         padding: '10px 12px 14px',
@@ -444,7 +461,7 @@ export default function DashboardShell({
                       <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
                         {user.email}
                       </div>
-                      {premiumActive ? (
+                      {premiumActive && (
                         <div
                           style={{
                             display: 'inline-flex',
@@ -459,13 +476,11 @@ export default function DashboardShell({
                             fontWeight: 800,
                           }}
                         >
-                          <Crown size={12} />
-                          Premium active
+                          <Crown size={12} /> Premium active
                         </div>
-                      ) : null}
+                      )}
                     </div>
 
-                    {/* ── My Profile link ── */}
                     <Link
                       href={profile.href}
                       onClick={() => setUserMenuOpen(false)}
@@ -515,7 +530,6 @@ export default function DashboardShell({
                       </div>
                     </Link>
 
-                    {/* ── Sign out ── */}
                     <button
                       onClick={handleSignOut}
                       style={{
@@ -537,12 +551,13 @@ export default function DashboardShell({
                       Sign out
                     </button>
                   </div>
-                ) : null}
+                )}
               </div>
             </div>
           </div>
         </div>
 
+        {/* ── Nav bar ── */}
         <div style={{ background: '#1E293B', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div
             style={{
@@ -581,7 +596,7 @@ export default function DashboardShell({
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {item.icon ? <NavIcon name={item.icon} /> : null}
+                      {item.icon && <NavIcon name={item.icon} />}
                       {item.label}
                       <ChevronDown
                         size={14}
@@ -608,12 +623,12 @@ export default function DashboardShell({
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {item.icon ? <NavIcon name={item.icon} /> : null}
+                      {item.icon && <NavIcon name={item.icon} />}
                       {item.label}
                     </Link>
                   )}
 
-                  {item.items && openDropdown === item.label ? (
+                  {item.items && openDropdown === item.label && (
                     <div
                       style={{
                         position: 'absolute',
@@ -676,7 +691,7 @@ export default function DashboardShell({
                         </Link>
                       ))}
                     </div>
-                  ) : null}
+                  )}
                 </div>
               );
             })}
@@ -736,14 +751,9 @@ export default function DashboardShell({
       </footer>
 
       <style>{`
-        .dashboard-shell-nav::-webkit-scrollbar {
-          display: none;
-        }
-
+        .dashboard-shell-nav::-webkit-scrollbar { display: none; }
         @media (max-width: 960px) {
-          .dashboard-hero-grid {
-            grid-template-columns: 1fr !important;
-          }
+          .dashboard-hero-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>

@@ -1,6 +1,6 @@
 import PusherServer from 'pusher';
-import PusherClient from 'pusher-js';
 
+// ── Server instance ─────────────────────────────────────────
 export const pusherServer = new PusherServer({
   appId: process.env.PUSHER_APP_ID!,
   key: process.env.PUSHER_KEY!,
@@ -9,6 +9,13 @@ export const pusherServer = new PusherServer({
   useTLS: true,
 });
 
-export const pusherClient = new PusherClient(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-  cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-});
+// ── Channel helpers ─────────────────────────────────────────
+export function userChannel(userId: string): string {
+  return `user-${userId}`;
+}
+
+// ── Events ──────────────────────────────────────────────────
+export const PUSHER_EVENTS = {
+  NEW_NOTIFICATION: 'new-notification',
+  NOTIFICATION_READ: 'notification-read',
+} as const;

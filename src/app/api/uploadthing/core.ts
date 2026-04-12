@@ -40,6 +40,23 @@ export const ourFileRouter = {
       return { generatedResumeUrl: file.ufsUrl };
     }),
 
+  // ── GER Upload (save GER PDF separately from resume) ────────────────
+  // Saves to: User.gerUrl — does not touch main resumeUrl or generatedResumeUrl
+  gerUploader: f({ pdf: { maxFileSize: '8MB' } })
+    .middleware(async () => {
+      const session = await auth();
+      if (!session?.user?.id) throw new UploadThingError('Unauthorized');
+      if (session.user.role !== 'student') throw new UploadThingError('Students only');
+      return { userId: session.user.id };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      await connectDB();
+      await User.findByIdAndUpdate(metadata.userId, {
+        gerUrl: file.ufsUrl,
+      });
+      return { gerUrl: file.ufsUrl };
+    }),
+
   // ── Profile Picture Upload (students, advisors, dept heads) ───────────
   // Saves to: User.image
   profilePictureUploader: f({
