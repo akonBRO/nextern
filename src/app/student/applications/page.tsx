@@ -124,6 +124,7 @@ export default async function StudentApplicationsPage() {
         name: student?.name ?? 'Student',
         email: student?.email ?? '',
         image: student?.image,
+        userId: session.user.id,
         subtitle:
           [student?.university, student?.department].filter(Boolean).join(' | ') ||
           'Student workspace',

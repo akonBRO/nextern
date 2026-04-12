@@ -1,6 +1,8 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
+import { Message } from '@/models/Message';
+import { Notification } from '@/models/Notification';
 import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import { DashboardPage, DashboardSection, HeroCard } from '@/components/dashboard/DashboardContent';
@@ -16,6 +18,10 @@ export default async function StudentBadgesPage() {
 
   await connectDB();
   const userId = session.user.id;
+  const [unreadNotifications, unreadMessages] = await Promise.all([
+    Notification.countDocuments({ userId, isRead: false }),
+    Message.countDocuments({ receiverId: userId, isRead: false }),
+  ]);
 
   const definitions = await BadgeDefinition.find({ category: 'student' }).lean();
   const earnedBadges = await BadgeAward.find({ userId }).select('badgeSlug awardedAt').lean();
@@ -73,9 +79,10 @@ export default async function StudentBadgesPage() {
         name: session.user.name ?? 'Student',
         email: session.user.email ?? '',
         image: session.user.image ?? undefined,
+        userId,
         subtitle: session.user.email ?? '',
-        unreadNotifications: 0,
-        unreadMessages: 0,
+        unreadNotifications,
+        unreadMessages,
       }}
     >
       <DashboardPage>

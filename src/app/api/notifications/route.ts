@@ -1,7 +1,9 @@
 // src/app/api/notifications/route.ts
-// GET  /api/notifications          — fetch user's notifications (paginated)
-// PATCH /api/notifications         — mark all as read
-// PATCH /api/notifications?id=xxx  — mark one as read
+// GET    /api/notifications          — fetch user's notifications (paginated)
+// PATCH  /api/notifications         — mark all as read
+// PATCH  /api/notifications?id=xxx  — mark one as read
+// DELETE /api/notifications         — delete all notifications permanently
+// DELETE /api/notifications?id=xxx  — delete a single notification permanently
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
@@ -114,5 +116,40 @@ export async function PATCH(req: NextRequest) {
   } catch (err) {
     console.error('[PATCH NOTIFICATIONS ERROR]', err);
     return NextResponse.json({ error: 'Failed to update notifications' }, { status: 500 });
+  }
+}
+
+// ── DELETE ─────────────────────────────────────────────────────────────────
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const notifId = searchParams.get('id');
+
+    await connectDB();
+
+    if (notifId) {
+      await Notification.deleteOne({ _id: notifId, userId: session.user.id });
+    } else {
+      await Notification.deleteMany({ userId: session.user.id });
+    }
+
+    const unreadCount = await Notification.countDocuments({
+      userId: session.user.id,
+      isRead: false,
+    });
+
+    await pusherServer
+      .trigger(userChannel(session.user.id), PUSHER_EVENTS.NOTIFICATION_READ, { unreadCount })
+      .catch(() => {});
+
+    return NextResponse.json({ message: 'Deleted', unreadCount });
+  } catch (err) {
+    console.error('[DELETE NOTIFICATIONS ERROR]', err);
+    return NextResponse.json({ error: 'Failed to delete notifications' }, { status: 500 });
   }
 }

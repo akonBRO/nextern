@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
 import { Subscription } from '@/models/Subscription';
 import { Payment } from '@/models/Payment';
+import { Message } from '@/models/Message';
+import { Notification } from '@/models/Notification';
 import { syncPremiumStatus } from '@/lib/premium';
 import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
@@ -18,7 +20,11 @@ export default async function StudentSubscriptionPage() {
   if (session.user.role !== 'student') redirect('/login');
 
   await connectDB();
-  const premiumStatus = await syncPremiumStatus(session.user.id);
+  const [premiumStatus, unreadNotifications, unreadMessages] = await Promise.all([
+    syncPremiumStatus(session.user.id),
+    Notification.countDocuments({ userId: session.user.id, isRead: false }),
+    Message.countDocuments({ receiverId: session.user.id, isRead: false }),
+  ]);
 
   const subscription = await Subscription.findOne({
     userId: session.user.id,
@@ -52,10 +58,11 @@ export default async function StudentSubscriptionPage() {
         name: session.user.name ?? 'Student',
         email: session.user.email ?? '',
         image: session.user.image ?? undefined,
+        userId: session.user.id,
         subtitle: session.user.email ?? '',
         isPremium: premiumStatus.isPremium,
-        unreadNotifications: 0,
-        unreadMessages: 0,
+        unreadNotifications,
+        unreadMessages,
       }}
     >
       <DashboardPage>
