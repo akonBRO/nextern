@@ -7,8 +7,8 @@ import { UploadThingError } from 'uploadthing/server';
 const f = createUploadthing();
 
 export const ourFileRouter = {
-  // ── Resume Upload (manual PDF upload by student from profile page) ─────
-  // Saves to: User.resumeUrl — the "actual resume" attached to job applications
+  // Resume upload from the student profile page.
+  // Saves to User.resumeUrl, which is the actual resume used for applications.
   resumeUploader: f({ pdf: { maxFileSize: '8MB' } })
     .middleware(async () => {
       const session = await auth();
@@ -23,8 +23,8 @@ export const ourFileRouter = {
       return { resumeUrl: file.ufsUrl };
     }),
 
-  // ── Generated Resume Upload (auto-generated PDF from Resume Builder) ───
-  // Saves to: User.generatedResumeUrl — completely separate from actual resume
+  // Generated resume upload from the Resume Builder page.
+  // Saves to User.generatedResumeUrl and must stay separate from the actual resume.
   generatedResumeUploader: f({ pdf: { maxFileSize: '8MB' } })
     .middleware(async () => {
       const session = await auth();
@@ -75,8 +75,8 @@ export const ourFileRouter = {
       return { imageUrl: file.ufsUrl };
     }),
 
-  // ── Company Logo Upload (employers only) ──────────────────────────────
-  // Saves to: User.companyLogo
+  // Company logo upload for employer accounts.
+  // Saves to User.companyLogo.
   companyLogoUploader: f({
     image: { maxFileSize: '2MB', maxFileCount: 1 },
   })
