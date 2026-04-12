@@ -12,13 +12,13 @@ export interface IGER extends Document {
   totalScore: number;
   graduationYear?: string; // 'Spring 2026'
 
-  // 8 weighted categories
-  academicPerformance: IGERCategory; // weight: 20
+  // 8 weighted categories (sum = 100)
+  academicPerformance: IGERCategory; // weight: 18
   skillGrowth: IGERCategory; // weight: 15
-  platformEngagement: IGERCategory; // weight: 10
+  platformEngagement: IGERCategory; // weight: 12
   mentorshipActivity: IGERCategory; // weight: 10
-  freelanceExperience: IGERCategory; // weight: 15
-  peerRecognition: IGERCategory; // weight: 10
+  freelanceExperience: IGERCategory; // weight: 12
+  peerRecognition: IGERCategory; // weight: 13 — badges contribution
   employerEndorsements: IGERCategory; // weight: 10
   opportunityScoreTrajectory: IGERCategory; // weight: 10 — defaults 0 until M3
 
@@ -38,12 +38,12 @@ const GERSchema = new Schema<IGER>(
     isLocked: { type: Boolean, default: false },
     totalScore: { type: Number, default: 0, min: 0, max: 100 },
     graduationYear: { type: String },
-    academicPerformance: { type: CategorySchema, default: { score: 0, weight: 20, breakdown: {} } },
+    academicPerformance: { type: CategorySchema, default: { score: 0, weight: 18, breakdown: {} } },
     skillGrowth: { type: CategorySchema, default: { score: 0, weight: 15, breakdown: {} } },
-    platformEngagement: { type: CategorySchema, default: { score: 0, weight: 10, breakdown: {} } },
+    platformEngagement: { type: CategorySchema, default: { score: 0, weight: 12, breakdown: {} } },
     mentorshipActivity: { type: CategorySchema, default: { score: 0, weight: 10, breakdown: {} } },
-    freelanceExperience: { type: CategorySchema, default: { score: 0, weight: 15, breakdown: {} } },
-    peerRecognition: { type: CategorySchema, default: { score: 0, weight: 10, breakdown: {} } },
+    freelanceExperience: { type: CategorySchema, default: { score: 0, weight: 12, breakdown: {} } },
+    peerRecognition: { type: CategorySchema, default: { score: 0, weight: 13, breakdown: {} } },
     employerEndorsements: {
       type: CategorySchema,
       default: { score: 0, weight: 10, breakdown: {} },

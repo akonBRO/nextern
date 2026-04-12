@@ -56,6 +56,14 @@ export default async function StudentBadgesPage() {
     })
   );
 
+  // Sum of ALL student badge marksRewards (the denominator for proportional sharing)
+  const totalPossibleMarks = definitions.reduce(
+    (sum: number, def: IBadgeDefinition & Record<string, unknown>) =>
+      sum + ((def.marksReward as number) || 0),
+    0
+  );
+
+  // Sum of earned badge marksRewards
   const earnedMarksRaw = definitions
     .filter((def: IBadgeDefinition & Record<string, unknown>) => earnedSlugs.has(def.badgeSlug))
     .reduce(
@@ -64,10 +72,13 @@ export default async function StudentBadgesPage() {
       0
     );
 
-  // The Peer Recognition category has a 10% weight in the final GER total.
-  // We cap the raw category score at 100, then scale it by 10%.
-  const categoryScore = Math.min(earnedMarksRaw, 100);
-  const totalMarks = (categoryScore * 10) / 100;
+  // Badges contribute up to 13% of GER total.
+  // Each badge's share = (its marksReward / totalPossibleMarks) * 13.
+  // All badges earned = full 13%. Partial = proportional fraction.
+  const totalMarks =
+    totalPossibleMarks > 0
+      ? parseFloat(((earnedMarksRaw / totalPossibleMarks) * 13).toFixed(1))
+      : 0;
 
   return (
     <DashboardShell
@@ -114,10 +125,10 @@ export default async function StudentBadgesPage() {
                   lineHeight: 1,
                 }}
               >
-                {totalMarks}
+                {totalMarks}%
               </div>
               <div style={{ fontSize: 13, color: '#94A3B8', fontWeight: 600, marginTop: 4 }}>
-                Total GER Marks Earned
+                GER Badge Contribution (max 13%)
               </div>
             </div>
           }
@@ -218,7 +229,14 @@ export default async function StudentBadgesPage() {
                           color: isEarned ? '#1E40AF' : '#64748B',
                         }}
                       >
-                        +{def.marksReward || 0} Marks
+                        +
+                        {totalPossibleMarks > 0
+                          ? (
+                              (((def.marksReward as number) || 0) / totalPossibleMarks) *
+                              13
+                            ).toFixed(1)
+                          : '0.0'}
+                        % GER
                       </span>
                       <span
                         style={{

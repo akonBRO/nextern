@@ -147,7 +147,9 @@ export async function getEventCount(
 // ── Main evaluator ────────────────────────────────────────────────────
 
 /**
- * Helper to recalculate the peer recognition score
+ * Helper to recalculate the peer recognition score.
+ * The raw score (0–100) represents the percentage of total badge rewards earned.
+ * The GER model then applies the 13% weight to get the final GER contribution.
  */
 async function recalculatePeerRecognition(userId: string) {
   const { GER } = await import('@/models/GER');
@@ -159,13 +161,18 @@ async function recalculatePeerRecognition(userId: string) {
 
   const studentDefs = await BadgeDefinition.find({ category: 'student' }).lean();
 
-  // Directly sum the marks Reward
+  // Total possible marks across all student badges
+  const totalPossible = studentDefs.reduce((sum, d) => sum + (d.marksReward || 0), 0);
+
+  // Sum of earned badge marks
   const earnedMarks = studentDefs
     .filter((d) => earnedSlugs.includes(d.badgeSlug))
     .reduce((sum, d) => sum + (d.marksReward || 0), 0);
 
-  // The subcategory score explicitly caps at 100 points
-  ger.peerRecognition.score = Math.min(earnedMarks, 100);
+  // Raw score = proportion of badges earned (0–100 scale)
+  // All badges earned = 100, proportionally less otherwise
+  ger.peerRecognition.score =
+    totalPossible > 0 ? Math.min(100, Math.round((earnedMarks / totalPossible) * 100)) : 0;
   await ger.save();
 }
 

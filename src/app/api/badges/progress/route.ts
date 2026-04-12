@@ -68,18 +68,27 @@ export async function GET(req: NextRequest) {
       })
     );
 
-    // Also get the total accumulated marks from earned badges
-    const totalMarks = definitions
+    // Calculate badge GER contribution — badges contribute up to 13% of total GER
+    // Each badge's share is proportional to its marksReward relative to total possible
+    const totalPossibleMarks = definitions.reduce(
+      (sum: number, def: IBadgeDefinition & Record<string, unknown>) =>
+        sum + ((def.marksReward as number) || 0),
+      0
+    );
+    const earnedMarks = definitions
       .filter((def: IBadgeDefinition & Record<string, unknown>) => earnedSlugs.has(def.badgeSlug))
       .reduce(
         (sum: number, def: IBadgeDefinition & Record<string, unknown>) =>
           sum + ((def.marksReward as number) || 0),
         0
       );
+    const gerContribution =
+      totalPossibleMarks > 0 ? parseFloat(((earnedMarks / totalPossibleMarks) * 13).toFixed(1)) : 0;
 
     return NextResponse.json({
       progress: progressList,
-      totalMarks,
+      totalMarks: earnedMarks,
+      gerContribution,
     });
   } catch (error) {
     console.error('[GET BADGE PROGRESS ERROR]', error);
