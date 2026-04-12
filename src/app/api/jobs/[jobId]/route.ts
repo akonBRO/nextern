@@ -9,7 +9,10 @@ import { connectDB } from '@/lib/db';
 import { Job } from '@/models/Job';
 import { JobView } from '@/models/JobView';
 import { Application } from '@/models/Application';
-import { UpdateJobSchema } from '@/lib/validations';
+import { Assessment } from '@/models/Assessment';
+import { AssessmentSubmission } from '@/models/AssessmentSubmission';
+import { Message } from '@/models/Message';
+import { AdminJobUpdateSchema, UpdateJobSchema } from '@/lib/validations';
 
 type Params = { params: Promise<{ jobId: string }> };
 
@@ -83,7 +86,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     const body = await req.json();
-    const parsed = UpdateJobSchema.safeParse(body);
+    const parsed = (isAdmin ? AdminJobUpdateSchema : UpdateJobSchema).safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
@@ -127,7 +130,23 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    await Job.findByIdAndDelete(jobId);
+    const relatedApplications = await Application.find({ jobId }).select('_id').lean();
+    const applicationIds = relatedApplications.map((application) => application._id);
+
+    const relatedAssessments = await Assessment.find({ jobId }).select('_id').lean();
+    const assessmentIds = relatedAssessments.map((assessment) => assessment._id);
+
+    await Promise.all([
+      AssessmentSubmission.deleteMany({
+        $or: [{ applicationId: { $in: applicationIds } }, { assessmentId: { $in: assessmentIds } }],
+      }),
+      Assessment.deleteMany({ jobId }),
+      Application.deleteMany({ jobId }),
+      JobView.deleteMany({ jobId }),
+      Message.deleteMany({ relatedJobId: jobId }),
+      Job.findByIdAndDelete(jobId),
+    ]);
+
     return NextResponse.json({ message: 'Job deleted successfully' });
   } catch (error) {
     console.error('[DELETE JOB ERROR]', error);
