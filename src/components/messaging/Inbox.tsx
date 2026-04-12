@@ -89,14 +89,13 @@ function Avatar({ user, size = 40 }: { user: UserData; size?: number }) {
   );
 }
 
-/* ─── Custom Delete Modal ─────────────────────────────────────────── */
 function DeleteModal({
-  isSender,
+  canDeleteForEveryone,
   onDeleteForMe,
   onDeleteForEveryone,
   onClose,
 }: {
-  isSender: boolean;
+  canDeleteForEveryone: boolean;
   onDeleteForMe: () => void;
   onDeleteForEveryone: () => void;
   onClose: () => void;
@@ -220,7 +219,7 @@ function DeleteModal({
             </div>
           </button>
 
-          {isSender && (
+          {canDeleteForEveryone && (
             <button
               onClick={onDeleteForEveryone}
               style={{
@@ -726,12 +725,14 @@ export default function Inbox({
       {/* Modals */}
       {deleteModal.open && deleteModal.msg && (
         <DeleteModal
-          isSender={(() => {
+          canDeleteForEveryone={(() => {
             const sid =
               typeof deleteModal.msg.senderId === 'string'
                 ? deleteModal.msg.senderId
                 : deleteModal.msg.senderId._id;
-            return sid === currentUserId;
+            const isSender = sid === currentUserId;
+            const ageMs = new Date().getTime() - new Date(deleteModal.msg.createdAt).getTime();
+            return isSender && ageMs < 15 * 60 * 1000;
           })()}
           onDeleteForMe={handleDeleteForMe}
           onDeleteForEveryone={handleDeleteForEveryone}
