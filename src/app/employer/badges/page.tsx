@@ -6,49 +6,8 @@ import { DashboardPage, DashboardSection, HeroCard } from '@/components/dashboar
 import { BadgeDefinition, type IBadgeDefinition } from '@/models/BadgeDefinition';
 import { BadgeAward } from '@/models/BadgeAward';
 import { getEventCount } from '@/lib/badge-engine';
+import { EMPLOYER_NAV_ITEMS } from '@/lib/employer-navigation';
 import { Trophy } from 'lucide-react';
-
-const employerNavItems = [
-  { label: 'Overview', href: '/employer/dashboard', icon: 'dashboard' as const },
-  { label: 'Job Listings', href: '/employer/jobs', icon: 'briefcase' as const },
-  {
-    label: 'Hiring',
-    icon: 'briefcase' as const,
-    items: [
-      {
-        label: 'Open roles',
-        href: '/employer/dashboard#jobs',
-        description: 'Review your latest jobs, activity status, and response volume.',
-        icon: 'briefcase' as const,
-      },
-      {
-        label: 'Pipeline',
-        href: '/employer/dashboard#pipeline',
-        description: 'Track how applications are moving across the hiring funnel.',
-        icon: 'insights' as const,
-      },
-      {
-        label: 'Applications',
-        href: '/employer/dashboard#applications',
-        description: 'See fresh applicant activity flowing into your team.',
-        icon: 'file' as const,
-      },
-    ],
-  },
-  {
-    label: 'Talent',
-    icon: 'users' as const,
-    items: [
-      {
-        label: 'Top candidates',
-        href: '/employer/dashboard#candidates',
-        description: 'Surface the strongest student matches already in your pipeline.',
-        icon: 'sparkles' as const,
-      },
-    ],
-  },
-  { label: 'Badges', href: '/employer/badges', icon: 'shield' as const },
-];
 
 export default async function EmployerBadgesPage() {
   const session = await auth();
@@ -64,6 +23,15 @@ export default async function EmployerBadgesPage() {
   const earnedSlugs = new Set(
     earnedBadges.map((b: { badgeSlug: string; awardedAt?: Date }) => b.badgeSlug)
   );
+
+  // Badge points — all employer badge marksRewards sum to 100
+  const totalPoints = definitions
+    .filter((def: IBadgeDefinition & Record<string, unknown>) => earnedSlugs.has(def.badgeSlug))
+    .reduce(
+      (sum: number, def: IBadgeDefinition & Record<string, unknown>) =>
+        sum + ((def.marksReward as number) || 0),
+      0
+    );
 
   const progressList = await Promise.all(
     definitions.map(async (def: IBadgeDefinition & Record<string, unknown>) => {
@@ -97,7 +65,7 @@ export default async function EmployerBadgesPage() {
       role="employer"
       roleLabel="Employer workspace"
       homeHref="/employer/dashboard"
-      navItems={employerNavItems}
+      navItems={EMPLOYER_NAV_ITEMS}
       user={{
         name: session.user.name ?? 'Employer',
         email: session.user.email ?? '',
@@ -136,10 +104,10 @@ export default async function EmployerBadgesPage() {
                   lineHeight: 1,
                 }}
               >
-                {earnedSlugs.size}
+                {totalPoints} / 100
               </div>
               <div style={{ fontSize: 13, color: '#94A3B8', fontWeight: 600, marginTop: 4 }}>
-                Badges Unlocked
+                Points Earned
               </div>
             </div>
           }
@@ -211,8 +179,22 @@ export default async function EmployerBadgesPage() {
                       </div>
 
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 16, fontWeight: 800, color: titleColor }}>
-                          {def.name}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ fontSize: 16, fontWeight: 800, color: titleColor }}>
+                            {def.name}
+                          </div>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              borderRadius: 999,
+                              background: isEarned ? '#DBEAFE' : '#F1F5F9',
+                              color: isEarned ? '#1E40AF' : '#64748B',
+                            }}
+                          >
+                            +{(def.marksReward as number) || 0} pts
+                          </span>
                         </div>
                         <div
                           style={{ fontSize: 13, color: '#64748B', marginTop: 4, lineHeight: 1.4 }}

@@ -61,14 +61,9 @@ export const EMPLOYER_NAV_ITEMS: DashboardNavItem[] = [
         description: 'Update employer identity, logo, contact, and verification details.',
         icon: 'building',
       },
-      {
-        label: 'Trust Badges',
-        href: '/employer/badges',
-        description: 'Track employer milestones that increase student trust.',
-        icon: 'shield',
-      },
     ],
   },
+  { label: 'Badges', href: '/employer/badges', icon: 'shield' },
   {
     label: 'Premium',
     icon: 'shield',

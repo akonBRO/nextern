@@ -118,7 +118,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 5,
     aiWeightBoost: 6,
     opportunityScorePoints: 0,
-    marksReward: 0,
+    marksReward: 30,
   },
   {
     badgeSlug: 'campus-favorite',
@@ -131,7 +131,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 3,
     aiWeightBoost: 8,
     opportunityScorePoints: 0,
-    marksReward: 0,
+    marksReward: 25,
   },
   {
     badgeSlug: 'fast-responder',
@@ -144,7 +144,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 10,
     aiWeightBoost: 4,
     opportunityScorePoints: 0,
-    marksReward: 0,
+    marksReward: 20,
   },
   {
     badgeSlug: 'active-hirer',
@@ -157,7 +157,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 5,
     aiWeightBoost: 5,
     opportunityScorePoints: 0,
-    marksReward: 0,
+    marksReward: 25,
   },
 
   // ── Advisor Badges ───────────────────────────────────────────────
