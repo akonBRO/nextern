@@ -27,6 +27,7 @@ import {
   MapPin,
   Mail,
   Phone,
+  Bell,
 } from 'lucide-react';
 import { useUploadThing } from '@/lib/uploadthing';
 
@@ -653,6 +654,7 @@ type UserData = {
     repoUrl?: string;
   }[];
   certifications: { name: string; issuedBy: string; credentialUrl?: string }[];
+  notificationPreferences?: Record<string, boolean>;
 };
 
 // Main page
@@ -684,7 +686,33 @@ export default function StudentProfilePage() {
 
   // ── Live preview of in-platform resume (updates on save) ──
   const [previewUser, setPreviewUser] = useState<UserData | null>(null);
-  const [form, setFormState] = useState({
+  const [form, setFormState] = useState<{
+    name: string;
+    phone: string;
+    bio: string;
+    studentId: string;
+    university: string;
+    department: string;
+    yearOfStudy: string;
+    currentSemester: string;
+    cgpa: string;
+    skills: string[];
+    completedCourses: string[];
+    linkedinUrl: string;
+    githubUrl: string;
+    portfolioUrl: string;
+    city: string;
+    isGraduated: boolean;
+    notificationPreferences: Record<string, boolean>;
+    projects: {
+      title: string;
+      description: string;
+      techStack: string[];
+      projectUrl: string;
+      repoUrl: string;
+    }[];
+    certifications: { name: string; issuedBy: string; credentialUrl: string }[];
+  }>({
     name: '',
     phone: '',
     bio: '',
@@ -694,21 +722,16 @@ export default function StudentProfilePage() {
     yearOfStudy: '',
     currentSemester: '',
     cgpa: '',
-    skills: [] as string[],
-    completedCourses: [] as string[],
+    skills: [],
+    completedCourses: [],
     linkedinUrl: '',
     githubUrl: '',
     portfolioUrl: '',
     city: '',
     isGraduated: false,
-    projects: [] as {
-      title: string;
-      description: string;
-      techStack: string[];
-      projectUrl: string;
-      repoUrl: string;
-    }[],
-    certifications: [] as { name: string; issuedBy: string; credentialUrl: string }[],
+    notificationPreferences: {},
+    projects: [],
+    certifications: [],
   });
 
   useEffect(() => {
@@ -747,6 +770,7 @@ export default function StudentProfilePage() {
             issuedBy: c.issuedBy ?? '',
             credentialUrl: c.credentialUrl ?? '',
           })),
+          notificationPreferences: u.notificationPreferences ?? {},
         });
       })
       .catch(() => setError('Failed to load profile'))
@@ -926,6 +950,7 @@ export default function StudentProfilePage() {
           issuedBy: c.issuedBy,
           credentialUrl: c.credentialUrl || undefined,
         })),
+        notificationPreferences: form.notificationPreferences,
       };
 
       const res = await fetch('/api/users/profile', {
@@ -2178,6 +2203,232 @@ export default function StudentProfilePage() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* 9 — Notification Preferences */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Bell size={18} />} label="Notification Preferences" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
+            Control which notifications you receive. All are enabled by default. Changes are saved
+            when you click <strong>Save Profile</strong>.
+          </div>
+
+          {/* Application Status group */}
+          <div style={{ marginBottom: 24 }}>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: C.light,
+                letterSpacing: 1,
+                textTransform: 'uppercase' as const,
+                marginBottom: 12,
+              }}
+            >
+              Application Status Updates
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                {
+                  key: 'application_under_review',
+                  label: '👀 Under Review',
+                  desc: 'When an employer starts reviewing your application',
+                },
+                {
+                  key: 'application_shortlisted',
+                  label: '🎉 Shortlisted',
+                  desc: 'When you get shortlisted for a role',
+                },
+                {
+                  key: 'application_assessment_sent',
+                  label: '📋 Assessment Sent',
+                  desc: 'When an assessment is assigned to you',
+                },
+                {
+                  key: 'application_interview',
+                  label: '📅 Interview Scheduled',
+                  desc: 'When an interview is booked for you',
+                },
+                {
+                  key: 'application_hired',
+                  label: '🎊 Hired',
+                  desc: 'When you are selected for a role',
+                },
+                {
+                  key: 'application_rejected',
+                  label: '📩 Not Selected',
+                  desc: 'When an employer decides not to proceed',
+                },
+                {
+                  key: 'application_withdrawn',
+                  label: '↩️ Withdrawn',
+                  desc: 'When your application is withdrawn',
+                },
+              ].map((item) => {
+                const isOn = form.notificationPreferences[item.key] !== false;
+                return (
+                  <div
+                    key={item.key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      background: '#FAFBFC',
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                        {item.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        set('notificationPreferences', {
+                          ...form.notificationPreferences,
+                          [item.key]: !isOn,
+                        })
+                      }
+                      style={{
+                        width: 44,
+                        height: 24,
+                        borderRadius: 999,
+                        border: 'none',
+                        background: isOn ? C.blue : C.border,
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background 0.2s',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: '50%',
+                          background: C.white,
+                          position: 'absolute',
+                          top: 3,
+                          left: isOn ? 23 : 3,
+                          transition: 'left 0.2s',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                        }}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Other notifications group */}
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: C.light,
+                letterSpacing: 1,
+                textTransform: 'uppercase' as const,
+                marginBottom: 12,
+              }}
+            >
+              Other Notifications
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                {
+                  key: 'deadline_reminders',
+                  label: '⏰ Deadline Reminders',
+                  desc: '3 days before a saved job closes',
+                },
+                {
+                  key: 'job_matches',
+                  label: '⚡ Job Matches',
+                  desc: 'When a new job matches your profile',
+                },
+                {
+                  key: 'badge_earned',
+                  label: '🏅 Badges Earned',
+                  desc: 'When you unlock a new achievement',
+                },
+                {
+                  key: 'advisor_notes',
+                  label: '💬 Advisor Notes',
+                  desc: 'When your advisor sends you a note',
+                },
+              ].map((item) => {
+                const isOn = form.notificationPreferences[item.key] !== false;
+                return (
+                  <div
+                    key={item.key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      background: '#FAFBFC',
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                        {item.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        set('notificationPreferences', {
+                          ...form.notificationPreferences,
+                          [item.key]: !isOn,
+                        })
+                      }
+                      style={{
+                        width: 44,
+                        height: 24,
+                        borderRadius: 999,
+                        border: 'none',
+                        background: isOn ? C.blue : C.border,
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background 0.2s',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: '50%',
+                          background: C.white,
+                          position: 'absolute',
+                          top: 3,
+                          left: isOn ? 23 : 3,
+                          transition: 'left 0.2s',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                        }}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {/* Save button */}

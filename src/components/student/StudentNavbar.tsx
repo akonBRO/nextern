@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import {
-  Bell,
   BriefcaseBusiness,
   ChevronDown,
   ClipboardList,
@@ -14,12 +13,14 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { NexternLogo } from '@/components/brand/NexternLogo';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 interface NavbarProps {
   user: {
     name: string;
     email: string;
     image?: string;
+    userId: string;
     opportunityScore: number;
     profileCompleteness: number;
     unreadNotifications: number;
@@ -135,41 +136,56 @@ export default function StudentNavbar({ user }: NavbarProps) {
             Applications
           </Link>
 
-          {/* Messages chip */}
+          {/* Messages chip — static */}
           <div
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              padding: '8px 12px',
+              padding: '9px 12px',
               borderRadius: 999,
+              border: '1px solid rgba(255,255,255,0.08)',
               background: 'rgba(255,255,255,0.05)',
               color: '#D8E3F1',
               fontSize: 12,
               fontWeight: 700,
             }}
           >
-            <Mail size={14} strokeWidth={2} color="#22D3EE" />
-            {user.unreadMessages}
+            <span style={{ display: 'inline-flex', color: '#22D3EE' }}>
+              <Mail size={14} strokeWidth={2} />
+            </span>
+            <span>Messages</span>
+            <span style={{ color: '#FFFFFF' }}>{user.unreadMessages}</span>
           </div>
 
-          {/* Alerts chip */}
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '8px 12px',
-              borderRadius: 999,
-              background: 'rgba(255,255,255,0.05)',
-              color: '#D8E3F1',
-              fontSize: 12,
-              fontWeight: 700,
-            }}
-          >
-            <Bell size={14} strokeWidth={2} color="#22D3EE" />
-            {user.unreadNotifications}
-          </div>
+          {/* ── Real-time Notification Bell ── */}
+          {user.userId ? (
+            <NotificationBell
+              userId={user.userId}
+              initialUnread={user.unreadNotifications}
+              notificationsHref="/student/notifications"
+            />
+          ) : (
+            // Fallback static chip if userId not provided
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '9px 12px',
+                borderRadius: 999,
+                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.05)',
+                color: '#D8E3F1',
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              <span style={{ display: 'inline-flex', color: '#22D3EE' }}>🔔</span>
+              <span>Alerts</span>
+              <span style={{ color: '#FFFFFF' }}>{user.unreadNotifications}</span>
+            </div>
+          )}
 
           {/* User menu */}
           <div style={{ position: 'relative' }}>

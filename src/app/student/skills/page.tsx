@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
 import { Application } from '@/models/Application';
 import { Job } from '@/models/Job';
+import { Message } from '@/models/Message';
+import { Notification } from '@/models/Notification';
 import { buildUnknownAIMeta } from '@/lib/ai-meta';
 import { getUsageSummary } from '@/lib/premium';
 import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
@@ -17,7 +19,7 @@ export default async function StudentSkillsPage() {
 
   await connectDB();
 
-  const [usage, applications] = await Promise.all([
+  const [usage, applications, unreadNotifications, unreadMessages] = await Promise.all([
     getUsageSummary(session.user.id),
     Application.find({
       studentId: session.user.id,
@@ -26,6 +28,8 @@ export default async function StudentSkillsPage() {
       .sort({ fitScoreComputedAt: -1 })
       .limit(8)
       .lean(),
+    Notification.countDocuments({ userId: session.user.id, isRead: false }),
+    Message.countDocuments({ receiverId: session.user.id, isRead: false }),
   ]);
 
   const jobs = applications.length
@@ -62,10 +66,11 @@ export default async function StudentSkillsPage() {
         name: session.user.name ?? 'Student',
         email: session.user.email ?? '',
         image: session.user.image ?? undefined,
+        userId: session.user.id,
         subtitle: session.user.email ?? '',
         isPremium: usage.isPremium,
-        unreadNotifications: 0,
-        unreadMessages: 0,
+        unreadNotifications,
+        unreadMessages,
       }}
     >
       <DashboardPage>

@@ -167,6 +167,7 @@ export default async function StudentJobsPage() {
         name: student.name,
         email: student.email,
         image: student.image,
+        userId: session.user.id,
         subtitle:
           [student.university, student.department].filter(Boolean).join(' | ') ||
           'Student workspace',

@@ -163,12 +163,31 @@ export default function NotificationBell({
   }
 
   // ── Mark all read ─────────────────────────────────────────────────────
-  async function markAllRead() {
+  async function clearNotifications() {
     setMarkingAll(true);
-    await fetch('/api/notifications', { method: 'PATCH' });
-    setNotifs((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    setUnread(0);
-    setMarkingAll(false);
+    try {
+      const res = await fetch('/api/notifications', { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to clear notifications');
+      setNotifs([]);
+      setUnread(0);
+    } catch (error) {
+      console.error('[CLEAR NOTIFICATIONS ERROR]', error);
+    } finally {
+      setMarkingAll(false);
+    }
+  }
+
+  async function removeNotification(id: string, isRead: boolean) {
+    try {
+      const res = await fetch(`/api/notifications?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to remove notification');
+      setNotifs((prev) => prev.filter((n) => n._id !== id));
+      if (!isRead) {
+        setUnread((prev) => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('[REMOVE NOTIFICATION ERROR]', error);
+    }
   }
 
   return (
@@ -285,9 +304,9 @@ export default function NotificationBell({
               )}
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
-              {unread > 0 && (
+              {notifications.length > 0 && (
                 <button
-                  onClick={markAllRead}
+                  onClick={clearNotifications}
                   disabled={markingAll}
                   style={{
                     display: 'flex',
@@ -302,10 +321,10 @@ export default function NotificationBell({
                     fontWeight: 700,
                     cursor: 'pointer',
                   }}
-                  title="Mark all as read"
+                  title="Clear notifications"
                 >
                   <CheckCheck size={12} />
-                  {markingAll ? 'Clearing…' : 'All read'}
+                  {markingAll ? 'Clearing…' : 'Clear'}
                 </button>
               )}
               <button
@@ -447,6 +466,30 @@ export default function NotificationBell({
                         )}
                       </div>
                     </div>
+
+                    {/* Remove button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeNotification(notif._id, notif.isRead);
+                      }}
+                      title="Remove notification"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 28,
+                        height: 28,
+                        borderRadius: 10,
+                        border: 'none',
+                        background: '#F1F5F9',
+                        color: '#64748B',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <X size={12} />
+                    </button>
 
                     {/* Unread dot */}
                     {!notif.isRead && (

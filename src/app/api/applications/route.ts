@@ -87,7 +87,8 @@ export async function PATCH(req: NextRequest) {
 
     await connectDB();
 
-    const application = await Application.findById(appId);
+    // Fetch application
+    const application = await Application.findById(appId).lean();
     if (!application) {
       return NextResponse.json({ error: 'Application not found' }, { status: 404 });
     }
@@ -95,13 +96,16 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const previousStatus = application.status;
+    const newStatus = parsed.data.status;
+
     const updated = await Application.findByIdAndUpdate(
       appId,
       {
-        $set: { status: parsed.data.status },
+        $set: { status: newStatus },
         $push: {
           statusHistory: {
-            status: parsed.data.status,
+            status: newStatus,
             changedAt: new Date(),
             changedBy: session.user.id,
             note: parsed.data.note,
@@ -111,10 +115,10 @@ export async function PATCH(req: NextRequest) {
       { new: true }
     );
 
-    // Fire event hook for badge/notification system
-    await onApplicationStatusChanged(application.studentId.toString(), parsed.data.status).catch(
-      () => {}
-    );
+    // Fire badge/event hook + notification only if status actually changed
+    if (newStatus !== previousStatus) {
+      await onApplicationStatusChanged(application.studentId.toString(), newStatus).catch(() => {});
+    }
 
     return NextResponse.json({ message: 'Status updated successfully', application: updated });
   } catch (error) {

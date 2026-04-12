@@ -20,9 +20,23 @@ interface ICertification {
 interface IVerifiedPortfolioItem {
   title: string;
   category: string;
-  fileUrl: string; // Uploadthing URL
+  fileUrl: string;
   freelanceOrderId: mongoose.Types.ObjectId;
   completedAt: Date;
+}
+
+interface INotificationPreferences {
+  application_under_review: boolean;
+  application_shortlisted: boolean;
+  application_assessment_sent: boolean;
+  application_interview: boolean;
+  application_hired: boolean;
+  application_rejected: boolean;
+  application_withdrawn: boolean;
+  deadline_reminders: boolean;
+  job_matches: boolean;
+  badge_earned: boolean;
+  advisor_notes: boolean;
 }
 
 // ── Main interface ───────────────────────────────────────────
@@ -30,50 +44,51 @@ export interface IUser extends Document {
   // ── Common fields (all roles) ────────────────────────────
   name: string;
   email: string;
-  password?: string; // null for Google OAuth users
+  password?: string;
   role: 'student' | 'employer' | 'advisor' | 'dept_head' | 'admin';
-  image?: string; // profile photo Uploadthing URL
-  phone?: string; // BD format: +8801XXXXXXXXX
+  image?: string;
+  phone?: string;
   isPremium: boolean;
   premiumExpiresAt?: Date;
-  isVerified: boolean; // admin-approved account
+  isVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
 
   // ── Student fields ───────────────────────────────────────
-  studentId?: string; // e.g. '22301206' — stored as String
-  university?: string; // BD university name
-  department?: string; // 'CSE', 'EEE', 'BBA' etc.
-  yearOfStudy?: number; // 1–5
-  currentSemester?: string; // 'Spring 2026', 'Fall 2025'
-  cgpa?: number; // 0.00–4.00 BD standard — NOT gpa
-  completedCourses: string[]; // e.g. ['CSE110', 'CSE220']
+  studentId?: string;
+  university?: string;
+  department?: string;
+  yearOfStudy?: number;
+  currentSemester?: string;
+  cgpa?: number;
+  completedCourses: string[];
   skills: string[];
-  closedSkillGaps: string[]; // skills student has globally resolved
+  closedSkillGaps: string[];
   certifications: ICertification[];
   projects: IProject[];
-  verifiedPortfolioItems: IVerifiedPortfolioItem[]; // from completed FreelanceOrders
+  verifiedPortfolioItems: IVerifiedPortfolioItem[];
   bio?: string;
-  resumeUrl?: string; // Uploadthing URL of latest resume
+  resumeUrl?: string;
   generatedResumeUrl?: string;
   linkedinUrl?: string;
   githubUrl?: string;
   portfolioUrl?: string;
-  city?: string; // BD district name
-  opportunityScore: number; // default 0 — wired by M3 engine
+  city?: string;
+  opportunityScore: number;
   isGraduated: boolean;
-  gerUrl?: string; // Uploadthing URL of GER PDF
-  profileCompleteness: number; // 0–100
-  assignedAdvisorId?: mongoose.Types.ObjectId; // which advisor oversees student
+  gerUrl?: string;
+  profileCompleteness: number;
+  assignedAdvisorId?: mongoose.Types.ObjectId;
+  notificationPreferences: INotificationPreferences;
 
   // ── Employer fields ─────────────────────────────────────
   companyName?: string;
-  industry?: string; // 'IT/Software', 'Banking', 'NGO' etc.
+  industry?: string;
   companySize?: string;
   companyWebsite?: string;
-  companyLogo?: string; // Uploadthing URL
+  companyLogo?: string;
   companyDescription?: string;
-  tradeLicenseNo?: string; // BD Trade License for admin verification
+  tradeLicenseNo?: string;
   headquartersCity?: string;
   verificationStatus: 'pending' | 'approved' | 'rejected';
   verificationNote?: string;
@@ -103,7 +118,7 @@ const UserSchema = new Schema<IUser>(
     premiumExpiresAt: { type: Date },
     isVerified: { type: Boolean, default: false },
 
-    // Student
+    // ── Student ──────────────────────────────────────────
     studentId: { type: String },
     university: { type: String },
     department: { type: String },
@@ -146,7 +161,22 @@ const UserSchema = new Schema<IUser>(
     profileCompleteness: { type: Number, default: 0, min: 0, max: 100 },
     assignedAdvisorId: { type: Schema.Types.ObjectId, ref: 'User' },
 
-    // Employer
+    // ── Notification preferences ─────────────────────────
+    notificationPreferences: {
+      application_under_review: { type: Boolean, default: true },
+      application_shortlisted: { type: Boolean, default: true },
+      application_assessment_sent: { type: Boolean, default: true },
+      application_interview: { type: Boolean, default: true },
+      application_hired: { type: Boolean, default: true },
+      application_rejected: { type: Boolean, default: true },
+      application_withdrawn: { type: Boolean, default: true },
+      deadline_reminders: { type: Boolean, default: true },
+      job_matches: { type: Boolean, default: true },
+      badge_earned: { type: Boolean, default: true },
+      advisor_notes: { type: Boolean, default: true },
+    },
+
+    // ── Employer ─────────────────────────────────────────
     companyName: { type: String },
     industry: { type: String },
     companySize: { type: String, enum: ['1-10', '11-50', '51-200', '201-500', '500+'] },
@@ -162,12 +192,16 @@ const UserSchema = new Schema<IUser>(
     },
     verificationNote: { type: String },
 
-    // Advisor / Dept Head
+    // ── Advisor / Dept Head ───────────────────────────────
     institutionName: { type: String },
     advisorStaffId: { type: String },
     designation: { type: String },
     advisoryDepartment: { type: String },
-    approvalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+    approvalStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
   },
   { timestamps: true }
 );
