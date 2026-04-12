@@ -23,7 +23,10 @@ export async function GET(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const messages = await Message.find({ threadId })
+  const messages = await Message.find({
+    threadId,
+    deletedFor: { $ne: new mongoose.Types.ObjectId(myId) },
+  })
     .sort({ createdAt: 1 })
     .populate('senderId', 'name role image companyName')
     .lean();

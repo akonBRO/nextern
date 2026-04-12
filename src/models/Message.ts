@@ -10,8 +10,13 @@ export interface IMessage extends Document {
   isFlagged: boolean; // admin monitoring
   flagReason?: string;
   templateType?: 'interview_invite' | 'rejection' | 'offer_letter' | null;
-  attachmentUrl?: string; // Uploadthing URL
+  attachmentUrl?: string; // Legacy Uploadthing URL
+  attachments?: { url: string; name: string; type: string }[];
   relatedJobId?: mongoose.Types.ObjectId;
+  editCount: number;
+  deletedFor: mongoose.Types.ObjectId[];
+  isDeletedForEveryone: boolean;
+  forwardedFromId?: mongoose.Types.ObjectId;
 }
 
 const MessageSchema = new Schema<IMessage>(
@@ -30,7 +35,18 @@ const MessageSchema = new Schema<IMessage>(
       default: null,
     },
     attachmentUrl: { type: String },
+    attachments: [
+      {
+        url: { type: String, required: true },
+        name: { type: String, required: true },
+        type: { type: String, required: true },
+      },
+    ],
     relatedJobId: { type: Schema.Types.ObjectId, ref: 'Job' },
+    editCount: { type: Number, default: 0 },
+    deletedFor: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    isDeletedForEveryone: { type: Boolean, default: false },
+    forwardedFromId: { type: Schema.Types.ObjectId, ref: 'Message' },
   },
   { timestamps: true }
 );

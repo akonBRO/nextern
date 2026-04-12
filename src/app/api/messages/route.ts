@@ -21,6 +21,7 @@ function makeThreadId(a: string, b: string) {
 }
 
 function checkIsFlagged(content: string): boolean {
+  if (!content) return false;
   const blocked = ['spam', 'scam', 'fraud', 'fake', 'illegal'];
   const lower = content.toLowerCase();
   return blocked.some((word) => lower.includes(word));
@@ -42,6 +43,7 @@ export async function GET(req: NextRequest) {
   // Fetch all messages involving this user
   const allMessages = await Message.find({
     $or: [{ senderId: myId }, { receiverId: myId }],
+    deletedFor: { $ne: myId },
   })
     .sort({ createdAt: -1 })
     .lean();
@@ -136,24 +138,32 @@ export async function POST(req: NextRequest) {
 
   await connectDB();
 
-  const { receiverId, content, templateType } = await req.json();
+  const { receiverId, content, templateType, attachments, forwardedFromId } = await req.json();
 
-  if (!receiverId || !content?.trim()) {
-    return NextResponse.json({ error: 'receiverId and content are required' }, { status: 400 });
+  if (!receiverId || (!content?.trim() && (!attachments || attachments.length === 0))) {
+    return NextResponse.json(
+      { error: 'receiverId and either content or attachments are required' },
+      { status: 400 }
+    );
   }
 
   if (!mongoose.Types.ObjectId.isValid(receiverId)) {
     return NextResponse.json({ error: 'Invalid receiverId' }, { status: 400 });
   }
 
-  const isFlagged = checkIsFlagged(content);
+  const isFlagged = checkIsFlagged(content || '');
   const threadId = makeThreadId(session.user.id, receiverId);
 
   const message = await Message.create({
     senderId: new mongoose.Types.ObjectId(session.user.id),
     receiverId: new mongoose.Types.ObjectId(receiverId),
     threadId,
-    content: content.trim(),
+    content: content?.trim() || '',
+    attachments: attachments || [],
+    forwardedFromId:
+      forwardedFromId && mongoose.Types.ObjectId.isValid(forwardedFromId)
+        ? new mongoose.Types.ObjectId(forwardedFromId)
+        : undefined,
     isFlagged,
     templateType: templateType || null,
   });
@@ -184,14 +194,32 @@ export async function PATCH(req: NextRequest) {
   const { threadId } = await req.json();
   if (!threadId) return NextResponse.json({ error: 'threadId required' }, { status: 400 });
 
-  await Message.updateMany(
-    {
-      threadId,
-      receiverId: new mongoose.Types.ObjectId(session.user.id),
-      isRead: false,
-    },
-    { isRead: true, readAt: new Date() }
-  );
+  const receiverId = new mongoose.Types.ObjectId(session.user.id);
+
+  // Find unread messages to know if we need to trigger an event, and who the sender was
+  const unreadMessages = await Message.find({
+    threadId,
+    receiverId,
+    isRead: false,
+  }).limit(1);
+
+  if (unreadMessages.length > 0) {
+    await Message.updateMany(
+      {
+        threadId,
+        receiverId,
+        isRead: false,
+      },
+      { isRead: true, readAt: new Date() }
+    );
+
+    const senderId = unreadMessages[0].senderId.toString();
+    try {
+      await pusher.trigger(`user-${senderId}`, 'messages-read', { threadId });
+    } catch (err) {
+      console.error('Pusher trigger failed:', err);
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }
