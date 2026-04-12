@@ -59,5 +59,5 @@ export default async function StudentDashboardPage() {
     };
   }
 
-  return <DashboardClient data={data} />;
+  return <DashboardClient data={data} userId={session.user.id} />;
 }

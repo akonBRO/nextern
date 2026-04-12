@@ -40,8 +40,8 @@ export const ourFileRouter = {
       return { generatedResumeUrl: file.ufsUrl };
     }),
 
-  // GER upload from the student GER page.
-  // Saves to User.gerUrl and must not overwrite either resume field.
+  // ── GER Upload (save GER PDF separately from resume) ────────────────
+  // Saves to: User.gerUrl — does not touch main resumeUrl or generatedResumeUrl
   gerUploader: f({ pdf: { maxFileSize: '8MB' } })
     .middleware(async () => {
       const session = await auth();
@@ -57,8 +57,8 @@ export const ourFileRouter = {
       return { gerUrl: file.ufsUrl };
     }),
 
-  // Profile picture upload for student, advisor, and department accounts.
-  // Saves to User.image.
+  // ── Profile Picture Upload (students, advisors, dept heads) ───────────
+  // Saves to: User.image
   profilePictureUploader: f({
     image: { maxFileSize: '2MB', maxFileCount: 1 },
   })

@@ -106,11 +106,10 @@ const navItems = [
   },
 ];
 
-export default function DashboardClient({ data }: { data: DashboardData }) {
+export default function DashboardClient({ data, userId }: { data: DashboardData; userId: string }) {
   const profileSubtitle = [data.profile.university, data.profile.department]
     .filter(Boolean)
     .join(' | ');
-
   return (
     <DashboardShell
       role="student"
@@ -122,6 +121,7 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
         email: data.profile.email,
         image: data.profile.image,
         subtitle: profileSubtitle || 'Student workspace',
+        userId,
         unreadNotifications: data.profile.unreadNotifications,
         unreadMessages: data.profile.unreadMessages,
       }}

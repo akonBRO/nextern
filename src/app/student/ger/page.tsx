@@ -389,12 +389,13 @@ export default function GERPage() {
       const blob = await res.blob();
       const file = new File([blob], 'ger.pdf', { type: 'application/pdf' });
       const uploaded = await startUpload([file]);
-      if (!uploaded?.[0]?.ufsUrl) {
+      const gerFileUrl = uploaded?.[0]?.ufsUrl;
+      if (!gerFileUrl) {
         setError('Upload failed.');
         return;
       }
 
-      setGerUrl(uploaded[0].ufsUrl);
+      setGerUrl(gerFileUrl);
       setSaved(true);
       setTimeout(() => setSaved(false), 4000);
     } catch {

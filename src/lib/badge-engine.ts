@@ -6,7 +6,8 @@ import { connectDB } from '@/lib/db';
 import mongoose from 'mongoose';
 import { BadgeDefinition, type IBadgeDefinition } from '@/models/BadgeDefinition';
 import { BadgeAward } from '@/models/BadgeAward';
-import { Notification } from '@/models/Notification';
+import { onBadgeEarned } from '@/lib/events';
+import { createNotification } from '@/lib/notify';
 import { Application } from '@/models/Application';
 import { Review } from '@/models/Review';
 import { MentorSession } from '@/models/MentorSession';
@@ -224,27 +225,17 @@ export async function evaluateBadges(
             isDisplayed: true,
           });
 
-          // Send notification
-          await Notification.create({
-            userId,
-            type: 'badge_earned',
-            title: `Badge earned: ${badge.name}`,
-            body: badge.description,
-            isRead: false,
-            meta: { badgeSlug: badge.badgeSlug, badgeIcon: badge.icon },
-          });
+          await onBadgeEarned(userId, badge.name, badge.icon, badge.badgeSlug);
 
           // Add GER update logic here for students
           if (badge.category === 'student' && badge.marksReward && badge.marksReward > 0) {
             await recalculatePeerRecognition(userId);
 
-            // Notify about GER increase
-            await Notification.create({
+            await createNotification({
               userId,
-              type: 'system',
-              title: `GER Boost Received!`,
-              body: `You received a boost in Peer Recognition from your new badge.`,
-              isRead: false,
+              type: 'score_update',
+              title: 'GER boost received',
+              body: 'Your peer recognition score increased after earning a new badge.',
             });
           }
 
@@ -255,13 +246,11 @@ export async function evaluateBadges(
           // Revoke the badge
           await BadgeAward.deleteOne({ userId, badgeSlug: badge.badgeSlug });
 
-          // Send notification
-          await Notification.create({
+          await createNotification({
             userId,
-            type: 'system',
+            type: 'score_update',
             title: `Badge lost: ${badge.name}`,
             body: `You no longer meet the criteria for the "${badge.name}" badge.`,
-            isRead: false,
             meta: { badgeSlug: badge.badgeSlug, badgeIcon: badge.icon },
           });
 
@@ -269,13 +258,11 @@ export async function evaluateBadges(
           if (badge.category === 'student' && badge.marksReward && badge.marksReward > 0) {
             await recalculatePeerRecognition(userId);
 
-            // Notify about GER decrease
-            await Notification.create({
+            await createNotification({
               userId,
-              type: 'system',
-              title: `GER Adjustment`,
-              body: `Your Peer Recognition score was adjusted due to losing the "${badge.name}" badge.`,
-              isRead: false,
+              type: 'score_update',
+              title: 'GER adjustment',
+              body: `Your peer recognition score changed after losing the "${badge.name}" badge.`,
             });
           }
 
