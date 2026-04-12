@@ -147,29 +147,6 @@ export async function getEventCount(
 // ── Main evaluator ────────────────────────────────────────────────────
 
 /**
- * Helper to recalculate the peer recognition score
- */
-async function recalculatePeerRecognition(userId: string) {
-  const { GER } = await import('@/models/GER');
-  const ger = await GER.findOne({ studentId: userId });
-  if (!ger) return;
-
-  const earnedBadges = await BadgeAward.find({ userId }).lean();
-  const earnedSlugs = earnedBadges.map((b: { badgeSlug: string }) => b.badgeSlug);
-
-  const studentDefs = await BadgeDefinition.find({ category: 'student' }).lean();
-
-  // Directly sum the marks Reward
-  const earnedMarks = studentDefs
-    .filter((d) => earnedSlugs.includes(d.badgeSlug))
-    .reduce((sum, d) => sum + (d.marksReward || 0), 0);
-
-  // The subcategory score explicitly caps at 100 points
-  ger.peerRecognition.score = Math.min(earnedMarks, 100);
-  await ger.save();
-}
-
-/**
  * Evaluate and award badges for a user after a specific event fires.
  * Safe to call multiple times — already-awarded badges are skipped.
  *
@@ -227,18 +204,6 @@ export async function evaluateBadges(
 
           await onBadgeEarned(userId, badge.name, badge.icon, badge.badgeSlug);
 
-          // Add GER update logic here for students
-          if (badge.category === 'student' && badge.marksReward && badge.marksReward > 0) {
-            await recalculatePeerRecognition(userId);
-
-            await createNotification({
-              userId,
-              type: 'score_update',
-              title: 'GER boost received',
-              body: 'Your peer recognition score increased after earning a new badge.',
-            });
-          }
-
           console.log(`[BADGE] Awarded "${badge.name}" to user ${userId}`);
         }
       } else {
@@ -253,18 +218,6 @@ export async function evaluateBadges(
             body: `You no longer meet the criteria for the "${badge.name}" badge.`,
             meta: { badgeSlug: badge.badgeSlug, badgeIcon: badge.icon },
           });
-
-          // Revert GER update logic here for students
-          if (badge.category === 'student' && badge.marksReward && badge.marksReward > 0) {
-            await recalculatePeerRecognition(userId);
-
-            await createNotification({
-              userId,
-              type: 'score_update',
-              title: 'GER adjustment',
-              body: `Your peer recognition score changed after losing the "${badge.name}" badge.`,
-            });
-          }
 
           console.log(`[BADGE] Revoked "${badge.name}" from user ${userId}`);
         }

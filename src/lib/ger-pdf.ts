@@ -775,7 +775,10 @@ function buildCategories(r: RawGERInput): GERCategory[] {
     : ['No freelance orders completed'];
 
   // 6. Peer Recognition — Badges (13%)
-  const badgeScore = Math.min(100, r.badges.length * 16);
+  // Raw score = proportion of badges earned out of total available (0–100 scale)
+  // 6 total student badges → each badge adds ~16.7% of raw score
+  const TOTAL_STUDENT_BADGES = 6;
+  const badgeScore = Math.min(100, Math.round((r.badges.length / TOTAL_STUDENT_BADGES) * 100));
   const badgeItems = r.badges.length ? r.badges.map((b) => b.badgeName) : ['No badges earned yet'];
 
   // 7. Employer Endorsements (10%)

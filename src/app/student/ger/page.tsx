@@ -947,10 +947,10 @@ export default function GERPage() {
                     </div>
                     <div style={{ fontSize: 12, color: C.gray, lineHeight: 1.7 }}>
                       Your GER is computed from real data across your entire Nextern journey. Each
-                      category has a weight (18% for Academic, 15% for Skill Growth, etc.) and a raw
-                      score 0–100. Weighted scores are summed to a final GER score out of 100.
-                      Platform Engagement, Mentorship, and Freelance scores grow automatically as
-                      you use Nextern — the GER updates each time you generate it.
+                      category has a weight (18% for Academic, 15% for Skill Growth, 13% for Badges,
+                      etc.) and a raw score 0–100. Weighted scores are summed to a final GER score
+                      out of 100%. Platform Engagement, Mentorship, and Freelance scores grow
+                      automatically as you use Nextern — the GER updates each time you generate it.
                     </div>
                   </div>
                 </div>
