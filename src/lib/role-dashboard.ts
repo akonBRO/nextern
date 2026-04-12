@@ -15,6 +15,7 @@ export type ChromeUser = {
   subtitle: string;
   unreadNotifications: number;
   unreadMessages: number;
+  userId?: string;
 };
 
 export type PipelineMetric = {
@@ -354,6 +355,7 @@ export async function getEmployerDashboardData(
       image: user.image,
       subtitle: user.companyName ?? 'Employer workspace',
       ...chromeCounts,
+      userId: oid.toString(),
     },
     company: {
       companyName: user.companyName ?? 'Your company',
@@ -493,6 +495,7 @@ export async function getAdvisorDashboardData(
         [user.designation, user.institutionName].filter(Boolean).join(' at ') ||
         'Advisor workspace',
       ...chromeCounts,
+      userId: oid.toString(),
     },
     advisor: {
       institutionName: user.institutionName,
@@ -672,6 +675,7 @@ export async function getDeptDashboardData(
         [user.designation, user.advisoryDepartment].filter(Boolean).join(' | ') ||
         'Department workspace',
       ...chromeCounts,
+      userId: oid.toString(),
     },
     department: {
       institutionName: user.institutionName,
