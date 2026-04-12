@@ -56,29 +56,14 @@ export default async function StudentBadgesPage() {
     })
   );
 
-  // Sum of ALL student badge marksRewards (the denominator for proportional sharing)
-  const totalPossibleMarks = definitions.reduce(
-    (sum: number, def: IBadgeDefinition & Record<string, unknown>) =>
-      sum + ((def.marksReward as number) || 0),
-    0
-  );
-
-  // Sum of earned badge marksRewards
-  const earnedMarksRaw = definitions
+  // Badge points — all badge marksRewards sum to 100
+  const totalPoints = definitions
     .filter((def: IBadgeDefinition & Record<string, unknown>) => earnedSlugs.has(def.badgeSlug))
     .reduce(
       (sum: number, def: IBadgeDefinition & Record<string, unknown>) =>
         sum + ((def.marksReward as number) || 0),
       0
     );
-
-  // Badges contribute up to 13% of GER total.
-  // Each badge's share = (its marksReward / totalPossibleMarks) * 13.
-  // All badges earned = full 13%. Partial = proportional fraction.
-  const totalMarks =
-    totalPossibleMarks > 0
-      ? parseFloat(((earnedMarksRaw / totalPossibleMarks) * 13).toFixed(1))
-      : 0;
 
   return (
     <DashboardShell
@@ -100,7 +85,7 @@ export default async function StudentBadgesPage() {
         <HeroCard
           eyebrow="Achievements"
           title="Your Badges"
-          description={`Unlock badges to earn GER marks and elevate your platform visibility. Every badge proves your commitment to career readiness.`}
+          description={`Unlock badges to earn points and elevate your platform visibility. Every badge proves your commitment to career readiness.`}
           actions={<div />}
           aside={
             <div
@@ -125,10 +110,10 @@ export default async function StudentBadgesPage() {
                   lineHeight: 1,
                 }}
               >
-                {totalMarks}%
+                {totalPoints} / 100
               </div>
               <div style={{ fontSize: 13, color: '#94A3B8', fontWeight: 600, marginTop: 4 }}>
-                GER Badge Contribution (max 13%)
+                Points Earned
               </div>
             </div>
           }
@@ -229,14 +214,7 @@ export default async function StudentBadgesPage() {
                           color: isEarned ? '#1E40AF' : '#64748B',
                         }}
                       >
-                        +
-                        {totalPossibleMarks > 0
-                          ? (
-                              (((def.marksReward as number) || 0) / totalPossibleMarks) *
-                              13
-                            ).toFixed(1)
-                          : '0.0'}
-                        % GER
+                        +{(def.marksReward as number) || 0} pts
                       </span>
                       <span
                         style={{

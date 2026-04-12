@@ -1,9 +1,26 @@
 // src/scripts/seedBadges.ts
-// Usage: npm run seed:badges
+// Usage: npx tsx src/scripts/seedBadges.ts
 // Upserts all badge definitions into MongoDB.
 
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import mongoose from 'mongoose';
 import { BadgeDefinition } from '../models/BadgeDefinition';
+
+// Load .env file manually (script runs outside Next.js)
+try {
+  const envPath = resolve(process.cwd(), '.env');
+  const envContent = readFileSync(envPath, 'utf-8');
+  for (const line of envContent.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx === -1) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    const value = trimmed.slice(eqIdx + 1).trim();
+    if (!process.env[key]) process.env[key] = value;
+  }
+} catch {}
 
 const MONGODB_URI = process.env.MONGODB_URI ?? process.env.DATABASE_URL ?? '';
 
@@ -21,7 +38,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 10,
     aiWeightBoost: 5,
     opportunityScorePoints: 10,
-    marksReward: 50,
+    marksReward: 12,
   },
   {
     badgeSlug: 'skill-champion',
@@ -34,7 +51,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 5,
     aiWeightBoost: 8,
     opportunityScorePoints: 15,
-    marksReward: 75,
+    marksReward: 18,
   },
   {
     badgeSlug: 'verified-scholar',
@@ -47,7 +64,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 1,
     aiWeightBoost: 6,
     opportunityScorePoints: 10,
-    marksReward: 60,
+    marksReward: 15,
   },
   {
     badgeSlug: 'community-leader',
@@ -60,7 +77,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 3,
     aiWeightBoost: 4,
     opportunityScorePoints: 8,
-    marksReward: 40,
+    marksReward: 10,
   },
   {
     badgeSlug: 'mentors-pick',
@@ -73,7 +90,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 3,
     aiWeightBoost: 7,
     opportunityScorePoints: 12,
-    marksReward: 80,
+    marksReward: 20,
   },
   {
     badgeSlug: 'rising-star',
@@ -86,7 +103,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 50,
     aiWeightBoost: 5,
     opportunityScorePoints: 10,
-    marksReward: 100,
+    marksReward: 25,
   },
 
   // ── Employer badges ───────────────────────────────────────────────
