@@ -38,6 +38,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
     await User.findByIdAndUpdate(userId, {
       verificationStatus: newStatus,
       verificationNote: parsed.data.note ?? '',
+      ...(user.role === 'advisor' || user.role === 'dept_head'
+        ? { approvalStatus: newStatus }
+        : {}),
       ...(newStatus === 'approved' && user.role === 'student' ? { isVerified: true } : {}), // Ensure isVerified syncing if needed
     });
 

@@ -177,6 +177,109 @@ export const AdminApproveSchema = z.object({
   note: z.string().max(500).optional(),
 });
 
+export const AdminUserUpdateSchema = z
+  .object({
+    name: z.string().min(2).max(60).optional(),
+    email: z.string().email().toLowerCase().optional(),
+    phone: z
+      .string()
+      .regex(/^\+8801[3-9]\d{8}$/, 'Invalid BD phone number (+8801XXXXXXXXX)')
+      .optional()
+      .or(z.literal('')),
+    role: z.enum(['student', 'employer', 'advisor', 'dept_head', 'admin']).optional(),
+    image: z.string().url().optional().or(z.literal('')),
+    bio: z.string().max(500).optional().or(z.literal('')),
+    city: z.string().max(60).optional().or(z.literal('')),
+    isVerified: z.boolean().optional(),
+    isPremium: z.boolean().optional(),
+    premiumExpiresAt: z.string().optional().or(z.literal('')).nullable(),
+    verificationStatus: z.enum(['pending', 'approved', 'rejected']).optional(),
+    verificationNote: z.string().max(500).optional().or(z.literal('')),
+    university: z.string().max(120).optional().or(z.literal('')),
+    department: z.string().max(60).optional().or(z.literal('')),
+    yearOfStudy: z.number().int().min(1).max(5).optional(),
+    currentSemester: z.string().max(30).optional().or(z.literal('')),
+    cgpa: z.number().min(0).max(4.0).optional(),
+    studentId: z.string().max(20).optional().or(z.literal('')),
+    completedCourses: z.array(z.string().max(80)).optional(),
+    skills: z.array(z.string().max(80)).optional(),
+    companyName: z.string().max(120).optional().or(z.literal('')),
+    industry: z.string().max(80).optional().or(z.literal('')),
+    companySize: z.enum(['1-10', '11-50', '51-200', '201-500', '500+']).optional(),
+    companyWebsite: z.string().url().optional().or(z.literal('')),
+    companyDescription: z.string().max(1000).optional().or(z.literal('')),
+    tradeLicenseNo: z.string().max(50).optional().or(z.literal('')),
+    headquartersCity: z.string().max(60).optional().or(z.literal('')),
+    institutionName: z.string().max(120).optional().or(z.literal('')),
+    advisorStaffId: z.string().max(30).optional().or(z.literal('')),
+    designation: z.string().max(80).optional().or(z.literal('')),
+    advisoryDepartment: z.string().max(60).optional().or(z.literal('')),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field must be provided.',
+  });
+
+export const AdminApplicationUpdateSchema = z
+  .object({
+    status: z
+      .enum([
+        'applied',
+        'shortlisted',
+        'under_review',
+        'assessment_sent',
+        'interview_scheduled',
+        'rejected',
+        'hired',
+        'withdrawn',
+      ])
+      .optional(),
+    note: z.string().max(500).optional().or(z.literal('')),
+    employerNotes: z.string().max(1000).optional().or(z.literal('')),
+  })
+  .refine((data) => Boolean(data.status) || typeof data.employerNotes === 'string', {
+    message: 'Provide a status update or employer notes.',
+  });
+
+export const AdminPaymentUpdateSchema = z
+  .object({
+    status: z.enum(['initiated', 'success', 'failed', 'refunded']).optional(),
+    method: z.enum(['bkash', 'visa', 'mastercard']).optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field must be provided.',
+  });
+
+export const AdminSubscriptionUpdateSchema = z
+  .object({
+    plan: z.enum(['student_premium', 'employer_premium']).optional(),
+    status: z.enum(['active', 'expired', 'cancelled']).optional(),
+    endDate: z.string().optional().or(z.literal('')).nullable(),
+    autoRenew: z.boolean().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field must be provided.',
+  });
+
+export const AdminSupportNotificationSchema = z.object({
+  userId: z.string().length(24, 'Invalid user ID'),
+  type: z.enum([
+    'status_update',
+    'message_received',
+    'advisor_note',
+    'payment_received',
+    'job_match',
+    'badge_earned',
+  ]),
+  title: z.string().min(3).max(120),
+  body: z.string().min(5).max(1000),
+  link: z.string().max(200).optional().or(z.literal('')),
+});
+
+export const AdminMessageModerationSchema = z.object({
+  isFlagged: z.boolean(),
+  flagReason: z.string().max(500).optional().or(z.literal('')),
+});
+
 // ── Module 1 — Job, Recruitment & Career Events System ───────────────────────
 
 export const CreateJobSchema = z.object({
@@ -213,6 +316,10 @@ export const CreateJobSchema = z.object({
 
 export const UpdateJobSchema = CreateJobSchema.partial().extend({
   isActive: z.boolean().optional(),
+});
+
+export const AdminJobUpdateSchema = UpdateJobSchema.extend({
+  isPremiumListing: z.boolean().optional(),
 });
 
 export const ApplyJobSchema = z.object({

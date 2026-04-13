@@ -68,8 +68,8 @@ export async function GET(req: NextRequest) {
       })
     );
 
-    // Also get the total accumulated marks from earned badges
-    const totalMarks = definitions
+    // Badge points — all badge marksRewards sum to 100
+    const totalPoints = definitions
       .filter((def: IBadgeDefinition & Record<string, unknown>) => earnedSlugs.has(def.badgeSlug))
       .reduce(
         (sum: number, def: IBadgeDefinition & Record<string, unknown>) =>
@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       progress: progressList,
-      totalMarks,
+      totalPoints,
     });
   } catch (error) {
     console.error('[GET BADGE PROGRESS ERROR]', error);

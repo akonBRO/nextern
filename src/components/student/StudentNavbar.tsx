@@ -14,6 +14,7 @@ import {
 import { useState } from 'react';
 import { NexternLogo } from '@/components/brand/NexternLogo';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import MessageBell from '@/components/messaging/MessageBell';
 
 interface NavbarProps {
   user: {
@@ -137,26 +138,34 @@ export default function StudentNavbar({ user }: NavbarProps) {
           </Link>
 
           {/* Messages chip — static */}
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '9px 12px',
-              borderRadius: 999,
-              border: '1px solid rgba(255,255,255,0.08)',
-              background: 'rgba(255,255,255,0.05)',
-              color: '#D8E3F1',
-              fontSize: 12,
-              fontWeight: 700,
-            }}
-          >
-            <span style={{ display: 'inline-flex', color: '#22D3EE' }}>
-              <Mail size={14} strokeWidth={2} />
-            </span>
-            <span>Messages</span>
-            <span style={{ color: '#FFFFFF' }}>{user.unreadMessages}</span>
-          </div>
+          {user.userId ? (
+            <MessageBell
+              userId={user.userId}
+              initialUnread={user.unreadMessages}
+              href="/student/messages"
+            />
+          ) : (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '9px 12px',
+                borderRadius: 999,
+                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.05)',
+                color: '#D8E3F1',
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              <span style={{ display: 'inline-flex', color: '#22D3EE' }}>
+                <Mail size={14} strokeWidth={2} />
+              </span>
+              <span>Messages</span>
+              <span style={{ color: '#FFFFFF' }}>{user.unreadMessages}</span>
+            </div>
+          )}
 
           {/* ── Real-time Notification Bell ── */}
           {user.userId ? (

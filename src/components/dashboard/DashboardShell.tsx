@@ -6,7 +6,9 @@ import { signOut } from 'next-auth/react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NexternLogo } from '@/components/brand/NexternLogo';
 import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
+import { EMPLOYER_NAV_ITEMS } from '@/lib/employer-navigation';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import MessageBell from '@/components/messaging/MessageBell';
 import {
   BookOpen,
   BriefcaseBusiness,
@@ -82,6 +84,7 @@ type DashboardShellProps = {
     userId?: string; // needed by NotificationBell for Pusher channel
   };
   children: ReactNode;
+  hideFooter?: boolean;
 };
 
 const iconMap = {
@@ -138,6 +141,7 @@ export default function DashboardShell({
   navItems,
   user,
   children,
+  hideFooter = false,
 }: DashboardShellProps) {
   const profile = profileConfig[role];
   const pathname = usePathname();
@@ -145,7 +149,8 @@ export default function DashboardShell({
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [premiumActive, setPremiumActive] = useState(Boolean(user.isPremium));
   const shellRef = useRef<HTMLDivElement>(null);
-  const resolvedNavItems = role === 'student' ? STUDENT_NAV_ITEMS : navItems;
+  const resolvedNavItems =
+    role === 'student' ? STUDENT_NAV_ITEMS : role === 'employer' ? EMPLOYER_NAV_ITEMS : navItems;
 
   // Derive notifications page href based on role
   const notificationsHref =
@@ -223,7 +228,11 @@ export default function DashboardShell({
     <div
       ref={shellRef}
       style={{
-        minHeight: '100vh',
+        height: hideFooter ? '100vh' : undefined,
+        minHeight: hideFooter ? undefined : '100vh',
+        overflow: hideFooter ? 'hidden' : undefined,
+        display: hideFooter ? 'flex' : undefined,
+        flexDirection: hideFooter ? 'column' : undefined,
         background: '#F1F5F9',
         color: '#1E293B',
         fontFamily: 'var(--font-body)',
@@ -326,12 +335,19 @@ export default function DashboardShell({
 
             {/* Right: chips + bell + user menu */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              {/* Messages — static chip (real-time messaging is Sabbir's module) */}
-              <StaticChip
-                label="Messages"
-                value={user.unreadMessages}
-                icon={<Mail size={14} strokeWidth={2} />}
-              />
+              {user.userId ? (
+                <MessageBell
+                  userId={user.userId}
+                  initialUnread={user.unreadMessages}
+                  href={`/${role === 'employer' ? 'employer' : role === 'student' ? 'student' : role === 'advisor' ? 'advisor' : 'dept'}/messages`}
+                />
+              ) : (
+                <StaticChip
+                  label="Messages"
+                  value={user.unreadMessages}
+                  icon={<Mail size={14} strokeWidth={2} />}
+                />
+              )}
 
               {/* ── Real-time Notification Bell ── */}
               {user.userId ? (
@@ -699,56 +715,58 @@ export default function DashboardShell({
         </div>
       </header>
 
-      <main>{children}</main>
+      <main style={hideFooter ? { flex: 1, overflow: 'hidden' } : undefined}>{children}</main>
 
-      <footer
-        style={{
-          background: '#1E293B',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-          marginTop: 48,
-        }}
-      >
-        <div
+      {!hideFooter && (
+        <footer
           style={{
-            maxWidth: 1320,
-            margin: '0 auto',
-            padding: '20px 24px 26px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 12,
-            flexWrap: 'wrap',
+            background: '#1E293B',
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            marginTop: 48,
           }}
         >
-          <NexternLogo
-            markSize={28}
-            markRadius={7}
-            textSize={14}
-            textWeight={700}
-            textColor="#FFFFFF"
-            subtitle="A focused workspace for decisions, progress, and outcomes."
-            subtitleColor="#94A3B8"
-            subtitleGap={4}
-          />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-            <Link
-              href={homeHref}
-              style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}
-            >
-              Overview
-            </Link>
-            <a
-              href="mailto:support@nextern.app"
-              style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}
-            >
-              Support
-            </a>
-            <Link href="/" style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}>
-              Home
-            </Link>
+          <div
+            style={{
+              maxWidth: 1320,
+              margin: '0 auto',
+              padding: '20px 24px 26px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 12,
+              flexWrap: 'wrap',
+            }}
+          >
+            <NexternLogo
+              markSize={28}
+              markRadius={7}
+              textSize={14}
+              textWeight={700}
+              textColor="#FFFFFF"
+              subtitle="A focused workspace for decisions, progress, and outcomes."
+              subtitleColor="#94A3B8"
+              subtitleGap={4}
+            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
+              <Link
+                href={homeHref}
+                style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}
+              >
+                Overview
+              </Link>
+              <a
+                href="mailto:support@nextern.app"
+                style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}
+              >
+                Support
+              </a>
+              <Link href="/" style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}>
+                Home
+              </Link>
+            </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      )}
 
       <style>{`
         .dashboard-shell-nav::-webkit-scrollbar { display: none; }

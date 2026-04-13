@@ -56,18 +56,14 @@ export default async function StudentBadgesPage() {
     })
   );
 
-  const earnedMarksRaw = definitions
+  // Badge points — all badge marksRewards sum to 100
+  const totalPoints = definitions
     .filter((def: IBadgeDefinition & Record<string, unknown>) => earnedSlugs.has(def.badgeSlug))
     .reduce(
       (sum: number, def: IBadgeDefinition & Record<string, unknown>) =>
         sum + ((def.marksReward as number) || 0),
       0
     );
-
-  // The Peer Recognition category has a 10% weight in the final GER total.
-  // We cap the raw category score at 100, then scale it by 10%.
-  const categoryScore = Math.min(earnedMarksRaw, 100);
-  const totalMarks = (categoryScore * 10) / 100;
 
   return (
     <DashboardShell
@@ -89,7 +85,7 @@ export default async function StudentBadgesPage() {
         <HeroCard
           eyebrow="Achievements"
           title="Your Badges"
-          description={`Unlock badges to earn GER marks and elevate your platform visibility. Every badge proves your commitment to career readiness.`}
+          description={`Unlock badges to earn points and elevate your platform visibility. Every badge proves your commitment to career readiness.`}
           actions={<div />}
           aside={
             <div
@@ -114,10 +110,10 @@ export default async function StudentBadgesPage() {
                   lineHeight: 1,
                 }}
               >
-                {totalMarks}
+                {totalPoints} / 100
               </div>
               <div style={{ fontSize: 13, color: '#94A3B8', fontWeight: 600, marginTop: 4 }}>
-                Total GER Marks Earned
+                Points Earned
               </div>
             </div>
           }
@@ -218,7 +214,7 @@ export default async function StudentBadgesPage() {
                           color: isEarned ? '#1E40AF' : '#64748B',
                         }}
                       >
-                        +{def.marksReward || 0} Marks
+                        +{(def.marksReward as number) || 0} pts
                       </span>
                       <span
                         style={{

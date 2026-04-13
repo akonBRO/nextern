@@ -28,6 +28,7 @@ const DASHBOARD_SHELL_PATHS = new Set([
   '/student/skills',
   '/student/subscription',
   '/student/mock-interview',
+  '/student/messages',
 ]);
 
 function isDashboardShellPath(pathname: string) {
