@@ -16,6 +16,7 @@ import {
   Eye,
   Sparkles,
   Crown,
+  MessageCircle,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -592,6 +593,24 @@ function ApplicantCard({
           }}
         >
           <Eye size={11} /> View
+        </Link>
+        <Link
+          href={`/employer/messages?user=${app.student._id}`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 5,
+            background: 'linear-gradient(135deg, #7C3AED, #6D28D9)',
+            color: '#fff',
+            padding: '7px 13px',
+            borderRadius: 9,
+            fontSize: 11,
+            fontWeight: 700,
+            textDecoration: 'none',
+          }}
+        >
+          <MessageCircle size={11} /> Message
         </Link>
         <ApplicantActions
           appId={app._id}

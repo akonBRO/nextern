@@ -34,6 +34,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import JobApplyButton from './JobApplyButton';
+import MessageEmployerButton from './MessageEmployerButton';
 import AISkillAnalysisCard from './AISkillAnalysisCard';
 import JobFitScoreCard from './JobFitScoreCard';
 
@@ -402,6 +403,12 @@ export default async function StudentJobDetailPage({
                 isActive={isActive}
                 isExpired={isExpired ?? false}
               />
+              {hasApplied && (
+                <MessageEmployerButton
+                  employerId={job.employerId.toString()}
+                  applicationStatus={applicationStatus}
+                />
+              )}
               {/* ✅ Fixed: <a> → <Link> for internal navigation */}
               <Link
                 href="/student/jobs"

@@ -50,6 +50,7 @@ type SectionKey =
   | 'applications'
   | 'finance'
   | 'support'
+  | 'messages'
   | 'analytics';
 
 type NoticeState = { tone: 'success' | 'error'; text: string } | null;
@@ -101,9 +102,15 @@ const SECTION_META: Record<
   },
   support: {
     label: 'Support',
-    description: 'Moderate flagged conversations and send admin notices.',
+    description: 'Send admin notices and manage system alerts.',
     icon: LifeBuoy,
     accent: '#9f1239',
+  },
+  messages: {
+    label: 'Messages',
+    description: 'Moderate all cross-platform conversations.',
+    icon: MessageSquareWarning,
+    accent: '#831843',
   },
   analytics: {
     label: 'Analytics',
@@ -120,6 +127,13 @@ function formatMoney(value: number) {
     style: 'currency',
     currency: 'BDT',
     maximumFractionDigits: 0,
+  }).format(value || 0);
+}
+
+function formatCompactNumber(value: number) {
+  return new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
   }).format(value || 0);
 }
 
@@ -337,6 +351,21 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
   const [messageReasonDrafts, setMessageReasonDrafts] = useState<Record<string, string>>({});
   const [supportActionId, setSupportActionId] = useState<string | null>(null);
 
+  const [messagesFilters, setMessagesFilters] = useState({
+    flaggedOnly: 'all',
+    search: '',
+  });
+  const [messagesData, setMessagesData] = useState<any>(null);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [messagesActionId, setMessagesActionId] = useState<string | null>(null);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  } | null>(null);
+
   useEffect(() => {
     void loadOverview();
   }, [overviewRange]);
@@ -348,6 +377,7 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
     if (activeSection === 'applications' && !applicationsData) void loadApplications();
     if (activeSection === 'finance' && !financeData) void loadFinance();
     if (activeSection === 'support' && !supportData) void loadSupport();
+    if (activeSection === 'messages' && !messagesData) void loadMessages();
     if (activeSection === 'analytics' && !overview) void loadOverview();
   }, [
     activeSection,
@@ -357,6 +387,7 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
     applicationsData,
     financeData,
     supportData,
+    messagesData,
     overview,
   ]);
 
@@ -597,6 +628,23 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
     }
   }
 
+  async function loadMessages() {
+    setMessagesLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: '20' });
+      if (messagesFilters.flaggedOnly !== 'all')
+        params.set('flaggedOnly', messagesFilters.flaggedOnly);
+      if (messagesFilters.search.trim()) params.set('search', messagesFilters.search.trim());
+      setMessagesData(await requestJson(`/api/admin/messages?${params.toString()}`));
+    } catch (error) {
+      showNotice('error', error instanceof Error ? error.message : 'Failed to load messages.');
+    } finally {
+      setMessagesLoading(false);
+    }
+  }
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
+
   async function handleVerificationAction(userId: string, action: 'approve' | 'reject') {
     setReviewActionId(userId);
     try {
@@ -681,20 +729,27 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
     }
   }
 
-  async function handleDeleteUser() {
+  function handleDeleteUser() {
     if (!selectedUser) return;
-    if (!window.confirm('Delete this user and related records?')) return;
-    setUserSaving(true);
-    try {
-      await requestJson(`/api/admin/users/${selectedUser._id}`, { method: 'DELETE' });
-      setSelectedUser(null);
-      showNotice('success', 'User deleted.');
-      await Promise.all([loadUsers(), loadVerification(), loadOverview(), loadFinance()]);
-    } catch (error) {
-      showNotice('error', error instanceof Error ? error.message : 'Failed to delete user.');
-    } finally {
-      setUserSaving(false);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete user?',
+      description: 'Delete this user and related records?',
+      onConfirm: async () => {
+        setConfirmModal(null);
+        setUserSaving(true);
+        try {
+          await requestJson(`/api/admin/users/${selectedUser._id}`, { method: 'DELETE' });
+          setSelectedUser(null);
+          showNotice('success', 'User deleted.');
+          await Promise.all([loadUsers(), loadVerification(), loadOverview(), loadFinance()]);
+        } catch (error) {
+          showNotice('error', error instanceof Error ? error.message : 'Failed to delete user.');
+        } finally {
+          setUserSaving(false);
+        }
+      },
+    });
   }
 
   async function handleSaveJob() {
@@ -734,21 +789,28 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
     }
   }
 
-  async function handleDeleteJob(jobId?: string) {
+  function handleDeleteJob(jobId?: string) {
     const targetId = jobId ?? selectedJob?._id;
     if (!targetId) return;
-    if (!window.confirm('Delete this listing and its related pipeline records?')) return;
-    setJobSaving(true);
-    try {
-      await requestJson(`/api/jobs/${targetId}`, { method: 'DELETE' });
-      setSelectedJob(null);
-      showNotice('success', 'Job deleted.');
-      await Promise.all([loadJobs(), loadOverview(), loadApplications()]);
-    } catch (error) {
-      showNotice('error', error instanceof Error ? error.message : 'Failed to delete job.');
-    } finally {
-      setJobSaving(false);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete listing?',
+      description: 'Delete this listing and its related pipeline records?',
+      onConfirm: async () => {
+        setConfirmModal(null);
+        setJobSaving(true);
+        try {
+          await requestJson(`/api/jobs/${targetId}`, { method: 'DELETE' });
+          setSelectedJob(null);
+          showNotice('success', 'Job deleted.');
+          await Promise.all([loadJobs(), loadOverview(), loadApplications()]);
+        } catch (error) {
+          showNotice('error', error instanceof Error ? error.message : 'Failed to delete job.');
+        } finally {
+          setJobSaving(false);
+        }
+      },
+    });
   }
 
   async function handleSaveApplication() {
@@ -772,21 +834,31 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
     }
   }
 
-  async function handleDeleteApplication(applicationId?: string) {
+  function handleDeleteApplication(applicationId?: string) {
     const targetId = applicationId ?? selectedApplication?._id;
     if (!targetId) return;
-    if (!window.confirm('Delete this application and related submissions?')) return;
-    setApplicationSaving(true);
-    try {
-      await requestJson(`/api/admin/applications/${targetId}`, { method: 'DELETE' });
-      setSelectedApplication(null);
-      showNotice('success', 'Application deleted.');
-      await Promise.all([loadApplications(), loadOverview()]);
-    } catch (error) {
-      showNotice('error', error instanceof Error ? error.message : 'Failed to delete application.');
-    } finally {
-      setApplicationSaving(false);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete application?',
+      description: 'Delete this application and related submissions?',
+      onConfirm: async () => {
+        setConfirmModal(null);
+        setApplicationSaving(true);
+        try {
+          await requestJson(`/api/admin/applications/${targetId}`, { method: 'DELETE' });
+          setSelectedApplication(null);
+          showNotice('success', 'Application deleted.');
+          await Promise.all([loadApplications(), loadOverview()]);
+        } catch (error) {
+          showNotice(
+            'error',
+            error instanceof Error ? error.message : 'Failed to delete application.'
+          );
+        } finally {
+          setApplicationSaving(false);
+        }
+      },
+    });
   }
 
   async function handleSavePayment(paymentId: string) {
@@ -862,6 +934,47 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
     } finally {
       setSupportActionId(null);
     }
+  }
+
+  async function handleToggleFlagMessage(messageId: string, isFlagged: boolean) {
+    setMessagesActionId(messageId);
+    try {
+      await requestJson(`/api/admin/messages`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          messageId,
+          isFlagged,
+          flagReason: messageReasonDrafts[messageId] || undefined,
+        }),
+      });
+      showNotice('success', isFlagged ? 'Message flagged.' : 'Message restored.');
+      await Promise.all([loadMessages(), loadOverview()]);
+    } catch (error) {
+      showNotice('error', error instanceof Error ? error.message : 'Failed to update message.');
+    } finally {
+      setMessagesActionId(null);
+    }
+  }
+
+  function handleDeleteMessage(messageId: string) {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete message?',
+      description: 'Are you sure you want to delete this message for everyone?',
+      onConfirm: async () => {
+        setConfirmModal(null);
+        setMessagesActionId(messageId);
+        try {
+          await requestJson(`/api/admin/messages?id=${messageId}`, { method: 'DELETE' });
+          showNotice('success', 'Message deleted for everyone.');
+          await Promise.all([loadMessages(), loadOverview()]);
+        } catch (error) {
+          showNotice('error', error instanceof Error ? error.message : 'Failed to delete message.');
+        } finally {
+          setMessagesActionId(null);
+        }
+      },
+    });
   }
 
   function openSupportForUser(userId: string) {
@@ -2806,6 +2919,255 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
             </section>
           ) : null}
 
+          {activeSection === 'messages' ? (
+            <section className={styles.section}>
+              <div className={styles.panel}>
+                <div className={styles.panelHeader}>
+                  <div>
+                    <h2>Platform Messages</h2>
+                    <p>Monitor, moderate, and manage cross-platform communications.</p>
+                  </div>
+                </div>
+                <div className={styles.filters}>
+                  <div className={styles.filterField}>
+                    <label>Status</label>
+                    <select
+                      value={messagesFilters.flaggedOnly}
+                      onChange={(event) =>
+                        setMessagesFilters((current) => ({
+                          ...current,
+                          flaggedOnly: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="all">All Messages</option>
+                      <option value="true">Flagged Only</option>
+                      <option value="false">Unflagged Only</option>
+                    </select>
+                  </div>
+                  <div className={styles.filterFieldWide}>
+                    <label>Search</label>
+                    <input
+                      value={messagesFilters.search}
+                      onChange={(event) =>
+                        setMessagesFilters((current) => ({
+                          ...current,
+                          search: event.target.value,
+                        }))
+                      }
+                      placeholder="Search content, sender, receiver, reason"
+                    />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%' }}>
+                    <button
+                      className={styles.primaryButton}
+                      onClick={() => void loadMessages()}
+                      type="button"
+                      style={{ width: '100%', padding: '10px 14px' }}
+                    >
+                      <Search size={14} />
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+
+                {messagesLoading ? (
+                  <div className={styles.loaderWrap}>
+                    <LoaderCircle className={styles.spin} size={20} />
+                  </div>
+                ) : (
+                  <>
+                    {messagesData?.summary && (
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr 1fr',
+                          gap: 16,
+                          padding: '0 24px 20px',
+                          borderBottom: '1px solid #E2E8F0',
+                          marginBottom: 20,
+                        }}
+                      >
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: '#64748B',
+                              fontWeight: 600,
+                              textTransform: 'uppercase',
+                              marginBottom: 4,
+                            }}
+                          >
+                            Total Messages
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 24,
+                              fontWeight: 900,
+                              color: '#0F172A',
+                              fontFamily: 'var(--font-display)',
+                            }}
+                          >
+                            {formatCompactNumber(messagesData.summary.totalMessages)}
+                          </div>
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: '#64748B',
+                              fontWeight: 600,
+                              textTransform: 'uppercase',
+                              marginBottom: 4,
+                            }}
+                          >
+                            Flagged Alerts
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 24,
+                              fontWeight: 900,
+                              color: '#9F1239',
+                              fontFamily: 'var(--font-display)',
+                            }}
+                          >
+                            {formatCompactNumber(messagesData.summary.flaggedMessages)}
+                          </div>
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: '#64748B',
+                              fontWeight: 600,
+                              textTransform: 'uppercase',
+                              marginBottom: 4,
+                            }}
+                          >
+                            Sent Today
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 24,
+                              fontWeight: 900,
+                              color: '#166534',
+                              fontFamily: 'var(--font-display)',
+                            }}
+                          >
+                            {formatCompactNumber(messagesData.summary.messagesToday)}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div className={styles.listTable}>
+                      {messagesData?.messages?.length ? (
+                        messagesData.messages.map((message: any) => (
+                          <div key={message._id} className={styles.listRow}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div
+                                className={styles.rowTitle}
+                                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                              >
+                                {labelFromMaybeUser(message.senderId)} →{' '}
+                                {labelFromMaybeUser(message.receiverId)}
+                                {message.isFlagged && <StatusBadge value="rejected" />}
+                                {message.isDeletedForEveryone && <StatusBadge value="withdrawn" />}
+                              </div>
+                              <div className={styles.rowMeta}>
+                                {formatDate(message.createdAt, true)}
+                                {message.relatedJobId
+                                  ? ` · Job: ${message.relatedJobId.title}`
+                                  : ''}
+                              </div>
+                              <div className={styles.supportMessage} style={{ marginTop: 8 }}>
+                                {message.content}
+                              </div>
+                              {message.isFlagged && message.flagReason && (
+                                <div
+                                  style={{
+                                    marginTop: 8,
+                                    fontSize: 12,
+                                    color: '#9F1239',
+                                    background: '#FFF1F2',
+                                    padding: '6px 10px',
+                                    borderRadius: 6,
+                                    display: 'inline-block',
+                                  }}
+                                >
+                                  <strong>Flag Reason:</strong> {message.flagReason}
+                                </div>
+                              )}
+                            </div>
+                            <div
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 8,
+                                alignItems: 'flex-end',
+                                marginLeft: 16,
+                              }}
+                            >
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <input
+                                  value={
+                                    messageReasonDrafts[message._id] ?? message.flagReason ?? ''
+                                  }
+                                  onChange={(event) =>
+                                    setMessageReasonDrafts((current) => ({
+                                      ...current,
+                                      [message._id]: event.target.value,
+                                    }))
+                                  }
+                                  placeholder="Flag reason"
+                                  style={{
+                                    width: 140,
+                                    fontSize: 13,
+                                    padding: '6px 10px',
+                                    borderRadius: 6,
+                                    border: '1px solid #E2E8F0',
+                                  }}
+                                />
+                                <button
+                                  className={
+                                    message.isFlagged ? styles.ghostButton : styles.secondaryButton
+                                  }
+                                  onClick={() =>
+                                    handleToggleFlagMessage(message._id, !message.isFlagged)
+                                  }
+                                  type="button"
+                                  disabled={messagesActionId === message._id}
+                                  style={{ width: 80 }}
+                                >
+                                  {message.isFlagged ? 'Unflag' : 'Flag'}
+                                </button>
+                              </div>
+                              {!message.isDeletedForEveryone && (
+                                <button
+                                  className={styles.ghostButton}
+                                  onClick={() => handleDeleteMessage(message._id)}
+                                  type="button"
+                                  disabled={messagesActionId === message._id}
+                                  style={{ color: '#E11D48', width: 80 }}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <SectionEmpty
+                          title="No messages found"
+                          description="Try adjusting your filters or search query."
+                        />
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </section>
+          ) : null}
+
           {activeSection === 'analytics' ? (
             <section className={styles.section}>
               <div className={styles.rangeTabs}>
@@ -2871,6 +3233,83 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
           ) : null}
         </main>
       </div>
+
+      {/* General Confirm Modal */}
+      {confirmModal && confirmModal.isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(15,23,42,0.5)',
+            backdropFilter: 'blur(6px)',
+          }}
+          onClick={() => setConfirmModal(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#fff',
+              borderRadius: 24,
+              padding: '32px 36px',
+              maxWidth: 400,
+              width: '90vw',
+              boxShadow: '0 24px 80px rgba(15,23,42,0.22)',
+              position: 'relative',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 16,
+                background: '#FFF1F2',
+                border: '1px solid #FECDD3',
+                color: '#BE123C',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+              }}
+            >
+              <CircleAlert size={28} />
+            </div>
+            <h3
+              style={{
+                fontSize: 18,
+                fontWeight: 800,
+                color: '#0F172A',
+                marginBottom: 8,
+              }}
+            >
+              {confirmModal.title}
+            </h3>
+            <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.6, marginBottom: 24 }}>
+              {confirmModal.description}
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setConfirmModal(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.dangerButton}
+                onClick={confirmModal.onConfirm}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

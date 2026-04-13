@@ -16,7 +16,12 @@ import {
   BadgeCheck,
   XCircle,
   Undo2,
+  MessageCircle,
+  X,
+  ShieldAlert,
 } from 'lucide-react';
+
+const ELIGIBLE_STATUSES = ['shortlisted', 'assessment_sent', 'interview_scheduled', 'hired'];
 
 const STATUS_CONFIG: Record<
   string,
@@ -60,6 +65,7 @@ type AppItem = {
     city: string | null;
     locationType: string;
     applicationDeadline: string | null;
+    employerId: string | null;
   } | null;
 };
 
@@ -79,7 +85,16 @@ function formatStatusLabel(v: string) {
     .join(' ');
 }
 
-function AppCard({ app, isEvent }: { app: AppItem; isEvent: boolean }) {
+function AppCard({
+  app,
+  isEvent,
+  onShowWarning,
+}: {
+  app: AppItem;
+  isEvent: boolean;
+  onShowWarning: () => void;
+}) {
+  const isEligible = ELIGIBLE_STATUSES.includes(app.status);
   const cfg = STATUS_CONFIG[app.status] ?? STATUS_CONFIG['applied'];
   const toneStyle = TONE_STYLES[cfg.tone];
   const job = app.job;
@@ -241,6 +256,45 @@ function AppCard({ app, isEvent }: { app: AppItem; isEvent: boolean }) {
               View {isEvent ? 'Event' : 'Job'} →
             </Link>
           )}
+          {!isEvent &&
+            job?.employerId &&
+            (isEligible ? (
+              <Link
+                href={`/student/messages?user=${job.employerId}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  color: '#7C3AED',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  marginTop: 2,
+                }}
+              >
+                <MessageCircle size={13} /> Message →
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={onShowWarning}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  color: '#94A3B8',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  marginTop: 2,
+                }}
+              >
+                <MessageCircle size={13} /> Message →
+              </button>
+            ))}
         </div>
       </div>
     </div>
@@ -255,6 +309,7 @@ export default function ApplicationsTabs({
   events: AppItem[];
 }) {
   const [activeTab, setActiveTab] = useState<'applications' | 'events'>('applications');
+  const [showWarning, setShowWarning] = useState(false);
 
   const tabs = [
     {
@@ -275,107 +330,220 @@ export default function ApplicationsTabs({
   const isEvent = activeTab === 'events';
 
   return (
-    <div
-      style={{
-        background: '#fff',
-        borderRadius: 20,
-        border: '1px solid #E2E8F0',
-        overflow: 'hidden',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-      }}
-    >
-      {/* Tab bar */}
-      <div style={{ display: 'flex', borderBottom: '1px solid #E2E8F0', background: '#FAFBFC' }}>
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '16px 24px',
-              border: 'none',
-              background: 'none',
-              cursor: 'pointer',
-              fontSize: 14,
-              fontWeight: activeTab === tab.key ? 700 : 500,
-              color: activeTab === tab.key ? '#2563EB' : '#64748B',
-              borderBottom: `2px solid ${activeTab === tab.key ? '#2563EB' : 'transparent'}`,
-              transition: 'all 0.15s',
-              fontFamily: 'var(--font-body)',
-            }}
-          >
-            <span style={{ color: activeTab === tab.key ? '#2563EB' : '#94A3B8' }}>{tab.icon}</span>
-            {tab.label}
-            <span
+    <>
+      <div
+        style={{
+          background: '#fff',
+          borderRadius: 20,
+          border: '1px solid #E2E8F0',
+          overflow: 'hidden',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        }}
+      >
+        {/* Tab bar */}
+        <div style={{ display: 'flex', borderBottom: '1px solid #E2E8F0', background: '#FAFBFC' }}>
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
               style={{
-                background: activeTab === tab.key ? '#EFF6FF' : '#F1F5F9',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '16px 24px',
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: activeTab === tab.key ? 700 : 500,
                 color: activeTab === tab.key ? '#2563EB' : '#64748B',
-                border: `1px solid ${activeTab === tab.key ? '#BFDBFE' : '#E2E8F0'}`,
-                padding: '2px 8px',
-                borderRadius: 999,
-                fontSize: 11,
-                fontWeight: 700,
+                borderBottom: `2px solid ${activeTab === tab.key ? '#2563EB' : 'transparent'}`,
+                transition: 'all 0.15s',
+                fontFamily: 'var(--font-body)',
               }}
             >
-              {tab.count}
-            </span>
-          </button>
-        ))}
+              <span style={{ color: activeTab === tab.key ? '#2563EB' : '#94A3B8' }}>
+                {tab.icon}
+              </span>
+              {tab.label}
+              <span
+                style={{
+                  background: activeTab === tab.key ? '#EFF6FF' : '#F1F5F9',
+                  color: activeTab === tab.key ? '#2563EB' : '#64748B',
+                  border: `1px solid ${activeTab === tab.key ? '#BFDBFE' : '#E2E8F0'}`,
+                  padding: '2px 8px',
+                  borderRadius: 999,
+                  fontSize: 11,
+                  fontWeight: 700,
+                }}
+              >
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div style={{ padding: '20px 22px' }}>
+          {activeItems.length === 0 ? (
+            <div
+              style={{
+                borderRadius: 14,
+                border: '1px dashed #CBD5E1',
+                background: '#F8FAFC',
+                padding: '40px 20px',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ marginBottom: 12, color: '#94A3B8' }}>
+                {isEvent ? <CalendarDays size={36} /> : <BriefcaseBusiness size={36} />}
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
+                {isEvent ? 'No events registered yet' : 'No applications yet'}
+              </div>
+              <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
+                {isEvent
+                  ? 'Register for webinars and workshops from the job feed to see them here.'
+                  : 'Apply to jobs and internships from the job feed to track them here.'}
+              </div>
+              <Link
+                href="/student/jobs"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  marginTop: 16,
+                  background: '#2563EB',
+                  color: '#fff',
+                  padding: '10px 20px',
+                  borderRadius: 10,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  fontFamily: 'var(--font-display)',
+                }}
+              >
+                Browse {isEvent ? 'Events' : 'Jobs'} →
+              </Link>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {activeItems.map((app) => (
+                <AppCard
+                  key={app._id}
+                  app={app}
+                  isEvent={isEvent}
+                  onShowWarning={() => setShowWarning(true)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Content */}
-      <div style={{ padding: '20px 22px' }}>
-        {activeItems.length === 0 ? (
+      {/* Eligibility warning modal */}
+      {showWarning && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(15,23,42,0.5)',
+            backdropFilter: 'blur(6px)',
+          }}
+          onClick={() => setShowWarning(false)}
+        >
           <div
+            onClick={(e) => e.stopPropagation()}
             style={{
-              borderRadius: 14,
-              border: '1px dashed #CBD5E1',
-              background: '#F8FAFC',
-              padding: '40px 20px',
+              background: '#fff',
+              borderRadius: 24,
+              padding: '32px 36px',
+              maxWidth: 420,
+              width: '90vw',
+              boxShadow: '0 32px 80px rgba(15,23,42,0.22)',
               textAlign: 'center',
+              position: 'relative',
             }}
           >
-            <div style={{ marginBottom: 12, color: '#94A3B8' }}>
-              {isEvent ? <CalendarDays size={36} /> : <BriefcaseBusiness size={36} />}
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
-              {isEvent ? 'No events registered yet' : 'No applications yet'}
-            </div>
-            <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
-              {isEvent
-                ? 'Register for webinars and workshops from the job feed to see them here.'
-                : 'Apply to jobs and internships from the job feed to track them here.'}
-            </div>
-            <Link
-              href="/student/jobs"
+            <button
+              type="button"
+              onClick={() => setShowWarning(false)}
               style={{
-                display: 'inline-flex',
+                position: 'absolute',
+                top: 14,
+                right: 14,
+                background: '#F1F5F9',
+                border: 'none',
+                borderRadius: 8,
+                width: 30,
+                height: 30,
+                display: 'flex',
                 alignItems: 'center',
-                gap: 7,
-                marginTop: 16,
-                background: '#2563EB',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#64748B',
+              }}
+            >
+              <X size={16} />
+            </button>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 16,
+                background: 'linear-gradient(135deg, #FEF3C7, #FFFBEB)',
+                border: '1px solid #FDE68A',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                color: '#D97706',
+              }}
+            >
+              <ShieldAlert size={28} />
+            </div>
+            <h3
+              style={{
+                fontSize: 18,
+                fontWeight: 900,
+                color: '#0F172A',
+                fontFamily: 'var(--font-display)',
+                margin: '0 0 8px',
+              }}
+            >
+              Not eligible to message yet
+            </h3>
+            <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7, margin: '0 0 20px' }}>
+              You can message the employer once your application status reaches{' '}
+              <strong style={{ color: '#0F172A' }}>Shortlisted</strong>,{' '}
+              <strong style={{ color: '#0F172A' }}>Assessment Sent</strong>,{' '}
+              <strong style={{ color: '#0F172A' }}>Interview Scheduled</strong>, or{' '}
+              <strong style={{ color: '#0F172A' }}>Hired</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowWarning(false)}
+              style={{
+                background: '#0F172A',
                 color: '#fff',
-                padding: '10px 20px',
-                borderRadius: 10,
+                border: 'none',
+                borderRadius: 12,
+                padding: '10px 24px',
                 fontSize: 13,
                 fontWeight: 700,
-                textDecoration: 'none',
+                cursor: 'pointer',
                 fontFamily: 'var(--font-display)',
               }}
             >
-              Browse {isEvent ? 'Events' : 'Jobs'} →
-            </Link>
+              Got it
+            </button>
           </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {activeItems.map((app) => (
-              <AppCard key={app._id} app={app} isEvent={isEvent} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 }
