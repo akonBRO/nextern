@@ -24,7 +24,7 @@ const MessageSchema = new Schema<IMessage>(
     senderId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     receiverId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     threadId: { type: String, required: true },
-    content: { type: String, required: true, maxlength: 5000 },
+    content: { type: String, default: '', maxlength: 5000 },
     isRead: { type: Boolean, default: false },
     readAt: { type: Date },
     isFlagged: { type: Boolean, default: false },

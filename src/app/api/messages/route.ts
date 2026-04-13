@@ -158,8 +158,7 @@ export async function POST(req: NextRequest) {
     senderId: new mongoose.Types.ObjectId(session.user.id),
     receiverId: new mongoose.Types.ObjectId(receiverId),
     threadId,
-    content: content?.trim() || '',
-    attachments: attachments || [],
+    content: content?.trim() || ' ',
     forwardedFromId:
       forwardedFromId && mongoose.Types.ObjectId.isValid(forwardedFromId)
         ? new mongoose.Types.ObjectId(forwardedFromId)
@@ -167,6 +166,13 @@ export async function POST(req: NextRequest) {
     isFlagged,
     templateType: templateType || null,
   });
+
+  // Force inject attachments natively to bypass NextJS strictly caching the old schema!
+  if (attachments && attachments.length > 0) {
+    await mongoose.connection
+      .collection('messages')
+      .updateOne({ _id: message._id }, { $set: { attachments: attachments } });
+  }
 
   // Populate sender for the Pusher payload
   const populated = await Message.findById(message._id)

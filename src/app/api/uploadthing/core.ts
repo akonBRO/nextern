@@ -92,6 +92,21 @@ export const ourFileRouter = {
       });
       return { companyLogoUrl: file.ufsUrl };
     }),
+
+  // Message attachment upload
+  messageAttachmentUploader: f({
+    image: { maxFileSize: '4MB', maxFileCount: 4 },
+    pdf: { maxFileSize: '8MB', maxFileCount: 4 },
+  })
+    .middleware(async () => {
+      const session = await auth();
+      if (!session?.user?.id) throw new UploadThingError('Unauthorized');
+      return { userId: session.user.id };
+    })
+    .onUploadComplete(async ({ file }) => {
+      // Just return the URL, the message POST will save it
+      return { ufsUrl: file.ufsUrl, name: file.name, type: file.type };
+    }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

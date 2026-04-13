@@ -2,7 +2,20 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Pusher from 'pusher-js';
-import { Send, Check, CheckCheck, Loader2, X, Forward, Edit2, Trash2 } from 'lucide-react';
+import {
+  Send,
+  Check,
+  CheckCheck,
+  Loader2,
+  X,
+  Forward,
+  Edit2,
+  Trash2,
+  Paperclip,
+  FileText,
+  Image as ImageIcon,
+} from 'lucide-react';
+import { useUploadThing } from '@/lib/uploadthing';
 
 /* ─── Types ──────────────────────────────────────────────────────── */
 type UserData = {
@@ -25,6 +38,7 @@ type Message = {
   editCount?: number;
   forwardedFromId?: string;
   isDeletedForEveryone?: boolean;
+  attachments?: { url: string; name: string; type: string }[];
 };
 type Thread = {
   threadId: string;
@@ -446,6 +460,17 @@ export default function Inbox({
     msg: null,
   });
 
+  const [inputFiles, setInputFiles] = useState<File[]>([]);
+  const { startUpload, isUploading } = useUploadThing('messageAttachmentUploader', {
+    onClientUploadComplete: () => {
+      // success handled in send
+    },
+    onUploadError: (e) => {
+      alert(`Upload failed: ${e.message}`);
+    },
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pusherRef = useRef<Pusher | null>(null);
 
@@ -594,7 +619,7 @@ export default function Inbox({
 
   /* ── Send / Edit ─────────────────────────────────────────────── */
   const handleSendOrEdit = async () => {
-    if (!inputText.trim() || !selectedThread) return;
+    if ((!inputText.trim() && inputFiles.length === 0) || !selectedThread) return;
     setIsSending(true);
 
     if (editingMsg) {
@@ -606,6 +631,32 @@ export default function Inbox({
       setEditingMsg(null);
     } else {
       try {
+        let uploadedAttachments: { url: string; name: string; type: string }[] = [];
+        if (inputFiles.length > 0) {
+          const results = await startUpload(inputFiles);
+          if (results) {
+            uploadedAttachments = results.map(
+              (r: {
+                ufsUrl?: string;
+                url?: string;
+                name?: string;
+                type?: string;
+                serverData?: Record<string, string>;
+              }) => {
+                const sData = r.serverData || {};
+                return {
+                  url: sData.ufsUrl || r.ufsUrl || r.url || '',
+                  name: sData.name || r.name || 'attachment',
+                  type:
+                    sData.type ||
+                    r.type ||
+                    (r.name?.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
+                };
+              }
+            );
+          }
+        }
+
         const res = await fetch('/api/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -613,6 +664,7 @@ export default function Inbox({
             receiverId: selectedThread.otherUser._id,
             content: inputText,
             templateType: template || null,
+            attachments: uploadedAttachments,
           }),
         });
         const data = await res.json();
@@ -628,14 +680,19 @@ export default function Inbox({
                 new Date(a.lastMessage.createdAt).getTime()
             );
           });
+        } else {
+          console.error('API error response', data);
+          alert(`Send failed from API: ${data.error || 'Unknown error'}`);
         }
-      } catch {
-        console.error('Send failed');
+      } catch (e) {
+        console.error('Send failed exception', e);
+        alert(`Send failed: ${e instanceof Error ? e.message : String(e)}`);
       }
     }
 
     setInputText('');
     setTemplate('');
+    setInputFiles([]);
     setIsSending(false);
     scrollToBottom();
   };
@@ -717,7 +774,7 @@ export default function Inbox({
       </div>
     );
 
-  const canSend = inputText.trim().length > 0;
+  const canSend = inputText.trim().length > 0 || inputFiles.length > 0;
 
   /* ── Render ──────────────────────────────────────────────────── */
   return (
@@ -1019,31 +1076,108 @@ export default function Inbox({
                         }}
                       >
                         {/* Bubble */}
-                        <div
-                          style={{
-                            background: isMe ? C.bubbleOut : C.bubbleIn,
-                            color: isMe ? C.white : C.deep,
-                            padding: '12px 16px',
-                            borderRadius: 20,
-                            borderBottomRightRadius: isMe ? 4 : 20,
-                            borderBottomLeftRadius: isMe ? 20 : 4,
-                            fontSize: 14,
-                            lineHeight: 1.55,
-                            whiteSpace: 'pre-wrap',
-                            boxShadow: isMe
-                              ? '0 4px 14px rgba(37,99,235,0.25)'
-                              : '0 2px 8px rgba(0,0,0,0.06)',
-                            border: isMe ? 'none' : `1px solid ${C.border}`,
-                          }}
-                        >
-                          {msg.isDeletedForEveryone ? (
-                            <span style={{ fontStyle: 'italic', opacity: 0.65 }}>
-                              🗑 This message was deleted
-                            </span>
-                          ) : (
-                            <>{msg.content}</>
-                          )}
-                        </div>
+                        {(() => {
+                          const hasText = !!msg.content?.trim();
+                          const isImageOnly =
+                            !hasText &&
+                            msg.attachments &&
+                            msg.attachments.length > 0 &&
+                            msg.attachments.every((a) => a.type.startsWith('image/'));
+
+                          return (
+                            <div
+                              style={{
+                                background: isMe ? C.bubbleOut : C.bubbleIn,
+                                color: isMe ? C.white : C.deep,
+                                padding: isImageOnly ? '4px' : '12px 16px',
+                                borderRadius: 20,
+                                borderBottomRightRadius: isMe ? 4 : 20,
+                                borderBottomLeftRadius: isMe ? 20 : 4,
+                                fontSize: 14,
+                                lineHeight: 1.55,
+                                whiteSpace: 'pre-wrap',
+                                boxShadow: isMe
+                                  ? '0 4px 14px rgba(37,99,235,0.25)'
+                                  : '0 2px 8px rgba(0,0,0,0.06)',
+                                border: isMe ? 'none' : `1px solid ${C.border}`,
+                              }}
+                            >
+                              {msg.isDeletedForEveryone ? (
+                                <span style={{ fontStyle: 'italic', opacity: 0.65 }}>
+                                  🗑 This message was deleted
+                                </span>
+                              ) : (
+                                hasText && <>{msg.content}</>
+                              )}
+
+                              {/* Attachments */}
+                              {msg.attachments &&
+                                msg.attachments.length > 0 &&
+                                !msg.isDeletedForEveryone && (
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      flexWrap: 'wrap',
+                                      gap: 6,
+                                      marginTop: hasText ? 8 : 0,
+                                    }}
+                                  >
+                                    {msg.attachments.map((att, i) =>
+                                      att.type.startsWith('image/') ? (
+                                        <a key={i} href={att.url} target="_blank" rel="noreferrer">
+                                          <img
+                                            src={att.url}
+                                            alt={att.name}
+                                            style={{
+                                              maxWidth: 220,
+                                              maxHeight: 220,
+                                              borderRadius: isImageOnly ? 16 : 12,
+                                              objectFit: 'cover',
+                                              display: 'block',
+                                              border: `1px solid ${
+                                                isMe ? 'rgba(255,255,255,0.2)' : C.border
+                                              }`,
+                                            }}
+                                          />
+                                        </a>
+                                      ) : (
+                                        <a
+                                          key={i}
+                                          href={att.url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 6,
+                                            padding: '8px 12px',
+                                            background: isMe ? 'rgba(255,255,255,0.15)' : C.bg,
+                                            borderRadius: 12,
+                                            color: isMe ? C.white : C.primary,
+                                            textDecoration: 'none',
+                                            fontSize: 13,
+                                            border: `1px solid ${isMe ? 'transparent' : C.border}`,
+                                          }}
+                                        >
+                                          <FileText size={16} />
+                                          <span
+                                            style={{
+                                              maxWidth: 160,
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis',
+                                              whiteSpace: 'nowrap',
+                                            }}
+                                          >
+                                            {att.name}
+                                          </span>
+                                        </a>
+                                      )
+                                    )}
+                                  </div>
+                                )}
+                            </div>
+                          );
+                        })()}
 
                         {/* Hover actions */}
                         {hoveredMsgId === msg._id && !msg.isDeletedForEveryone && (
@@ -1196,6 +1330,52 @@ export default function Inbox({
                   </div>
                 )}
 
+                {/* File Previews */}
+                {!editingMsg && inputFiles.length > 0 && (
+                  <div
+                    style={{ display: 'flex', gap: 10, flexWrap: 'wrap', padding: '0 10px 14px' }}
+                  >
+                    {inputFiles.map((file, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          background: '#EFF6FF',
+                          padding: '6px 12px',
+                          borderRadius: 99,
+                          fontSize: 12,
+                          color: '#1E40AF',
+                          border: `1px solid #BFDBFE`,
+                        }}
+                      >
+                        {file.type.startsWith('image/') ? (
+                          <ImageIcon size={14} />
+                        ) : (
+                          <FileText size={14} />
+                        )}
+                        <span
+                          style={{
+                            maxWidth: 120,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {file.name}
+                        </span>
+                        <X
+                          size={14}
+                          style={{ cursor: 'pointer', color: '#1E40AF', opacity: 0.6 }}
+                          onClick={() => setInputFiles((prev) => prev.filter((_, i) => i !== idx))}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Input row */}
                 <div
                   style={{
@@ -1209,12 +1389,53 @@ export default function Inbox({
                     transition: 'border-color 0.15s',
                   }}
                 >
+                  {/* Paperclip */}
+                  {!editingMsg && (
+                    <>
+                      <button
+                        title="Attach files (max 4, 8MB each)"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isSending || isUploading || inputFiles.length >= 4}
+                        style={{
+                          border: 'none',
+                          background: 'transparent',
+                          cursor:
+                            isSending || isUploading || inputFiles.length >= 4
+                              ? 'not-allowed'
+                              : 'pointer',
+                          color: C.gray,
+                          padding: '0 4px 6px 0',
+                          display: 'flex',
+                          alignItems: 'flex-end',
+                          alignSelf: 'stretch',
+                          opacity: inputFiles.length >= 4 ? 0.3 : 1,
+                        }}
+                      >
+                        <Paperclip size={20} />
+                      </button>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*,application/pdf"
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            const incoming = Array.from(e.target.files);
+                            setInputFiles((prev) => [...prev, ...incoming].slice(0, 4));
+                            if (fileInputRef.current) fileInputRef.current.value = '';
+                          }
+                        }}
+                      />
+                    </>
+                  )}
+
                   {/* Textarea */}
                   <textarea
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder={editingMsg ? 'Edit message…' : 'Type a message…'}
-                    disabled={isSending}
+                    disabled={isSending || isUploading}
                     style={{
                       flex: 1,
                       minHeight: 24,
@@ -1240,7 +1461,7 @@ export default function Inbox({
                   {/* Send button */}
                   <button
                     onClick={handleSendOrEdit}
-                    disabled={isSending || !canSend}
+                    disabled={isSending || isUploading || !canSend}
                     style={{
                       width: 42,
                       height: 42,
@@ -1257,7 +1478,7 @@ export default function Inbox({
                       transition: 'all 0.2s',
                     }}
                   >
-                    {isSending ? (
+                    {isSending || isUploading ? (
                       <Loader2 className="animate-spin" size={18} />
                     ) : (
                       <Send size={17} style={{ marginLeft: 1 }} />
