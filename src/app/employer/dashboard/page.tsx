@@ -116,7 +116,7 @@ export default async function EmployerDashboard() {
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"
       navItems={navItems}
-      user={{ ...data.chromeUser, isPremium: usage.isPremium }}
+      user={{ ...data.chromeUser, isPremium: usage.isPremium, userId: session.user.id }}
     >
       <DashboardPage>
         {/* ── Hero ── */}

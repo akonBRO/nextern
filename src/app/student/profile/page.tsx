@@ -869,12 +869,8 @@ export default function StudentProfilePage() {
       const res = await fetch('/api/users/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          resumeUrl: null,
-          isGraduated: form.isGraduated,
-        }),
+        body: JSON.stringify({ resumeUrl: null }),
       });
-
       if (res.ok) {
         setUser((prev) => (prev ? { ...prev, resumeUrl: undefined } : prev));
         setShowDeleteConfirm(false);
@@ -882,37 +878,6 @@ export default function StudentProfilePage() {
     } catch {
       setResumeError('Failed to delete resume. Please try again.');
       setShowDeleteConfirm(false);
-    }
-  }
-
-  async function handleGraduationToggle(checked: boolean) {
-    const previous = form.isGraduated;
-    set('isGraduated', checked);
-    setGraduationSaving(true);
-    setError('');
-    try {
-      const res = await fetch('/api/users/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isGraduated: checked }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        set('isGraduated', previous);
-        setError(data.error ?? 'Failed to update graduation status');
-        return;
-      }
-
-      const nextValue = data.user?.isGraduated ?? checked;
-      set('isGraduated', nextValue);
-      setUser((prev) => (prev ? { ...prev, isGraduated: nextValue } : prev));
-      setPreviewUser((prev) => (prev ? { ...prev, isGraduated: nextValue } : prev));
-    } catch {
-      set('isGraduated', previous);
-      setError('Failed to update graduation status. Please try again.');
-    } finally {
-      setGraduationSaving(false);
     }
   }
 

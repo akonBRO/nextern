@@ -10,6 +10,7 @@ export type NotificationType =
   | 'advisor_note'
   | 'assessment_assigned'
   | 'interview_scheduled'
+  | 'application_received'
   | 'mentorship_request'
   | 'mentorship_accepted'
   | 'review_received'

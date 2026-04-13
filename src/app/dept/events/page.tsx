@@ -163,6 +163,7 @@ export default async function DeptEventsPage() {
           'Department workspace',
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
+        userId: session.user.id,
       }}
     >
       <DashboardPage>

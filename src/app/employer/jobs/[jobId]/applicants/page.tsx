@@ -195,6 +195,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
         email: employer?.email ?? '',
         image: employer?.image,
         subtitle: employer?.companyName ?? 'Employer workspace',
+        userId: session.user.id,
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
       }}

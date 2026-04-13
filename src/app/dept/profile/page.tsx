@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AlertCircle, CheckCircle2, GraduationCap, User, Save, Linkedin } from 'lucide-react';
+import { AlertCircle, Bell, CheckCircle2, GraduationCap, User, Save, Linkedin } from 'lucide-react';
 import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
 
 const C = {
@@ -136,6 +136,7 @@ export default function DeptProfilePage() {
     designation: '',
     advisoryDepartment: '',
     linkedinUrl: '',
+    notificationPreferences: {} as Record<string, boolean>,
   });
 
   useEffect(() => {
@@ -154,13 +155,14 @@ export default function DeptProfilePage() {
           designation: u.designation ?? '',
           advisoryDepartment: u.advisoryDepartment ?? '',
           linkedinUrl: u.linkedinUrl ?? '',
+          notificationPreferences: u.notificationPreferences ?? {},
         });
       })
       .catch(() => setError('Failed to load profile'))
       .finally(() => setFetching(false));
   }, []);
 
-  function set(field: string, value: string) {
+  function set(field: string, value: unknown) {
     setForm((p) => ({ ...p, [field]: value }));
   }
 
@@ -182,6 +184,7 @@ export default function DeptProfilePage() {
           designation: form.designation || undefined,
           advisoryDepartment: form.advisoryDepartment || undefined,
           linkedinUrl: form.linkedinUrl || undefined,
+          notificationPreferences: form.notificationPreferences,
         }),
       });
       const data = await res.json();
@@ -504,6 +507,101 @@ export default function DeptProfilePage() {
                 />
               </div>
             </Field>
+          </div>
+        </div>
+
+        {/* Notification Preferences */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Bell size={18} />} label="Notification Preferences" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
+            Control which department notifications you receive. All options are enabled by default.
+          </div>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {[
+              {
+                key: 'event_registration',
+                label: 'Event registrations',
+                desc: 'When a student registers for your event.',
+              },
+              {
+                key: 'department_report',
+                label: 'Department reports',
+                desc: 'When a new department analytics report is ready.',
+              },
+              {
+                key: 'role_updates',
+                label: 'Role updates',
+                desc: 'When there are updates to your department head permissions or access.',
+              },
+              {
+                key: 'system_announcements',
+                label: 'Platform announcements',
+                desc: 'Important product updates and system messages.',
+              },
+            ].map((item) => {
+              const isOn = form.notificationPreferences[item.key] !== false;
+              return (
+                <div
+                  key={item.key}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    background: '#FAFBFC',
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 12,
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{item.label}</div>
+                    <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      set('notificationPreferences', {
+                        ...form.notificationPreferences,
+                        [item.key]: !isOn,
+                      })
+                    }
+                    style={{
+                      width: 44,
+                      height: 24,
+                      borderRadius: 999,
+                      border: 'none',
+                      background: isOn ? C.tealDark : C.border,
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background 0.2s',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: '50%',
+                        background: C.white,
+                        position: 'absolute',
+                        top: 3,
+                        left: isOn ? 23 : 3,
+                        transition: 'left 0.2s',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                      }}
+                    />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
 

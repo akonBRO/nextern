@@ -22,6 +22,7 @@ import {
   TrendingUp,
   AlertCircle,
   Zap,
+  Users,
 } from 'lucide-react';
 import Pusher from 'pusher-js';
 import { userChannel, PUSHER_EVENTS } from '@/lib/pusher';
@@ -44,6 +45,7 @@ function typeConfig(type: string): { icon: React.ReactNode; color: string; bg: s
     status_update: { icon: <Briefcase size={14} />, color: '#2563EB', bg: '#EFF6FF' },
     deadline_reminder: { icon: <CalendarDays size={14} />, color: '#D97706', bg: '#FFFBEB' },
     badge_earned: { icon: <Award size={14} />, color: '#7C3AED', bg: '#EDE9FE' },
+    application_received: { icon: <Users size={14} />, color: '#0D9488', bg: '#ECFDF5' },
     job_match: { icon: <Zap size={14} />, color: '#0D9488', bg: '#F0FDFA' },
     advisor_note: { icon: <Star size={14} />, color: '#0EA5E9', bg: '#F0F9FF' },
     interview_scheduled: { icon: <CalendarDays size={14} />, color: '#059669', bg: '#ECFDF5' },

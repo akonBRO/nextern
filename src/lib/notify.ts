@@ -14,11 +14,23 @@ export type CreateNotificationInput = {
   meta?: Record<string, unknown>;
   expiresAt?: Date;
   sendEmail?: boolean;
+  preferenceKey?: string;
 };
 
 export async function createNotification(input: CreateNotificationInput) {
   try {
     await connectDB();
+
+    if (input.preferenceKey) {
+      const user = await User.findById(input.userId).select('notificationPreferences').lean();
+      const prefs = normalizeNotificationPreferences(
+        (user as { notificationPreferences?: Record<string, boolean> } | null)
+          ?.notificationPreferences
+      );
+      if (prefs[input.preferenceKey] === false) {
+        return null;
+      }
+    }
 
     const notification = await Notification.create({
       userId: input.userId,
@@ -140,6 +152,30 @@ export async function notifyApplicationStatusChanged(
 }
 
 // ── Job applied ────────────────────────────────────────────────────────────
+const DEFAULT_NOTIFICATION_PREFERENCES: Record<string, boolean> = {
+  application_under_review: true,
+  application_shortlisted: true,
+  application_assessment_sent: true,
+  application_interview: true,
+  application_hired: true,
+  application_rejected: true,
+  application_withdrawn: true,
+  deadline_reminders: true,
+  job_matches: true,
+  badge_earned: true,
+  advisor_notes: true,
+  event_registrations: true,
+  waitlist_updates: true,
+  student_messages: true,
+  event_reminders: true,
+};
+
+function normalizeNotificationPreferences(
+  prefs?: Record<string, boolean> | null
+): Record<string, boolean> {
+  return { ...DEFAULT_NOTIFICATION_PREFERENCES, ...(prefs ?? {}) };
+}
+
 export async function notifyJobApplied(
   studentId: string,
   jobTitle: string,
@@ -153,6 +189,43 @@ export async function notifyJobApplied(
     body: `Your application for "${jobTitle}" at ${companyName} has been submitted successfully. We'll notify you of any updates.`,
     link: '/student/applications',
     meta: { applicationId, jobTitle, companyName, icon: 'CircleCheck' },
+  });
+}
+
+export async function notifyEmployerApplicationReceived(
+  employerId: string,
+  studentName: string,
+  jobTitle: string,
+  companyName: string,
+  jobId: string,
+  applicationId: string,
+  options?: { isEventRegistration?: boolean }
+) {
+  let employerRole: string | undefined;
+  const employerPrefs: Record<string, boolean> = DEFAULT_NOTIFICATION_PREFERENCES;
+
+  if (options?.isEventRegistration) {
+    const employer = await User.findById(employerId).select('role').lean();
+    employerRole = employer?.role as string | undefined;
+  }
+
+  const isAdvisorEvent =
+    options?.isEventRegistration && (employerRole === 'advisor' || employerRole === 'dept_head');
+
+  await createNotification({
+    userId: employerId,
+    type: 'application_received',
+    title: isAdvisorEvent
+      ? `New registration from ${studentName}`
+      : `New application from ${studentName}`,
+    body: isAdvisorEvent
+      ? `${studentName} registered for "${jobTitle}". Review the registrant from your event dashboard.`
+      : `${studentName} has applied for "${jobTitle}" at ${companyName}. Review the applicant in your hiring pipeline.`,
+    link: isAdvisorEvent
+      ? `/advisor/events/${jobId}/applicants`
+      : `/employer/jobs/${jobId}/applicants`,
+    meta: { jobId, applicationId, studentName, companyName, icon: 'Users' },
+    preferenceKey: options?.isEventRegistration ? 'event_registrations' : undefined,
   });
 }
 

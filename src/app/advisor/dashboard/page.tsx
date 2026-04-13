@@ -119,7 +119,7 @@ export default async function AdvisorDashboard() {
       roleLabel="Advisor dashboard"
       homeHref="/advisor/dashboard"
       navItems={navItems}
-      user={data.chromeUser}
+      user={{ ...data.chromeUser, userId: session.user.id }}
     >
       <DashboardPage>
         {/* ── Hero ── */}

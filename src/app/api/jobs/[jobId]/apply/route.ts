@@ -9,6 +9,7 @@ import { Application } from '@/models/Application';
 import { User } from '@/models/User';
 import { ApplyJobSchema } from '@/lib/validations';
 import { onJobApplied } from '@/lib/events';
+import { notifyEmployerApplicationReceived } from '@/lib/notify';
 import { analyzeSkillGap } from '@/lib/gemini';
 import { checkFeatureAccess } from '@/lib/premium';
 import { FeatureUsage } from '@/models/FeatureUsage';
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     // USER SNAPSHOT (BOTH VERSIONS COMBINED)
     // ─────────────────────────────────────────────────────────────
     const student = await User.findById(session.user.id)
-      .select('resumeUrl generatedResumeUrl skills cgpa completedCourses')
+      .select('name resumeUrl generatedResumeUrl skills cgpa completedCourses')
       .lean();
 
     const isEvent = job.type === 'webinar' || job.type === 'workshop';
@@ -135,6 +136,16 @@ export async function POST(req: NextRequest, { params }: Params) {
     ]);
 
     await onJobApplied(session.user.id, jobId).catch(() => {});
+
+    await notifyEmployerApplicationReceived(
+      job.employerId.toString(),
+      student?.name ?? 'A student',
+      job.title,
+      job.companyName,
+      jobId,
+      application._id.toString(),
+      { isEventRegistration: isEvent }
+    ).catch(() => {});
 
     // ─────────────────────────────────────────────────────────────
     // SKILL GAP ANALYSIS (FROM FIRST VERSION - OPTIONAL FEATURE)

@@ -37,6 +37,10 @@ interface INotificationPreferences {
   job_matches: boolean;
   badge_earned: boolean;
   advisor_notes: boolean;
+  event_registrations: boolean;
+  waitlist_updates: boolean;
+  student_messages: boolean;
+  event_reminders: boolean;
 }
 
 // ── Main interface ───────────────────────────────────────────
@@ -174,6 +178,10 @@ const UserSchema = new Schema<IUser>(
       job_matches: { type: Boolean, default: true },
       badge_earned: { type: Boolean, default: true },
       advisor_notes: { type: Boolean, default: true },
+      event_registrations: { type: Boolean, default: true },
+      waitlist_updates: { type: Boolean, default: true },
+      student_messages: { type: Boolean, default: true },
+      event_reminders: { type: Boolean, default: true },
     },
 
     // ── Employer ─────────────────────────────────────────

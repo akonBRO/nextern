@@ -103,6 +103,7 @@ export default async function EmployerBadgesPage() {
         email: session.user.email ?? '',
         image: session.user.image ?? undefined,
         subtitle: session.user.email ?? '',
+        userId: session.user.id,
         unreadNotifications: 0,
         unreadMessages: 0,
       }}

@@ -3,17 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import {
-  AlertCircle,
-  CheckCircle2,
-  GraduationCap,
-  User,
-  Globe,
-  Phone,
-  Save,
-  Linkedin,
-  MapPin,
-} from 'lucide-react';
+import { AlertCircle, Bell, CheckCircle2, GraduationCap, User, Save, Linkedin } from 'lucide-react';
 import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
 
 const C = {
@@ -21,7 +11,6 @@ const C = {
   indigo: '#1E293B',
   bg: '#F1F5F9',
   gray: '#64748B',
-  success: '#10B981',
   white: '#fff',
   dark: '#0F172A',
   border: '#E2E8F0',
@@ -64,6 +53,7 @@ const BD_UNIS = [
   'Dhaka University (DU)',
   'IUT',
 ];
+
 const BD_DEPTS = [
   'CSE',
   'EEE',
@@ -141,6 +131,7 @@ export default function AdvisorProfilePage() {
     designation: '',
     advisoryDepartment: '',
     linkedinUrl: '',
+    notificationPreferences: {} as Record<string, boolean>,
   });
 
   useEffect(() => {
@@ -159,13 +150,14 @@ export default function AdvisorProfilePage() {
           designation: u.designation ?? '',
           advisoryDepartment: u.advisoryDepartment ?? '',
           linkedinUrl: u.linkedinUrl ?? '',
+          notificationPreferences: u.notificationPreferences ?? {},
         });
       })
       .catch(() => setError('Failed to load'))
       .finally(() => setFetching(false));
   }, []);
 
-  function set(field: string, value: string) {
+  function set(field: string, value: unknown) {
     setForm((p) => ({ ...p, [field]: value }));
   }
 
@@ -187,6 +179,7 @@ export default function AdvisorProfilePage() {
           designation: form.designation || undefined,
           advisoryDepartment: form.advisoryDepartment || undefined,
           linkedinUrl: form.linkedinUrl || undefined,
+          notificationPreferences: form.notificationPreferences,
         }),
       });
       const data = await res.json();
@@ -204,7 +197,7 @@ export default function AdvisorProfilePage() {
     }
   }
 
-  if (fetching)
+  if (fetching) {
     return (
       <div
         style={{
@@ -220,12 +213,14 @@ export default function AdvisorProfilePage() {
         Loading…
       </div>
     );
+  }
 
   const role = user?.role as string;
   const isDeptHead = role === 'dept_head';
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
+      {/* Header */}
       <div
         style={{
           background: `linear-gradient(145deg, ${C.dark}, ${C.indigo})`,
@@ -299,6 +294,7 @@ export default function AdvisorProfilePage() {
         </div>
       </div>
 
+      {/* Body */}
       <div
         style={{
           maxWidth: 820,
@@ -346,7 +342,7 @@ export default function AdvisorProfilePage() {
           </div>
         )}
 
-        {/* Personal */}
+        {/* Personal Information */}
         <div
           style={{
             background: C.white,
@@ -406,7 +402,7 @@ export default function AdvisorProfilePage() {
           </div>
         </div>
 
-        {/* Academic / Institution */}
+        {/* Academic Position */}
         <div
           style={{
             background: C.white,
@@ -493,7 +489,97 @@ export default function AdvisorProfilePage() {
           </div>
         </div>
 
-        {/* Save */}
+        {/* Notification Preferences */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Bell size={18} />} label="Notification Preferences" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
+            Control which advisor notifications you receive. All options are enabled by default.
+          </div>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {[
+              {
+                key: 'event_registration',
+                label: 'Event registrations',
+                desc: 'When a student registers for your event.',
+              },
+              {
+                key: 'deadline_reminders',
+                label: 'Deadline reminders',
+                desc: 'When important advising or event deadlines approach.',
+              },
+              {
+                key: 'department_report',
+                label: 'Department reports',
+                desc: 'When cohort analytics or advisor reports are ready.',
+              },
+            ].map((item) => {
+              const isOn = form.notificationPreferences[item.key] !== false;
+              return (
+                <div
+                  key={item.key}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    background: '#FAFBFC',
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 12,
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{item.label}</div>
+                    <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      set('notificationPreferences', {
+                        ...form.notificationPreferences,
+                        [item.key]: !isOn,
+                      })
+                    }
+                    style={{
+                      width: 44,
+                      height: 24,
+                      borderRadius: 999,
+                      border: 'none',
+                      background: isOn ? C.blue : C.border,
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background 0.2s',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: '50%',
+                        background: C.white,
+                        position: 'absolute',
+                        top: 3,
+                        left: isOn ? 23 : 3,
+                        transition: 'left 0.2s',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                      }}
+                    />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Save button */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}>
           <button
             onClick={handleSave}

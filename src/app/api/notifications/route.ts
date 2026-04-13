@@ -19,6 +19,7 @@ const ALLOWED_TYPES = new Set([
   'badge_earned',
   'score_update',
   'advisor_note',
+  'application_received',
   'assessment_assigned',
   'interview_scheduled',
   'mentorship_request',
@@ -39,14 +40,22 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
     const limit = Math.min(50, parseInt(searchParams.get('limit') ?? '20'));
-    const unread = searchParams.get('unread') === 'true';
+    const unreadOnly = searchParams.get('unread') === 'true';
     const type = searchParams.get('type');
 
     await connectDB();
 
+    // ── Build query ──────────────────────────────────────────────────────
     const query: Record<string, unknown> = { userId: session.user.id };
-    if (unread) query.isRead = false;
-    if (type && ALLOWED_TYPES.has(type)) query.type = type;
+
+    if (unreadOnly) {
+      query.isRead = false;
+    }
+
+    // Only apply type filter if it's a known, safe type
+    if (type && type !== 'all' && ALLOWED_TYPES.has(type)) {
+      query.type = type;
+    }
 
     const [notifications, total, unreadCount] = await Promise.all([
       Notification.find(query)
@@ -55,6 +64,7 @@ export async function GET(req: NextRequest) {
         .limit(limit)
         .lean(),
       Notification.countDocuments(query),
+      // Always count ALL unread regardless of current filter
       Notification.countDocuments({ userId: session.user.id, isRead: false }),
     ]);
 
@@ -74,7 +84,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ── PATCH ────────────────────────────────────────────────────────────────
+// ── PATCH ─────────────────────────────────────────────────────────────────
 export async function PATCH(req: NextRequest) {
   try {
     const session = await auth();
@@ -94,23 +104,23 @@ export async function PATCH(req: NextRequest) {
         { $set: { isRead: true } }
       );
     } else {
-      // Mark ALL as read
+      // Mark ALL notifications as read
       await Notification.updateMany(
         { userId: session.user.id, isRead: false },
         { $set: { isRead: true } }
       );
     }
 
-    // Count remaining unread
+    // Count remaining unread after update
     const unreadCount = await Notification.countDocuments({
       userId: session.user.id,
       isRead: false,
     });
 
-    // Push updated unread count via Pusher
+    // Push updated unread count to client via Pusher
     await pusherServer
       .trigger(userChannel(session.user.id), PUSHER_EVENTS.NOTIFICATION_READ, { unreadCount })
-      .catch(() => {}); // non-critical
+      .catch(() => {}); // non-critical — never crash the response
 
     return NextResponse.json({ message: 'Updated', unreadCount });
   } catch (err) {
@@ -119,7 +129,7 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-// ── DELETE ─────────────────────────────────────────────────────────────────
+// ── DELETE ────────────────────────────────────────────────────────────────
 export async function DELETE(req: NextRequest) {
   try {
     const session = await auth();
@@ -133,19 +143,23 @@ export async function DELETE(req: NextRequest) {
     await connectDB();
 
     if (notifId) {
+      // Delete single notification
       await Notification.deleteOne({ _id: notifId, userId: session.user.id });
     } else {
+      // Delete ALL notifications for this user
       await Notification.deleteMany({ userId: session.user.id });
     }
 
+    // Count remaining unread after delete
     const unreadCount = await Notification.countDocuments({
       userId: session.user.id,
       isRead: false,
     });
 
+    // Push updated count to client
     await pusherServer
       .trigger(userChannel(session.user.id), PUSHER_EVENTS.NOTIFICATION_READ, { unreadCount })
-      .catch(() => {});
+      .catch(() => {}); // non-critical
 
     return NextResponse.json({ message: 'Deleted', unreadCount });
   } catch (err) {

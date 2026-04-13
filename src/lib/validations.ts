@@ -112,6 +112,7 @@ export const UpdateStudentProfileSchema = z.object({
       })
     )
     .optional(),
+  notificationPreferences: z.record(z.string(), z.boolean()).optional(),
 });
 
 export const UpdateEmployerProfileSchema = z.object({
@@ -124,13 +125,33 @@ export const UpdateEmployerProfileSchema = z.object({
 
   // ONLY company logo for employers
   companyLogo: z.string().url().optional(),
-
   companyName: z.string().min(2).max(120).optional(),
   industry: z.string().max(80).optional(),
   companySize: z.enum(['1-10', '11-50', '51-200', '201-500', '500+']).optional(),
   companyWebsite: z.string().url().optional().or(z.literal('')),
   companyDescription: z.string().max(1000).optional(),
   headquartersCity: z.string().max(60).optional(),
+  notificationPreferences: z.record(z.string(), z.boolean()).optional(),
+});
+
+export const UpdateAdvisorProfileSchema = z.object({
+  name: z.string().min(2).max(60).optional(),
+  phone: z
+    .string()
+    .regex(/^\+?8?8?0?1[3-9]\d{8}$/)
+    .optional()
+    .or(z.literal(''))
+    .optional()
+    .or(z.literal('')),
+  bio: z.string().max(500).optional(),
+  image: z.string().optional(),
+  institutionName: z.string().max(120).optional(),
+  advisorStaffId: z.string().max(30).optional(),
+  designation: z.string().max(80).optional(),
+  advisoryDepartment: z.string().max(60).optional(),
+  city: z.string().max(60).optional(),
+  linkedinUrl: z.string().url().optional().or(z.literal('')),
+  notificationPreferences: z.record(z.string(), z.boolean()).optional(),
 });
 
 export const ChangePasswordSchema = z
