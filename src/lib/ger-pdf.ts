@@ -68,7 +68,7 @@ export type RawGERInput = {
   hiredCount: number;
   mentorSessionCount: number;
   freelanceOrderCount: number;
-  badges: { badgeName: string; badgeSlug: string }[];
+  badges: { badgeName: string; badgeSlug: string; marksReward: number }[];
   employerEndorsementCount: number;
   avgEmployerRating: number;
   cgpaScore: number;
@@ -776,10 +776,10 @@ function buildCategories(r: RawGERInput): GERCategory[] {
 
   // 6. Peer Recognition — Badges (13%)
   // Raw score = proportion of badges earned out of total available (0–100 scale)
-  // 6 total student badges → each badge adds ~16.7% of raw score
-  const TOTAL_STUDENT_BADGES = 6;
-  const badgeScore = Math.min(100, Math.round((r.badges.length / TOTAL_STUDENT_BADGES) * 100));
-  const badgeItems = r.badges.length ? r.badges.map((b) => b.badgeName) : ['No badges earned yet'];
+  const TOTAL_STUDENT_BADGE_POINTS = r.badges.reduce((sum, badge) => sum + badge.marksReward, 0);
+  const badgeScore = Math.min(100, Math.round(TOTAL_STUDENT_BADGE_POINTS));
+  const badgeItems =
+    r.badges.length > 0 ? r.badges.map((b) => b.badgeName) : ['No badges earned yet'];
 
   // 7. Employer Endorsements (10%)
   const endorse = Math.min(
