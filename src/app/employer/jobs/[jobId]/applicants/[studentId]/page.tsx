@@ -43,6 +43,7 @@ import {
   Crown,
   Lock,
   Sparkles,
+  MessageCircle,
 } from 'lucide-react';
 import ApplicantActions from '../ApplicantActions';
 import Image from 'next/image';
@@ -704,6 +705,26 @@ export default async function EmployerApplicantDetailPage({
                     currentStatus={application.status}
                   />
                 </div>
+                <Link
+                  href={`/employer/messages?user=${studentId}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 7,
+                    background: 'linear-gradient(135deg, #7C3AED, #6D28D9)',
+                    color: '#fff',
+                    padding: '10px 18px',
+                    borderRadius: 12,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    border: '1px solid rgba(124,58,237,0.3)',
+                    boxShadow: '0 4px 14px rgba(124,58,237,0.25)',
+                  }}
+                >
+                  <MessageCircle size={14} /> Message Student
+                </Link>
               </div>
             </div>
           </div>

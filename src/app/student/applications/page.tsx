@@ -35,7 +35,10 @@ async function getApplicationsData(userId: string) {
   const [student, allApplications, unreadNotifs, unreadMsgs] = await Promise.all([
     User.findById(oid).select('name email image university department').lean(),
     Application.find({ studentId: oid })
-      .populate('jobId', 'title type companyName city locationType applicationDeadline isActive')
+      .populate(
+        'jobId',
+        'title type companyName city locationType applicationDeadline isActive employerId'
+      )
       .sort({ appliedAt: -1 })
       .lean(),
     Notification.countDocuments({ userId: oid, isRead: false }),
@@ -69,6 +72,7 @@ async function getApplicationsData(userId: string) {
       city?: string;
       locationType: string;
       applicationDeadline?: Date;
+      employerId?: { _id: string } | string;
     } | null;
     return {
       _id: app._id.toString(),
@@ -91,6 +95,10 @@ async function getApplicationsData(userId: string) {
             city: job.city ?? null,
             locationType: job.locationType,
             applicationDeadline: job.applicationDeadline?.toISOString() ?? null,
+            employerId:
+              typeof job.employerId === 'object' && job.employerId
+                ? (job.employerId as { _id: string })._id?.toString()
+                : (job.employerId?.toString() ?? null),
           }
         : null,
     };
