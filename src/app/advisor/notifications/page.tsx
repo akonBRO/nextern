@@ -71,7 +71,7 @@ export default async function AdvisorNotificationsPage() {
       roleLabel="Advisor dashboard"
       homeHref="/advisor/dashboard"
       navItems={navItems}
-      user={{ ...data.chromeUser, userId: session.user.id }}
+      user={data.chromeUser}
     >
       <NotificationsPageClient
         dashboardHref="/advisor/dashboard"

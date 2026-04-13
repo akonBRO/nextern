@@ -45,7 +45,7 @@ export default async function DepartmentNotificationsPage() {
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
       navItems={navItems}
-      user={{ ...data.chromeUser, userId: session.user.id }}
+      user={data.chromeUser}
     >
       <NotificationsPageClient
         dashboardHref="/dept/dashboard"

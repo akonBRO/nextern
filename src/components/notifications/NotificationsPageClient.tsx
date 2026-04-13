@@ -176,6 +176,7 @@ export default function NotificationsPageClient({
   const [notifications, setNotifs] = useState<Notif[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [markingAll, setMarkingAll] = useState(false);
   const [filter, setFilter] = useState('all');
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
@@ -202,6 +203,14 @@ export default function NotificationsPageClient({
     await fetch(`/api/notifications?id=${id}`, { method: 'PATCH' });
     setNotifs((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)));
     setUnread((prev) => Math.max(0, prev - 1));
+  }
+
+  async function markAllRead() {
+    setMarkingAll(true);
+    await fetch('/api/notifications', { method: 'PATCH' });
+    setNotifs((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    setUnread(0);
+    setMarkingAll(false);
   }
 
   return (
@@ -294,6 +303,26 @@ export default function NotificationsPageClient({
                   </span>
                 </div>
               )}
+              <button
+                onClick={markAllRead}
+                disabled={markingAll || unread === 0}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  padding: '10px 18px',
+                  borderRadius: 12,
+                  background: unread === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.1)',
+                  color: unread === 0 ? C.gray : '#E2E8F0',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: unread === 0 ? 'not-allowed' : 'pointer',
+                }}
+              >
+                <CheckCheck size={14} />
+                {markingAll ? 'Marking…' : 'Mark all read'}
+              </button>
             </div>
           </div>
         </div>
