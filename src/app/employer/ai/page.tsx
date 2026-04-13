@@ -119,6 +119,7 @@ export default async function EmployerAiPage() {
         email: user?.email ?? '',
         image: user?.image,
         subtitle: user?.companyName ?? 'Employer workspace',
+        userId: session.user.id,
         isPremium: usage.isPremium,
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,

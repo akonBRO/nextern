@@ -151,6 +151,7 @@ export default async function DeptBadgesPage() {
         subtitle: session.user.email ?? '',
         unreadNotifications: 0,
         unreadMessages: 0,
+        userId: session.user.id,
       }}
     >
       <DashboardPage>

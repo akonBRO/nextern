@@ -359,7 +359,7 @@ export default function DashboardShell({
               ) : (
                 // Fallback static chip if userId not provided
                 <StaticChip
-                  label="Alerts"
+                  label="Notifications"
                   value={user.unreadNotifications}
                   icon={<span style={{ fontSize: 14 }}>🔔</span>}
                 />

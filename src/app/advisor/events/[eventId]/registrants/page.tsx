@@ -120,6 +120,7 @@ export default async function EventRegistrantsPage({
           'Advisor workspace',
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
+        userId: session.user.id,
       }}
     >
       <DashboardPage>

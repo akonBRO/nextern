@@ -10,30 +10,11 @@ import { User } from '@/models/User';
 import {
   UpdateStudentProfileSchema,
   UpdateEmployerProfileSchema,
+  UpdateAdvisorProfileSchema,
   ChangePasswordSchema,
 } from '@/lib/validations';
 import { z } from 'zod';
 import { onProfileVerified } from '@/lib/events';
-
-// ── Advisor / Dept Head profile schema ────────────────────────────────────
-const UpdateAdvisorProfileSchema = z.object({
-  name: z.string().min(2).max(60).optional(),
-  phone: z
-    .string()
-    .regex(/^\+?8?8?0?1[3-9]\d{8}$/)
-    .optional()
-    .or(z.literal(''))
-    .optional()
-    .or(z.literal('')),
-  bio: z.string().max(500).optional(),
-  image: z.string().optional(),
-  institutionName: z.string().max(120).optional(),
-  advisorStaffId: z.string().max(30).optional(),
-  designation: z.string().max(80).optional(),
-  advisoryDepartment: z.string().max(60).optional(),
-  city: z.string().max(60).optional(),
-  linkedinUrl: z.string().url().optional().or(z.literal('')),
-});
 
 // ── GET /api/users/profile ────────────────────────────────────────────────
 export async function GET() {

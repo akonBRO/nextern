@@ -39,13 +39,12 @@ const ROLE_ROUTES: { prefix: string; roles: UserRole[] }[] = [
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Skip middleware for static assets and NextAuth internals
+  // Skip middleware for static assets and API routes
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
     pathname.includes('.') ||
-    pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/api/uploadthing')
+    pathname.startsWith('/api/')
   ) {
     return NextResponse.next();
   }

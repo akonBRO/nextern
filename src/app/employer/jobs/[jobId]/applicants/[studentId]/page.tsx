@@ -448,6 +448,7 @@ export default async function EmployerApplicantDetailPage({
         email: employer?.email ?? '',
         image: employer?.image,
         subtitle: employer?.companyName ?? 'Employer workspace',
+        userId: session.user.id,
         isPremium: premiumStatus.isPremium,
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,

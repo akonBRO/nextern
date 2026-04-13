@@ -143,7 +143,7 @@ export default async function DeptDashboard() {
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
       navItems={navItems}
-      user={data.chromeUser}
+      user={{ ...data.chromeUser, userId: session.user.id }}
     >
       <DashboardPage>
         {/* ── Hero ── */}

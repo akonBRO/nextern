@@ -256,6 +256,7 @@ export default async function StudentApplicationPage({
           'Advisor workspace',
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
+        userId: session.user.id,
       }}
     >
       <DashboardPage>

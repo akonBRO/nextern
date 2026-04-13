@@ -15,10 +15,11 @@ export async function onJobApplied(userId: string, jobId: string) {
   // 1. Badge evaluation
   await evaluateBadges(userId, 'onJobApplied').catch(console.error);
 
-  // 2. Notify student that their application was submitted
+  // 2. Notify student + notify event owner (employer/dept head)
   try {
     await connectDB();
-    const job = await Job.findById(jobId).select('title companyName').lean();
+    const job = await Job.findById(jobId).select('title companyName employerId type').lean();
+
     if (job) {
       const app = await Application.findOne({
         studentId: new mongoose.Types.ObjectId(userId),
@@ -27,7 +28,27 @@ export async function onJobApplied(userId: string, jobId: string) {
         .select('_id')
         .lean();
 
-      await notifyJobApplied(userId, job.title, job.companyName, app?._id?.toString() ?? jobId);
+      const appId = app?._id?.toString() ?? jobId;
+      const isEvent = job.type === 'webinar' || job.type === 'workshop';
+
+      // Notify student their application/registration was submitted
+      await notifyJobApplied(userId, job.title, job.companyName, appId);
+
+      // Notify the job owner (employer or dept head) that someone applied/registered
+      const { User } = await import('@/models/User');
+      const student = await User.findById(userId).select('name').lean();
+      if (student && job.employerId) {
+        const { notifyEmployerApplicationReceived } = await import('@/lib/notify');
+        await notifyEmployerApplicationReceived(
+          job.employerId.toString(),
+          student.name ?? 'A student',
+          job.title,
+          job.companyName,
+          jobId,
+          appId,
+          { isEventRegistration: isEvent }
+        );
+      }
     }
   } catch (err) {
     console.error('[onJobApplied notify error]', err);

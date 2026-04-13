@@ -140,6 +140,7 @@ export default async function EmployerJobsPage() {
         email: employer?.email ?? '',
         image: employer?.image,
         subtitle: employer?.companyName ?? 'Employer workspace',
+        userId: session.user.id,
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
       }}
