@@ -14,6 +14,7 @@ import {
   Paperclip,
   FileText,
   Image as ImageIcon,
+  CircleAlert,
 } from 'lucide-react';
 import { useUploadThing } from '@/lib/uploadthing';
 
@@ -99,6 +100,104 @@ function Avatar({ user, size = 40 }: { user: UserData; size?: number }) {
       ) : (
         initials(user.name)
       )}
+    </div>
+  );
+}
+
+function AlertModal({ message, onClose }: { message: string; onClose: () => void }) {
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(15,23,42,0.5)',
+        backdropFilter: 'blur(6px)',
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: C.white,
+          borderRadius: 24,
+          padding: '32px 36px',
+          maxWidth: 400,
+          width: '90vw',
+          boxShadow: '0 25px 60px -12px rgba(0,0,0,0.35)',
+          position: 'relative',
+          textAlign: 'center',
+        }}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: 14,
+            right: 14,
+            background: C.bg,
+            border: 'none',
+            borderRadius: 8,
+            width: 30,
+            height: 30,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: C.gray,
+          }}
+        >
+          <X size={16} />
+        </button>
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 16,
+            background: '#FFF1F2',
+            border: '1px solid #FECDD3',
+            color: '#BE123C',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px',
+          }}
+        >
+          <CircleAlert size={28} />
+        </div>
+        <h3
+          style={{
+            fontSize: 18,
+            fontWeight: 800,
+            color: C.deep,
+            marginBottom: 8,
+          }}
+        >
+          Action Failed
+        </h3>
+        <p style={{ fontSize: 14, color: C.gray, lineHeight: 1.6, marginBottom: 24 }}>{message}</p>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            background: C.deep,
+            color: C.white,
+            border: 'none',
+            borderRadius: 12,
+            padding: '10px 24px',
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: 'pointer',
+            width: '100%',
+          }}
+        >
+          Dismiss
+        </button>
+      </div>
     </div>
   );
 }
@@ -459,6 +558,7 @@ export default function Inbox({
     open: false,
     msg: null,
   });
+  const [globalAlert, setGlobalAlert] = useState<string | null>(null);
 
   const [inputFiles, setInputFiles] = useState<File[]>([]);
   const { startUpload, isUploading } = useUploadThing('messageAttachmentUploader', {
@@ -466,7 +566,7 @@ export default function Inbox({
       // success handled in send
     },
     onUploadError: (e) => {
-      alert(`Upload failed: ${e.message}`);
+      setGlobalAlert(`Upload failed: ${e.message}`);
     },
   });
 
@@ -682,11 +782,11 @@ export default function Inbox({
           });
         } else {
           console.error('API error response', data);
-          alert(`Send failed from API: ${data.error || 'Unknown error'}`);
+          setGlobalAlert(`Send failed from API: ${data.error || 'Unknown error'}`);
         }
       } catch (e) {
         console.error('Send failed exception', e);
-        alert(`Send failed: ${e instanceof Error ? e.message : String(e)}`);
+        setGlobalAlert(`Send failed: ${e instanceof Error ? e.message : String(e)}`);
       }
     }
 
@@ -727,7 +827,7 @@ export default function Inbox({
       );
     } else {
       const d = await res.json();
-      alert(d.error || 'Cannot delete for everyone'); // fallback
+      setGlobalAlert(d.error || 'Cannot delete for everyone'); // fallback
     }
     setDeleteModal({ open: false, msg: null });
   };
@@ -780,6 +880,7 @@ export default function Inbox({
   return (
     <>
       {/* Modals */}
+      {globalAlert && <AlertModal message={globalAlert} onClose={() => setGlobalAlert(null)} />}
       {deleteModal.open && deleteModal.msg && (
         <DeleteModal
           canDeleteForEveryone={(() => {
