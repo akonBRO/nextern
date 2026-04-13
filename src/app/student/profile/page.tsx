@@ -827,6 +827,40 @@ export default function StudentProfilePage() {
     });
   }
 
+  async function handleGraduationToggle(isGraduated: boolean) {
+    setGraduationSaving(true);
+    setError('');
+    setFormState((p) => ({ ...p, isGraduated }));
+
+    try {
+      const res = await fetch('/api/users/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isGraduated }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? 'Failed to save graduation status.');
+        setFormState((p) => ({ ...p, isGraduated: !isGraduated }));
+        return;
+      }
+
+      setUser((prev) =>
+        prev ? { ...prev, isGraduated: data.user.isGraduated ?? isGraduated } : prev
+      );
+      setPreviewUser((prev) =>
+        prev ? { ...prev, isGraduated: data.user.isGraduated ?? isGraduated } : prev
+      );
+      set('isGraduated', data.user.isGraduated ?? isGraduated);
+    } catch {
+      setError('Network error. Please try again.');
+      setFormState((p) => ({ ...p, isGraduated: !isGraduated }));
+    } finally {
+      setGraduationSaving(false);
+    }
+  }
+
   // Resume upload
   function handleFileSelect(file: File) {
     setResumeError('');
