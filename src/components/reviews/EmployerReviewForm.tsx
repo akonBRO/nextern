@@ -45,8 +45,18 @@ export default function EmployerReviewForm({
       try {
         const res = await fetch(`/api/users/${studentId}/reviews`);
         const data = await res.json();
-        if (data.data?.some((r: { applicationId: string }) => r.applicationId === applicationId)) {
+        const existingReview = data.data?.find(
+          (r: { applicationId: string }) => r.applicationId === applicationId
+        );
+        if (existingReview) {
           setAlreadyReviewed(true);
+          setProfessionalismRating(existingReview.professionalismRating || 0);
+          setPunctualityRating(existingReview.punctualityRating || 0);
+          setSkillPerformanceRating(existingReview.skillPerformanceRating || 0);
+          setWorkQualityRating(existingReview.workQualityRating || 0);
+          setComment(existingReview.comment || '');
+          setIsRecommended(existingReview.isRecommended || false);
+          setRecommendationText(existingReview.recommendationText || '');
         }
       } catch {
         // Silently fail — allow form to show
@@ -347,6 +357,30 @@ export default function EmployerReviewForm({
             <Sparkles size={12} /> Profile Updated
           </span>
         </div>
+
+        <button
+          onClick={() => {
+            setAlreadyReviewed(false);
+            setSuccess(false);
+          }}
+          type="button"
+          style={{
+            marginTop: 24,
+            padding: '10px 24px',
+            background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 12,
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: 'pointer',
+            fontFamily: 'var(--font-display)',
+            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Edit Evaluation
+        </button>
       </div>
     );
   }
@@ -490,47 +524,6 @@ export default function EmployerReviewForm({
             setWorkQualityRating,
             <Sparkles size={14} />
           )}
-        </div>
-
-        {/* Optional written feedback */}
-        <div style={{ marginTop: 16 }}>
-          <label
-            style={{
-              display: 'block',
-              fontSize: 12,
-              fontWeight: 700,
-              color: '#475569',
-              marginBottom: 8,
-              textTransform: 'uppercase',
-              letterSpacing: 0.6,
-            }}
-          >
-            Written Feedback{' '}
-            <span style={{ color: '#94A3B8', fontWeight: 400, textTransform: 'none' }}>
-              (optional)
-            </span>
-          </label>
-          <textarea
-            style={{
-              width: '100%',
-              boxSizing: 'border-box',
-              padding: '14px 16px',
-              borderRadius: 12,
-              border: `1.5px solid ${comment.trim() ? 'rgba(37, 99, 235, 0.2)' : '#E8ECF1'}`,
-              background: comment.trim() ? 'rgba(37, 99, 235, 0.02)' : '#FAFBFC',
-              fontSize: 14,
-              fontFamily: 'var(--font-body)',
-              color: '#0F172A',
-              outline: 'none',
-              minHeight: 90,
-              resize: 'vertical',
-              lineHeight: 1.7,
-              transition: 'all 0.3s ease',
-            }}
-            placeholder="Share any additional context about this student's performance..."
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-          />
         </div>
 
         {/* Recommendation Toggle */}

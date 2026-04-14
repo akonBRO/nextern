@@ -66,25 +66,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const review = await Review.create({
-      reviewerId: session.user.id,
-      revieweeId,
-      applicationId,
-      reviewType,
-      overallRating,
-      workEnvironmentRating,
-      learningOpportunityRating,
-      mentorshipQualityRating,
-      comment,
-      professionalismRating,
-      punctualityRating,
-      skillPerformanceRating,
-      workQualityRating,
-      isRecommended,
-      recommendationText,
-      isVerified: true,
-      isPublic: true,
-    });
+    const review = await Review.findOneAndUpdate(
+      { applicationId, reviewType },
+      {
+        reviewerId: session.user.id,
+        revieweeId,
+        overallRating,
+        workEnvironmentRating,
+        learningOpportunityRating,
+        mentorshipQualityRating,
+        comment,
+        professionalismRating,
+        punctualityRating,
+        skillPerformanceRating,
+        workQualityRating,
+        isRecommended,
+        recommendationText,
+        isVerified: true,
+        isPublic: true,
+      },
+      { new: true, upsert: true }
+    );
 
     // Async Trigger Badges
     process.nextTick(async () => {
@@ -106,18 +108,7 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ success: true, data: review });
   } catch (error: unknown) {
-    console.error('Create review error:', error);
-    // Handle uniqueness error (MongoDB E11000)
-    if (
-      error instanceof Error &&
-      'code' in error &&
-      (error as Record<string, unknown>).code === 11000
-    ) {
-      return NextResponse.json(
-        { error: 'A review already exists for this application' },
-        { status: 400 }
-      );
-    }
+    console.error('Create/Update review error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
