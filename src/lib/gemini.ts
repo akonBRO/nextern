@@ -577,6 +577,7 @@ export interface SmartJobRecommendationParams {
     completedCourses: string[];
     certifications: string[];
     projectTechStacks: string[];
+    hasVerifiedWorkRecord?: boolean;
   };
   behavior: SmartRecommendationBehavior;
   candidateJobs: SmartJobRecommendationCandidate[];
@@ -762,6 +763,7 @@ function buildFallbackSmartJobRecommendations(
       const popularityScore = clamp(job.applicationCount / 20 + job.viewCount / 50, 0, 3);
       const aiSeedScore = typeof job.localFitScore === 'number' ? job.localFitScore * 0.08 : 0;
       const behaviorSeedScore = clamp(job.behaviorScore, 0, 100) * 0.08;
+      const verifiedMultiplier = params.studentProfile.hasVerifiedWorkRecord ? 8 : 0;
 
       const rankScore = clamp(
         Math.round(
@@ -778,7 +780,8 @@ function buildFallbackSmartJobRecommendations(
             titleBehaviorScore +
             popularityScore +
             aiSeedScore +
-            behaviorSeedScore
+            behaviorSeedScore +
+            verifiedMultiplier
         ),
         0,
         100
@@ -913,6 +916,7 @@ Rank the best jobs for this student and return ONLY valid JSON.
 Core behavior:
 - On first use, rank by profile data: department/major, skills, CGPA, year, university, location.
 - If the student has activity, adjust the ranking using behavior. Applications and saves matter most, then repeated views.
+- If the student has a Verified Work Record (hasVerifiedWorkRecord: true), gently boost their overall match score for top recommended jobs.
 - Explain every recommendation with one short "whyRecommended" tag such as "Matches your React skill" or "Suits your academic year".
 - Do not invent job IDs. Use only candidate jobId values from the list.
 

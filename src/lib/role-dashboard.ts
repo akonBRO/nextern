@@ -7,6 +7,7 @@ import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { AdvisorAction } from '@/models/AdvisorAction';
 import { DepartmentBenchmark } from '@/models/DepartmentBenchmark';
+import { Review } from '@/models/Review';
 
 export type ChromeUser = {
   name: string;
@@ -110,6 +111,17 @@ export type AdvisorDashboardData = {
     scheduledAt: string;
   }[];
   topSkillGaps: string[];
+  reputationStats: {
+    totalReviews: number;
+    totalRecommendations: number;
+    avgWorkQuality: number;
+  };
+  recentRecommendations: {
+    id: string;
+    studentName: string;
+    companyName: string;
+    text: string;
+  }[];
 };
 
 export type DepartmentDashboardData = {
@@ -419,13 +431,23 @@ export async function getAdvisorDashboardData(
   ]);
 
   const studentIds = students.map((student) => student._id);
-  const [applications, interviewJobs] = await Promise.all([
+  const [applications, interviewJobs, reviews] = await Promise.all([
     studentIds.length
       ? Application.find({ studentId: { $in: studentIds }, isEventRegistration: false })
           .select('studentId jobId status interviewScheduledAt hardGaps')
           .lean()
       : [],
     studentIds.length ? Job.find({}).select('title companyName').lean() : [],
+    studentIds.length
+      ? Review.find({
+          revieweeId: { $in: studentIds },
+          reviewType: 'employer_to_student',
+          isPublic: true,
+          isVerified: true,
+        })
+          .populate('reviewerId', 'name companyDetails.companyName')
+          .lean()
+      : [],
   ]);
 
   const flaggedStudentIds = new Set(
@@ -486,6 +508,53 @@ export async function getAdvisorDashboardData(
 
   const priorityStudents = attentionStudents.filter((student) => student.priorityFlagged).length;
 
+  let totalWorkQuality = 0;
+  let totalRecommendations = 0;
+  const rawRecommendations: {
+    id: string;
+    studentName: string;
+    companyName: string;
+    text: string;
+    createdAt: Date;
+  }[] = [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  reviews.forEach(
+    (r: {
+      _id: any;
+      workQualityRating?: number;
+      isRecommended?: boolean;
+      recommendationText?: string;
+      revieweeId: any;
+      reviewerId?: { name?: string; companyDetails?: { companyName?: string } };
+      createdAt: Date;
+    }) => {
+      if (r.workQualityRating) totalWorkQuality += r.workQualityRating;
+      if (r.isRecommended) {
+        totalRecommendations++;
+      }
+      if (r.recommendationText) {
+        rawRecommendations.push({
+          id: r._id.toString(),
+          studentName: studentMap.get(r.revieweeId.toString())?.name ?? 'Unknown Student',
+          companyName: r.reviewerId?.companyDetails?.companyName || r.reviewerId?.name || 'Company',
+          text: r.recommendationText,
+          createdAt: r.createdAt,
+        });
+      }
+    }
+  );
+
+  const recentRecommendations = rawRecommendations
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5)
+    .map((r) => ({
+      id: r.id,
+      studentName: r.studentName,
+      companyName: r.companyName,
+      text: r.text,
+    }));
+
   return {
     chromeUser: {
       name: user.name,
@@ -513,6 +582,12 @@ export async function getAdvisorDashboardData(
     recentActions,
     upcomingInterviews,
     topSkillGaps,
+    reputationStats: {
+      totalReviews: reviews.length,
+      totalRecommendations,
+      avgWorkQuality: reviews.length ? Number((totalWorkQuality / reviews.length).toFixed(1)) : 0,
+    },
+    recentRecommendations,
   };
 }
 

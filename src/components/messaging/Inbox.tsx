@@ -105,99 +105,65 @@ function Avatar({ user, size = 40 }: { user: UserData; size?: number }) {
 }
 
 function AlertModal({ message, onClose }: { message: string; onClose: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 5000);
+    return () => clearTimeout(t);
+  }, [onClose]);
+
   return (
     <div
       style={{
         position: 'fixed',
-        inset: 0,
-        background: 'rgba(15,23,42,0.5)',
-        backdropFilter: 'blur(6px)',
+        bottom: 32,
+        right: 32,
         zIndex: 99999,
+        background: '#1E293B',
+        color: '#F8FAFC',
+        padding: '16px 20px',
+        borderRadius: 16,
+        boxShadow: '0 20px 40px -8px rgba(0,0,0,0.3)',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
+        gap: 14,
+        border: '1px solid rgba(255,255,255,0.1)',
       }}
-      onClick={onClose}
     >
       <div
-        onClick={(e) => e.stopPropagation()}
         style={{
-          background: C.white,
-          borderRadius: 24,
-          padding: '32px 36px',
-          maxWidth: 400,
-          width: '90vw',
-          boxShadow: '0 25px 60px -12px rgba(0,0,0,0.35)',
-          position: 'relative',
-          textAlign: 'center',
+          width: 32,
+          height: 32,
+          borderRadius: 10,
+          background: 'rgba(239, 68, 68, 0.15)',
+          color: '#F87171',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: 14,
-            right: 14,
-            background: C.bg,
-            border: 'none',
-            borderRadius: 8,
-            width: 30,
-            height: 30,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            color: C.gray,
-          }}
-        >
-          <X size={16} />
-        </button>
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 16,
-            background: '#FFF1F2',
-            border: '1px solid #FECDD3',
-            color: '#BE123C',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 16px',
-          }}
-        >
-          <CircleAlert size={28} />
-        </div>
-        <h3
-          style={{
-            fontSize: 18,
-            fontWeight: 800,
-            color: C.deep,
-            marginBottom: 8,
-          }}
-        >
-          Action Failed
-        </h3>
-        <p style={{ fontSize: 14, color: C.gray, lineHeight: 1.6, marginBottom: 24 }}>{message}</p>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            background: C.deep,
-            color: C.white,
-            border: 'none',
-            borderRadius: 12,
-            padding: '10px 24px',
-            fontSize: 13,
-            fontWeight: 700,
-            cursor: 'pointer',
-            width: '100%',
-          }}
-        >
-          Dismiss
-        </button>
+        <CircleAlert size={18} />
       </div>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Error Alert</div>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{message}</div>
+      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          color: 'rgba(255,255,255,0.4)',
+          cursor: 'pointer',
+          padding: 4,
+          marginLeft: 8,
+          display: 'flex',
+          transition: 'color 0.2s',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = '#fff')}
+        onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
+      >
+        <X size={16} />
+      </button>
     </div>
   );
 }

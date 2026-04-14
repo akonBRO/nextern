@@ -52,6 +52,25 @@ export async function getEventCount(
     }
 
     case 'onReviewReceived': {
+      if (badge.badgeSlug === 'verified-work-record' && badge.category === 'student') {
+        // Must have at least the threshold number of recommendations (isRecommended)
+        // and an average overall/work quality rating >= 4.0
+        const reviews = (await Review.find({
+          revieweeId: userId,
+          reviewType: 'employer_to_student',
+        })
+          .select('workQualityRating isRecommended')
+          .lean()) as { workQualityRating?: number; isRecommended?: boolean }[];
+
+        const recommendedCount = reviews.filter((r) => r.isRecommended).length;
+        if (recommendedCount < badge.thresholdValue) return 0;
+
+        const avg =
+          reviews.reduce((s, r) => s + (r.workQualityRating ?? 0), 0) / (reviews.length || 1);
+
+        return avg >= 4.0 ? badge.thresholdValue : 0;
+      }
+
       // For employers: count reviews received about them
       if (badge.badgeSlug === 'campus-favorite') {
         // Check average rating ≥ 4.5 AND at least threshold reviews
