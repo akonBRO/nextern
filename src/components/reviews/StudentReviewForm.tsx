@@ -41,8 +41,15 @@ export default function StudentReviewForm({
       try {
         const res = await fetch(`/api/users/${employerId}/reviews`);
         const data = await res.json();
-        if (data.data?.some((r: { applicationId: string }) => r.applicationId === applicationId)) {
+        const existingReview = data.data?.find(
+          (r: { applicationId: string }) => r.applicationId === applicationId
+        );
+        if (existingReview) {
           setAlreadyReviewed(true);
+          setOverallRating(existingReview.overallRating || 0);
+          setWorkEnvironmentRating(existingReview.workEnvironmentRating || 0);
+          setLearningOpportunityRating(existingReview.learningOpportunityRating || 0);
+          setComment(existingReview.comment || '');
         }
       } catch {
         // Silently fail
@@ -331,6 +338,30 @@ export default function StudentReviewForm({
             <Sparkles size={12} /> Publicly Visible
           </span>
         </div>
+
+        <button
+          onClick={() => {
+            setAlreadyReviewed(false);
+            setSuccess(false);
+          }}
+          type="button"
+          style={{
+            marginTop: 24,
+            padding: '10px 24px',
+            background: 'linear-gradient(135deg, #0D9488, #0F766E)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 12,
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: 'pointer',
+            fontFamily: 'var(--font-display)',
+            boxShadow: '0 4px 12px rgba(13, 148, 136, 0.25)',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Edit Review
+        </button>
       </div>
     );
   }
