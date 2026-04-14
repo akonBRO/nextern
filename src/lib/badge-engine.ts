@@ -248,3 +248,55 @@ export async function evaluateBadges(
     }
   }
 }
+
+/**
+ * Hook to evaluate if a student meets the criteria for the "Verified Work Record" badge,
+ * without actually emitting the badge award event or saving to the database.
+ *
+ * Criteria:
+ * - Received at least 1 written recommendation (isRecommended = true or has recommendationText)
+ * - Average overall work quality rating > 4.0
+ *
+ * @param studentId The ID of the student to evaluate
+ * @returns Promise<boolean> True if criteria are met, false otherwise
+ */
+export async function checkVerifiedWorkRecordEligibility(studentId: string): Promise<boolean> {
+  await connectDB();
+
+  const reviews = (await Review.find({
+    revieweeId: studentId,
+    reviewType: 'employer_to_student',
+    isPublic: true,
+    isVerified: true,
+  })
+    .select('workQualityRating isRecommended recommendationText')
+    .lean()) as {
+    workQualityRating?: number;
+    isRecommended?: boolean;
+    recommendationText?: string;
+  }[];
+
+  if (reviews.length === 0) return false;
+
+  // Criteria 1: At least 1 written recommendation
+  const hasWrittenRecommendation = reviews.some(
+    (r) => r.isRecommended || (r.recommendationText && r.recommendationText.trim().length > 0)
+  );
+  if (!hasWrittenRecommendation) return false;
+
+  // Criteria 2: Average rating > 4.0
+  let totalRating = 0;
+  let count = 0;
+
+  for (const r of reviews) {
+    if (r.workQualityRating) {
+      totalRating += r.workQualityRating;
+      count++;
+    }
+  }
+
+  if (count === 0) return false;
+
+  const avgRating = totalRating / count;
+  return avgRating > 4.0;
+}
