@@ -49,6 +49,7 @@ export default function ReputationHistory({
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedReview, setSelectedReview] = useState<ReviewData | null>(null);
 
   useEffect(() => {
     async function fetchReviews() {
@@ -385,7 +386,7 @@ export default function ReputationHistory({
           display: 'flex',
           flexDirection: 'column',
           gap: 12,
-          maxHeight: '500px',
+          maxHeight: '250px',
           overflowY: 'auto',
           paddingRight: '8px',
         }}
@@ -419,7 +420,7 @@ export default function ReputationHistory({
                 borderBottom: '1px solid #F1F5F9',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', gap: 12 }}>
                 <div
                   style={{
                     width: 40,
@@ -434,6 +435,7 @@ export default function ReputationHistory({
                     fontSize: 16,
                     fontFamily: 'var(--font-display)',
                     overflow: 'hidden',
+                    flexShrink: 0,
                   }}
                 >
                   {r.reviewerId?.profilePicture ? (
@@ -446,7 +448,7 @@ export default function ReputationHistory({
                     r.reviewerId?.name?.charAt(0).toUpperCase() || 'U'
                   )}
                 </div>
-                <div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <div
                     style={{
                       display: 'flex',
@@ -455,12 +457,18 @@ export default function ReputationHistory({
                       fontSize: 14,
                       fontWeight: 700,
                       color: '#0F172A',
+                      flexWrap: 'wrap',
                     }}
                   >
                     {r.reviewerId?.name}
                     {r.reviewerId?.isVerified && (
                       <CheckCircle2 size={14} color="#2563EB" fill="#EFF6FF" />
                     )}
+                  </div>
+                  <div>
+                    {userRole === 'employer'
+                      ? renderStars(r.overallRating)
+                      : renderStars(r.workQualityRating)}
                   </div>
                   <div
                     style={{
@@ -469,7 +477,6 @@ export default function ReputationHistory({
                       gap: 5,
                       fontSize: 12,
                       color: '#94A3B8',
-                      marginTop: 1,
                     }}
                   >
                     <Clock size={11} />
@@ -481,132 +488,308 @@ export default function ReputationHistory({
                   </div>
                 </div>
               </div>
-              <div>
-                {userRole === 'employer' && renderStars(r.overallRating)}
-                {userRole === 'student' && renderStars(r.workQualityRating)}
-              </div>
             </div>
 
-            {/* Metrics */}
+            {/* View full review button */}
+            <div style={{ padding: '12px 20px', background: '#FAFBFC' }}>
+              <button
+                onClick={() => setSelectedReview(r)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#2563EB',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  padding: 0,
+                  textDecoration: 'none',
+                  fontFamily: 'inherit',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                }}
+              >
+                Read full review <span style={{ fontSize: 16 }}>&rarr;</span>
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Modal for full review */}
+      {selectedReview && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(15, 23, 42, 0.6)',
+            padding: 24,
+            backdropFilter: 'blur(4px)',
+          }}
+          onClick={() => setSelectedReview(null)}
+        >
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: 24,
+              width: '100%',
+              maxWidth: 600,
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 24px 48px rgba(0,0,0,0.2)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div
               style={{
-                padding: '14px 20px',
-                background: '#FAFBFC',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '20px 24px',
+                borderBottom: '1px solid #F1F5F9',
+                position: 'sticky',
+                top: 0,
+                background: '#fff',
+                zIndex: 10,
               }}
             >
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: 18,
+                  fontWeight: 800,
+                  color: '#0F172A',
+                  fontFamily: 'var(--font-display)',
+                }}
+              >
+                Full Review
+              </h3>
+              <button
+                onClick={() => setSelectedReview(null)}
+                style={{
+                  background: '#F1F5F9',
+                  border: 'none',
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#64748B',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: '24px' }}>
+              {/* Header inside modal */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  marginBottom: 24,
+                }}
+              >
+                <div style={{ display: 'flex', gap: 14 }}>
+                  <div
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 12,
+                      background: 'linear-gradient(135deg, #E2E8F0, #CBD5E1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 800,
+                      color: '#64748B',
+                      fontSize: 18,
+                      overflow: 'hidden',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {selectedReview.reviewerId?.profilePicture ? (
+                      <img
+                        src={selectedReview.reviewerId.profilePicture}
+                        alt=""
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      selectedReview.reviewerId?.name?.charAt(0).toUpperCase() || 'U'
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <div
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: '#0F172A',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      {selectedReview.reviewerId?.name}
+                      {selectedReview.reviewerId?.isVerified && (
+                        <CheckCircle2 size={16} color="#2563EB" fill="#EFF6FF" />
+                      )}
+                    </div>
+                    <div>
+                      {userRole === 'employer'
+                        ? renderStars(selectedReview.overallRating)
+                        : renderStars(selectedReview.workQualityRating)}
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontSize: 13,
+                        color: '#64748B',
+                      }}
+                    >
+                      <Clock size={12} />
+                      {new Date(selectedReview.createdAt).toLocaleDateString('en-US', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Metrics */}
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
-                  gap: 8,
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                  gap: 10,
+                  marginBottom: 24,
                 }}
               >
                 {userRole === 'employer' ? (
                   <>
                     <MetricPill
-                      icon={<Building2 size={12} />}
+                      icon={<Building2 size={14} />}
                       label="Environment"
-                      rating={r.workEnvironmentRating || 0}
+                      rating={selectedReview.workEnvironmentRating || 0}
                     />
                     <MetricPill
-                      icon={<BookOpen size={12} />}
+                      icon={<BookOpen size={14} />}
                       label="Learning"
-                      rating={r.learningOpportunityRating || 0}
+                      rating={selectedReview.learningOpportunityRating || 0}
                     />
                   </>
                 ) : (
                   <>
                     <MetricPill
-                      icon={<UserCheck size={12} />}
+                      icon={<UserCheck size={14} />}
                       label="Professionalism"
-                      rating={r.professionalismRating || 0}
+                      rating={selectedReview.professionalismRating || 0}
                     />
                     <MetricPill
-                      icon={<Clock size={12} />}
+                      icon={<Clock size={14} />}
                       label="Punctuality"
-                      rating={r.punctualityRating || 0}
+                      rating={selectedReview.punctualityRating || 0}
                     />
                     <MetricPill
-                      icon={<TrendingUp size={12} />}
+                      icon={<TrendingUp size={14} />}
                       label="Skills"
-                      rating={r.skillPerformanceRating || 0}
+                      rating={selectedReview.skillPerformanceRating || 0}
                     />
                     <MetricPill
-                      icon={<ThumbsUp size={12} />}
+                      icon={<ThumbsUp size={14} />}
                       label="Work Quality"
-                      rating={r.workQualityRating || 0}
+                      rating={selectedReview.workQualityRating || 0}
                     />
                   </>
                 )}
               </div>
-            </div>
 
-            {/* Written content */}
-            {r.comment && (
-              <div style={{ padding: '14px 20px' }}>
-                <p
-                  style={{
-                    fontSize: 14,
-                    color: '#475569',
-                    lineHeight: 1.7,
-                    margin: 0,
-                    fontStyle: 'italic',
-                  }}
-                >
-                  &ldquo;{r.comment}&rdquo;
-                </p>
-              </div>
-            )}
+              {selectedReview.comment && (
+                <div style={{ paddingBottom: 24, borderTop: '1px solid #F1F5F9', paddingTop: 20 }}>
+                  <h4
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: '#64748B',
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.6,
+                      margin: '0 0 12px 0',
+                    }}
+                  >
+                    Written Feedback
+                  </h4>
+                  <p
+                    style={{
+                      fontSize: 15,
+                      color: '#475569',
+                      lineHeight: 1.7,
+                      margin: 0,
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    &ldquo;{selectedReview.comment}&rdquo;
+                  </p>
+                </div>
+              )}
 
-            {/* Recommendation */}
-            {r.isRecommended && r.recommendationText && (
-              <div
-                style={{
-                  margin: '0 16px 16px',
-                  padding: '20px 18px 16px',
-                  background: 'linear-gradient(135deg, #EFF6FF, #F0F7FF)',
-                  border: '1px solid rgba(37, 99, 235, 0.15)',
-                  borderRadius: 14,
-                  position: 'relative',
-                }}
-              >
+              {selectedReview.isRecommended && selectedReview.recommendationText && (
                 <div
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
-                    color: '#fff',
-                    fontSize: 10,
-                    fontWeight: 800,
-                    padding: '3px 10px',
-                    borderRadius: 999,
-                    boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)',
-                    letterSpacing: 0.3,
-                    marginBottom: 10,
+                    padding: '20px 18px',
+                    background: 'linear-gradient(135deg, #EFF6FF, #F0F7FF)',
+                    border: '1px solid rgba(37, 99, 235, 0.15)',
+                    borderRadius: 14,
                   }}
                 >
-                  <Award size={10} /> FORMAL ENDORSEMENT
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+                      color: '#fff',
+                      fontSize: 10,
+                      fontWeight: 800,
+                      padding: '3px 10px',
+                      borderRadius: 999,
+                      letterSpacing: 0.3,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <Award size={10} /> FORMAL ENDORSEMENT
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      color: '#1E3A5F',
+                      fontWeight: 500,
+                      lineHeight: 1.75,
+                      margin: 0,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      paddingRight: '12px',
+                    }}
+                  >
+                    {selectedReview.recommendationText}
+                  </div>
                 </div>
-                <p
-                  style={{
-                    fontSize: 14,
-                    color: '#1E3A5F',
-                    fontWeight: 500,
-                    lineHeight: 1.75,
-                    margin: 0,
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    overflowWrap: 'break-word',
-                  }}
-                >
-                  {r.recommendationText}
-                </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
