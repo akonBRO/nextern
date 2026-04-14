@@ -22,6 +22,7 @@ type StudentPageShellProps = {
 
 const DASHBOARD_SHELL_PATHS = new Set([
   '/student/dashboard',
+  '/student/calendar',
   '/student/jobs',
   '/student/applications',
   '/student/badges',
