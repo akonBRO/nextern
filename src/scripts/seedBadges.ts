@@ -64,7 +64,7 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 1,
     aiWeightBoost: 6,
     opportunityScorePoints: 10,
-    marksReward: 15,
+    marksReward: 10,
   },
   {
     badgeSlug: 'community-leader',
@@ -103,7 +103,22 @@ const BADGE_DEFINITIONS = [
     thresholdValue: 50,
     aiWeightBoost: 5,
     opportunityScorePoints: 10,
-    marksReward: 25,
+    marksReward: 20,
+  },
+
+  {
+    badgeSlug: 'verified-work-record',
+    name: 'Verified Work Record',
+    description:
+      'Received at least one written recommendation and maintained an outstanding >4.0 average rating.',
+    icon: '🏢',
+    category: 'student' as const,
+    criteria: 'Written recommendation and >4.0 avg rating',
+    triggerEvent: 'onReviewReceived',
+    thresholdValue: 1,
+    aiWeightBoost: 10,
+    opportunityScorePoints: 15,
+    marksReward: 10,
   },
 
   // ── Employer badges ───────────────────────────────────────────────

@@ -498,6 +498,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Student profile not found.' }, { status: 404 });
     }
 
+    const hasVerifiedWorkRecord = await mongoose.models.BadgeAward?.exists({
+      userId: session.user.id,
+      badgeSlug: 'verified-work-record',
+    });
+
     const [applications, jobViews] = await Promise.all([
       Application.find({ studentId: session.user.id, isWithdrawn: { $ne: true } })
         .select('jobId fitScore fitScoreComputedAt')

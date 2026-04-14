@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
+import ReputationHistory from '@/components/reviews/ReputationHistory';
 import {
   AlertCircle,
   CheckCircle2,
@@ -624,6 +625,8 @@ function InPlatformResume({ user }: { user: UserData | null }) {
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type UserData = {
+  _id?: string;
+  id?: string;
   name: string;
   email: string;
   image?: string;
@@ -1838,89 +1841,93 @@ export default function StudentProfilePage() {
               No projects added yet. Click Add Project to get started.
             </div>
           )}
-          {form.projects.map((proj, i) => (
-            <div
-              key={i}
-              style={{
-                border: `1px solid ${C.border}`,
-                borderRadius: 14,
-                padding: '18px 20px',
-                marginBottom: 12,
-                background: '#FAFBFC',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.gray }}>Project {i + 1}</div>
-                <button
-                  type="button"
-                  onClick={() => removeProject(i)}
-                  style={{
-                    background: C.dangerBg,
-                    color: C.danger,
-                    border: `1px solid ${C.dangerBorder}`,
-                    borderRadius: 8,
-                    padding: '4px 10px',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                  }}
-                >
-                  <Trash2 size={12} /> Remove
-                </button>
+          <div style={{ maxHeight: 600, overflowY: 'auto', paddingRight: 8 }}>
+            {form.projects.map((proj, i) => (
+              <div
+                key={i}
+                style={{
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 14,
+                  padding: '18px 20px',
+                  marginBottom: 12,
+                  background: '#FAFBFC',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.gray }}>
+                    Project {i + 1}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeProject(i)}
+                    style={{
+                      background: C.dangerBg,
+                      color: C.danger,
+                      border: `1px solid ${C.dangerBorder}`,
+                      borderRadius: 8,
+                      padding: '4px 10px',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <Trash2 size={12} /> Remove
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <Field label="Project Title" required>
+                    <input
+                      type="text"
+                      value={proj.title}
+                      onChange={(e) => setProject(i, 'title', e.target.value)}
+                      placeholder="e.g. E-Commerce Platform"
+                      style={inputBase}
+                    />
+                  </Field>
+                  <Field label="Live URL">
+                    <input
+                      type="url"
+                      value={proj.projectUrl}
+                      onChange={(e) => setProject(i, 'projectUrl', e.target.value)}
+                      placeholder="https://myproject.com"
+                      style={inputBase}
+                    />
+                  </Field>
+                  <Field label="GitHub Repo">
+                    <input
+                      type="url"
+                      value={proj.repoUrl}
+                      onChange={(e) => setProject(i, 'repoUrl', e.target.value)}
+                      placeholder="https://github.com/..."
+                      style={inputBase}
+                    />
+                  </Field>
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <Field label="Description">
+                    <textarea
+                      value={proj.description}
+                      onChange={(e) => setProject(i, 'description', e.target.value)}
+                      placeholder="What did you build and what technologies did you use?"
+                      rows={2}
+                      style={{ ...inputBase, resize: 'vertical' }}
+                    />
+                  </Field>
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <Field label="Tech Stack">
+                    <TagInput
+                      tags={proj.techStack}
+                      onChange={(v) => setProject(i, 'techStack', v)}
+                      placeholder="e.g. React, Node.js — press Enter"
+                    />
+                  </Field>
+                </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <Field label="Project Title" required>
-                  <input
-                    type="text"
-                    value={proj.title}
-                    onChange={(e) => setProject(i, 'title', e.target.value)}
-                    placeholder="e.g. E-Commerce Platform"
-                    style={inputBase}
-                  />
-                </Field>
-                <Field label="Live URL">
-                  <input
-                    type="url"
-                    value={proj.projectUrl}
-                    onChange={(e) => setProject(i, 'projectUrl', e.target.value)}
-                    placeholder="https://myproject.com"
-                    style={inputBase}
-                  />
-                </Field>
-                <Field label="GitHub Repo">
-                  <input
-                    type="url"
-                    value={proj.repoUrl}
-                    onChange={(e) => setProject(i, 'repoUrl', e.target.value)}
-                    placeholder="https://github.com/..."
-                    style={inputBase}
-                  />
-                </Field>
-              </div>
-              <div style={{ marginTop: 12 }}>
-                <Field label="Description">
-                  <textarea
-                    value={proj.description}
-                    onChange={(e) => setProject(i, 'description', e.target.value)}
-                    placeholder="What did you build and what technologies did you use?"
-                    rows={2}
-                    style={{ ...inputBase, resize: 'vertical' }}
-                  />
-                </Field>
-              </div>
-              <div style={{ marginTop: 12 }}>
-                <Field label="Tech Stack">
-                  <TagInput
-                    tags={proj.techStack}
-                    onChange={(v) => setProject(i, 'techStack', v)}
-                    placeholder="e.g. React, Node.js — press Enter"
-                  />
-                </Field>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* 6 — Certifications */}
@@ -1992,71 +1999,73 @@ export default function StudentProfilePage() {
               No certifications added yet.
             </div>
           )}
-          {form.certifications.map((cert, i) => (
-            <div
-              key={i}
-              style={{
-                border: `1px solid ${C.border}`,
-                borderRadius: 14,
-                padding: '18px 20px',
-                marginBottom: 12,
-                background: '#FAFBFC',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.gray }}>
-                  Certificate {i + 1}
+          <div style={{ maxHeight: 400, overflowY: 'auto', paddingRight: 8 }}>
+            {form.certifications.map((cert, i) => (
+              <div
+                key={i}
+                style={{
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 14,
+                  padding: '18px 20px',
+                  marginBottom: 12,
+                  background: '#FAFBFC',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.gray }}>
+                    Certificate {i + 1}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeCert(i)}
+                    style={{
+                      background: C.dangerBg,
+                      color: C.danger,
+                      border: `1px solid ${C.dangerBorder}`,
+                      borderRadius: 8,
+                      padding: '4px 10px',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <Trash2 size={12} /> Remove
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => removeCert(i)}
-                  style={{
-                    background: C.dangerBg,
-                    color: C.danger,
-                    border: `1px solid ${C.dangerBorder}`,
-                    borderRadius: 8,
-                    padding: '4px 10px',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                  }}
-                >
-                  <Trash2 size={12} /> Remove
-                </button>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <Field label="Certificate Name" required>
+                    <input
+                      type="text"
+                      value={cert.name}
+                      onChange={(e) => setCert(i, 'name', e.target.value)}
+                      placeholder="e.g. AWS Cloud Practitioner"
+                      style={inputBase}
+                    />
+                  </Field>
+                  <Field label="Issued By" required>
+                    <input
+                      type="text"
+                      value={cert.issuedBy}
+                      onChange={(e) => setCert(i, 'issuedBy', e.target.value)}
+                      placeholder="e.g. Amazon Web Services"
+                      style={inputBase}
+                    />
+                  </Field>
+                  <Field label="Credential URL">
+                    <input
+                      type="url"
+                      value={cert.credentialUrl}
+                      onChange={(e) => setCert(i, 'credentialUrl', e.target.value)}
+                      placeholder="https://credential.net/..."
+                      style={inputBase}
+                    />
+                  </Field>
+                </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <Field label="Certificate Name" required>
-                  <input
-                    type="text"
-                    value={cert.name}
-                    onChange={(e) => setCert(i, 'name', e.target.value)}
-                    placeholder="e.g. AWS Cloud Practitioner"
-                    style={inputBase}
-                  />
-                </Field>
-                <Field label="Issued By" required>
-                  <input
-                    type="text"
-                    value={cert.issuedBy}
-                    onChange={(e) => setCert(i, 'issuedBy', e.target.value)}
-                    placeholder="e.g. Amazon Web Services"
-                    style={inputBase}
-                  />
-                </Field>
-                <Field label="Credential URL">
-                  <input
-                    type="url"
-                    value={cert.credentialUrl}
-                    onChange={(e) => setCert(i, 'credentialUrl', e.target.value)}
-                    placeholder="https://credential.net/..."
-                    style={inputBase}
-                  />
-                </Field>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* 7 — Online Presence */}
@@ -2174,6 +2183,9 @@ export default function StudentProfilePage() {
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))',
                 gap: 12,
+                maxHeight: 400,
+                overflowY: 'auto',
+                paddingRight: 8,
               }}
             >
               {badges.map((b) => (
@@ -2204,7 +2216,28 @@ export default function StudentProfilePage() {
           )}
         </div>
 
-        {/* 9 — Notification Preferences */}
+        {/* 9 — Reputation & Reviews */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Award size={18} />} label="Reputation & Verified Reviews" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16 }}>
+            Verified feedback from employers you&apos;ve worked with appears here.
+          </div>
+          {user && (user._id || user.id) ? (
+            <ReputationHistory userId={(user._id || user.id) as string} userRole="student" />
+          ) : (
+            <div style={{ fontSize: 13, color: C.light }}>Loading reputation data...</div>
+          )}
+        </div>
+
+        {/* 10 — Notification Preferences */}
         <div
           style={{
             background: C.white,
