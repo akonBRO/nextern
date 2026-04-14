@@ -52,6 +52,25 @@ export async function getEventCount(
     }
 
     case 'onReviewReceived': {
+      if (badge.badgeSlug === 'verified-work-record' && badge.category === 'student') {
+        // Must have at least the threshold number of recommendations (isRecommended)
+        // and an average overall/work quality rating >= 4.0
+        const reviews = (await Review.find({
+          revieweeId: userId,
+          reviewType: 'employer_to_student',
+        })
+          .select('workQualityRating isRecommended')
+          .lean()) as { workQualityRating?: number; isRecommended?: boolean }[];
+
+        const recommendedCount = reviews.filter((r) => r.isRecommended).length;
+        if (recommendedCount < badge.thresholdValue) return 0;
+
+        const avg =
+          reviews.reduce((s, r) => s + (r.workQualityRating ?? 0), 0) / (reviews.length || 1);
+
+        return avg >= 4.0 ? badge.thresholdValue : 0;
+      }
+
       // For employers: count reviews received about them
       if (badge.badgeSlug === 'campus-favorite') {
         // Check average rating ≥ 4.5 AND at least threshold reviews
@@ -228,4 +247,56 @@ export async function evaluateBadges(
       console.error(`[BADGE ERROR] Failed to evaluate "${badge.badgeSlug}" for ${userId}:`, err);
     }
   }
+}
+
+/**
+ * Hook to evaluate if a student meets the criteria for the "Verified Work Record" badge,
+ * without actually emitting the badge award event or saving to the database.
+ *
+ * Criteria:
+ * - Received at least 1 written recommendation (isRecommended = true or has recommendationText)
+ * - Average overall work quality rating > 4.0
+ *
+ * @param studentId The ID of the student to evaluate
+ * @returns Promise<boolean> True if criteria are met, false otherwise
+ */
+export async function checkVerifiedWorkRecordEligibility(studentId: string): Promise<boolean> {
+  await connectDB();
+
+  const reviews = (await Review.find({
+    revieweeId: studentId,
+    reviewType: 'employer_to_student',
+    isPublic: true,
+    isVerified: true,
+  })
+    .select('workQualityRating isRecommended recommendationText')
+    .lean()) as {
+    workQualityRating?: number;
+    isRecommended?: boolean;
+    recommendationText?: string;
+  }[];
+
+  if (reviews.length === 0) return false;
+
+  // Criteria 1: At least 1 written recommendation
+  const hasWrittenRecommendation = reviews.some(
+    (r) => r.isRecommended || (r.recommendationText && r.recommendationText.trim().length > 0)
+  );
+  if (!hasWrittenRecommendation) return false;
+
+  // Criteria 2: Average rating > 4.0
+  let totalRating = 0;
+  let count = 0;
+
+  for (const r of reviews) {
+    if (r.workQualityRating) {
+      totalRating += r.workQualityRating;
+      count++;
+    }
+  }
+
+  if (count === 0) return false;
+
+  const avgRating = totalRating / count;
+  return avgRating > 4.0;
 }

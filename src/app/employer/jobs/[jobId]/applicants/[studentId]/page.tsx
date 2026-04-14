@@ -47,6 +47,8 @@ import {
 } from 'lucide-react';
 import ApplicantActions from '../ApplicantActions';
 import Image from 'next/image';
+import EmployerReviewForm from '@/components/reviews/EmployerReviewForm';
+import ReputationHistory from '@/components/reviews/ReputationHistory';
 
 const navItems = [
   { label: 'Overview', href: '/employer/dashboard', icon: 'dashboard' as const },
@@ -1713,10 +1715,24 @@ export default async function EmployerApplicantDetailPage({
                   </div>
                 </div>
               )}
+
+              {/* Verified Reviews Section */}
+              {application.status === 'hired' && (
+                <div style={{ marginTop: 8 }}>
+                  <EmployerReviewForm
+                    applicationId={application._id.toString()}
+                    studentId={studentId}
+                  />
+                </div>
+              )}
             </div>
 
             {/* ── RIGHT SIDEBAR ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ marginBottom: 4 }}>
+                <ReputationHistory userId={studentId} userRole="student" />
+              </div>
+
               {/* Resume */}
               <SideCard
                 title="Resume"

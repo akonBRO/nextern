@@ -37,6 +37,8 @@ import JobApplyButton from './JobApplyButton';
 import MessageEmployerButton from './MessageEmployerButton';
 import AISkillAnalysisCard from './AISkillAnalysisCard';
 import JobFitScoreCard from './JobFitScoreCard';
+import StudentReviewForm from '@/components/reviews/StudentReviewForm';
+import ReputationHistory from '@/components/reviews/ReputationHistory';
 
 const TYPE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   internship: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE' },
@@ -103,6 +105,7 @@ async function getJobData(jobId: string, userId: string) {
     student,
     job,
     hasApplied: !!existingApp,
+    applicationId: existingApp?._id?.toString() ?? null,
     applicationStatus: existingApp?.status ?? null,
     savedAnalysis: existingApp?.fitScoreComputedAt
       ? {
@@ -143,6 +146,7 @@ export default async function StudentJobDetailPage({
     student,
     job,
     hasApplied,
+    applicationId,
     applicationStatus,
     savedAnalysis,
     fitScore,
@@ -469,6 +473,23 @@ export default async function StudentJobDetailPage({
                   ))}
                 </ul>
               </Panel>
+            )}
+
+            {/* Employer Reputation */}
+            <Panel title="Company Reputation" description="">
+              <div style={{ margin: '-10px 0' }}>
+                <ReputationHistory userId={job.employerId.toString()} userRole="employer" />
+              </div>
+            </Panel>
+
+            {/* Student Review Form (if hired) */}
+            {applicationStatus === 'hired' && (
+              <div style={{ marginTop: 8 }}>
+                <StudentReviewForm
+                  applicationId={applicationId || ''}
+                  employerId={job.employerId.toString()}
+                />
+              </div>
             )}
           </div>
 

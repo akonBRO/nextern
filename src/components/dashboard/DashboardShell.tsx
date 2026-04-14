@@ -25,6 +25,7 @@ import {
   MessageSquare,
   ShieldCheck,
   Sparkles,
+  Star,
   Target,
   Users,
 } from 'lucide-react';
@@ -42,7 +43,8 @@ type IconName =
   | 'sparkles'
   | 'messages'
   | 'book'
-  | 'shield';
+  | 'shield'
+  | 'star';
 
 export type DashboardNavItem = {
   label: string;
@@ -101,6 +103,7 @@ const iconMap = {
   messages: MessageSquare,
   book: BookOpen,
   shield: ShieldCheck,
+  star: Star,
 };
 
 function NavIcon({ name, size = 16 }: { name: IconName; size?: number }) {

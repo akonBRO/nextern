@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import EmployerClientShell from '@/components/employer/EmployerClientShell';
 import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
+import ReputationHistory from '@/components/reviews/ReputationHistory';
 import { AlertCircle, CheckCircle2, Building2, Globe, Phone, Save, Award } from 'lucide-react';
 
 const C = {
@@ -567,6 +568,9 @@ export default function EmployerProfilePage() {
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
                   gap: 12,
+                  maxHeight: 400,
+                  overflowY: 'auto',
+                  paddingRight: 8,
                 }}
               >
                 {badges.map((b) => (
@@ -594,6 +598,28 @@ export default function EmployerProfilePage() {
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+
+          {/* Section 4: Reputation & Reviews */}
+          <div
+            style={{
+              background: C.white,
+              borderRadius: 18,
+              border: `1px solid ${C.border}`,
+              padding: '24px 28px',
+              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+            }}
+          >
+            <SectionHeader icon={<Award size={18} />} label="Reputation & Verified Reviews" />
+            <div style={{ fontSize: 13, color: C.gray, marginBottom: 16 }}>
+              Verified feedback from students who have worked at your company forms your public
+              reputation.
+            </div>
+            {user && (user._id || user.id) ? (
+              <ReputationHistory userId={(user._id || user.id) as string} userRole="employer" />
+            ) : (
+              <div style={{ fontSize: 13, color: C.light }}>Loading reputation data...</div>
             )}
           </div>
 
