@@ -173,26 +173,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const existingUser = await User.findOne({ email: user.email?.toLowerCase() });
 
         if (!existingUser) {
-          // New Google user — create with student role by default
-          // They will be prompted to complete their profile on first login
           const createdUser = await User.create({
             name: user.name,
             email: user.email?.toLowerCase(),
             image: user.image,
             role: 'student',
-            isVerified: true, // Google email is already verified
+            isVerified: true,
             verificationStatus: 'approved',
+            // ── Save refresh token if provided ──
+            ...(account.refresh_token
+              ? {
+                  googleRefreshToken: account.refresh_token,
+                  googleCalendarConnected: true,
+                }
+              : {}),
           });
           user.id = createdUser._id.toString();
           user.role = createdUser.role;
           user.isVerified = createdUser.isVerified;
           user.verificationStatus = createdUser.verificationStatus;
         } else {
-          // Existing user — update their Google profile picture if needed
           if (user.image && !existingUser.image) {
             await User.findByIdAndUpdate(existingUser._id, { image: user.image });
           }
-          // Attach existing user ID to the NextAuth user object
+          // ── Update refresh token if a new one was issued ──
+          if (account.refresh_token) {
+            await User.findByIdAndUpdate(existingUser._id, {
+              googleRefreshToken: account.refresh_token,
+              googleCalendarConnected: true,
+            });
+          }
           user.id = existingUser._id.toString();
           user.role = existingUser.role;
           user.isVerified = existingUser.isVerified;

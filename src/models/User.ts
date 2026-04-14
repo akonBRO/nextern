@@ -83,6 +83,8 @@ export interface IUser extends Document {
   gerUrl?: string;
   profileCompleteness: number;
   assignedAdvisorId?: mongoose.Types.ObjectId;
+  googleRefreshToken?: string;
+  googleCalendarConnected?: boolean;
   notificationPreferences: INotificationPreferences;
 
   // ── Employer fields ─────────────────────────────────────
@@ -164,6 +166,8 @@ const UserSchema = new Schema<IUser>(
     gerUrl: { type: String },
     profileCompleteness: { type: Number, default: 0, min: 0, max: 100 },
     assignedAdvisorId: { type: Schema.Types.ObjectId, ref: 'User' },
+    googleRefreshToken: { type: String, select: false }, // never exposed to client
+    googleCalendarConnected: { type: Boolean, default: false },
 
     // ── Notification preferences ─────────────────────────
     notificationPreferences: {

@@ -8,6 +8,8 @@ import { connectDB } from '@/lib/db';
 import { Application } from '@/models/Application';
 import { UpdateApplicationStatusSchema } from '@/lib/validations';
 import { onApplicationStatusChanged } from '@/lib/events';
+import { Job } from '@/models/Job';
+import { syncInterviewToCalendar, removeCalendarEvent } from '@/lib/calendar';
 
 // ── GET ───────────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
@@ -114,6 +116,43 @@ export async function PATCH(req: NextRequest) {
       },
       { new: true }
     );
+
+    // ── Calendar sync on status change ────────────────────────────────────
+    if (newStatus !== previousStatus) {
+      await onApplicationStatusChanged(application.studentId.toString(), newStatus).catch(() => {});
+
+      // Handle calendar events based on new status
+      try {
+        if (newStatus === 'interview_scheduled' && updated?.interviewScheduledAt) {
+          const job = await Job.findById(application.jobId).select('title companyName').lean();
+
+          if (job) {
+            await syncInterviewToCalendar(
+              application.studentId.toString(),
+              appId,
+              job.title,
+              job.companyName,
+              updated.interviewScheduledAt,
+              updated.googleCalendarEventId // pass existing ID to update if rescheduled
+            );
+          }
+        } else if (newStatus === 'withdrawn' || newStatus === 'rejected') {
+          // Remove calendar event when application ends
+          if (updated?.googleCalendarEventId) {
+            await removeCalendarEvent(
+              application.studentId.toString(),
+              updated.googleCalendarEventId
+            );
+            await Application.findByIdAndUpdate(appId, {
+              $unset: { googleCalendarEventId: '' },
+            });
+          }
+        }
+      } catch (calErr) {
+        console.error('[CALENDAR SYNC ON STATUS CHANGE]', calErr);
+        // non-blocking — never crash the response
+      }
+    }
 
     // Fire badge/event hook + notification only if status actually changed
     if (newStatus !== previousStatus) {

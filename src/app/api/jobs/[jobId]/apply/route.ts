@@ -13,12 +13,11 @@ import { notifyEmployerApplicationReceived } from '@/lib/notify';
 import { analyzeSkillGap } from '@/lib/gemini';
 import { checkFeatureAccess } from '@/lib/premium';
 import { FeatureUsage } from '@/models/FeatureUsage';
+import { syncJobDeadlineToCalendar, syncEventRegistrationToCalendar } from '@/lib/calendar';
 
 type Params = { params: Promise<{ jobId: string }> };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // POST /api/jobs/[jobId]/apply
-// ─────────────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest, { params }: Params) {
   try {
     const session = await auth();
@@ -74,18 +73,14 @@ export async function POST(req: NextRequest, { params }: Params) {
       );
     }
 
-    // ─────────────────────────────────────────────────────────────
     // USER SNAPSHOT (BOTH VERSIONS COMBINED)
-    // ─────────────────────────────────────────────────────────────
     const student = await User.findById(session.user.id)
       .select('name resumeUrl generatedResumeUrl skills cgpa completedCourses')
       .lean();
 
     const isEvent = job.type === 'webinar' || job.type === 'workshop';
 
-    // ─────────────────────────────────────────────────────────────
     // CREATE APPLICATION (MERGED SCHEMA)
-    // ─────────────────────────────────────────────────────────────
     const application = await Application.create({
       studentId: session.user.id,
       jobId,
@@ -111,9 +106,7 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     const appliedAt = new Date();
 
-    // ─────────────────────────────────────────────────────────────
     // JOB METRICS + VIEW TRACKING (FROM FIRST VERSION)
-    // ─────────────────────────────────────────────────────────────
     await Promise.all([
       Job.findByIdAndUpdate(jobId, { $inc: { applicationCount: 1 } }),
 
@@ -147,9 +140,33 @@ export async function POST(req: NextRequest, { params }: Params) {
       { isEventRegistration: isEvent }
     ).catch(() => {});
 
-    // ─────────────────────────────────────────────────────────────
+    // ── Calendar sync ────────────────────────────────────────────────────
+    try {
+      if (isEvent && job.startDate) {
+        // Webinar/workshop — sync the event date
+        await syncEventRegistrationToCalendar(
+          session.user.id,
+          application._id.toString(),
+          job.title,
+          job.companyName,
+          job.startDate
+        );
+      } else if (!isEvent && job.applicationDeadline) {
+        // Regular job — sync the deadline
+        await syncJobDeadlineToCalendar(
+          session.user.id,
+          application._id.toString(),
+          job.title,
+          job.companyName,
+          job.applicationDeadline
+        );
+      }
+    } catch (calErr) {
+      console.error('[CALENDAR SYNC ON APPLY]', calErr);
+      // non-blocking — never crash the apply response
+    }
+
     // SKILL GAP ANALYSIS (FROM FIRST VERSION - OPTIONAL FEATURE)
-    // ─────────────────────────────────────────────────────────────
     let appliedFitScore: number | null = null;
 
     try {
