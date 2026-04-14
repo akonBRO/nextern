@@ -7,6 +7,7 @@ import {
 } from '@/lib/ai-meta';
 
 const GEMINI_MODEL = 'gemini-3.1-flash-lite-preview';
+const GEMINI_FALLBACK_MODEL = 'gemini-2.5-flash';
 const LOCAL_SKILL_GAP_MODEL = 'local-skill-gap';
 const LOCAL_TRAINING_MODEL = 'local-training-path';
 const LOCAL_CAREER_MODEL = 'local-career-advice';
@@ -17,7 +18,8 @@ const GEMINI_RETRY_DELAYS_MS = [800, 1600];
 function getGeminiModel(
   generationConfig?: Record<string, unknown>,
   apiKey = process.env.GEMINI_API_KEY,
-  apiKeyName = 'GEMINI_API_KEY'
+  apiKeyName = 'GEMINI_API_KEY',
+  model = GEMINI_MODEL
 ) {
   if (!apiKey) {
     throw new Error(`${apiKeyName} is not configured.`);
@@ -25,7 +27,7 @@ function getGeminiModel(
 
   const genAI = new GoogleGenerativeAI(apiKey);
   return genAI.getGenerativeModel({
-    model: GEMINI_MODEL,
+    model,
     generationConfig: { temperature: 0.4, maxOutputTokens: 2048, ...generationConfig },
   });
 }
@@ -60,23 +62,30 @@ async function generateGeminiContent(
   apiKeyName?: string
 ) {
   let lastError: unknown;
+  const modelsToTry = [GEMINI_MODEL, GEMINI_FALLBACK_MODEL];
 
-  for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt += 1) {
-    try {
-      return await getGeminiModel(generationConfig, apiKey, apiKeyName).generateContent(prompt);
-    } catch (error) {
-      lastError = error;
-      const retryDelay = GEMINI_RETRY_DELAYS_MS[attempt];
+  for (const model of modelsToTry) {
+    for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt += 1) {
+      try {
+        return await getGeminiModel(generationConfig, apiKey, apiKeyName, model).generateContent(
+          prompt
+        );
+      } catch (error) {
+        lastError = error;
+        const retryDelay = GEMINI_RETRY_DELAYS_MS[attempt];
 
-      if (retryDelay === undefined || !isRetryableGeminiError(error)) {
-        throw error;
+        if (retryDelay === undefined || !isRetryableGeminiError(error)) {
+          break;
+        }
+
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(
+            `[GEMINI RETRY] Attempt ${attempt + 1} failed on ${model}. Retrying in ${retryDelay}ms.`
+          );
+        }
+
+        await sleep(retryDelay);
       }
-
-      if (process.env.NODE_ENV === 'development') {
-        console.warn(`[GEMINI RETRY] Attempt ${attempt + 1} failed. Retrying in ${retryDelay}ms.`);
-      }
-
-      await sleep(retryDelay);
     }
   }
 
@@ -97,8 +106,8 @@ function extractJsonPayload(raw: string): string {
     .replace(/```json\s*/gi, '')
     .replace(/```\s*/gi, '')
     .replace(/^\uFEFF/, '')
-    .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'")
+    .replace(/[""]/g, '"')
+    .replace(/['']/g, "'")
     .trim();
   if (!clean) {
     throw new Error('Gemini returned an empty response.');
@@ -406,11 +415,41 @@ function normalizeSkillGapCandidate(
   }
 
   const candidate = value as Record<string, unknown>;
-  const nested = ['analysis', 'result', 'data', 'skillGap']
+
+  // Check all known wrapper keys that different models may use
+  const nested = [
+    'analysis',
+    'result',
+    'data',
+    'skillGap',
+    'skillGapAnalysis',
+    'response',
+    'output',
+    'payload',
+  ]
     .map((key) => candidate[key])
     .find((item) => item && typeof item === 'object' && !Array.isArray(item));
 
-  return (nested ?? candidate) as Partial<SkillGapResult> & Record<string, unknown>;
+  const resolved = (nested ?? candidate) as Partial<SkillGapResult> & Record<string, unknown>;
+
+  // If the resolved object has at least one expected field, accept it.
+  // This prevents rejecting a valid flat response that just lacks a wrapper.
+  const hasKnownField =
+    'fitScore' in resolved ||
+    'hardGaps' in resolved ||
+    'softGaps' in resolved ||
+    'metRequirements' in resolved ||
+    'suggestedPath' in resolved ||
+    'summary' in resolved;
+
+  if (!hasKnownField) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[GEMINI SKILL GAP SHAPE MISMATCH]', JSON.stringify(resolved).slice(0, 500));
+    }
+    throw new Error('Gemini did not return skill gap data.');
+  }
+
+  return resolved;
 }
 
 function buildDerivedSkillGapSummary(result: Omit<SkillGapResult, 'summary'>) {
