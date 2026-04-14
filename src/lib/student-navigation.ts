@@ -69,6 +69,11 @@ export const STUDENT_NAV_ITEMS: DashboardNavItem[] = [
     href: '/student/badges',
   },
   {
+    label: 'Calendar',
+    icon: 'calendar',
+    href: '/student/calendar',
+  },
+  {
     label: 'Growth',
     icon: 'insights',
     items: [

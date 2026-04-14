@@ -20,12 +20,9 @@ import {
   ActionLink,
   Panel,
   StatCard,
-  Tag,
   formatCompactNumber,
-  formatShortDate,
-  formatStatusLabel,
 } from '@/components/dashboard/DashboardContent';
-import { BriefcaseBusiness, CheckCircle2, Trophy, Clock3, CalendarDays } from 'lucide-react';
+import { BriefcaseBusiness, CheckCircle2, Trophy, CalendarDays } from 'lucide-react';
 import ApplicationsTabs from './ApplicationsTabs';
 
 async function getApplicationsData(userId: string) {

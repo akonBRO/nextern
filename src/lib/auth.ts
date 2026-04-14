@@ -16,6 +16,16 @@ function isValidObjectId(value: unknown): value is string {
   return typeof value === 'string' && mongoose.Types.ObjectId.isValid(value);
 }
 
+function hasGoogleCalendarScope(scope?: string | null): boolean {
+  if (typeof scope !== 'string') return false;
+
+  const grantedScopes = new Set(scope.split(/\s+/).filter(Boolean));
+  return (
+    grantedScopes.has('https://www.googleapis.com/auth/calendar') ||
+    grantedScopes.has('https://www.googleapis.com/auth/calendar.events')
+  );
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // ── Providers ──────────────────────────────────────────────────────────
   providers: [
@@ -169,6 +179,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
         await connectDB();
+        const grantedCalendarAccess = hasGoogleCalendarScope(account.scope);
 
         const existingUser = await User.findOne({ email: user.email?.toLowerCase() });
 
@@ -181,7 +192,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             isVerified: true,
             verificationStatus: 'approved',
             // ── Save refresh token if provided ──
-            ...(account.refresh_token
+            ...(account.refresh_token && grantedCalendarAccess
               ? {
                   googleRefreshToken: account.refresh_token,
                   googleCalendarConnected: true,
@@ -197,7 +208,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             await User.findByIdAndUpdate(existingUser._id, { image: user.image });
           }
           // ── Update refresh token if a new one was issued ──
-          if (account.refresh_token) {
+          if (account.refresh_token && grantedCalendarAccess) {
             await User.findByIdAndUpdate(existingUser._id, {
               googleRefreshToken: account.refresh_token,
               googleCalendarConnected: true,

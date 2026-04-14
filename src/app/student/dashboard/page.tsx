@@ -1,6 +1,11 @@
+// src/app/student/dashboard/page.tsx
+
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { getStudentDashboardData } from '@/lib/student-dashboard';
+import { getUpcomingCalendarEvents } from '@/lib/calendar-events';
+import { connectDB } from '@/lib/db';
+import { User } from '@/models/User';
 import DashboardClient from './DashboardClient';
 import type { Metadata } from 'next';
 
@@ -59,5 +64,29 @@ export default async function StudentDashboardPage() {
     };
   }
 
-  return <DashboardClient data={data} userId={session.user.id} />;
+  // ── Fetch calendar data server-side ──────────────────────────────────────
+  let calendarEvents: Awaited<ReturnType<typeof getUpcomingCalendarEvents>> = [];
+  let isCalendarConnected = false;
+
+  try {
+    await connectDB();
+    const [events, calUser] = await Promise.all([
+      getUpcomingCalendarEvents(session.user.id, 24),
+      User.findById(session.user.id).select('googleCalendarConnected').lean(),
+    ]);
+    calendarEvents = events;
+    isCalendarConnected = calUser?.googleCalendarConnected ?? false;
+  } catch (err) {
+    console.error('[CALENDAR WIDGET ERROR]', err);
+    // non-blocking — dashboard still renders without calendar
+  }
+
+  return (
+    <DashboardClient
+      data={data}
+      userId={session.user.id}
+      calendarEvents={calendarEvents}
+      isCalendarConnected={isCalendarConnected}
+    />
+  );
 }

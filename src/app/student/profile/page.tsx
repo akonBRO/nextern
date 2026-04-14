@@ -29,8 +29,10 @@ import {
   Mail,
   Phone,
   Bell,
+  Calendar,
 } from 'lucide-react';
 import { useUploadThing } from '@/lib/uploadthing';
+import CalendarConnectButton from '@/components/calendar/CalendarConnectButton';
 
 const C = {
   blue: '#2563EB',
@@ -657,6 +659,7 @@ type UserData = {
     repoUrl?: string;
   }[];
   certifications: { name: string; issuedBy: string; credentialUrl?: string }[];
+  googleCalendarConnected?: boolean;
   notificationPreferences?: Record<string, boolean>;
 };
 
@@ -2216,8 +2219,9 @@ export default function StudentProfilePage() {
           )}
         </div>
 
-        {/* 9 — Reputation & Reviews */}
+        {/* 9 — Google Calendar */}
         <div
+          id="calendar"
           style={{
             background: C.white,
             borderRadius: 18,
@@ -2226,15 +2230,12 @@ export default function StudentProfilePage() {
             boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
           }}
         >
-          <SectionHeader icon={<Award size={18} />} label="Reputation & Verified Reviews" />
-          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16 }}>
-            Verified feedback from employers you&apos;ve worked with appears here.
+          <SectionHeader icon={<Calendar size={18} />} label="Google Calendar" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16, lineHeight: 1.6 }}>
+            Connect your Google Calendar to automatically sync job application deadlines, scheduled
+            interviews, and registered events. Updates happen instantly — no manual tracking needed.
           </div>
-          {user && (user._id || user.id) ? (
-            <ReputationHistory userId={(user._id || user.id) as string} userRole="student" />
-          ) : (
-            <div style={{ fontSize: 13, color: C.light }}>Loading reputation data...</div>
-          )}
+          <CalendarConnectButton isConnected={user?.googleCalendarConnected ?? false} />
         </div>
 
         {/* 10 — Notification Preferences */}

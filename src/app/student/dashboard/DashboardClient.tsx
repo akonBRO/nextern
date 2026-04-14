@@ -1,8 +1,11 @@
 'use client';
 
 import type { DashboardData } from '@/lib/student-dashboard';
+import type { UpcomingCalendarEvent } from '@/lib/calendar-events';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import {
   ActionLink,
@@ -20,6 +23,7 @@ import {
   formatStatusLabel,
   getDaysLeftLabel,
 } from '@/components/dashboard/DashboardContent';
+import CalendarWidget from '@/components/calendar/CalendarWidget';
 import {
   Award,
   BriefcaseBusiness,
@@ -36,7 +40,6 @@ import {
 
 function formatCurrency(value?: number) {
   if (!value || value <= 0) return 'Negotiable';
-
   return new Intl.NumberFormat('en-BD', {
     style: 'currency',
     currency: 'BDT',
@@ -53,63 +56,55 @@ function getStatusTone(status: string): 'info' | 'success' | 'warning' | 'neutra
   return 'neutral';
 }
 
-const navItems = [
-  { label: 'Overview', href: '/student/dashboard', icon: 'dashboard' as const },
-  { label: 'Browse Jobs', href: '/student/jobs', icon: 'briefcase' as const },
-  {
-    label: 'Career',
-    icon: 'file' as const,
-    items: [
-      {
-        label: 'Applications',
-        href: '/student/applications',
-        description: 'Review your active application pipeline and latest submissions.',
-        icon: 'file' as const,
-      },
-      {
-        label: 'Recommended roles',
-        href: '/student/jobs',
-        description: 'See the best current matches based on your skills and profile.',
-        icon: 'sparkles' as const,
-      },
-      {
-        label: 'Deadlines',
-        href: '/student/applications',
-        description: 'Stay ahead of closing application windows.',
-        icon: 'calendar' as const,
-      },
-    ],
-  },
-  {
-    label: 'Growth',
-    icon: 'insights' as const,
-    items: [
-      {
-        label: 'Score trend',
-        href: '/student/dashboard#score',
-        description: 'Track how your opportunity score has changed over time.',
-        icon: 'insights' as const,
-      },
-      {
-        label: 'Skill gaps',
-        href: '/student/dashboard#skills',
-        description: 'Focus on the skills that impact your readiness.',
-        icon: 'target' as const,
-      },
-      {
-        label: 'Badges',
-        href: '/student/dashboard#badges',
-        description: 'Review the badges and milestones you have earned.',
-        icon: 'shield' as const,
-      },
-    ],
-  },
-];
+interface DashboardClientProps {
+  data: DashboardData;
+  userId: string;
+  calendarEvents: UpcomingCalendarEvent[];
+  isCalendarConnected: boolean;
+}
 
-export default function DashboardClient({ data, userId }: { data: DashboardData; userId: string }) {
+export default function DashboardClient({
+  data,
+  userId,
+  calendarEvents,
+  isCalendarConnected,
+}: DashboardClientProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasTriggeredCalendarSync = useRef(false);
   const profileSubtitle = [data.profile.university, data.profile.department]
     .filter(Boolean)
     .join(' | ');
+
+  useEffect(() => {
+    if (!isCalendarConnected) return;
+    if (searchParams.get('calendar') !== 'connected') return;
+    if (hasTriggeredCalendarSync.current) return;
+
+    hasTriggeredCalendarSync.current = true;
+    let isActive = true;
+
+    void (async () => {
+      try {
+        await fetch('/api/calendar/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resync: true }),
+        });
+      } catch (error) {
+        console.error('[CALENDAR AUTO-SYNC ERROR]', error);
+      } finally {
+        if (!isActive) return;
+        router.replace('/student/dashboard#calendar');
+        router.refresh();
+      }
+    })();
+
+    return () => {
+      isActive = false;
+    };
+  }, [isCalendarConnected, router, searchParams]);
+
   return (
     <DashboardShell
       role="student"
@@ -336,6 +331,7 @@ export default function DashboardClient({ data, userId }: { data: DashboardData;
           }
         />
 
+        {/* ── Stat cards ── */}
         <section style={{ marginTop: 22 }}>
           <div
             style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}
@@ -371,13 +367,14 @@ export default function DashboardClient({ data, userId }: { data: DashboardData;
           </div>
         </section>
 
+        {/* ── Score trend + Calendar side by side ── */}
         <DashboardSection
           id="score"
-          title="Readiness and score"
-          description="A cleaner view of how your profile strength is evolving, alongside time-sensitive actions you should not miss."
+          title="Readiness and schedule"
+          description="Track your score movement, then scroll straight into a month-view planner for deadlines and interviews."
         >
           <div
-            style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.95fr', gap: 16 }}
+            style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}
             className="dashboard-grid-two"
           >
             <Panel
@@ -438,77 +435,87 @@ export default function DashboardClient({ data, userId }: { data: DashboardData;
               </div>
             </Panel>
 
-            <div id="deadlines">
-              <Panel
-                title="Priority deadlines"
-                description="Roles you already engaged with that need attention soon."
-                action={
-                  <Tag
-                    label={`${data.deadlines.length} active`}
-                    tone={data.deadlines.length > 0 ? 'warning' : 'neutral'}
-                  />
-                }
-              >
-                <div style={{ display: 'grid', gap: 12 }}>
-                  {data.deadlines.length > 0 ? (
-                    data.deadlines.map((deadline) => (
-                      <div
-                        key={deadline._id}
-                        style={{
-                          padding: 16,
-                          borderRadius: 18,
-                          background: '#F8FAFC',
-                          border: '1px solid #E2E8F0',
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            justifyContent: 'space-between',
-                            gap: 12,
-                          }}
-                        >
-                          <div>
-                            <div style={{ fontSize: 15, fontWeight: 800, color: '#1E293B' }}>
-                              {deadline.jobTitle}
-                            </div>
-                            <div style={{ marginTop: 4, fontSize: 13, color: '#64748B' }}>
-                              {deadline.companyName}
-                            </div>
-                          </div>
-                          <Tag
-                            label={getDaysLeftLabel(deadline.daysLeft)}
-                            tone={deadline.daysLeft <= 2 ? 'warning' : 'info'}
-                          />
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 12,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            color: '#64748B',
-                            fontSize: 13,
-                          }}
-                        >
-                          <CalendarClock size={15} strokeWidth={2} />
-                          Deadline: {formatShortDate(deadline.deadline)}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <EmptyState
-                      title="Nothing urgent right now"
-                      description="Upcoming deadlines will appear here once you apply to active opportunities."
-                    />
-                  )}
-                </div>
-              </Panel>
+            {/* ── CalendarWidget lives here ── */}
+            <div id="calendar">
+              <CalendarWidget events={calendarEvents} isCalendarConnected={isCalendarConnected} />
             </div>
           </div>
         </DashboardSection>
 
+        {/* ── Deadlines ── */}
+        <DashboardSection
+          id="deadlines"
+          title="Priority deadlines"
+          description="Roles you already engaged with that need attention soon."
+        >
+          <Panel
+            title="Upcoming deadlines"
+            action={
+              <Tag
+                label={`${data.deadlines.length} active`}
+                tone={data.deadlines.length > 0 ? 'warning' : 'neutral'}
+              />
+            }
+          >
+            <div style={{ display: 'grid', gap: 12 }}>
+              {data.deadlines.length > 0 ? (
+                data.deadlines.map((deadline) => (
+                  <div
+                    key={deadline._id}
+                    style={{
+                      padding: 16,
+                      borderRadius: 18,
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: '#1E293B' }}>
+                          {deadline.jobTitle}
+                        </div>
+                        <div style={{ marginTop: 4, fontSize: 13, color: '#64748B' }}>
+                          {deadline.companyName}
+                        </div>
+                      </div>
+                      <Tag
+                        label={getDaysLeftLabel(deadline.daysLeft)}
+                        tone={deadline.daysLeft <= 2 ? 'warning' : 'info'}
+                      />
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 12,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        color: '#64748B',
+                        fontSize: 13,
+                      }}
+                    >
+                      <CalendarClock size={15} strokeWidth={2} />
+                      Deadline: {formatShortDate(deadline.deadline)}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <EmptyState
+                  title="Nothing urgent right now"
+                  description="Upcoming deadlines will appear here once you apply to active opportunities."
+                />
+              )}
+            </div>
+          </Panel>
+        </DashboardSection>
+
+        {/* ── Recent applications ── */}
         <DashboardSection
           id="applications"
           title="Recent application activity"
@@ -602,6 +609,7 @@ export default function DashboardClient({ data, userId }: { data: DashboardData;
           </Panel>
         </DashboardSection>
 
+        {/* ── Recommended jobs ── */}
         <DashboardSection
           id="recommended"
           title="Recommended opportunities"
@@ -697,6 +705,7 @@ export default function DashboardClient({ data, userId }: { data: DashboardData;
           )}
         </DashboardSection>
 
+        {/* ── Skills & credentials ── */}
         <DashboardSection
           id="skills"
           title="Skills and credentials"
@@ -832,7 +841,6 @@ export default function DashboardClient({ data, userId }: { data: DashboardData;
               grid-template-columns: 1fr 1fr !important;
             }
           }
-
           @media (max-width: 960px) {
             .dashboard-stats-grid,
             .dashboard-grid-two,
