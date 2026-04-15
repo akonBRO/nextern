@@ -23,7 +23,9 @@ import { MentorSession } from '@/models/MentorSession';
 import { FreelanceListing } from '@/models/FreelanceListing';
 import { FreelanceOrder } from '@/models/FreelanceOrder';
 import { Assessment } from '@/models/Assessment';
+import { AssessmentAssignment } from '@/models/AssessmentAssignment';
 import { AssessmentSubmission } from '@/models/AssessmentSubmission';
+import { InterviewSession } from '@/models/InterviewSession';
 import { onProfileVerified } from '@/lib/events';
 
 type Params = { params: Promise<{ userId: string }> };
@@ -282,6 +284,22 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
           { studentId: userId },
           { applicationId: { $in: applicationIds } },
           { assessmentId: { $in: assessmentIds } },
+        ],
+      }),
+      AssessmentAssignment.deleteMany({
+        $or: [
+          { studentId: userId },
+          { employerId: userId },
+          { applicationId: { $in: applicationIds } },
+          { assessmentId: { $in: assessmentIds } },
+        ],
+      }),
+      InterviewSession.deleteMany({
+        $or: [
+          { studentId: userId },
+          { employerId: userId },
+          { applicationId: { $in: applicationIds } },
+          { jobId: { $in: ownedJobIds } },
         ],
       }),
       Assessment.deleteMany({

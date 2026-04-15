@@ -28,6 +28,32 @@ export const STUDENT_NAV_ITEMS: DashboardNavItem[] = [
     ],
   },
   {
+    label: 'Hiring Suite',
+    icon: 'target',
+    items: [
+      {
+        label: 'Assessments',
+        href: '/student/assessments',
+        description: 'Open employer tests, timed assessments, and coding challenges in one place.',
+        icon: 'file',
+      },
+      {
+        label: 'Interviews',
+        href: '/student/interviews',
+        description:
+          'Join scheduled interviews, manage recording consent, and track session status.',
+        icon: 'messages',
+      },
+      {
+        label: 'Application Tracker',
+        href: '/student/applications',
+        description:
+          'Return to the job tracker with direct links to active assessments and interviews.',
+        icon: 'briefcase',
+      },
+    ],
+  },
+  {
     label: 'Freelance',
     icon: 'briefcase',
     items: [
@@ -117,30 +143,7 @@ export const STUDENT_NAV_ITEMS: DashboardNavItem[] = [
     icon: 'calendar',
     href: '/student/calendar',
   },
-  {
-    label: 'Growth',
-    icon: 'insights',
-    items: [
-      {
-        label: 'Score trend',
-        href: '/student/dashboard#score',
-        description: 'Track your opportunity score movement over time.',
-        icon: 'insights',
-      },
-      {
-        label: 'Skill dashboard',
-        href: '/student/dashboard#skills',
-        description: 'Review the gaps and strengths shaping your readiness.',
-        icon: 'target',
-      },
-      {
-        label: 'Badges',
-        href: '/student/dashboard#badges',
-        description: 'Check the milestones and achievements you have earned.',
-        icon: 'shield',
-      },
-    ],
-  },
+
   {
     label: 'Premium',
     icon: 'shield',

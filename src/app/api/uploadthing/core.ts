@@ -151,6 +151,35 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ file }) => {
       return { ufsUrl: file.ufsUrl, name: file.name, type: file.type };
     }),
+
+  assessmentAttachmentUploader: f({
+    image: { maxFileSize: '8MB', maxFileCount: 8 },
+    pdf: { maxFileSize: '16MB', maxFileCount: 8 },
+  })
+    .middleware(async () => {
+      const session = await auth();
+      if (!session?.user?.id) throw new UploadThingError('Unauthorized');
+      if (!['student', 'employer'].includes(session.user.role)) {
+        throw new UploadThingError('Students and employers only');
+      }
+      return { userId: session.user.id };
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { ufsUrl: file.ufsUrl, name: file.name, type: file.type };
+    }),
+
+  interviewRecordingUploader: f({
+    video: { maxFileSize: '64MB', maxFileCount: 1 },
+  })
+    .middleware(async () => {
+      const session = await auth();
+      if (!session?.user?.id) throw new UploadThingError('Unauthorized');
+      if (session.user.role !== 'employer') throw new UploadThingError('Employers only');
+      return { userId: session.user.id };
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { ufsUrl: file.ufsUrl, name: file.name, type: file.type };
+    }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

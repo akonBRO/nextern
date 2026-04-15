@@ -1,5 +1,5 @@
-// src/app/page.tsx
-// Nextern Landing Page — world-class, premium redesign
+﻿// src/app/page.tsx
+// Nextern Landing Page â€” world-class, premium redesign
 // Sections: Navbar, Hero, Logos/Stats, Features, For Students, For Employers, Universities, Testimonials, CTA, Footer
 
 import Link from 'next/link';
@@ -9,8 +9,7 @@ import React from 'react';
 import { NexternLogo } from '@/components/brand/NexternLogo';
 import { getDefaultAuthenticatedRoute } from '@/lib/role-routing';
 
-const CURRENT_YEAR = 2026;
-/* ─── INLINE SVG ICONS ──────────────────────────────────────────────── */
+/* â”€â”€â”€ INLINE SVG ICONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const Icons = {
   Brain: () => (
     <svg
@@ -333,7 +332,7 @@ const Icons = {
   ),
 };
 
-/* ─── STAT CARD ─────────────────────────────────────────────────────── */
+/* â”€â”€â”€ STAT CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function StatCard({
   value,
   label,
@@ -393,7 +392,7 @@ function StatCard({
   );
 }
 
-/* ─── FEATURE CARD ──────────────────────────────────────────────────── */
+/* â”€â”€â”€ FEATURE CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function FeatureCard({
   icon,
   title,
@@ -455,7 +454,7 @@ function FeatureCard({
   );
 }
 
-/* ─── STEP ──────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ STEP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function Step({
   num,
   title,
@@ -520,7 +519,7 @@ function Step({
   );
 }
 
-/* ─── TESTIMONIAL CARD ──────────────────────────────────────────────── */
+/* â”€â”€â”€ TESTIMONIAL CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function TestimonialCard({
   name,
   role,
@@ -597,7 +596,7 @@ function TestimonialCard({
             {name}
           </div>
           <div style={{ color: '#64748B', fontSize: 12 }}>
-            {role} · {uni}
+            {role} Â· {uni}
           </div>
         </div>
       </div>
@@ -605,7 +604,7 @@ function TestimonialCard({
   );
 }
 
-/* ─── CHECK POINT ────────────────────────────────────────────────────── */
+/* â”€â”€â”€ CHECK POINT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function CheckPoint({ text }: { text: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14 }}>
@@ -617,7 +616,7 @@ function CheckPoint({ text }: { text: string }) {
   );
 }
 
-/* ─── MAIN PAGE ─────────────────────────────────────────────────────── */
+/* â”€â”€â”€ MAIN PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export default async function LandingPage() {
   const session = await auth();
   if (session?.user) {
@@ -631,7 +630,7 @@ export default async function LandingPage() {
 
   return (
     <div style={{ fontFamily: 'var(--font-body)', background: '#F8FAFC', overflowX: 'hidden' }}>
-      {/* ── NAVBAR ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ NAVBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <nav
         style={{
           position: 'sticky',
@@ -737,7 +736,7 @@ export default async function LandingPage() {
         </div>
       </nav>
 
-      {/* ── HERO ────────────────────────────────────────────────────── */}
+      {/* â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section
         style={{
           background: '#0F172A',
@@ -964,7 +963,7 @@ export default async function LandingPage() {
               </div>
             </div>
 
-            {/* Right — Hero visual card */}
+            {/* Right â€” Hero visual card */}
             <div style={{ position: 'relative' }} className="hero-visual">
               {/* Main card */}
               <div
@@ -1207,7 +1206,7 @@ export default async function LandingPage() {
                     New match found
                   </div>
                   <div style={{ fontSize: 11, color: '#64748B' }}>
-                    Frontend Dev @ bKash — 94% fit
+                    Frontend Dev @ bKash â€” 94% fit
                   </div>
                 </div>
               </div>
@@ -1216,7 +1215,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── STATS BAR ─────────────────────────────────────────────── */}
+      {/* â”€â”€ STATS BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section style={{ background: '#F8FAFC', padding: '60px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
@@ -1244,7 +1243,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── FEATURES ──────────────────────────────────────────────── */}
+      {/* â”€â”€ FEATURES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section id="features" style={{ background: '#fff', padding: '100px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           {/* Section header */}
@@ -1295,7 +1294,7 @@ export default async function LandingPage() {
                 lineHeight: 1.7,
               }}
             >
-              From AI-powered matching to real-time mentorship — Nextern has every tool you need.
+              From AI-powered matching to real-time mentorship â€” Nextern has every tool you need.
             </p>
           </div>
 
@@ -1336,7 +1335,7 @@ export default async function LandingPage() {
               title="Graduation Report"
               accent="#0284C7"
               bg="#F0F9FF"
-              desc="A verified achievement document scoring your entire university career — shareable directly with top recruiters."
+              desc="A verified achievement document scoring your entire university career â€” shareable directly with top recruiters."
             />
             <FeatureCard
               icon={Icons.Users}
@@ -1349,7 +1348,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── FOR STUDENTS ──────────────────────────────────────────── */}
+      {/* â”€â”€ FOR STUDENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section id="for-students" style={{ background: '#F8FAFC', padding: '100px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           <div
@@ -1449,7 +1448,7 @@ export default async function LandingPage() {
               </Link>
             </div>
 
-            {/* Right — dark card */}
+            {/* Right â€” dark card */}
             <div
               style={{
                 background: 'linear-gradient(145deg, #1E293B 0%, #0F172A 100%)',
@@ -1485,7 +1484,7 @@ export default async function LandingPage() {
                     marginBottom: 8,
                   }}
                 >
-                  Your Fit Score — bKash Frontend Role
+                  Your Fit Score â€” bKash Frontend Role
                 </div>
                 <div
                   style={{
@@ -1641,7 +1640,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── FOR EMPLOYERS ─────────────────────────────────────────── */}
+      {/* â”€â”€ FOR EMPLOYERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section id="for-employers" style={{ background: '#fff', padding: '100px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           <div
@@ -1653,7 +1652,7 @@ export default async function LandingPage() {
             }}
             className="split-grid"
           >
-            {/* Left — Applicant pipeline card */}
+            {/* Left â€” Applicant pipeline card */}
             <div
               style={{
                 background: '#fff',
@@ -1684,7 +1683,7 @@ export default async function LandingPage() {
                     Applicant Pipeline
                   </div>
                   <div style={{ color: '#64748B', fontSize: 13, marginTop: 2 }}>
-                    Frontend Developer Intern — Dhaka
+                    Frontend Developer Intern â€” Dhaka
                   </div>
                 </div>
                 <span
@@ -1935,7 +1934,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── UNIVERSITIES ──────────────────────────────────────────── */}
+      {/* â”€â”€ UNIVERSITIES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section id="universities" style={{ background: '#F8FAFC', padding: '100px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           {/* Header */}
@@ -2064,7 +2063,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ──────────────────────────────────────────── */}
+      {/* â”€â”€ TESTIMONIALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section style={{ background: '#fff', padding: '100px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
@@ -2145,7 +2144,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA BANNER ────────────────────────────────────────────── */}
+      {/* â”€â”€ CTA BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section
         style={{
           background: 'linear-gradient(135deg, #0F172A 0%, #1E3A5F 60%, #0F172A 100%)',
@@ -2306,130 +2305,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── FOOTER ────────────────────────────────────────────────── */}
-      <footer style={{ background: '#0F172A', padding: '64px 0 0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '2fr 1fr 1fr 1fr',
-              gap: 40,
-              marginBottom: 56,
-            }}
-            className="footer-grid"
-          >
-            {/* Brand */}
-            <div>
-              <NexternLogo
-                markSize={32}
-                markRadius={9}
-                textSize={20}
-                textColor="#fff"
-                style={{ marginBottom: 16 }}
-              />
-              <p
-                style={{
-                  color: '#475569',
-                  fontSize: 14,
-                  lineHeight: 1.8,
-                  maxWidth: 280,
-                  marginBottom: 24,
-                }}
-              >
-                Campus career readiness platform for Bangladesh university students and employers.
-                AI-powered, mentor-backed, university-verified.
-              </p>
-              <div style={{ display: 'flex', gap: 12 }}>
-                {[Icons.Twitter, Icons.Linkedin, Icons.Mail].map((Icon, i) => (
-                  <a
-                    key={i}
-                    href="#"
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 9,
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#64748B',
-                      transition: 'color 0.15s, background 0.15s',
-                    }}
-                  >
-                    <div style={{ width: 16, height: 16 }}>
-                      <Icon />
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            {/* Cols */}
-            {[
-              {
-                title: 'Platform',
-                links: ['For Students', 'For Employers', 'For Universities', 'Pricing'],
-              },
-              { title: 'Resources', links: ['Blog', 'Career Guide', 'Help Center', 'API Docs'] },
-              {
-                title: 'Company',
-                links: ['About', 'Contact', 'Privacy Policy', 'Terms of Service'],
-              },
-            ].map((col) => (
-              <div key={col.title}>
-                <div
-                  style={{
-                    color: '#E2E8F0',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    letterSpacing: 0.5,
-                    marginBottom: 18,
-                  }}
-                >
-                  {col.title}
-                </div>
-                {col.links.map((link) => (
-                  <div key={link} style={{ marginBottom: 12 }}>
-                    <a
-                      href="#"
-                      className="landing-footer-link"
-                      style={{
-                        color: '#475569',
-                        fontSize: 14,
-                        textDecoration: 'none',
-                        transition: 'color 0.15s',
-                      }}
-                    >
-                      {link}
-                    </a>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-
-          {/* Bottom bar */}
-          <div
-            style={{
-              borderTop: '1px solid rgba(255,255,255,0.06)',
-              padding: '24px 0 32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: 8,
-            }}
-          >
-            <p style={{ color: '#334155', fontSize: 13 }}>
-              © {CURRENT_YEAR} Nextern. Built by Group 05, CSE471, BRAC University.
-            </p>
-            <p style={{ color: '#334155', fontSize: 13 }}>Made with care for Bangladesh students</p>
-          </div>
-        </div>
-      </footer>
-
-      {/* ── RESPONSIVE STYLES ─────────────────────────────────────── */}
+      {/* â”€â”€ RESPONSIVE STYLES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <style>{`
         @media (max-width: 900px) {
           .hero-grid { grid-template-columns: 1fr !important; }
@@ -2437,19 +2313,16 @@ export default async function LandingPage() {
           .split-grid { grid-template-columns: 1fr !important; }
           .features-grid { grid-template-columns: 1fr 1fr !important; }
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
-          .footer-grid { grid-template-columns: 1fr 1fr !important; }
         }
         @media (max-width: 600px) {
           .features-grid { grid-template-columns: 1fr !important; }
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
-          .footer-grid { grid-template-columns: 1fr 1fr !important; }
         }
         .landing-nav-link:hover { color: #fff !important; }
         .landing-feature-card:hover {
           transform: translateY(-5px) !important;
           box-shadow: 0 16px 48px rgba(0,0,0,0.1) !important;
         }
-        .landing-footer-link:hover { color: #94A3B8 !important; }
       `}</style>
     </div>
   );

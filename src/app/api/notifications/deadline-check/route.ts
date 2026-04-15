@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { JobView } from '@/models/JobView';
 import { Notification } from '@/models/Notification';
+import { sendHiringSuiteReminders } from '@/lib/hiring-suite';
 import { notifyDeadlineReminder } from '@/lib/notify';
 import mongoose from 'mongoose';
 
@@ -93,6 +94,10 @@ export async function GET(req: NextRequest) {
 
       fired.push(`${studentId}:${jobId}:${daysLeft}d`);
     }
+
+    await sendHiringSuiteReminders().catch((error) => {
+      console.error('[HIRING REMINDER ERROR]', error);
+    });
 
     return NextResponse.json({
       message: 'Deadline check complete',

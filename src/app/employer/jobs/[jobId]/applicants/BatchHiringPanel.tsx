@@ -6,6 +6,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import ApplicantActions from './ApplicantActions';
+import HiringSuiteBatchActions from './HiringSuiteBatchActions';
 import {
   ChevronDown,
   ChevronUp,
@@ -704,6 +705,9 @@ export default function BatchHiringPanel({
   const aiUsageLabel = usageState.isPremium
     ? 'Premium: unlimited AI shortlists'
     : `${aiRemaining ?? 0}/${aiLimit ?? 0} AI shortlists left this month`;
+  const selectedApplicationRecords = applications.filter((application) =>
+    selectedApps.has(application._id)
+  );
 
   async function handleAiShortlist() {
     setAiLoading(true);
@@ -1274,6 +1278,8 @@ export default function BatchHiringPanel({
           </div>
         ) : null}
       </div>
+
+      <HiringSuiteBatchActions jobId={jobId} selectedApplications={selectedApplicationRecords} />
 
       <div
         style={{

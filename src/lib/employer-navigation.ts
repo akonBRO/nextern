@@ -28,6 +28,30 @@ export const EMPLOYER_NAV_ITEMS: DashboardNavItem[] = [
     ],
   },
   {
+    label: 'Hiring Suite',
+    icon: 'target',
+    items: [
+      {
+        label: 'Assessments',
+        href: '/employer/assessments',
+        description: 'Create tests, assign shortlisted candidates, and review grading progress.',
+        icon: 'file',
+      },
+      {
+        label: 'Interviews',
+        href: '/employer/interviews',
+        description: 'Run live interviews with Agora rooms, scorecards, notes, and recordings.',
+        icon: 'messages',
+      },
+      {
+        label: 'Pipeline Actions',
+        href: '/employer/jobs',
+        description: 'Open applicant pipelines and batch-send assessments or interview invites.',
+        icon: 'users',
+      },
+    ],
+  },
+  {
     label: 'Freelance',
     icon: 'briefcase',
     items: [
