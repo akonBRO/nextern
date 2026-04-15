@@ -10,7 +10,9 @@ import { Job } from '@/models/Job';
 import { JobView } from '@/models/JobView';
 import { Application } from '@/models/Application';
 import { Assessment } from '@/models/Assessment';
+import { AssessmentAssignment } from '@/models/AssessmentAssignment';
 import { AssessmentSubmission } from '@/models/AssessmentSubmission';
+import { InterviewSession } from '@/models/InterviewSession';
 import { Message } from '@/models/Message';
 import { AdminJobUpdateSchema, UpdateJobSchema } from '@/lib/validations';
 
@@ -140,6 +142,10 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       AssessmentSubmission.deleteMany({
         $or: [{ applicationId: { $in: applicationIds } }, { assessmentId: { $in: assessmentIds } }],
       }),
+      AssessmentAssignment.deleteMany({
+        $or: [{ applicationId: { $in: applicationIds } }, { assessmentId: { $in: assessmentIds } }],
+      }),
+      InterviewSession.deleteMany({ $or: [{ applicationId: { $in: applicationIds } }, { jobId }] }),
       Assessment.deleteMany({ jobId }),
       Application.deleteMany({ jobId }),
       JobView.deleteMany({ jobId }),

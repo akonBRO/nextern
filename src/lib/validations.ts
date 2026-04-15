@@ -340,6 +340,142 @@ export const UpdateApplicationStatusSchema = z.object({
   note: z.string().max(500).optional(),
 });
 
+const HiringAssetSchema = z.object({
+  url: z.string().url(),
+  name: z.string().min(1).max(160),
+  type: z.string().min(1).max(120),
+});
+
+const AssessmentQuestionSchema = z.object({
+  index: z.number().int().min(0),
+  type: z.enum(['mcq', 'short_answer', 'coding', 'case_study']),
+  questionText: z.string().min(10).max(4000),
+  marks: z.number().int().min(1).max(100),
+  options: z.array(z.string().min(1).max(300)).max(8).optional().default([]),
+  correctOptionIndex: z.number().int().min(0).max(7).optional(),
+  acceptedAnswers: z.array(z.string().min(1).max(300)).max(8).optional().default([]),
+  enablePlagiarismCheck: z.boolean().optional(),
+  language: z.enum(['javascript', 'typescript', 'python', 'java', 'cpp']).optional(),
+  starterCode: z.string().max(20000).optional().or(z.literal('')),
+  testCases: z
+    .array(
+      z.object({
+        input: z.string().max(2000),
+        expectedOutput: z.string().max(4000),
+        isSample: z.boolean().optional(),
+      })
+    )
+    .max(20)
+    .optional()
+    .default([]),
+  rubric: z.string().max(2000).optional().or(z.literal('')),
+  attachments: z.array(HiringAssetSchema).max(5).optional().default([]),
+  maxWords: z.number().int().min(10).max(5000).optional(),
+});
+
+export const CreateAssessmentSchema = z.object({
+  jobId: z.string().length(24),
+  title: z.string().min(3).max(160),
+  type: z.enum(['mcq', 'short_answer', 'coding', 'case_study', 'mixed']),
+  instructions: z.string().max(4000).optional().or(z.literal('')),
+  durationMinutes: z.number().int().min(5).max(480),
+  totalMarks: z.number().int().min(1).max(1000),
+  passingMarks: z.number().int().min(0).max(1000),
+  isTimedAutoSubmit: z.boolean().optional(),
+  allowLateSubmission: z.boolean().optional(),
+  dueAt: z.string().optional().or(z.literal('')).nullable(),
+  reminderOffsetsMinutes: z.array(z.number().int().min(15).max(10080)).max(5).optional(),
+  questions: z.array(AssessmentQuestionSchema).min(1).max(30),
+  applicationIds: z.array(z.string().length(24)).max(100).optional().default([]),
+});
+
+export const AssessmentActionSchema = z.object({
+  action: z.enum(['assign', 'archive', 'reactivate']),
+  applicationIds: z.array(z.string().length(24)).max(100).optional().default([]),
+  dueAt: z.string().optional().or(z.literal('')).nullable(),
+});
+
+export const AssessmentRunSchema = z.object({
+  questionIndex: z.number().int().min(0),
+  code: z.string().min(1).max(50000),
+  stdin: z.string().max(4000).optional().or(z.literal('')),
+});
+
+export const AssessmentSubmitSchema = z.object({
+  answers: z
+    .array(
+      z.object({
+        questionIndex: z.number().int().min(0),
+        answerText: z.string().max(10000).optional().or(z.literal('')),
+        selectedOptionIndex: z.number().int().min(0).max(7).optional(),
+        code: z.string().max(50000).optional().or(z.literal('')),
+        uploadedFiles: z.array(HiringAssetSchema).max(8).optional().default([]),
+      })
+    )
+    .min(1)
+    .max(30),
+  autoSubmit: z.boolean().optional(),
+});
+
+export const GradeAssessmentSchema = z.object({
+  manualAdjustments: z
+    .array(
+      z.object({
+        questionIndex: z.number().int().min(0),
+        marksAwarded: z.number().min(0).max(100),
+        evaluationNotes: z.string().max(2000).optional().or(z.literal('')),
+      })
+    )
+    .max(30)
+    .optional()
+    .default([]),
+});
+
+export const ScheduleInterviewSchema = z.object({
+  applicationIds: z.array(z.string().length(24)).min(1).max(50),
+  title: z.string().min(3).max(160),
+  description: z.string().max(2000).optional().or(z.literal('')),
+  mode: z.enum(['one_on_one', 'panel']).optional(),
+  scheduledAt: z.string().min(1),
+  durationMinutes: z.number().int().min(15).max(240),
+  panelists: z
+    .array(
+      z.object({
+        name: z.string().min(1).max(120),
+        email: z.string().email().optional().or(z.literal('')),
+      })
+    )
+    .max(8)
+    .optional()
+    .default([]),
+});
+
+export const InterviewUpdateSchema = z.object({
+  action: z.enum([
+    'update_notes',
+    'update_scorecard',
+    'mark_live',
+    'mark_completed',
+    'cancel',
+    'consent_granted',
+    'consent_declined',
+    'recording_uploaded',
+  ]),
+  liveNotes: z.string().max(12000).optional().or(z.literal('')),
+  scorecard: z
+    .object({
+      communication: z.number().min(0).max(100).optional(),
+      technical: z.number().min(0).max(100).optional(),
+      problemSolving: z.number().min(0).max(100).optional(),
+      cultureFit: z.number().min(0).max(100).optional(),
+      confidence: z.number().min(0).max(100).optional(),
+      recommendation: z.enum(['strong_yes', 'yes', 'maybe', 'no']).optional(),
+      summary: z.string().max(3000).optional().or(z.literal('')),
+    })
+    .optional(),
+  recordingAsset: HiringAssetSchema.optional(),
+});
+
 const FreelanceAssetSchema = z.object({
   url: z.string().url(),
   name: z.string().min(1).max(160),

@@ -32,6 +32,7 @@ import {
   BookOpen,
   Lightbulb,
   Calendar,
+  ClipboardList,
   Briefcase,
   Award,
   ExternalLink,
@@ -707,6 +708,63 @@ export default async function EmployerApplicantDetailPage({
                     currentStatus={application.status}
                   />
                 </div>
+                {application.assessmentAssignmentId || application.interviewSessionId ? (
+                  <div
+                    style={{
+                      background: 'rgba(255,255,255,0.06)',
+                      borderRadius: 12,
+                      padding: '12px 14px',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: '#64748B',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.6,
+                      }}
+                    >
+                      Hiring Suite
+                    </div>
+                    {application.assessmentAssignmentId ? (
+                      <Link
+                        href={`/employer/assessments/${application.assessmentId?.toString() ?? ''}`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          color: '#67E8F9',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        <ClipboardList size={13} /> Open assessment review
+                      </Link>
+                    ) : null}
+                    {application.interviewSessionId ? (
+                      <Link
+                        href={`/employer/interviews/${application.interviewSessionId.toString()}`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          color: '#C4B5FD',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        <Calendar size={13} /> Open interview session
+                      </Link>
+                    ) : null}
+                  </div>
+                ) : null}
                 <Link
                   href={`/employer/messages?user=${studentId}`}
                   style={{

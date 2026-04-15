@@ -81,6 +81,7 @@ export async function onApplicationStatusChanged(userId: string, status: string)
     const app = await Application.findOne({ studentId: userId, status })
       .sort({ updatedAt: -1 })
       .populate('jobId', 'title companyName')
+      .select('jobId assessmentAssignmentId interviewSessionId')
       .lean();
 
     if (app?.jobId) {
@@ -90,7 +91,11 @@ export async function onApplicationStatusChanged(userId: string, status: string)
         job.title,
         job.companyName,
         status,
-        app._id.toString()
+        app._id.toString(),
+        {
+          assessmentAssignmentId: app.assessmentAssignmentId?.toString(),
+          interviewSessionId: app.interviewSessionId?.toString(),
+        }
       );
     }
   } catch (err) {

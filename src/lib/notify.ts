@@ -68,7 +68,11 @@ export async function notifyApplicationStatusChanged(
   jobTitle: string,
   companyName: string,
   newStatus: string,
-  applicationId: string
+  applicationId: string,
+  extra?: {
+    assessmentAssignmentId?: string;
+    interviewSessionId?: string;
+  }
 ) {
   type StatusConfig = {
     type: NotificationType;
@@ -133,6 +137,13 @@ export async function notifyApplicationStatusChanged(
   const cfg = STATUS_CONFIG[newStatus];
   if (!cfg) return; // unknown status — skip silently
 
+  const link =
+    newStatus === 'assessment_sent' && extra?.assessmentAssignmentId
+      ? `/student/assessments/${extra.assessmentAssignmentId}`
+      : newStatus === 'interview_scheduled' && extra?.interviewSessionId
+        ? `/student/interviews/${extra.interviewSessionId}`
+        : '/student/applications';
+
   // ── Check notification preference before sending ──
   const student = await User.findById(studentId).select('notificationPreferences').lean();
 
@@ -146,8 +157,16 @@ export async function notifyApplicationStatusChanged(
     type: cfg.type,
     title: cfg.title,
     body: cfg.body,
-    link: '/student/applications',
-    meta: { applicationId, jobTitle, companyName, newStatus, icon: cfg.icon },
+    link,
+    meta: {
+      applicationId,
+      jobTitle,
+      companyName,
+      newStatus,
+      icon: cfg.icon,
+      assessmentAssignmentId: extra?.assessmentAssignmentId,
+      interviewSessionId: extra?.interviewSessionId,
+    },
   });
 }
 

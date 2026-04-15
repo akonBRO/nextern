@@ -761,52 +761,6 @@ export default function StudentPremiumPage() {
         </div>
       </main>
 
-      <footer
-        style={{
-          background: '#1E293B',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-          marginTop: 48,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1320,
-            margin: '0 auto',
-            padding: '20px 24px 26px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 12,
-            flexWrap: 'wrap',
-          }}
-        >
-          <NexternLogo
-            markSize={28}
-            markRadius={7}
-            textSize={14}
-            textWeight={700}
-            textColor="#fff"
-            subtitle="Premium unlocks your full potential."
-            subtitleColor="#94A3B8"
-            subtitleGap={4}
-          />
-          <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
-            <Link
-              href="/student/dashboard"
-              style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}
-            >
-              Dashboard
-            </Link>
-            <a
-              href="mailto:support@nextern.app"
-              style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}
-            >
-              Support
-            </a>
-          </div>
-        </div>
-      </footer>
-
       <style>{`
         @media (max-width: 860px) {
           .premium-grid {

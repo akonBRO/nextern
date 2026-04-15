@@ -2,6 +2,7 @@
 import type { Metadata } from 'next';
 import { SessionProvider } from 'next-auth/react';
 import { auth } from '@/lib/auth';
+import GlobalFooter from '@/components/site/GlobalFooter';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -39,6 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="antialiased">
         <SessionProvider session={session}>{children}</SessionProvider>
+        <GlobalFooter />
       </body>
     </html>
   );
