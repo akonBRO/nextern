@@ -39,6 +39,17 @@ export type ResumeData = {
     issueDate?: string;
     credentialUrl?: string;
   }[];
+  verifiedPortfolioItems?: {
+    title: string;
+    category: string;
+    fileUrl: string;
+    fileUrls?: string[];
+    summary?: string;
+    skills?: string[];
+    clientName?: string;
+    rating?: number;
+    completedAt?: string;
+  }[];
   jobApplications?: {
     status: string;
     appliedAt: string | null;
@@ -110,6 +121,19 @@ function jobTypeLabel(t: string): string {
     workshop: 'Workshop',
   };
   return map[t] ?? t;
+}
+
+function freelanceCategoryLabel(value?: string): string {
+  if (!value) return 'Verified work';
+  const map: Record<string, string> = {
+    'web-dev': 'Web Development',
+    'graphic-design': 'Graphic Design',
+    'content-writing': 'Content Writing',
+    'data-analysis': 'Data Analysis',
+    'video-editing': 'Video Editing',
+    other: 'Verified Work',
+  };
+  return map[value] ?? value;
 }
 
 function statusLabel(s: string): string {
@@ -523,6 +547,48 @@ export async function generateResumePDF(data: ResumeData): Promise<Buffer> {
     }
 
     // ── Certifications ──
+    const verifiedWork = (data.verifiedPortfolioItems ?? []).slice(0, 4);
+    if (verifiedWork.length > 0) {
+      cy = mainSection(doc, 'Verified Freelance Work', cy, ACCENT);
+      verifiedWork.forEach((item, index) => {
+        if (index > 0) {
+          doc.rect(MAIN_X, cy, MAIN_W, 0.5).fillColor(rgb(DIVIDER)).fill();
+          cy += 9;
+        }
+        doc.font('Helvetica-Bold').fontSize(10).fillColor(rgb(DARK)).text(item.title, MAIN_X, cy);
+        cy = doc.y + 2;
+        const meta = [
+          freelanceCategoryLabel(item.category),
+          item.clientName ? `Client: ${item.clientName}` : '',
+          typeof item.rating === 'number' ? `Rating ${item.rating.toFixed(1)}` : '',
+          item.completedAt ? fmtDate(item.completedAt) : '',
+        ]
+          .filter(Boolean)
+          .join('  |  ');
+        if (meta) {
+          doc.font('Helvetica').fontSize(8).fillColor(rgb(ACCENT)).text(meta, MAIN_X, cy);
+          cy = doc.y + 4;
+        }
+        if (item.summary) {
+          doc
+            .font('Helvetica')
+            .fontSize(8.8)
+            .fillColor(rgb(MID))
+            .text(item.summary, MAIN_X, cy, { width: MAIN_W, lineGap: 2.2 });
+          cy = doc.y + 4;
+        }
+        if (item.skills?.length) {
+          doc
+            .font('Helvetica')
+            .fontSize(7.5)
+            .fillColor(rgb(TEAL))
+            .text(item.skills.slice(0, 8).join('  |  '), MAIN_X, cy);
+          cy = doc.y + 4;
+        }
+      });
+      cy += 12;
+    }
+
     if (data.certifications.length > 0) {
       cy = mainSection(doc, 'Certifications', cy);
       data.certifications.forEach((cert, i) => {

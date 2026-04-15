@@ -2,6 +2,7 @@ import type { PipelineStage } from 'mongoose';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { requireAdminSession, fillDateSeries, getSinceDate, parseRangeDays } from '@/lib/admin';
+import { VERIFIED_FREELANCER_BADGE_SLUG } from '@/lib/freelance';
 import { User } from '@/models/User';
 import { Job } from '@/models/Job';
 import { Application } from '@/models/Application';
@@ -10,6 +11,9 @@ import { Subscription } from '@/models/Subscription';
 import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { FeatureUsage } from '@/models/FeatureUsage';
+import { BadgeAward } from '@/models/BadgeAward';
+import { FreelanceListing } from '@/models/FreelanceListing';
+import { FreelanceOrder } from '@/models/FreelanceOrder';
 
 function byDatePipeline(
   field = 'createdAt',
@@ -50,12 +54,18 @@ export async function GET(req: NextRequest) {
       totalJobs,
       activeJobs,
       totalApplications,
+      activeFreelanceListings,
       activeSubscriptions,
       premiumUsers,
+      verifiedFreelancers,
       unreadNotifications,
       flaggedMessages,
       successfulPayments,
       monthlyPayments,
+      freelanceGMV,
+      rollingFreelanceGMV,
+      heldEscrow,
+      disputedFreelanceOrders,
       userRoles,
       applicationStatuses,
       paymentMethods,
@@ -65,6 +75,7 @@ export async function GET(req: NextRequest) {
       jobActivity,
       applicationActivity,
       revenueActivity,
+      freelanceGmvActivity,
       featureUsage,
       topUniversities,
       topEmployers,
@@ -73,18 +84,39 @@ export async function GET(req: NextRequest) {
       Job.countDocuments(),
       Job.countDocuments({ isActive: true }),
       Application.countDocuments(),
+      FreelanceListing.countDocuments({ isActive: true }),
       Subscription.countDocuments({ status: 'active', endDate: { $gt: new Date() } }),
       User.countDocuments({ isPremium: true }),
+      BadgeAward.countDocuments({ badgeSlug: VERIFIED_FREELANCER_BADGE_SLUG }),
       Notification.countDocuments({ isRead: false }),
       Message.countDocuments({ isFlagged: true }),
       Payment.aggregate<{ _id: null; total: number }>([
-        { $match: { status: 'success' } },
+        { $match: { status: 'success', type: 'subscription' } },
         { $group: { _id: null, total: { $sum: '$amountBDT' } } },
       ]),
       Payment.aggregate<{ _id: null; total: number }>([
-        { $match: { status: 'success', createdAt: { $gte: last30Days } } },
+        { $match: { status: 'success', type: 'subscription', createdAt: { $gte: last30Days } } },
         { $group: { _id: null, total: { $sum: '$amountBDT' } } },
       ]),
+      Payment.aggregate<{ _id: null; total: number }>([
+        { $match: { status: 'success', type: 'freelance_escrow' } },
+        { $group: { _id: null, total: { $sum: '$amountBDT' } } },
+      ]),
+      Payment.aggregate<{ _id: null; total: number }>([
+        {
+          $match: {
+            status: 'success',
+            type: 'freelance_escrow',
+            createdAt: { $gte: last30Days },
+          },
+        },
+        { $group: { _id: null, total: { $sum: '$amountBDT' } } },
+      ]),
+      FreelanceOrder.aggregate<{ _id: null; total: number }>([
+        { $match: { escrowStatus: 'held' } },
+        { $group: { _id: null, total: { $sum: '$agreedPriceBDT' } } },
+      ]),
+      FreelanceOrder.countDocuments({ status: 'disputed' }),
       User.aggregate<{ _id: string; value: number }>([
         { $group: { _id: '$role', value: { $sum: 1 } } },
       ]),
@@ -115,7 +147,13 @@ export async function GET(req: NextRequest) {
         ...byDatePipeline('createdAt'),
       ]),
       Payment.aggregate<{ _id: string; value: number }>([
-        { $match: { status: 'success', createdAt: { $gte: since } } },
+        { $match: { status: 'success', type: 'subscription', createdAt: { $gte: since } } },
+        ...byDatePipeline('createdAt', { $sum: '$amountBDT' }),
+      ]),
+      Payment.aggregate<{ _id: string; value: number }>([
+        {
+          $match: { status: 'success', type: 'freelance_escrow', createdAt: { $gte: since } },
+        },
         ...byDatePipeline('createdAt', { $sum: '$amountBDT' }),
       ]),
       FeatureUsage.aggregate<{ _id: string; value: number }>([
@@ -192,12 +230,18 @@ export async function GET(req: NextRequest) {
         totalJobs,
         activeJobs,
         totalApplications,
+        activeFreelanceListings,
         activeSubscriptions,
         premiumUsers,
+        verifiedFreelancers,
         unreadNotifications,
         flaggedMessages,
         totalRevenueBDT: successfulPayments[0]?.total ?? 0,
         rolling30DayRevenueBDT: monthlyPayments[0]?.total ?? 0,
+        freelanceGMVBDT: freelanceGMV[0]?.total ?? 0,
+        rolling30DayFreelanceGMVBDT: rollingFreelanceGMV[0]?.total ?? 0,
+        freelanceEscrowHeldBDT: heldEscrow[0]?.total ?? 0,
+        disputedFreelanceOrders,
       },
       breakdowns: {
         userRoles,
@@ -212,6 +256,7 @@ export async function GET(req: NextRequest) {
         jobs: fillDateSeries(jobActivity, rangeDays),
         applications: fillDateSeries(applicationActivity, rangeDays),
         revenue: fillDateSeries(revenueActivity, rangeDays),
+        freelanceGmv: fillDateSeries(freelanceGmvActivity, rangeDays),
       },
       highlights: {
         topUniversities,

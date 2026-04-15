@@ -518,14 +518,13 @@ export async function getAdvisorDashboardData(
     createdAt: Date;
   }[] = [];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   reviews.forEach(
     (r: {
-      _id: any;
+      _id: unknown;
       workQualityRating?: number;
       isRecommended?: boolean;
       recommendationText?: string;
-      revieweeId: any;
+      revieweeId: unknown;
       reviewerId?: { name?: string; companyDetails?: { companyName?: string } };
       createdAt: Date;
     }) => {
@@ -535,8 +534,8 @@ export async function getAdvisorDashboardData(
       }
       if (r.recommendationText) {
         rawRecommendations.push({
-          id: r._id.toString(),
-          studentName: studentMap.get(r.revieweeId.toString())?.name ?? 'Unknown Student',
+          id: String(r._id),
+          studentName: studentMap.get(String(r.revieweeId))?.name ?? 'Unknown Student',
           companyName: r.reviewerId?.companyDetails?.companyName || r.reviewerId?.name || 'Company',
           text: r.recommendationText,
           createdAt: r.createdAt,

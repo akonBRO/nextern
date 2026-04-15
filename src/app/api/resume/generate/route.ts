@@ -25,6 +25,18 @@ type CertDoc = {
   credentialUrl?: string;
 };
 
+type VerifiedPortfolioDoc = {
+  title?: string;
+  category?: string;
+  fileUrl?: string;
+  fileUrls?: string[];
+  summary?: string;
+  skills?: string[];
+  clientName?: string;
+  rating?: number;
+  completedAt?: Date;
+};
+
 export async function GET() {
   try {
     const session = await auth();
@@ -127,6 +139,20 @@ export async function GET() {
         issueDate: c.issueDate ? new Date(c.issueDate).toISOString() : undefined,
         credentialUrl: c.credentialUrl ?? undefined,
       })),
+
+      verifiedPortfolioItems: (user.verifiedPortfolioItems ?? [])
+        .filter((item: VerifiedPortfolioDoc) => item.fileUrl)
+        .map((item: VerifiedPortfolioDoc) => ({
+          title: item.title ?? 'Verified freelance project',
+          category: item.category ?? 'other',
+          fileUrl: item.fileUrl ?? '',
+          fileUrls: item.fileUrls ?? [],
+          summary: item.summary ?? undefined,
+          skills: item.skills ?? [],
+          clientName: item.clientName ?? undefined,
+          rating: item.rating ?? undefined,
+          completedAt: item.completedAt ? new Date(item.completedAt).toISOString() : undefined,
+        })),
 
       jobApplications,
       eventRegistrations,

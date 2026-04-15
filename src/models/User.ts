@@ -21,6 +21,11 @@ interface IVerifiedPortfolioItem {
   title: string;
   category: string;
   fileUrl: string;
+  fileUrls?: string[];
+  summary?: string;
+  skills?: string[];
+  clientName?: string;
+  rating?: number;
   freelanceOrderId: mongoose.Types.ObjectId;
   completedAt: Date;
 }
@@ -86,6 +91,11 @@ export interface IUser extends Document {
   googleRefreshToken?: string;
   googleCalendarConnected?: boolean;
   notificationPreferences: INotificationPreferences;
+  freelanceAccountBalanceBDT: number;
+  freelanceTotalEarningsBDT: number;
+  freelanceTotalSpendingsBDT: number;
+  freelanceTotalWithdrawnBDT: number;
+  freelanceTotalPlatformFeesBDT: number;
 
   // ── Employer fields ─────────────────────────────────────
   companyName?: string;
@@ -150,6 +160,11 @@ const UserSchema = new Schema<IUser>(
         title: String,
         category: String,
         fileUrl: String,
+        fileUrls: [String],
+        summary: String,
+        skills: [String],
+        clientName: String,
+        rating: Number,
         freelanceOrderId: { type: Schema.Types.ObjectId, ref: 'FreelanceOrder' },
         completedAt: Date,
       },
@@ -168,6 +183,11 @@ const UserSchema = new Schema<IUser>(
     assignedAdvisorId: { type: Schema.Types.ObjectId, ref: 'User' },
     googleRefreshToken: { type: String, select: false }, // never exposed to client
     googleCalendarConnected: { type: Boolean, default: false },
+    freelanceAccountBalanceBDT: { type: Number, default: 0, min: 0 },
+    freelanceTotalEarningsBDT: { type: Number, default: 0, min: 0 },
+    freelanceTotalSpendingsBDT: { type: Number, default: 0, min: 0 },
+    freelanceTotalWithdrawnBDT: { type: Number, default: 0, min: 0 },
+    freelanceTotalPlatformFeesBDT: { type: Number, default: 0, min: 0 },
 
     // ── Notification preferences ─────────────────────────
     notificationPreferences: {

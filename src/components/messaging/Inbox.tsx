@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Pusher from 'pusher-js';
 import {
+  BriefcaseBusiness,
   Send,
   Check,
   CheckCheck,
@@ -32,6 +33,7 @@ type Message = {
   senderId: string | UserData;
   receiverId: string;
   threadId: string;
+  threadType?: 'direct' | 'freelance_order';
   content: string;
   isRead: boolean;
   createdAt: string;
@@ -40,12 +42,20 @@ type Message = {
   forwardedFromId?: string;
   isDeletedForEveryone?: boolean;
   attachments?: { url: string; name: string; type: string }[];
+  relatedFreelanceOrderId?: string;
 };
 type Thread = {
   threadId: string;
   lastMessage: Message;
   unreadCount: number;
+  threadType: 'direct' | 'freelance_order';
   otherUser: UserData;
+  freelanceOrder?: {
+    _id: string;
+    title: string;
+    status: string;
+    proposalStatus: string;
+  } | null;
 };
 
 /* ─── Colour tokens (mirrors globals.css) ────────────────────────── */
@@ -71,6 +81,8 @@ const fmtTime = (iso: string) => {
   return isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 const initials = (name: string) => name?.charAt(0).toUpperCase() ?? '?';
+const getMessageSenderId = (message: Pick<Message, 'senderId'>) =>
+  typeof message.senderId === 'string' ? message.senderId : message.senderId?._id || '';
 
 /* ─── Avatar ─────────────────────────────────────────────────────── */
 function Avatar({ user, size = 40 }: { user: UserData; size?: number }) {
@@ -502,10 +514,12 @@ export default function Inbox({
   currentUserId,
   currentUserRole,
   initiateUserId,
+  initiateFreelanceOrderId,
 }: {
   currentUserId: string;
   currentUserRole: string;
   initiateUserId?: string;
+  initiateFreelanceOrderId?: string;
 }) {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
@@ -544,19 +558,29 @@ export default function Inbox({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }
 
+  const buildThreadsUrl = useCallback(() => {
+    const params = new URLSearchParams();
+    if (initiateUserId) params.set('initiateUser', initiateUserId);
+    if (initiateFreelanceOrderId) params.set('freelanceOrder', initiateFreelanceOrderId);
+
+    const query = params.toString();
+    return query ? `/api/messages?${query}` : '/api/messages';
+  }, [initiateFreelanceOrderId, initiateUserId]);
+
   /* Refetch threads from server */
-  const refetchThreads = () =>
-    fetch('/api/messages')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.threads) setThreads(d.threads);
-      });
+  const refetchThreads = useCallback(
+    () =>
+      fetch(buildThreadsUrl())
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.threads) setThreads(d.threads);
+        }),
+    [buildThreadsUrl]
+  );
 
   /* ── Fetch Threads ──────────────────────────────────────────── */
   useEffect(() => {
-    let url = '/api/messages';
-    if (initiateUserId) url += `?initiateUser=${initiateUserId}`;
-    fetch(url)
+    fetch(buildThreadsUrl())
       .then((r) => r.json())
       .then((d) => {
         if (d.threads) {
@@ -564,12 +588,20 @@ export default function Inbox({
           if (initiateUserId) {
             const tgt = d.threads.find((t: Thread) => t.otherUser._id === initiateUserId);
             if (tgt) setSelectedThread(tgt);
+          } else if (initiateFreelanceOrderId) {
+            const tgt =
+              d.threads.find(
+                (t: Thread) =>
+                  t.freelanceOrder?._id === initiateFreelanceOrderId ||
+                  t.threadId === d.initiatedThreadId
+              ) || null;
+            if (tgt) setSelectedThread(tgt);
           }
         }
         setIsLoading(false);
       })
       .catch(console.error);
-  }, [initiateUserId]);
+  }, [buildThreadsUrl, initiateFreelanceOrderId, initiateUserId]);
 
   /* ── Fetch Messages for Selected Thread ─────────────────────── */
   useEffect(() => {
@@ -681,11 +713,20 @@ export default function Inbox({
     return () => {
       pusherRef.current?.unsubscribe(`user-${currentUserId}`);
     };
-  }, [currentUserId, selectedThread]);
+  }, [currentUserId, refetchThreads, selectedThread]);
+
+  const freelanceThreads = threads.filter((thread) => thread.threadType === 'freelance_order');
+  const directThreads = threads.filter((thread) => thread.threadType !== 'freelance_order');
+  const selectedThreadReadOnly =
+    selectedThread?.threadType === 'freelance_order' &&
+    !!selectedThread.freelanceOrder &&
+    (selectedThread.freelanceOrder.proposalStatus !== 'accepted' ||
+      ['completed', 'cancelled'].includes(selectedThread.freelanceOrder.status));
 
   /* ── Send / Edit ─────────────────────────────────────────────── */
   const handleSendOrEdit = async () => {
-    if ((!inputText.trim() && inputFiles.length === 0) || !selectedThread) return;
+    if ((!inputText.trim() && inputFiles.length === 0) || !selectedThread || selectedThreadReadOnly)
+      return;
     setIsSending(true);
 
     if (editingMsg) {
@@ -728,6 +769,9 @@ export default function Inbox({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             receiverId: selectedThread.otherUser._id,
+            threadId: selectedThread.threadId,
+            threadType: selectedThread.threadType,
+            relatedFreelanceOrderId: selectedThread.freelanceOrder?._id,
             content: inputText,
             templateType: template || null,
             attachments: uploadedAttachments,
@@ -840,7 +884,7 @@ export default function Inbox({
       </div>
     );
 
-  const canSend = inputText.trim().length > 0 || inputFiles.length > 0;
+  const canSend = !selectedThreadReadOnly && (inputText.trim().length > 0 || inputFiles.length > 0);
 
   /* ── Render ──────────────────────────────────────────────────── */
   return (
@@ -865,7 +909,7 @@ export default function Inbox({
       )}
       {forwardModal.open && forwardModal.msg && (
         <ForwardModal
-          threads={threads}
+          threads={directThreads}
           onForward={handleForwardExecute}
           onClose={() => setForwardModal({ open: false, msg: null })}
         />
@@ -939,125 +983,320 @@ export default function Inbox({
                 No conversations yet
               </div>
             ) : (
-              threads.map((thread) => {
-                const sel = selectedThread?.threadId === thread.threadId;
-                const unread = thread.unreadCount > 0;
-                const ou = thread.otherUser;
-                const preview = thread.lastMessage.isDeletedForEveryone
-                  ? '🗑 Message deleted'
-                  : thread.lastMessage.content || '';
-
-                return (
-                  <div
-                    key={thread.threadId}
-                    onClick={() => setSelectedThread(thread)}
-                    style={{
-                      padding: '14px 24px',
-                      cursor: 'pointer',
-                      background: sel
-                        ? 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(34,211,238,0.06))'
-                        : C.white,
-                      borderLeft: `4px solid ${sel ? C.primary : 'transparent'}`,
-                      borderBottom: `1px solid ${C.bg}`,
-                      transition: 'all 0.15s',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!sel) e.currentTarget.style.background = C.bg;
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!sel) e.currentTarget.style.background = C.white;
-                    }}
-                  >
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                      <div style={{ position: 'relative' }}>
-                        <Avatar user={ou} size={44} />
-                        {unread && (
-                          <div
-                            style={{
-                              position: 'absolute',
-                              top: -2,
-                              right: -2,
-                              width: 14,
-                              height: 14,
-                              borderRadius: 7,
-                              background: '#06b6d4',
-                              border: '2px solid white',
-                            }}
-                          />
-                        )}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+              <>
+                {[
+                  {
+                    key: 'freelance',
+                    title: 'Freelance Chats',
+                    description: 'Accepted order conversations',
+                    items: freelanceThreads,
+                    icon: <BriefcaseBusiness size={12} />,
+                  },
+                  {
+                    key: 'direct',
+                    title: 'Direct Messages',
+                    description: 'General conversations',
+                    items: directThreads,
+                    icon: <Send size={12} />,
+                  },
+                ].map((section) =>
+                  section.items.length ? (
+                    <div key={section.key}>
+                      <div
+                        style={{
+                          padding: '14px 18px 10px',
+                          borderBottom: `1px solid ${C.bg}`,
+                          background: '#F8FAFC',
+                        }}
+                      >
                         <div
                           style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'baseline',
-                            marginBottom: 3,
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontWeight: unread ? 800 : 600,
-                              fontSize: 14,
-                              color: sel ? C.primary : C.deep,
-                            }}
-                          >
-                            {ou.name}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: 11,
-                              color: unread ? C.primary : C.gray,
-                              fontWeight: 600,
-                              flexShrink: 0,
-                              marginLeft: 8,
-                            }}
-                          >
-                            {fmtTime(thread.lastMessage.createdAt)}
-                          </span>
-                        </div>
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
+                            display: 'inline-flex',
                             alignItems: 'center',
+                            gap: 6,
+                            color: C.gray,
+                            fontSize: 11,
+                            fontWeight: 800,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.06em',
                           }}
                         >
-                          <div
-                            style={{
-                              fontSize: 13,
-                              color: unread ? C.deep : C.gray,
-                              fontWeight: unread ? 600 : 400,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              flex: 1,
-                              marginRight: 8,
-                            }}
-                          >
-                            {thread.lastMessage.senderId === currentUserId ? 'You: ' : ''}
-                            {preview}
-                          </div>
-                          {unread && (
-                            <div
-                              style={{
-                                background: C.primary,
-                                color: C.white,
-                                fontSize: 10,
-                                fontWeight: 800,
-                                padding: '2px 7px',
-                                borderRadius: 99,
-                              }}
-                            >
-                              {thread.unreadCount}
-                            </div>
-                          )}
+                          {section.icon}
+                          {section.title}
+                        </div>
+                        <div style={{ marginTop: 4, fontSize: 11, color: C.gray }}>
+                          {section.description}
                         </div>
                       </div>
+                      {section.items.map((thread) => {
+                        const sectionSelected = selectedThread?.threadId === thread.threadId;
+                        const sectionUnread = thread.unreadCount > 0;
+                        const otherUser = thread.otherUser;
+                        const sectionPreview = thread.lastMessage.isDeletedForEveryone
+                          ? 'Thread message deleted'
+                          : thread.lastMessage.content ||
+                            (thread.threadType === 'freelance_order'
+                              ? 'Freelance order chat ready'
+                              : '');
+
+                        return (
+                          <div
+                            key={thread.threadId}
+                            onClick={() => setSelectedThread(thread)}
+                            style={{
+                              padding: '14px 24px',
+                              cursor: 'pointer',
+                              background: sectionSelected
+                                ? 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(34,211,238,0.06))'
+                                : C.white,
+                              borderLeft: `4px solid ${sectionSelected ? C.primary : 'transparent'}`,
+                              borderBottom: `1px solid ${C.bg}`,
+                              transition: 'all 0.15s',
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!sectionSelected) e.currentTarget.style.background = C.bg;
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!sectionSelected) e.currentTarget.style.background = C.white;
+                            }}
+                          >
+                            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                              <div style={{ position: 'relative' }}>
+                                <Avatar user={otherUser} size={44} />
+                                {sectionUnread ? (
+                                  <div
+                                    style={{
+                                      position: 'absolute',
+                                      top: -2,
+                                      right: -2,
+                                      width: 14,
+                                      height: 14,
+                                      borderRadius: 7,
+                                      background: '#06b6d4',
+                                      border: '2px solid white',
+                                    }}
+                                  />
+                                ) : null}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'baseline',
+                                    marginBottom: 3,
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontWeight: sectionUnread ? 800 : 600,
+                                      fontSize: 14,
+                                      color: sectionSelected ? C.primary : C.deep,
+                                    }}
+                                  >
+                                    {otherUser.name}
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: 11,
+                                      color: sectionUnread ? C.primary : C.gray,
+                                      fontWeight: 600,
+                                      flexShrink: 0,
+                                      marginLeft: 8,
+                                    }}
+                                  >
+                                    {fmtTime(thread.lastMessage.createdAt)}
+                                  </span>
+                                </div>
+                                {thread.threadType === 'freelance_order' &&
+                                thread.freelanceOrder ? (
+                                  <div
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 6,
+                                      marginBottom: 6,
+                                      padding: '3px 8px',
+                                      borderRadius: 999,
+                                      background: '#EFF6FF',
+                                      border: `1px solid rgba(37, 99, 235, 0.22)`,
+                                      color: C.primary,
+                                      fontSize: 10,
+                                      fontWeight: 800,
+                                    }}
+                                  >
+                                    {thread.freelanceOrder.title}
+                                  </div>
+                                ) : null}
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      fontSize: 13,
+                                      color: sectionUnread ? C.deep : C.gray,
+                                      fontWeight: sectionUnread ? 600 : 400,
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                      flex: 1,
+                                      marginRight: 8,
+                                    }}
+                                  >
+                                    {getMessageSenderId(thread.lastMessage) === currentUserId
+                                      ? 'You: '
+                                      : ''}
+                                    {sectionPreview}
+                                  </div>
+                                  {sectionUnread ? (
+                                    <div
+                                      style={{
+                                        background: C.primary,
+                                        color: C.white,
+                                        fontSize: 10,
+                                        fontWeight: 800,
+                                        padding: '2px 7px',
+                                        borderRadius: 99,
+                                      }}
+                                    >
+                                      {thread.unreadCount}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
-                );
-              })
+                  ) : null
+                )}
+                {false
+                  ? threads.map((thread) => {
+                      const sel = selectedThread?.threadId === thread.threadId;
+                      const unread = thread.unreadCount > 0;
+                      const ou = thread.otherUser;
+                      const preview = thread.lastMessage.isDeletedForEveryone
+                        ? '🗑 Message deleted'
+                        : thread.lastMessage.content || '';
+
+                      return (
+                        <div
+                          key={thread.threadId}
+                          onClick={() => setSelectedThread(thread)}
+                          style={{
+                            padding: '14px 24px',
+                            cursor: 'pointer',
+                            background: sel
+                              ? 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(34,211,238,0.06))'
+                              : C.white,
+                            borderLeft: `4px solid ${sel ? C.primary : 'transparent'}`,
+                            borderBottom: `1px solid ${C.bg}`,
+                            transition: 'all 0.15s',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!sel) e.currentTarget.style.background = C.bg;
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!sel) e.currentTarget.style.background = C.white;
+                          }}
+                        >
+                          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                            <div style={{ position: 'relative' }}>
+                              <Avatar user={ou} size={44} />
+                              {unread && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    top: -2,
+                                    right: -2,
+                                    width: 14,
+                                    height: 14,
+                                    borderRadius: 7,
+                                    background: '#06b6d4',
+                                    border: '2px solid white',
+                                  }}
+                                />
+                              )}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'baseline',
+                                  marginBottom: 3,
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontWeight: unread ? 800 : 600,
+                                    fontSize: 14,
+                                    color: sel ? C.primary : C.deep,
+                                  }}
+                                >
+                                  {ou.name}
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: 11,
+                                    color: unread ? C.primary : C.gray,
+                                    fontWeight: 600,
+                                    flexShrink: 0,
+                                    marginLeft: 8,
+                                  }}
+                                >
+                                  {fmtTime(thread.lastMessage.createdAt)}
+                                </span>
+                              </div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontSize: 13,
+                                    color: unread ? C.deep : C.gray,
+                                    fontWeight: unread ? 600 : 400,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    flex: 1,
+                                    marginRight: 8,
+                                  }}
+                                >
+                                  {thread.lastMessage.senderId === currentUserId ? 'You: ' : ''}
+                                  {preview}
+                                </div>
+                                {unread && (
+                                  <div
+                                    style={{
+                                      background: C.primary,
+                                      color: C.white,
+                                      fontSize: 10,
+                                      fontWeight: 800,
+                                      padding: '2px 7px',
+                                      borderRadius: 99,
+                                    }}
+                                  >
+                                    {thread.unreadCount}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  : null}
+              </>
             )}
           </div>
         </div>
@@ -1082,11 +1321,31 @@ export default function Inbox({
                   <div style={{ fontWeight: 800, color: C.white, fontSize: 16 }}>
                     {selectedThread.otherUser.name}
                   </div>
-                  <div style={{ fontSize: 12, color: C.white, textTransform: 'capitalize' }}>
-                    {selectedThread.otherUser.role === 'employer'
-                      ? selectedThread.otherUser.companyName || 'Employer'
-                      : selectedThread.otherUser.role}
-                  </div>
+                  {selectedThread.threadType === 'freelance_order' &&
+                  selectedThread.freelanceOrder ? (
+                    <>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: 'rgba(255,255,255,0.95)',
+                          fontWeight: 700,
+                          marginTop: 2,
+                        }}
+                      >
+                        {selectedThread.freelanceOrder.title}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.82)' }}>
+                        Freelance order chat ·{' '}
+                        {selectedThread.freelanceOrder.status.replace(/_/g, ' ')}
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ fontSize: 12, color: C.white, textTransform: 'capitalize' }}>
+                      {selectedThread.otherUser.role === 'employer'
+                        ? selectedThread.otherUser.companyName || 'Employer'
+                        : selectedThread.otherUser.role}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1351,49 +1610,68 @@ export default function Inbox({
                 )}
 
                 {/* Templates */}
-                {currentUserRole === 'employer' && !editingMsg && (
-                  <div style={{ marginBottom: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {[
-                      {
-                        key: 'interview_invite',
-                        label: 'Interview Invite',
-                        bg: '#EFF6FF',
-                        border: '#BFDBFE',
-                        color: '#1E40AF',
-                      },
-                      {
-                        key: 'offer_letter',
-                        label: 'Offer Letter',
-                        bg: '#F0FDF4',
-                        border: '#BBF7D0',
-                        color: '#166534',
-                      },
-                      {
-                        key: 'rejection',
-                        label: 'Rejection',
-                        bg: '#FFF1F2',
-                        border: '#FECDD3',
-                        color: '#9F1239',
-                      },
-                    ].map((tmpl) => (
-                      <button
-                        key={tmpl.key}
-                        onClick={() => applyTemplate(tmpl.key)}
-                        style={{
-                          fontSize: 12,
-                          padding: '5px 14px',
-                          borderRadius: 99,
-                          background: tmpl.bg,
-                          border: `1px solid ${tmpl.border}`,
-                          cursor: 'pointer',
-                          color: tmpl.color,
-                          fontWeight: 700,
-                          transition: 'all 0.15s',
-                        }}
-                      >
-                        + {tmpl.label}
-                      </button>
-                    ))}
+                {currentUserRole === 'employer' &&
+                  selectedThread.threadType === 'direct' &&
+                  !editingMsg && (
+                    <div style={{ marginBottom: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {[
+                        {
+                          key: 'interview_invite',
+                          label: 'Interview Invite',
+                          bg: '#EFF6FF',
+                          border: '#BFDBFE',
+                          color: '#1E40AF',
+                        },
+                        {
+                          key: 'offer_letter',
+                          label: 'Offer Letter',
+                          bg: '#F0FDF4',
+                          border: '#BBF7D0',
+                          color: '#166534',
+                        },
+                        {
+                          key: 'rejection',
+                          label: 'Rejection',
+                          bg: '#FFF1F2',
+                          border: '#FECDD3',
+                          color: '#9F1239',
+                        },
+                      ].map((tmpl) => (
+                        <button
+                          key={tmpl.key}
+                          onClick={() => applyTemplate(tmpl.key)}
+                          style={{
+                            fontSize: 12,
+                            padding: '5px 14px',
+                            borderRadius: 99,
+                            background: tmpl.bg,
+                            border: `1px solid ${tmpl.border}`,
+                            cursor: 'pointer',
+                            color: tmpl.color,
+                            fontWeight: 700,
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          + {tmpl.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                {selectedThreadReadOnly && (
+                  <div
+                    style={{
+                      marginBottom: 12,
+                      padding: '10px 14px',
+                      borderRadius: 12,
+                      background: '#FFF7ED',
+                      border: '1px solid #FED7AA',
+                      color: '#9A3412',
+                      fontSize: 12,
+                      fontWeight: 700,
+                    }}
+                  >
+                    This freelance chat is now read-only because the order is closed.
                   </div>
                 )}
 
@@ -1462,12 +1740,20 @@ export default function Inbox({
                       <button
                         title="Attach files (max 4, 8MB each)"
                         onClick={() => fileInputRef.current?.click()}
-                        disabled={isSending || isUploading || inputFiles.length >= 4}
+                        disabled={
+                          isSending ||
+                          isUploading ||
+                          inputFiles.length >= 4 ||
+                          selectedThreadReadOnly
+                        }
                         style={{
                           border: 'none',
                           background: 'transparent',
                           cursor:
-                            isSending || isUploading || inputFiles.length >= 4
+                            isSending ||
+                            isUploading ||
+                            inputFiles.length >= 4 ||
+                            selectedThreadReadOnly
                               ? 'not-allowed'
                               : 'pointer',
                           color: C.gray,
@@ -1475,7 +1761,7 @@ export default function Inbox({
                           display: 'flex',
                           alignItems: 'flex-end',
                           alignSelf: 'stretch',
-                          opacity: inputFiles.length >= 4 ? 0.3 : 1,
+                          opacity: inputFiles.length >= 4 || selectedThreadReadOnly ? 0.3 : 1,
                         }}
                       >
                         <Paperclip size={20} />
@@ -1501,8 +1787,14 @@ export default function Inbox({
                   <textarea
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
-                    placeholder={editingMsg ? 'Edit message…' : 'Type a message…'}
-                    disabled={isSending || isUploading}
+                    placeholder={
+                      selectedThreadReadOnly
+                        ? 'This freelance order chat is closed.'
+                        : editingMsg
+                          ? 'Edit message…'
+                          : 'Type a message…'
+                    }
+                    disabled={isSending || isUploading || selectedThreadReadOnly}
                     style={{
                       flex: 1,
                       minHeight: 24,

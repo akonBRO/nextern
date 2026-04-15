@@ -16,6 +16,7 @@ export default async function StudentMessagesPage({
 
   const params = await searchParams;
   const initiateUser = typeof params?.user === 'string' ? params.user : undefined;
+  const initiateFreelanceOrder = typeof params?.order === 'string' ? params.order : undefined;
 
   const data = await getStudentDashboardData(session.user.id);
 
@@ -49,6 +50,7 @@ export default async function StudentMessagesPage({
           currentUserId={session.user.id}
           currentUserRole="student"
           initiateUserId={initiateUser}
+          initiateFreelanceOrderId={initiateFreelanceOrder}
         />
       </div>
     </DashboardShell>

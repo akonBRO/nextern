@@ -4,7 +4,11 @@
 
 import { connectDB } from '@/lib/db';
 import mongoose from 'mongoose';
-import { BadgeDefinition, type IBadgeDefinition } from '@/models/BadgeDefinition';
+import {
+  getBadgeDefinitionsForTrigger,
+  type BadgeCatalogDefinition,
+  type BadgeCategory,
+} from '@/lib/badge-definitions';
 import { BadgeAward } from '@/models/BadgeAward';
 import { onBadgeEarned } from '@/lib/events';
 import { createNotification } from '@/lib/notify';
@@ -23,7 +27,7 @@ import { Job } from '@/models/Job';
 export async function getEventCount(
   userId: string,
   triggerEvent: string,
-  badge: IBadgeDefinition
+  badge: BadgeCatalogDefinition
 ): Promise<number> {
   switch (triggerEvent) {
     case 'onJobApplied': {
@@ -96,6 +100,63 @@ export async function getEventCount(
         return MentorSession.countDocuments({ mentorId: mentor._id, status: 'completed' });
       }
       return MentorSession.countDocuments({ studentId: userId, status: 'completed' });
+    }
+
+    case 'onFreelanceCompleted': {
+      const FreelanceOrder = mongoose.models.FreelanceOrder;
+      if (!FreelanceOrder) return 0;
+
+      const completedOrders = await FreelanceOrder.countDocuments({
+        freelancerId: userId,
+        status: 'completed',
+        escrowStatus: 'released',
+      });
+
+      if (badge.badgeSlug !== 'verified-freelancer') {
+        return completedOrders;
+      }
+
+      const FreelanceReview = mongoose.models.FreelanceReview;
+      if (!FreelanceReview) return 0;
+
+      const reviews = (await FreelanceReview.find({
+        freelancerId: userId,
+        reviewType: 'client_to_student',
+        isPublic: true,
+        isVerified: true,
+      })
+        .select('professionalismRating punctualityRating skillPerformanceRating workQualityRating')
+        .lean()) as {
+        professionalismRating?: number;
+        punctualityRating?: number;
+        skillPerformanceRating?: number;
+        workQualityRating?: number;
+      }[];
+
+      if (reviews.length < badge.thresholdValue || completedOrders < badge.thresholdValue) {
+        return 0;
+      }
+
+      const reviewAverages = reviews
+        .map((review) => {
+          const ratings = [
+            review.professionalismRating,
+            review.punctualityRating,
+            review.skillPerformanceRating,
+            review.workQualityRating,
+          ].filter((value): value is number => typeof value === 'number' && value > 0);
+
+          if (!ratings.length) return 0;
+          return ratings.reduce((sum, value) => sum + value, 0) / ratings.length;
+        })
+        .filter(Boolean);
+
+      if (!reviewAverages.length) return 0;
+
+      const averageRating =
+        reviewAverages.reduce((sum, value) => sum + value, 0) / reviewAverages.length;
+
+      return averageRating >= 4.5 ? completedOrders : 0;
     }
 
     case 'onOpportunityScoreGain': {
@@ -176,15 +237,11 @@ export async function getEventCount(
 export async function evaluateBadges(
   userId: string,
   triggerEvent: string,
-  category?: 'student' | 'employer' | 'advisor' | 'dept_head'
+  category?: BadgeCategory
 ): Promise<void> {
   await connectDB();
 
-  // Find all badge definitions that fire on this event
-  const query: Record<string, unknown> = { triggerEvent };
-  if (category) query.category = category;
-
-  const definitions = await BadgeDefinition.find(query).lean();
+  const definitions = getBadgeDefinitionsForTrigger(triggerEvent, category);
   if (definitions.length === 0) return;
 
   // Check which badges the user already has

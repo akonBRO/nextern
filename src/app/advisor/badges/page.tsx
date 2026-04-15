@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import { DashboardPage, DashboardSection, HeroCard } from '@/components/dashboard/DashboardContent';
-import { BadgeDefinition, type IBadgeDefinition } from '@/models/BadgeDefinition';
+import { getBadgeDefinitions, type BadgeCatalogDefinition } from '@/lib/badge-definitions';
 import { BadgeAward } from '@/models/BadgeAward';
 import { getEventCount } from '@/lib/badge-engine';
 import { Trophy } from 'lucide-react';
@@ -67,16 +67,14 @@ export default async function AdvisorBadgesPage() {
   await connectDB();
   const userId = session.user.id;
 
-  const definitions = await BadgeDefinition.find({
-    category: 'advisor',
-  }).lean();
+  const definitions = getBadgeDefinitions('advisor');
   const earnedBadges = await BadgeAward.find({ userId }).select('badgeSlug awardedAt').lean();
   const earnedSlugs = new Set(
     earnedBadges.map((b: { badgeSlug: string; awardedAt?: Date }) => b.badgeSlug)
   );
 
   const progressList = await Promise.all(
-    definitions.map(async (def: IBadgeDefinition & Record<string, unknown>) => {
+    definitions.map(async (def: BadgeCatalogDefinition) => {
       const isEarned = earnedSlugs.has(def.badgeSlug);
       let count = 0;
 
@@ -84,7 +82,7 @@ export default async function AdvisorBadgesPage() {
         count = def.thresholdValue;
       } else {
         try {
-          count = await getEventCount(userId, def.triggerEvent, def as unknown as IBadgeDefinition);
+          count = await getEventCount(userId, def.triggerEvent, def);
           if (count >= def.thresholdValue) count = def.thresholdValue;
         } catch {}
       }
