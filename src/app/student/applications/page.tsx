@@ -15,7 +15,6 @@ import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
   DashboardPage,
   DashboardSection,
-  EmptyState,
   HeroCard,
   ActionLink,
   Panel,
@@ -78,6 +77,11 @@ async function getApplicationsData(userId: string) {
       resumeUrlSnapshot: app.resumeUrlSnapshot ?? null,
       appliedAt: app.appliedAt?.toISOString() ?? new Date().toISOString(),
       fitScore: app.fitScore ?? null,
+      assessmentAssignmentId: app.assessmentAssignmentId?.toString() ?? null,
+      assessmentDueAt: app.assessmentDueAt?.toISOString() ?? null,
+      assessmentSubmittedAt: app.assessmentSubmittedAt?.toISOString() ?? null,
+      interviewSessionId: app.interviewSessionId?.toString() ?? null,
+      interviewScheduledAt: app.interviewScheduledAt?.toISOString() ?? null,
       isEventRegistration: app.isEventRegistration,
       statusHistory: (app.statusHistory ?? []).map((h: { status: string; changedAt?: Date }) => ({
         status: h.status,

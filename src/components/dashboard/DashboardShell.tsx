@@ -720,56 +720,7 @@ export default function DashboardShell({
 
       <main style={hideFooter ? { flex: 1, overflow: 'hidden' } : undefined}>{children}</main>
 
-      {!hideFooter && (
-        <footer
-          style={{
-            background: '#1E293B',
-            borderTop: '1px solid rgba(255,255,255,0.06)',
-            marginTop: 48,
-          }}
-        >
-          <div
-            style={{
-              maxWidth: 1320,
-              margin: '0 auto',
-              padding: '20px 24px 26px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: 12,
-              flexWrap: 'wrap',
-            }}
-          >
-            <NexternLogo
-              markSize={28}
-              markRadius={7}
-              textSize={14}
-              textWeight={700}
-              textColor="#FFFFFF"
-              subtitle="A focused workspace for decisions, progress, and outcomes."
-              subtitleColor="#94A3B8"
-              subtitleGap={4}
-            />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-              <Link
-                href={homeHref}
-                style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}
-              >
-                Overview
-              </Link>
-              <a
-                href="mailto:support@nextern.app"
-                style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}
-              >
-                Support
-              </a>
-              <Link href="/" style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}>
-                Home
-              </Link>
-            </div>
-          </div>
-        </footer>
-      )}
+      {!hideFooter && <div style={{ marginTop: 48 }} />}
 
       <style>{`
         .dashboard-shell-nav::-webkit-scrollbar { display: none; }

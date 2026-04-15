@@ -17,6 +17,8 @@
     "@hookform/resolvers": "^5.2.2",
     "@uploadthing/react": "^7.3.3",
     "@upstash/redis": "^1.37.0",
+    "agora-rtc-sdk-ng": "^4.24.3",
+    "agora-token": "^2.0.5",
     "axios": "^1.13.6",
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",

@@ -20,28 +20,27 @@ type StudentPageShellProps = {
   children: ReactNode;
 };
 
-const DASHBOARD_SHELL_PATHS = new Set([
-  '/student/dashboard',
-  '/student/calendar',
-  '/student/jobs',
-  '/student/applications',
-  '/student/badges',
-  '/student/skills',
-  '/student/subscription',
-  '/student/mock-interview',
-  '/student/messages',
-  '/student/freelance',
+const STANDALONE_NAVBAR_PATHS = new Set([
+  '/student/profile',
+  '/student/resume',
+  '/student/ger',
+  '/student/notifications',
+  '/student/premium',
 ]);
 
-function isDashboardShellPath(pathname: string) {
+function shouldUseStandaloneNavbar(pathname: string) {
   if (!pathname.startsWith('/student')) return false;
-  if (pathname.startsWith('/student/jobs/')) return true;
-  return DASHBOARD_SHELL_PATHS.has(pathname);
+  if (pathname.startsWith('/student/profile/')) return true;
+  if (pathname.startsWith('/student/resume/')) return true;
+  if (pathname.startsWith('/student/ger/')) return true;
+  if (pathname.startsWith('/student/notifications/')) return true;
+  if (pathname.startsWith('/student/premium/')) return true;
+  return STANDALONE_NAVBAR_PATHS.has(pathname);
 }
 
 export default function StudentPageShell({ user, children }: StudentPageShellProps) {
   const pathname = usePathname();
-  const showNavbar = !pathname || !isDashboardShellPath(pathname);
+  const showNavbar = !pathname || shouldUseStandaloneNavbar(pathname);
 
   return (
     <>

@@ -55,6 +55,11 @@ type AppItem = {
   resumeUrlSnapshot: string | null;
   appliedAt: string;
   fitScore: number | null;
+  assessmentAssignmentId: string | null;
+  assessmentDueAt: string | null;
+  assessmentSubmittedAt: string | null;
+  interviewSessionId: string | null;
+  interviewScheduledAt: string | null;
   isEventRegistration: boolean;
   statusHistory: { status: string; changedAt: string }[];
   job: {
@@ -98,6 +103,8 @@ function AppCard({
   const cfg = STATUS_CONFIG[app.status] ?? STATUS_CONFIG['applied'];
   const toneStyle = TONE_STYLES[cfg.tone];
   const job = app.job;
+  const assessmentReady = Boolean(app.assessmentAssignmentId);
+  const interviewReady = Boolean(app.interviewSessionId);
 
   return (
     <div
@@ -232,6 +239,56 @@ function AppCard({
               ))}
             </div>
           )}
+
+          {!isEvent && (assessmentReady || interviewReady) ? (
+            <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {assessmentReady ? (
+                <Link
+                  href={`/student/assessments/${app.assessmentAssignmentId}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: '#EFF6FF',
+                    color: '#2563EB',
+                    border: '1px solid #BFDBFE',
+                    borderRadius: 999,
+                    padding: '6px 10px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <ClipboardList size={13} />
+                  {app.assessmentSubmittedAt ? 'Review assessment' : 'Open assessment'}
+                </Link>
+              ) : null}
+
+              {interviewReady ? (
+                <Link
+                  href={`/student/interviews/${app.interviewSessionId}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: '#F5F3FF',
+                    color: '#7C3AED',
+                    border: '1px solid #DDD6FE',
+                    borderRadius: 999,
+                    padding: '6px 10px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <CalendarCheck size={13} />
+                  {app.interviewScheduledAt
+                    ? `Interview ${formatShortDate(app.interviewScheduledAt)}`
+                    : 'Open interview'}
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <div

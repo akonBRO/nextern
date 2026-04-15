@@ -281,3 +281,30 @@ h6 {
 .landing-footer-link:hover {
   color: #94a3b8 !important;
 }
+
+.site-footer-social:hover {
+  color: #cbd5e1 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+.site-footer-grid {
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+}
+
+@media (max-width: 900px) {
+  .site-footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .site-footer-bottom {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .site-footer-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
