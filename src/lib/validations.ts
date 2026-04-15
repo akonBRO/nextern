@@ -340,6 +340,93 @@ export const UpdateApplicationStatusSchema = z.object({
   note: z.string().max(500).optional(),
 });
 
+const FreelanceAssetSchema = z.object({
+  url: z.string().url(),
+  name: z.string().min(1).max(160),
+  type: z.string().min(1).max(120),
+});
+
+export const FreelanceListingSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters').max(120),
+  description: z.string().min(20, 'Description must be at least 20 characters').max(2000),
+  category: z.enum([
+    'web-dev',
+    'graphic-design',
+    'content-writing',
+    'data-analysis',
+    'video-editing',
+    'other',
+  ]),
+  skills: z.array(z.string().min(1).max(80)).max(20).default([]),
+  priceType: z.enum(['fixed', 'hourly']),
+  priceBDT: z.number().int().min(1, 'Price must be at least 1 BDT'),
+  deliveryDays: z.number().int().min(1).max(90),
+  sampleFiles: z.array(FreelanceAssetSchema).max(6).default([]),
+  isActive: z.boolean().optional(),
+});
+
+export const FreelanceOrderCreateSchema = z.object({
+  listingId: z.string().length(24, 'Invalid listing ID'),
+  requirements: z.string().min(20, 'Please provide enough project details').max(3000),
+  requirementsFiles: z.array(FreelanceAssetSchema).max(6).default([]),
+  quotedRateBDT: z.number().int().min(1).max(500000).optional(),
+  quotedHours: z.number().int().min(1).max(400).optional(),
+  proposalNote: z.string().max(1000).optional().or(z.literal('')),
+  paymentMethod: z.enum(['bkash', 'visa', 'mastercard']),
+});
+
+export const FreelanceOrderActionSchema = z.object({
+  action: z.enum([
+    'accept_proposal',
+    'counter_proposal',
+    'reject_proposal',
+    'deliver',
+    'request_revision',
+    'confirm_completion',
+    'cancel',
+    'mark_disputed',
+    'release_escrow',
+    'refund_escrow',
+  ]),
+  quotedRateBDT: z.number().int().min(1).max(500000).optional(),
+  quotedHours: z.number().int().min(1).max(400).optional(),
+  proposalNote: z.string().max(1000).optional().or(z.literal('')),
+  deliveryNote: z.string().max(2000).optional().or(z.literal('')),
+  deliveryFiles: z.array(FreelanceAssetSchema).max(8).optional().default([]),
+  clientNote: z.string().max(2000).optional().or(z.literal('')),
+});
+
+export const FreelanceReviewSchema = z.object({
+  orderId: z.string().length(24, 'Invalid order ID'),
+  reviewType: z.enum(['client_to_student', 'student_to_client']),
+  overallRating: z.number().int().min(1).max(5).optional(),
+  communicationRating: z.number().int().min(1).max(5).optional(),
+  requirementsClarityRating: z.number().int().min(1).max(5).optional(),
+  paymentPromptnessRating: z.number().int().min(1).max(5).optional(),
+  professionalismRating: z.number().int().min(1).max(5).optional(),
+  punctualityRating: z.number().int().min(1).max(5).optional(),
+  skillPerformanceRating: z.number().int().min(1).max(5).optional(),
+  workQualityRating: z.number().int().min(1).max(5).optional(),
+  isRecommended: z.boolean().optional(),
+  recommendationText: z.string().max(3000).optional().or(z.literal('')),
+  comment: z.string().max(1500).optional().or(z.literal('')),
+});
+
+export const AdminFreelanceOrderUpdateSchema = z.object({
+  action: z.enum(['release_escrow', 'refund_escrow', 'mark_disputed', 'restore_in_progress']),
+  adminNote: z.string().max(1000).optional().or(z.literal('')),
+});
+
+export const FreelanceWithdrawalCreateSchema = z.object({
+  amountBDT: z.number().int().min(1).max(500000),
+  note: z.string().max(500).optional().or(z.literal('')),
+});
+
+export const AdminFreelanceWithdrawalUpdateSchema = z.object({
+  action: z.enum(['process', 'reject']),
+  adminNote: z.string().max(1000).optional().or(z.literal('')),
+});
+
 // ── Type exports ──────────────────────────────────────────────────────────────
 
 export type RegisterInput = z.infer<typeof RegisterSchema>;
@@ -350,3 +437,6 @@ export type UpdateEmployerProfileInput = z.infer<typeof UpdateEmployerProfileSch
 export type CreateJobInput = z.infer<typeof CreateJobSchema>;
 export type UpdateJobInput = z.infer<typeof UpdateJobSchema>;
 export type ApplyJobInput = z.infer<typeof ApplyJobSchema>;
+export type FreelanceListingInput = z.infer<typeof FreelanceListingSchema>;
+export type FreelanceOrderCreateInput = z.infer<typeof FreelanceOrderCreateSchema>;
+export type FreelanceWithdrawalCreateInput = z.infer<typeof FreelanceWithdrawalCreateSchema>;

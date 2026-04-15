@@ -6,7 +6,7 @@ import { Notification } from '@/models/Notification';
 import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import { DashboardPage, DashboardSection, HeroCard } from '@/components/dashboard/DashboardContent';
-import { BadgeDefinition, type IBadgeDefinition } from '@/models/BadgeDefinition';
+import { getBadgeDefinitions, type BadgeCatalogDefinition } from '@/lib/badge-definitions';
 import { BadgeAward } from '@/models/BadgeAward';
 import { getEventCount } from '@/lib/badge-engine';
 import { Trophy } from 'lucide-react';
@@ -23,14 +23,14 @@ export default async function StudentBadgesPage() {
     Message.countDocuments({ receiverId: userId, isRead: false }),
   ]);
 
-  const definitions = await BadgeDefinition.find({ category: 'student' }).lean();
+  const definitions = getBadgeDefinitions('student');
   const earnedBadges = await BadgeAward.find({ userId }).select('badgeSlug awardedAt').lean();
   const earnedSlugs = new Set(
     earnedBadges.map((b: { badgeSlug: string; awardedAt?: Date }) => b.badgeSlug)
   );
 
   const progressList = await Promise.all(
-    definitions.map(async (def: IBadgeDefinition & Record<string, unknown>) => {
+    definitions.map(async (def: BadgeCatalogDefinition) => {
       const isEarned = earnedSlugs.has(def.badgeSlug);
       let count = 0;
 
@@ -38,7 +38,7 @@ export default async function StudentBadgesPage() {
         count = def.thresholdValue;
       } else {
         try {
-          count = await getEventCount(userId, def.triggerEvent, def as unknown as IBadgeDefinition);
+          count = await getEventCount(userId, def.triggerEvent, def);
           if (count >= def.thresholdValue) count = def.thresholdValue;
         } catch {}
       }
@@ -49,21 +49,14 @@ export default async function StudentBadgesPage() {
         threshold: def.thresholdValue,
         isEarned,
         progressPercentage: Math.min(100, Math.round((count / def.thresholdValue) * 100)),
-        awardedAt: earnedBadges.find(
-          (b: { badgeSlug: string; awardedAt?: Date }) => b.badgeSlug === def.badgeSlug
-        )?.awardedAt,
       };
     })
   );
 
   // Badge points — all badge marksRewards sum to 100
   const totalPoints = definitions
-    .filter((def: IBadgeDefinition & Record<string, unknown>) => earnedSlugs.has(def.badgeSlug))
-    .reduce(
-      (sum: number, def: IBadgeDefinition & Record<string, unknown>) =>
-        sum + ((def.marksReward as number) || 0),
-      0
-    );
+    .filter((def) => earnedSlugs.has(def.badgeSlug))
+    .reduce((sum: number, def) => sum + (def.marksReward || 0), 0);
 
   return (
     <DashboardShell
@@ -131,14 +124,7 @@ export default async function StudentBadgesPage() {
             }}
           >
             {progressList.map(
-              ({
-                definition: def,
-                currentCount,
-                threshold,
-                isEarned,
-                progressPercentage,
-                awardedAt,
-              }) => {
+              ({ definition: def, currentCount, threshold, isEarned, progressPercentage }) => {
                 const bg = isEarned ? '#EFF6FF' : '#FFFFFF';
                 const border = isEarned ? '#60A5FA' : '#E2E8F0';
                 const titleColor = isEarned ? '#1E3A8A' : '#1E293B';
@@ -214,7 +200,7 @@ export default async function StudentBadgesPage() {
                           color: isEarned ? '#1E40AF' : '#64748B',
                         }}
                       >
-                        +{(def.marksReward as number) || 0} pts
+                        +{def.marksReward || 0} pts
                       </span>
                       <span
                         style={{

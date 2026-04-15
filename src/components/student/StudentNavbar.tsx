@@ -6,10 +6,12 @@ import {
   BriefcaseBusiness,
   ChevronDown,
   ClipboardList,
+  FolderKanban,
   Home,
   LogOut,
   Mail,
   UserCircle2,
+  Wallet,
 } from 'lucide-react';
 import { useState } from 'react';
 import { NexternLogo } from '@/components/brand/NexternLogo';
@@ -31,6 +33,7 @@ interface NavbarProps {
 
 export default function StudentNavbar({ user }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [freelanceMenuOpen, setFreelanceMenuOpen] = useState(false);
   const initials = user.name
     .split(' ')
     .map((part) => part[0])
@@ -136,6 +139,123 @@ export default function StudentNavbar({ user }: NavbarProps) {
             <ClipboardList size={15} strokeWidth={2} />
             Applications
           </Link>
+
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setFreelanceMenuOpen((value) => !value)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                border: 'none',
+                background: 'transparent',
+                color: '#CBD5E1',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              <FolderKanban size={15} strokeWidth={2} />
+              Freelance
+              <ChevronDown
+                size={14}
+                strokeWidth={2}
+                style={{
+                  transform: freelanceMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease',
+                }}
+              />
+            </button>
+
+            {freelanceMenuOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 10px)',
+                  left: 0,
+                  zIndex: 90,
+                  width: 260,
+                  background: '#FFFFFF',
+                  borderRadius: 18,
+                  border: '1px solid #D9E2EC',
+                  boxShadow: '0 18px 42px rgba(15,23,42,0.12)',
+                  padding: 10,
+                }}
+              >
+                {[
+                  {
+                    href: '/student/freelance?view=board',
+                    label: 'Marketplace',
+                    description: 'Browse the live freelance board',
+                    icon: <FolderKanban size={15} strokeWidth={2} />,
+                  },
+                  {
+                    href: '/student/freelance?view=services',
+                    label: 'My Services',
+                    description: 'Manage your service listings',
+                    icon: <BriefcaseBusiness size={15} strokeWidth={2} />,
+                  },
+                  {
+                    href: '/student/freelance?view=freelancerOrders',
+                    label: 'Freelancer Orders',
+                    description: 'Track work you are delivering',
+                    icon: <ClipboardList size={15} strokeWidth={2} />,
+                  },
+                  {
+                    href: '/student/freelance?view=finance',
+                    label: 'Earnings & Invoices',
+                    description: 'View balance, invoices, and withdrawals',
+                    icon: <Wallet size={15} strokeWidth={2} />,
+                  },
+                ].map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setFreelanceMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 10,
+                      padding: '11px 12px',
+                      borderRadius: 12,
+                      textDecoration: 'none',
+                      color: '#1E293B',
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      marginBottom: 6,
+                    }}
+                    onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
+                    onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
+                  >
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 10,
+                        background: '#EFF6FF',
+                        color: '#2563EB',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {item.icon}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                        {item.label}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                        {item.description}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Messages chip — static */}
           {user.userId ? (
@@ -415,6 +535,48 @@ export default function StudentNavbar({ user }: NavbarProps) {
                       </div>
                       <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
                         Track your pipeline
+                      </div>
+                    </div>
+                  </Link>
+
+                  <Link
+                    href="/student/freelance?view=board"
+                    onClick={() => setMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '11px 12px',
+                      borderRadius: 12,
+                      textDecoration: 'none',
+                      color: '#1E293B',
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                    }}
+                    onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
+                    onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
+                  >
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 10,
+                        background: '#EFF6FF',
+                        color: '#2563EB',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <FolderKanban size={15} strokeWidth={2} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                        Freelance Board
+                      </div>
+                      <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                        Offer services and manage gigs
                       </div>
                     </div>
                   </Link>

@@ -2,10 +2,10 @@
 // Shared data-fetching logic for both GER preview and generate routes
 
 import { connectDB } from '@/lib/db';
+import { getBadgeDefinitionMap } from '@/lib/badge-definitions';
 import { User } from '@/models/User';
 import { Application } from '@/models/Application';
 import { BadgeAward } from '@/models/BadgeAward';
-import { BadgeDefinition } from '@/models/BadgeDefinition';
 import { Review } from '@/models/Review';
 import { computeGERScore, type RawGERInput, type GERData } from '@/lib/ger-pdf';
 import mongoose from 'mongoose';
@@ -41,8 +41,7 @@ export async function buildGERData(userId: string): Promise<{
 
   // ── Badges — load earned badge definitions to preserve marksReward
   const badgeAwards = await BadgeAward.find({ userId: oid }).lean();
-  const studentBadgeDefs = await BadgeDefinition.find({ category: 'student' }).lean();
-  const studentBadgeMap = new Map(studentBadgeDefs.map((def) => [def.badgeSlug, def]));
+  const studentBadgeMap = getBadgeDefinitionMap('student');
   const badges = badgeAwards.map((a) => {
     const def = studentBadgeMap.get(a.badgeSlug);
     return {
@@ -98,8 +97,9 @@ export async function buildGERData(userId: string): Promise<{
     const FreelanceOrder = mongoose.models.FreelanceOrder;
     if (FreelanceOrder) {
       freelanceOrderCount = await FreelanceOrder.countDocuments({
-        studentId: oid,
+        freelancerId: oid,
         status: 'completed',
+        escrowStatus: 'released',
       });
     }
   } catch {

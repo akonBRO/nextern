@@ -87,6 +87,19 @@ type Profile = {
   opportunityScore: number;
   profileCompleteness: number;
   resumeUrl?: string;
+  generatedResumeUrl?: string;
+  verifiedPortfolioItems: {
+    title: string;
+    category: string;
+    fileUrl: string;
+    fileUrls?: string[];
+    summary?: string;
+    skills?: string[];
+    clientName?: string;
+    rating?: number;
+    completedAt?: string;
+    freelanceOrderId?: string;
+  }[];
   projects: {
     title: string;
     description: string;
@@ -148,6 +161,19 @@ function jobTypeLabel(t: string) {
     workshop: 'Workshop',
   };
   return m[t] ?? t;
+}
+
+function categoryLabel(value?: string) {
+  if (!value) return 'Verified work';
+  const map: Record<string, string> = {
+    'web-dev': 'Web Development',
+    'graphic-design': 'Graphic Design',
+    'content-writing': 'Content Writing',
+    'data-analysis': 'Data Analysis',
+    'video-editing': 'Video Editing',
+    other: 'Verified Work',
+  };
+  return map[value] ?? value.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 const STATUS_COLOR: Record<string, string> = {
@@ -711,6 +737,57 @@ function ResumePreviewModal({
                 </div>
               )}
 
+              {profile.verifiedPortfolioItems.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <Section title="Verified Freelance Work" color={C.blue} />
+                  {profile.verifiedPortfolioItems.map((item, index) => (
+                    <div
+                      key={`${item.freelanceOrderId ?? item.fileUrl}:${index}`}
+                      style={{
+                        marginBottom: 12,
+                        paddingBottom: 12,
+                        borderBottom:
+                          index < profile.verifiedPortfolioItems.length - 1
+                            ? `1px solid ${C.border}`
+                            : 'none',
+                      }}
+                    >
+                      <div
+                        style={{ fontSize: 10.5, fontWeight: 800, color: C.text, marginBottom: 3 }}
+                      >
+                        {item.title}
+                      </div>
+                      <div style={{ fontSize: 8, color: C.blue, marginBottom: 4, fontWeight: 700 }}>
+                        {categoryLabel(item.category)}
+                        {item.clientName ? `  |  Client: ${item.clientName}` : ''}
+                        {typeof item.rating === 'number'
+                          ? `  |  Rating: ${item.rating.toFixed(1)}`
+                          : ''}
+                      </div>
+                      {item.summary ? (
+                        <div
+                          style={{
+                            fontSize: 9,
+                            color: C.textMuted,
+                            lineHeight: 1.65,
+                            marginBottom: 4,
+                          }}
+                        >
+                          {item.summary}
+                        </div>
+                      ) : null}
+                      {item.skills?.length ? (
+                        <div
+                          style={{ fontSize: 8, color: C.teal, marginBottom: 4, fontWeight: 600 }}
+                        >
+                          {item.skills.join('  |  ')}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {profile.certifications.length > 0 && (
                 <div style={{ marginBottom: 20 }}>
                   <Section title="Certifications" />
@@ -1130,7 +1207,17 @@ export default function StudentResumePage() {
       fetch('/api/resume/platform-activity').then((r) => r.json()),
     ])
       .then(([profileData, activityData]) => {
-        setProfile(profileData?.user ?? null);
+        const user = profileData?.user
+          ? {
+              ...profileData.user,
+              skills: profileData.user.skills ?? [],
+              completedCourses: profileData.user.completedCourses ?? [],
+              projects: profileData.user.projects ?? [],
+              certifications: profileData.user.certifications ?? [],
+              verifiedPortfolioItems: profileData.user.verifiedPortfolioItems ?? [],
+            }
+          : null;
+        setProfile(user);
         setJobApps(activityData.jobApplications ?? []);
         setEvents(activityData.eventRegistrations ?? []);
       })
@@ -1241,6 +1328,11 @@ export default function StudentResumePage() {
     { key: 'acad', label: 'Academic Info', filled: !!(profile.university && profile.cgpa) },
     { key: 'skills', label: 'Skills', filled: profile.skills.length > 0 },
     { key: 'projs', label: 'Projects', filled: profile.projects.length > 0 },
+    {
+      key: 'verified-work',
+      label: 'Verified Work',
+      filled: profile.verifiedPortfolioItems.length > 0,
+    },
     { key: 'certs', label: 'Certifications', filled: profile.certifications.length > 0 },
     { key: 'courses', label: 'Courses', filled: profile.completedCourses.length > 0 },
     {
@@ -1581,6 +1673,79 @@ export default function StudentResumePage() {
               </div>
             ) : (
               <Hint text="No projects — showcase your work to stand out to employers." />
+            )}
+          </SectionCard>
+
+          <SectionCard
+            icon={<Sparkles size={15} />}
+            title="Verified Work Portfolio"
+            filled={profile.verifiedPortfolioItems.length > 0}
+          >
+            {profile.verifiedPortfolioItems.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {profile.verifiedPortfolioItems.map((item, index) => (
+                  <div
+                    key={`${item.freelanceOrderId ?? item.fileUrl}:${index}`}
+                    style={{ borderLeft: `3px solid ${C.blue}`, paddingLeft: 12 }}
+                  >
+                    <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{item.title}</div>
+                    <div style={{ marginTop: 4, fontSize: 12, color: C.blue, fontWeight: 700 }}>
+                      {categoryLabel(item.category)}
+                      {item.clientName ? ` | Client: ${item.clientName}` : ''}
+                      {typeof item.rating === 'number'
+                        ? ` | Rating: ${item.rating.toFixed(1)}`
+                        : ''}
+                    </div>
+                    {item.skills?.length ? (
+                      <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap' }}>
+                        {item.skills.map((skill) => (
+                          <Chip
+                            key={`${item.fileUrl}:${skill}`}
+                            label={skill}
+                            color={C.teal}
+                            bg={C.tealBg}
+                            border={C.tealBorder}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
+                    {item.summary ? (
+                      <div
+                        style={{ marginTop: 6, fontSize: 13, color: C.textMuted, lineHeight: 1.65 }}
+                      >
+                        {item.summary}
+                      </div>
+                    ) : null}
+                    <div style={{ marginTop: 8, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                      <a
+                        href={item.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          fontSize: 12,
+                          color: C.blue,
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        Open verified file
+                      </a>
+                      {item.fileUrls && item.fileUrls.length > 1 ? (
+                        <span style={{ fontSize: 12, color: C.textLight }}>
+                          {item.fileUrls.length} files synced
+                        </span>
+                      ) : null}
+                      {item.completedAt ? (
+                        <span style={{ fontSize: 12, color: C.textLight }}>
+                          Completed {fmtDate(item.completedAt)}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Hint text="Verified freelance deliveries will appear here automatically after escrow release and client approval." />
             )}
           </SectionCard>
 

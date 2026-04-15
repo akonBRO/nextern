@@ -28,6 +28,30 @@ export const EMPLOYER_NAV_ITEMS: DashboardNavItem[] = [
     ],
   },
   {
+    label: 'Freelance',
+    icon: 'briefcase',
+    items: [
+      {
+        label: 'Marketplace',
+        href: '/employer/freelance?view=board',
+        description: 'Hire verified student freelancers with superadmin escrow protection.',
+        icon: 'briefcase',
+      },
+      {
+        label: 'Client Orders',
+        href: '/employer/freelance?view=clientOrders',
+        description: 'Review pending payments, deliveries, and verified completion records.',
+        icon: 'file',
+      },
+      {
+        label: 'Invoices & Spend',
+        href: '/employer/freelance?view=finance',
+        description: 'Monitor spend, escrow exposure, and freelance invoices in one place.',
+        icon: 'insights',
+      },
+    ],
+  },
+  {
     label: 'AI Hiring',
     icon: 'sparkles',
     items: [

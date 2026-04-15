@@ -18,6 +18,7 @@ export default async function EmployerMessagesPage({
 
   const params = await searchParams;
   const initiateUser = typeof params?.user === 'string' ? params.user : undefined;
+  const initiateFreelanceOrder = typeof params?.order === 'string' ? params.order : undefined;
 
   const data = await getEmployerDashboardData(session.user.id);
 
@@ -46,6 +47,7 @@ export default async function EmployerMessagesPage({
           currentUserId={session.user.id}
           currentUserRole="employer"
           initiateUserId={initiateUser}
+          initiateFreelanceOrderId={initiateFreelanceOrder}
         />
       </div>
     </DashboardShell>

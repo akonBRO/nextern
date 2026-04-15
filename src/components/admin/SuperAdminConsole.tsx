@@ -49,6 +49,7 @@ type SectionKey =
   | 'jobs'
   | 'applications'
   | 'finance'
+  | 'freelance'
   | 'support'
   | 'messages'
   | 'analytics';
@@ -96,9 +97,15 @@ const SECTION_META: Record<
   },
   finance: {
     label: 'Finance',
-    description: 'Track payments, subscriptions, and premium handling.',
+    description: 'Track subscriptions, payment records, refunds, and premium handling.',
     icon: BadgeDollarSign,
     accent: '#166534',
+  },
+  freelance: {
+    label: 'Freelance',
+    description: 'Operate escrow, platform-fee, account-balance, and withdrawal workflows.',
+    icon: BriefcaseBusiness,
+    accent: '#0f766e',
   },
   support: {
     label: 'Support',
@@ -325,6 +332,7 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
   const [financeFilters, setFinanceFilters] = useState({
     paymentStatus: 'all',
     method: 'all',
+    type: 'all',
     plan: 'all',
     search: '',
   });
@@ -333,6 +341,8 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
   const [paymentDrafts, setPaymentDrafts] = useState<Record<string, any>>({});
   const [subscriptionDrafts, setSubscriptionDrafts] = useState<Record<string, any>>({});
   const [financeActionId, setFinanceActionId] = useState<string | null>(null);
+  const [freelanceAdminNotes, setFreelanceAdminNotes] = useState<Record<string, string>>({});
+  const [freelanceListingActionId, setFreelanceListingActionId] = useState<string | null>(null);
 
   const [supportFilters, setSupportFilters] = useState({
     flaggedOnly: 'true',
@@ -375,7 +385,9 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
     if (activeSection === 'users' && !usersData) void loadUsers();
     if (activeSection === 'jobs' && !jobsData) void loadJobs();
     if (activeSection === 'applications' && !applicationsData) void loadApplications();
-    if (activeSection === 'finance' && !financeData) void loadFinance();
+    if ((activeSection === 'finance' || activeSection === 'freelance') && !financeData) {
+      void loadFinance();
+    }
     if (activeSection === 'support' && !supportData) void loadSupport();
     if (activeSection === 'messages' && !messagesData) void loadMessages();
     if (activeSection === 'analytics' && !overview) void loadOverview();
@@ -496,6 +508,12 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
         ])
       )
     );
+
+    setFreelanceAdminNotes(
+      Object.fromEntries(
+        (financeData.freelanceOrders ?? []).map((order: any) => [order._id, order.adminNote ?? ''])
+      )
+    );
   }, [financeData]);
 
   const sectionMeta = SECTION_META[activeSection];
@@ -505,8 +523,9 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
     return [
       `${overview.summary.totalUsers} users`,
       `${overview.summary.activeJobs} active jobs`,
-      `${overview.summary.flaggedMessages} support alerts`,
-      `${formatMoney(overview.summary.totalRevenueBDT)} collected`,
+      `${formatMoney(overview.summary.totalRevenueBDT)} subscription revenue`,
+      `${formatMoney(overview.summary.freelanceGMVBDT ?? 0)} freelance GMV`,
+      `${overview.summary.verifiedFreelancers ?? 0} verified freelancers`,
     ];
   }, [overview]);
 
@@ -602,6 +621,7 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
       if (financeFilters.paymentStatus !== 'all')
         params.set('paymentStatus', financeFilters.paymentStatus);
       if (financeFilters.method !== 'all') params.set('method', financeFilters.method);
+      if (financeFilters.type !== 'all') params.set('type', financeFilters.type);
       if (financeFilters.plan !== 'all') params.set('plan', financeFilters.plan);
       if (financeFilters.search.trim()) params.set('search', financeFilters.search.trim());
       setFinanceData(await requestJson(`/api/admin/finance?${params.toString()}`));
@@ -899,6 +919,75 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
     }
   }
 
+  async function handleFreelanceOrderAction(
+    orderId: string,
+    action: 'release_escrow' | 'refund_escrow' | 'mark_disputed' | 'restore_in_progress'
+  ) {
+    setFinanceActionId(`freelance:${orderId}:${action}`);
+    try {
+      await requestJson(`/api/admin/freelance/orders/${orderId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          action,
+          adminNote: freelanceAdminNotes[orderId] || undefined,
+        }),
+      });
+      showNotice('success', 'Freelance escrow updated.');
+      await Promise.all([loadFinance(), loadOverview()]);
+    } catch (error) {
+      showNotice(
+        'error',
+        error instanceof Error ? error.message : 'Failed to update freelance order.'
+      );
+    } finally {
+      setFinanceActionId(null);
+    }
+  }
+
+  async function handleToggleFreelanceListing(listingId: string, isActive: boolean) {
+    setFreelanceListingActionId(listingId);
+    try {
+      await requestJson(`/api/freelance/listings/${listingId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isActive }),
+      });
+      showNotice('success', isActive ? 'Listing activated.' : 'Listing paused.');
+      await Promise.all([loadFinance(), loadOverview()]);
+    } catch (error) {
+      showNotice(
+        'error',
+        error instanceof Error ? error.message : 'Failed to update freelance listing.'
+      );
+    } finally {
+      setFreelanceListingActionId(null);
+    }
+  }
+
+  async function handleFreelanceWithdrawalAction(
+    withdrawalId: string,
+    action: 'process' | 'reject'
+  ) {
+    setFinanceActionId(`withdrawal:${withdrawalId}:${action}`);
+    try {
+      await requestJson(`/api/admin/freelance/withdrawals/${withdrawalId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          action,
+          adminNote: '',
+        }),
+      });
+      showNotice(
+        'success',
+        action === 'process' ? 'Withdrawal marked as processed.' : 'Withdrawal rejected.'
+      );
+      await Promise.all([loadFinance(), loadOverview()]);
+    } catch (error) {
+      showNotice('error', error instanceof Error ? error.message : 'Failed to update withdrawal.');
+    } finally {
+      setFinanceActionId(null);
+    }
+  }
+
   async function handleSupportSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSupportActionId('send');
@@ -1142,7 +1231,7 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                 <MetricCard
                   title="Revenue"
                   value={formatMoney(overview?.summary?.totalRevenueBDT ?? 0)}
-                  hint="Successful payments"
+                  hint="Subscription revenue"
                   icon={BadgeDollarSign}
                 />
                 <MetricCard
@@ -1150,6 +1239,24 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                   value={`${overview?.summary?.premiumUsers ?? 0}`}
                   hint="Elevated access"
                   icon={Crown}
+                />
+                <MetricCard
+                  title="Freelance GMV"
+                  value={formatMoney(overview?.summary?.freelanceGMVBDT ?? 0)}
+                  hint="Funded escrow volume"
+                  icon={BriefcaseBusiness}
+                />
+                <MetricCard
+                  title="Escrow held"
+                  value={formatMoney(overview?.summary?.freelanceEscrowHeldBDT ?? 0)}
+                  hint="Currently held by superadmin"
+                  icon={ShieldCheck}
+                />
+                <MetricCard
+                  title="Verified freelancers"
+                  value={`${overview?.summary?.verifiedFreelancers ?? 0}`}
+                  hint="Badge holders"
+                  icon={CheckCheck}
                 />
                 <MetricCard
                   title="Alerts"
@@ -1189,8 +1296,8 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                 <div className={styles.panel}>
                   <div className={styles.panelHeader}>
                     <div>
-                      <h2>Revenue trend</h2>
-                      <p>Successful payment volume over time.</p>
+                      <h2>Subscription revenue trend</h2>
+                      <p>Collected premium revenue over time.</p>
                     </div>
                   </div>
                   <div className={styles.chartWrap}>
@@ -1206,6 +1313,32 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                           <YAxis tick={{ fill: '#5b6b81', fontSize: 12 }} />
                           <Tooltip formatter={(value) => formatMoney(Number(value))} />
                           <Bar dataKey="value" fill="#1d4ed8" radius={[8, 8, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.panel}>
+                  <div className={styles.panelHeader}>
+                    <div>
+                      <h2>Freelance GMV trend</h2>
+                      <p>Escrow-funded freelance order volume over time.</p>
+                    </div>
+                  </div>
+                  <div className={styles.chartWrap}>
+                    {overviewLoading ? (
+                      <div className={styles.loaderWrap}>
+                        <LoaderCircle className={styles.spin} size={20} />
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={280}>
+                        <BarChart data={overview?.activity?.freelanceGmv ?? []}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ef" />
+                          <XAxis dataKey="label" tick={{ fill: '#5b6b81', fontSize: 12 }} />
+                          <YAxis tick={{ fill: '#5b6b81', fontSize: 12 }} />
+                          <Tooltip formatter={(value) => formatMoney(Number(value))} />
+                          <Bar dataKey="value" fill="#0f766e" radius={[8, 8, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     )}
@@ -1274,6 +1407,95 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                     <SectionEmpty
                       title="No university analytics"
                       description="Student cohorts will show here."
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className={styles.twoColumnGrid}>
+                <div className={styles.panel}>
+                  <div className={styles.panelHeader}>
+                    <div>
+                      <h2>Freelance marketplace</h2>
+                      <p>Snapshot of escrow health and verified delivery momentum.</p>
+                    </div>
+                  </div>
+                  <div className={styles.listTable}>
+                    {[
+                      {
+                        label: 'Active listings',
+                        value: `${overview?.summary?.activeFreelanceListings ?? 0}`,
+                        tone: 'success',
+                      },
+                      {
+                        label: 'Verified freelancers',
+                        value: `${overview?.summary?.verifiedFreelancers ?? 0}`,
+                        tone: 'neutral',
+                      },
+                      {
+                        label: 'Escrow held',
+                        value: formatMoney(overview?.summary?.freelanceEscrowHeldBDT ?? 0),
+                        tone: 'warning',
+                      },
+                      {
+                        label: 'Disputed orders',
+                        value: `${overview?.summary?.disputedFreelanceOrders ?? 0}`,
+                        tone: 'danger',
+                      },
+                      {
+                        label: '30 day GMV',
+                        value: formatMoney(overview?.summary?.rolling30DayFreelanceGMVBDT ?? 0),
+                        tone: 'success',
+                      },
+                    ].map((row) => (
+                      <div key={row.label} className={styles.listRow}>
+                        <div>
+                          <div className={styles.rowTitle}>{row.label}</div>
+                          <div className={styles.rowMeta}>Freelance marketplace monitoring</div>
+                        </div>
+                        <span
+                          className={`${styles.badge} ${
+                            row.tone === 'success'
+                              ? styles.badgeSuccess
+                              : row.tone === 'warning'
+                                ? styles.badgeWarning
+                                : row.tone === 'danger'
+                                  ? styles.badgeDanger
+                                  : styles.badgeNeutral
+                          }`}
+                        >
+                          {row.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={styles.panel}>
+                  <div className={styles.panelHeader}>
+                    <div>
+                      <h2>Top employers</h2>
+                      <p>Highest-traction hiring organizations on the platform.</p>
+                    </div>
+                  </div>
+                  {overview?.highlights?.topEmployers?.length ? (
+                    <div className={styles.listTable}>
+                      {overview.highlights.topEmployers.map((row: any) => (
+                        <div key={row.employerId} className={styles.listRow}>
+                          <div>
+                            <div className={styles.rowTitle}>{row.companyName}</div>
+                            <div className={styles.rowMeta}>
+                              {row.ownerName} · {row.jobs} jobs · {row.premiumListings} premium
+                            </div>
+                          </div>
+                          <strong>{formatCompactNumber(row.totalApplications)}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <SectionEmpty
+                      title="No employer analytics"
+                      description="Top hiring organizations will show here."
                     />
                   )}
                 </div>
@@ -2359,17 +2581,59 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
 
           {activeSection === 'finance' ? (
             <section className={styles.section}>
+              <div className={styles.panel}>
+                <div className={styles.panelHeader}>
+                  <div>
+                    <h2>Finance Workspace</h2>
+                    <p>
+                      Use the switcher to jump between premium finance controls and freelance
+                      operations.
+                    </p>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div className={styles.rowMeta}>
+                    Payments and subscriptions stay here. Escrow, accounts, and withdrawals also
+                    have a dedicated freelance ops view.
+                  </div>
+                  <select
+                    value={activeSection}
+                    onChange={(event) => setActiveSection(event.target.value as SectionKey)}
+                    style={{
+                      minWidth: 220,
+                      padding: '10px 12px',
+                      borderRadius: 14,
+                      border: '1px solid #CBD5E1',
+                      background: '#fff',
+                      color: '#0F172A',
+                      font: 'inherit',
+                    }}
+                  >
+                    <option value="finance">Finance</option>
+                    <option value="freelance">Freelance Ops</option>
+                  </select>
+                </div>
+              </div>
+
               <div className={styles.metricsGrid}>
                 <MetricCard
-                  title="Collected"
+                  title="Subscription revenue"
                   value={formatMoney(financeData?.summary?.totalRevenueBDT ?? 0)}
-                  hint="Successful payments"
+                  hint="Successful premium payments"
                   icon={BadgeDollarSign}
                 />
                 <MetricCard
-                  title="Refunded"
+                  title="Subscription refunds"
                   value={formatMoney(financeData?.summary?.refundedRevenueBDT ?? 0)}
-                  hint="Returned value"
+                  hint="Returned premium value"
                   icon={RefreshCw}
                 />
                 <MetricCard
@@ -2384,6 +2648,30 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                   hint="Access enabled"
                   icon={Users}
                 />
+                <MetricCard
+                  title="Freelance GMV"
+                  value={formatMoney(financeData?.summary?.freelanceGMVBDT ?? 0)}
+                  hint="Escrow-funded order volume"
+                  icon={BriefcaseBusiness}
+                />
+                <MetricCard
+                  title="Escrow held"
+                  value={formatMoney(financeData?.summary?.freelanceEscrowHeldBDT ?? 0)}
+                  hint="Currently held by superadmin"
+                  icon={ShieldCheck}
+                />
+                <MetricCard
+                  title="Released payouts"
+                  value={formatMoney(financeData?.summary?.freelanceReleasedBDT ?? 0)}
+                  hint="Freelancer payouts completed"
+                  icon={CheckCheck}
+                />
+                <MetricCard
+                  title="Freelance disputes"
+                  value={`${financeData?.summary?.disputedFreelanceOrders ?? 0}`}
+                  hint="Orders needing admin attention"
+                  icon={MessageSquareWarning}
+                />
               </div>
 
               <div className={styles.financeGrid}>
@@ -2391,7 +2679,7 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                   <div className={styles.panelHeader}>
                     <div>
                       <h2>Payments</h2>
-                      <p>Update settlement status and method.</p>
+                      <p>Update subscription and freelance payment records.</p>
                     </div>
                   </div>
                   <div className={styles.filters}>
@@ -2428,6 +2716,23 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                         <option value="bkash">bKash</option>
                         <option value="visa">Visa</option>
                         <option value="mastercard">Mastercard</option>
+                      </select>
+                    </div>
+                    <div className={styles.filterField}>
+                      <label>Type</label>
+                      <select
+                        value={financeFilters.type}
+                        onChange={(event) =>
+                          setFinanceFilters((current) => ({
+                            ...current,
+                            type: event.target.value,
+                          }))
+                        }
+                      >
+                        <option value="all">All</option>
+                        <option value="subscription">Subscription</option>
+                        <option value="freelance_escrow">Freelance escrow</option>
+                        <option value="freelance_release">Freelance release</option>
                       </select>
                     </div>
                     <div className={styles.filterField}>
@@ -2481,6 +2786,30 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                             <div className={styles.rowMeta}>
                               {formatMoney(payment.amountBDT)} ·{' '}
                               {formatDate(payment.createdAt, true)}
+                            </div>
+                          </div>
+                          <div>
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                flexWrap: 'wrap',
+                                marginTop: 8,
+                              }}
+                            >
+                              <StatusBadge value={payment.status} />
+                              <span className={`${styles.badge} ${styles.badgeNeutral}`}>
+                                {normalizeLabel(payment.type)}
+                              </span>
+                              <span className={`${styles.badge} ${styles.badgeNeutral}`}>
+                                {normalizeLabel(payment.method)}
+                              </span>
+                              {payment.referenceType ? (
+                                <span className={`${styles.badge} ${styles.badgeNeutral}`}>
+                                  {normalizeLabel(payment.referenceType)}
+                                </span>
+                              ) : null}
                             </div>
                           </div>
                           <div className={styles.financeControls}>
@@ -2548,7 +2877,7 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                   <div className={styles.panelHeader}>
                     <div>
                       <h2>Subscriptions</h2>
-                      <p>Adjust plan, status, and expiry date.</p>
+                      <p>Adjust plan, status, and renewal window.</p>
                     </div>
                   </div>
                   {financeLoading ? (
@@ -2654,6 +2983,709 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                       description="Subscription records will appear here."
                     />
                   )}
+                </div>
+              </div>
+
+              <div className={styles.panel}>
+                <div className={styles.panelHeader}>
+                  <div>
+                    <h2>Freelance Marketplace</h2>
+                    <p>Moderate escrow orders and control freelance board visibility.</p>
+                  </div>
+                </div>
+                <div className={styles.financeGrid}>
+                  <div className={styles.panelSubsection}>
+                    <div className={styles.subsectionTitle}>Escrow orders</div>
+                    {financeLoading ? (
+                      <div className={styles.loaderWrap}>
+                        <LoaderCircle className={styles.spin} size={20} />
+                      </div>
+                    ) : financeData?.freelanceOrders?.length ? (
+                      <div className={styles.listTable}>
+                        {financeData.freelanceOrders.map((order: any) => {
+                          const busyPrefix = `freelance:${order._id}:`;
+                          const actionBusy = financeActionId?.startsWith(busyPrefix);
+                          return (
+                            <div key={order._id} className={styles.financeRowTall}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div className={styles.rowTitle}>{order.listing.title}</div>
+                                <div className={styles.rowMeta}>
+                                  {order.client.companyName || order.client.name} →{' '}
+                                  {order.freelancer.name} · {formatMoney(order.agreedPriceBDT)} ·
+                                  Due {formatDate(order.dueDate)}
+                                </div>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    flexWrap: 'wrap',
+                                    marginTop: 8,
+                                  }}
+                                >
+                                  <StatusBadge value={order.status} />
+                                  <StatusBadge value={order.escrowStatus} />
+                                  {order.paymentMethod ? (
+                                    <span className={`${styles.badge} ${styles.badgeNeutral}`}>
+                                      {normalizeLabel(order.paymentMethod)}
+                                    </span>
+                                  ) : null}
+                                </div>
+                                {order.adminNote ? (
+                                  <div
+                                    style={{
+                                      marginTop: 10,
+                                      fontSize: 12,
+                                      color: '#0F172A',
+                                      background: '#F8FAFC',
+                                      border: '1px solid #E2E8F0',
+                                      borderRadius: 10,
+                                      padding: '8px 10px',
+                                      lineHeight: 1.5,
+                                    }}
+                                  >
+                                    <strong>Admin note:</strong> {order.adminNote}
+                                  </div>
+                                ) : null}
+                              </div>
+                              <div
+                                style={{
+                                  minWidth: 280,
+                                  display: 'grid',
+                                  gap: 8,
+                                  alignContent: 'start',
+                                }}
+                              >
+                                <input
+                                  value={freelanceAdminNotes[order._id] ?? ''}
+                                  onChange={(event) =>
+                                    setFreelanceAdminNotes((current) => ({
+                                      ...current,
+                                      [order._id]: event.target.value,
+                                    }))
+                                  }
+                                  placeholder="Admin note for both parties"
+                                  style={{
+                                    width: '100%',
+                                    fontSize: 13,
+                                    padding: '10px 12px',
+                                    borderRadius: 10,
+                                    border: '1px solid #CBD5E1',
+                                  }}
+                                />
+                                <div
+                                  className={styles.actionRow}
+                                  style={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}
+                                >
+                                  {order.escrowStatus === 'held' && order.status !== 'disputed' ? (
+                                    <button
+                                      className={styles.ghostButton}
+                                      onClick={() =>
+                                        void handleFreelanceOrderAction(order._id, 'mark_disputed')
+                                      }
+                                      type="button"
+                                      disabled={actionBusy}
+                                    >
+                                      Dispute
+                                    </button>
+                                  ) : null}
+                                  {order.escrowStatus === 'held' && order.status === 'disputed' ? (
+                                    <button
+                                      className={styles.ghostButton}
+                                      onClick={() =>
+                                        void handleFreelanceOrderAction(
+                                          order._id,
+                                          'restore_in_progress'
+                                        )
+                                      }
+                                      type="button"
+                                      disabled={actionBusy}
+                                    >
+                                      Restore
+                                    </button>
+                                  ) : null}
+                                  {order.escrowStatus === 'held' ? (
+                                    <button
+                                      className={styles.secondaryButton}
+                                      onClick={() =>
+                                        void handleFreelanceOrderAction(order._id, 'release_escrow')
+                                      }
+                                      type="button"
+                                      disabled={actionBusy}
+                                    >
+                                      Release
+                                    </button>
+                                  ) : null}
+                                  {order.escrowStatus === 'held' ? (
+                                    <button
+                                      className={styles.dangerButton}
+                                      onClick={() =>
+                                        void handleFreelanceOrderAction(order._id, 'refund_escrow')
+                                      }
+                                      type="button"
+                                      disabled={actionBusy}
+                                    >
+                                      Refund
+                                    </button>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <SectionEmpty
+                        title="No freelance orders found"
+                        description="Escrow orders matching the finance filters will appear here."
+                      />
+                    )}
+                  </div>
+
+                  <div className={styles.panelSubsection}>
+                    <div className={styles.subsectionTitle}>Listings</div>
+                    {financeLoading ? (
+                      <div className={styles.loaderWrap}>
+                        <LoaderCircle className={styles.spin} size={20} />
+                      </div>
+                    ) : financeData?.freelanceListings?.length ? (
+                      <div className={styles.listTable}>
+                        {financeData.freelanceListings.map((listing: any) => (
+                          <div key={listing._id} className={styles.listRow}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div className={styles.rowTitle}>{listing.title}</div>
+                              <div className={styles.rowMeta}>
+                                {listing.student.name} · {normalizeLabel(listing.category)} ·{' '}
+                                {formatMoney(listing.priceBDT)} · {listing.deliveryDays} days
+                              </div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 8,
+                                  flexWrap: 'wrap',
+                                  marginTop: 8,
+                                }}
+                              >
+                                <StatusBadge value={listing.isActive ? 'active' : 'inactive'} />
+                                <span className={`${styles.badge} ${styles.badgeNeutral}`}>
+                                  {listing.totalOrdersCompleted} completed
+                                </span>
+                                <span className={`${styles.badge} ${styles.badgeNeutral}`}>
+                                  {listing.averageRating.toFixed(1)} rating
+                                </span>
+                              </div>
+                            </div>
+                            <div className={styles.actionRow}>
+                              <button
+                                className={
+                                  listing.isActive ? styles.dangerButton : styles.secondaryButton
+                                }
+                                onClick={() =>
+                                  void handleToggleFreelanceListing(listing._id, !listing.isActive)
+                                }
+                                type="button"
+                                disabled={freelanceListingActionId === listing._id}
+                              >
+                                {listing.isActive ? 'Pause' : 'Activate'}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <SectionEmpty
+                        title="No listings found"
+                        description="Freelance services matching the current filters will appear here."
+                      />
+                    )}
+
+                    <div className={styles.listTable}>
+                      {[
+                        {
+                          label: 'Active listings',
+                          value: `${financeData?.summary?.activeFreelanceListings ?? 0}`,
+                        },
+                        {
+                          label: 'Verified freelancers',
+                          value: `${financeData?.summary?.verifiedFreelancers ?? 0}`,
+                        },
+                        {
+                          label: 'Refunded escrow',
+                          value: formatMoney(financeData?.summary?.freelanceRefundedBDT ?? 0),
+                        },
+                      ].map((row) => (
+                        <div key={row.label} className={styles.listRow}>
+                          <div className={styles.rowTitle}>{row.label}</div>
+                          <strong>{row.value}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          ) : null}
+
+          {activeSection === 'freelance' ? (
+            <section className={styles.section}>
+              <div className={styles.panel}>
+                <div className={styles.panelHeader}>
+                  <div>
+                    <h2>Freelance Ops</h2>
+                    <p>
+                      Manage escrow, platform fees, marketplace visibility, account balances, and
+                      withdrawal requests.
+                    </p>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div className={styles.rowMeta}>
+                    Superadmin holds freelance escrow, controls listing visibility, and reviews
+                    payout withdrawals from here.
+                  </div>
+                  <select
+                    value={activeSection}
+                    onChange={(event) => setActiveSection(event.target.value as SectionKey)}
+                    style={{
+                      minWidth: 220,
+                      padding: '10px 12px',
+                      borderRadius: 14,
+                      border: '1px solid #CBD5E1',
+                      background: '#fff',
+                      color: '#0F172A',
+                      font: 'inherit',
+                    }}
+                  >
+                    <option value="finance">Finance</option>
+                    <option value="freelance">Freelance Ops</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className={styles.metricsGrid}>
+                <MetricCard
+                  title="Freelance GMV"
+                  value={formatMoney(financeData?.summary?.freelanceGMVBDT ?? 0)}
+                  hint="Escrow-funded order volume"
+                  icon={BriefcaseBusiness}
+                />
+                <MetricCard
+                  title="Escrow held"
+                  value={formatMoney(financeData?.summary?.freelanceEscrowHeldBDT ?? 0)}
+                  hint="Currently protected by superadmin"
+                  icon={ShieldCheck}
+                />
+                <MetricCard
+                  title="Released payout"
+                  value={formatMoney(financeData?.summary?.freelanceReleasedBDT ?? 0)}
+                  hint="Net freelancer payouts completed"
+                  icon={CheckCheck}
+                />
+                <MetricCard
+                  title="Platform fees"
+                  value={formatMoney(financeData?.summary?.freelancePlatformFeesCollectedBDT ?? 0)}
+                  hint="15% retained from released freelance earnings"
+                  icon={BadgeDollarSign}
+                />
+                <MetricCard
+                  title="Balances"
+                  value={formatMoney(financeData?.summary?.freelanceAccountBalancesBDT ?? 0)}
+                  hint="Money currently sitting in freelancer accounts"
+                  icon={Users}
+                />
+                <MetricCard
+                  title="Withdrawn"
+                  value={formatMoney(financeData?.summary?.freelanceWithdrawnBDT ?? 0)}
+                  hint="Funds already moved out of accounts"
+                  icon={RefreshCw}
+                />
+                <MetricCard
+                  title="Pending withdrawals"
+                  value={formatMoney(financeData?.summary?.pendingFreelanceWithdrawalsBDT ?? 0)}
+                  hint="Withdrawal requests waiting for review"
+                  icon={BellRing}
+                />
+                <MetricCard
+                  title="Disputes"
+                  value={`${financeData?.summary?.disputedFreelanceOrders ?? 0}`}
+                  hint="Orders needing admin intervention"
+                  icon={MessageSquareWarning}
+                />
+              </div>
+
+              <div className={styles.financeGrid}>
+                <div className={styles.panel}>
+                  <div className={styles.panelHeader}>
+                    <div>
+                      <h2>Escrow Orders & Marketplace</h2>
+                      <p>Review order state, hold notes, and listing visibility.</p>
+                    </div>
+                    <button
+                      className={styles.primaryButton}
+                      onClick={() => void loadFinance()}
+                      type="button"
+                    >
+                      <RefreshCw size={14} />
+                      Refresh ops
+                    </button>
+                  </div>
+                  <div className={styles.panelSubsection}>
+                    <div className={styles.subsectionTitle}>Escrow orders</div>
+                    {financeLoading ? (
+                      <div className={styles.loaderWrap}>
+                        <LoaderCircle className={styles.spin} size={20} />
+                      </div>
+                    ) : financeData?.freelanceOrders?.length ? (
+                      <div className={styles.listTable}>
+                        {financeData.freelanceOrders.map((order: any) => {
+                          const busyPrefix = `freelance:${order._id}:`;
+                          const actionBusy = financeActionId?.startsWith(busyPrefix);
+                          return (
+                            <div key={order._id} className={styles.financeRowTall}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div className={styles.rowTitle}>{order.listing.title}</div>
+                                <div className={styles.rowMeta}>
+                                  {order.client.companyName || order.client.name} →{' '}
+                                  {order.freelancer.name} · {formatMoney(order.agreedPriceBDT)}{' '}
+                                  gross · {formatMoney(order.freelancerPayoutBDT)} payout ·{' '}
+                                  {formatMoney(order.nexternCutBDT)} fee
+                                </div>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    flexWrap: 'wrap',
+                                    marginTop: 8,
+                                  }}
+                                >
+                                  <StatusBadge value={order.proposalStatus} />
+                                  <StatusBadge value={order.status} />
+                                  <StatusBadge value={order.escrowStatus} />
+                                  {order.paymentMethod ? (
+                                    <span className={`${styles.badge} ${styles.badgeNeutral}`}>
+                                      {normalizeLabel(order.paymentMethod)}
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <div className={styles.rowMeta} style={{ marginTop: 8 }}>
+                                  Due {formatDate(order.dueDate)} · Updated admin note is visible to
+                                  both sides
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  minWidth: 280,
+                                  display: 'grid',
+                                  gap: 8,
+                                  alignContent: 'start',
+                                }}
+                              >
+                                <input
+                                  value={freelanceAdminNotes[order._id] ?? ''}
+                                  onChange={(event) =>
+                                    setFreelanceAdminNotes((current) => ({
+                                      ...current,
+                                      [order._id]: event.target.value,
+                                    }))
+                                  }
+                                  placeholder="Admin note for both parties"
+                                  style={{
+                                    width: '100%',
+                                    fontSize: 13,
+                                    padding: '10px 12px',
+                                    borderRadius: 10,
+                                    border: '1px solid #CBD5E1',
+                                  }}
+                                />
+                                <div
+                                  className={styles.actionRow}
+                                  style={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}
+                                >
+                                  {order.escrowStatus === 'held' && order.status !== 'disputed' ? (
+                                    <button
+                                      className={styles.ghostButton}
+                                      onClick={() =>
+                                        void handleFreelanceOrderAction(order._id, 'mark_disputed')
+                                      }
+                                      type="button"
+                                      disabled={actionBusy}
+                                    >
+                                      Dispute
+                                    </button>
+                                  ) : null}
+                                  {order.escrowStatus === 'held' && order.status === 'disputed' ? (
+                                    <button
+                                      className={styles.ghostButton}
+                                      onClick={() =>
+                                        void handleFreelanceOrderAction(
+                                          order._id,
+                                          'restore_in_progress'
+                                        )
+                                      }
+                                      type="button"
+                                      disabled={actionBusy}
+                                    >
+                                      Restore
+                                    </button>
+                                  ) : null}
+                                  {order.escrowStatus === 'held' ? (
+                                    <button
+                                      className={styles.secondaryButton}
+                                      onClick={() =>
+                                        void handleFreelanceOrderAction(order._id, 'release_escrow')
+                                      }
+                                      type="button"
+                                      disabled={actionBusy}
+                                    >
+                                      Release
+                                    </button>
+                                  ) : null}
+                                  {order.escrowStatus === 'held' ? (
+                                    <button
+                                      className={styles.dangerButton}
+                                      onClick={() =>
+                                        void handleFreelanceOrderAction(order._id, 'refund_escrow')
+                                      }
+                                      type="button"
+                                      disabled={actionBusy}
+                                    >
+                                      Refund
+                                    </button>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <SectionEmpty
+                        title="No freelance orders found"
+                        description="Escrow-backed freelance orders will appear here."
+                      />
+                    )}
+                  </div>
+
+                  <div className={styles.panelSubsection}>
+                    <div className={styles.subsectionTitle}>Marketplace listings</div>
+                    {financeLoading ? (
+                      <div className={styles.loaderWrap}>
+                        <LoaderCircle className={styles.spin} size={20} />
+                      </div>
+                    ) : financeData?.freelanceListings?.length ? (
+                      <div className={styles.listTable}>
+                        {financeData.freelanceListings.map((listing: any) => (
+                          <div key={listing._id} className={styles.listRow}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div className={styles.rowTitle}>{listing.title}</div>
+                              <div className={styles.rowMeta}>
+                                {listing.student.name} · {normalizeLabel(listing.category)} ·{' '}
+                                {formatMoney(listing.priceBDT)} · {listing.deliveryDays} days
+                              </div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 8,
+                                  flexWrap: 'wrap',
+                                  marginTop: 8,
+                                }}
+                              >
+                                <StatusBadge value={listing.isActive ? 'active' : 'inactive'} />
+                                <span className={`${styles.badge} ${styles.badgeNeutral}`}>
+                                  {listing.totalOrdersCompleted} completed
+                                </span>
+                                <span className={`${styles.badge} ${styles.badgeNeutral}`}>
+                                  {listing.averageRating.toFixed(1)} rating
+                                </span>
+                              </div>
+                            </div>
+                            <div className={styles.actionRow}>
+                              <button
+                                className={
+                                  listing.isActive ? styles.dangerButton : styles.secondaryButton
+                                }
+                                onClick={() =>
+                                  void handleToggleFreelanceListing(listing._id, !listing.isActive)
+                                }
+                                type="button"
+                                disabled={freelanceListingActionId === listing._id}
+                              >
+                                {listing.isActive ? 'Pause' : 'Activate'}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <SectionEmpty
+                        title="No listings found"
+                        description="Freelance marketplace listings will appear here."
+                      />
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.panel}>
+                  <div className={styles.panelHeader}>
+                    <div>
+                      <h2>Accounts & Withdrawals</h2>
+                      <p>
+                        Review freelancer balances, lifetime metrics, and pending payout requests.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className={styles.panelSubsection}>
+                    <div className={styles.subsectionTitle}>Freelancer accounts</div>
+                    {financeLoading ? (
+                      <div className={styles.loaderWrap}>
+                        <LoaderCircle className={styles.spin} size={20} />
+                      </div>
+                    ) : financeData?.freelanceAccounts?.length ? (
+                      <div className={styles.listTable}>
+                        {financeData.freelanceAccounts.map((user: any) => (
+                          <div key={user._id} className={styles.listRow}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div className={styles.rowTitle}>{user.companyName || user.name}</div>
+                              <div className={styles.rowMeta}>
+                                {user.email || 'No email'} · {roleLabel(user.role)} ·{' '}
+                                {user.university || 'N/A'}
+                              </div>
+                            </div>
+                            <div
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                                gap: 10,
+                                minWidth: 320,
+                              }}
+                            >
+                              <div>
+                                <div className={styles.rowMeta}>Balance</div>
+                                <div className={styles.rowTitle}>
+                                  {formatMoney(user.freelanceAccountBalanceBDT)}
+                                </div>
+                              </div>
+                              <div>
+                                <div className={styles.rowMeta}>Earnings</div>
+                                <div className={styles.rowTitle}>
+                                  {formatMoney(user.freelanceTotalEarningsBDT)}
+                                </div>
+                              </div>
+                              <div>
+                                <div className={styles.rowMeta}>Withdrawn</div>
+                                <div className={styles.rowTitle}>
+                                  {formatMoney(user.freelanceTotalWithdrawnBDT)}
+                                </div>
+                              </div>
+                              <div>
+                                <div className={styles.rowMeta}>Fees</div>
+                                <div className={styles.rowTitle}>
+                                  {formatMoney(user.freelanceTotalPlatformFeesBDT)}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <SectionEmpty
+                        title="No account balances"
+                        description="Released payouts and user freelance account balances will appear here."
+                      />
+                    )}
+                  </div>
+
+                  <div className={styles.panelSubsection}>
+                    <div className={styles.subsectionTitle}>Withdrawal requests</div>
+                    {financeLoading ? (
+                      <div className={styles.loaderWrap}>
+                        <LoaderCircle className={styles.spin} size={20} />
+                      </div>
+                    ) : financeData?.freelanceWithdrawals?.length ? (
+                      <div className={styles.listTable}>
+                        {financeData.freelanceWithdrawals.map((withdrawal: any) => {
+                          const processBusy =
+                            financeActionId === `withdrawal:${withdrawal._id}:process`;
+                          const rejectBusy =
+                            financeActionId === `withdrawal:${withdrawal._id}:reject`;
+                          return (
+                            <div key={withdrawal._id} className={styles.financeRowTall}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div className={styles.rowTitle}>
+                                  {withdrawal.user.companyName || withdrawal.user.name}
+                                </div>
+                                <div className={styles.rowMeta}>
+                                  {formatMoney(withdrawal.amountBDT)} · Requested{' '}
+                                  {formatDate(withdrawal.createdAt, true)} · Balance after request{' '}
+                                  {formatMoney(withdrawal.accountBalanceAfterBDT)}
+                                </div>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    flexWrap: 'wrap',
+                                    marginTop: 8,
+                                  }}
+                                >
+                                  <StatusBadge value={withdrawal.status} />
+                                </div>
+                              </div>
+                              <div className={styles.actionRow} style={{ flexWrap: 'wrap' }}>
+                                {withdrawal.status === 'requested' ? (
+                                  <>
+                                    <button
+                                      className={styles.secondaryButton}
+                                      onClick={() =>
+                                        void handleFreelanceWithdrawalAction(
+                                          withdrawal._id,
+                                          'process'
+                                        )
+                                      }
+                                      type="button"
+                                      disabled={processBusy || rejectBusy}
+                                    >
+                                      Process
+                                    </button>
+                                    <button
+                                      className={styles.dangerButton}
+                                      onClick={() =>
+                                        void handleFreelanceWithdrawalAction(
+                                          withdrawal._id,
+                                          'reject'
+                                        )
+                                      }
+                                      type="button"
+                                      disabled={processBusy || rejectBusy}
+                                    >
+                                      Reject
+                                    </button>
+                                  </>
+                                ) : null}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <SectionEmpty
+                        title="No withdrawals"
+                        description="Requested and processed freelance withdrawals will appear here."
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </section>

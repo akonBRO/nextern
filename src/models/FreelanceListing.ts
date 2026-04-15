@@ -1,5 +1,11 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+interface IFreelanceAsset {
+  url: string;
+  name: string;
+  type: string;
+}
+
 export interface IFreelanceListing extends Document {
   studentId: mongoose.Types.ObjectId;
   title: string;
@@ -15,7 +21,7 @@ export interface IFreelanceListing extends Document {
   priceType: 'fixed' | 'hourly';
   priceBDT: number; // BDT integer
   deliveryDays: number;
-  sampleFiles: string[]; // Uploadthing URLs
+  sampleFiles: IFreelanceAsset[]; // Uploadthing URLs
   averageRating: number;
   totalOrdersCompleted: number;
   isActive: boolean;
@@ -42,13 +48,23 @@ const FreelanceListingSchema = new Schema<IFreelanceListing>(
     priceType: { type: String, enum: ['fixed', 'hourly'], required: true },
     priceBDT: { type: Number, required: true, min: 0 },
     deliveryDays: { type: Number, required: true, min: 1 },
-    sampleFiles: [{ type: String }],
+    sampleFiles: [
+      {
+        url: { type: String, required: true },
+        name: { type: String, required: true },
+        type: { type: String, required: true },
+      },
+    ],
     averageRating: { type: Number, default: 0, min: 0, max: 5 },
     totalOrdersCompleted: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
+
+FreelanceListingSchema.index({ studentId: 1, createdAt: -1 });
+FreelanceListingSchema.index({ isActive: 1, category: 1, priceBDT: 1 });
+FreelanceListingSchema.index({ skills: 1, isActive: 1 });
 
 export const FreelanceListing =
   mongoose.models.FreelanceListing ||

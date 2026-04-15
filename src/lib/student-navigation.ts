@@ -28,6 +28,44 @@ export const STUDENT_NAV_ITEMS: DashboardNavItem[] = [
     ],
   },
   {
+    label: 'Freelance',
+    icon: 'briefcase',
+    items: [
+      {
+        label: 'Marketplace',
+        href: '/student/freelance?view=board',
+        description:
+          'Browse the board, request client work, and review the live service marketplace.',
+        icon: 'briefcase',
+      },
+      {
+        label: 'My Services',
+        href: '/student/freelance?view=services',
+        description: 'Publish, edit, pause, and manage your student freelance service packages.',
+        icon: 'file',
+      },
+      {
+        label: 'Client Orders',
+        href: '/student/freelance?view=clientOrders',
+        description:
+          'Track freelance work you ordered from other users and approve escrow release.',
+        icon: 'messages',
+      },
+      {
+        label: 'Freelancer Orders',
+        href: '/student/freelance?view=freelancerOrders',
+        description: 'Manage the orders you are delivering and build verified work history.',
+        icon: 'target',
+      },
+      {
+        label: 'Earnings & Invoices',
+        href: '/student/freelance?view=finance',
+        description: 'View account balance, total earnings, invoices, and withdrawal requests.',
+        icon: 'insights',
+      },
+    ],
+  },
+  {
     label: 'AI Tools',
     icon: 'sparkles',
     items: [
@@ -54,6 +92,12 @@ export const STUDENT_NAV_ITEMS: DashboardNavItem[] = [
         href: '/student/resume',
         description: 'Generate and download your professional resume as a PDF.',
         icon: 'file',
+      },
+      {
+        label: 'Verified Work',
+        href: '/student/freelance?view=freelancerOrders',
+        description: 'Track verified freelance projects that strengthen your portfolio builder.',
+        icon: 'briefcase',
       },
       {
         label: 'Graduation Report',

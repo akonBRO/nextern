@@ -218,7 +218,7 @@ export default function DashboardShell({
 
   const isActiveHref = (href?: string) => {
     if (!href) return false;
-    const normalized = href.split('#')[0];
+    const normalized = href.split('#')[0].split('?')[0];
     return normalized === pathname && !href.includes('#');
   };
 

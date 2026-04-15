@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import { DashboardPage, DashboardSection, HeroCard } from '@/components/dashboard/DashboardContent';
-import { BadgeDefinition, type IBadgeDefinition } from '@/models/BadgeDefinition';
+import { getBadgeDefinitions, type BadgeCatalogDefinition } from '@/lib/badge-definitions';
 import { BadgeAward } from '@/models/BadgeAward';
 import { getEventCount } from '@/lib/badge-engine';
 import { EMPLOYER_NAV_ITEMS } from '@/lib/employer-navigation';
@@ -18,7 +18,7 @@ export default async function EmployerBadgesPage() {
   await connectDB();
   const userId = session.user.id;
 
-  const definitions = await BadgeDefinition.find({ category: 'employer' }).lean();
+  const definitions = getBadgeDefinitions('employer');
   const earnedBadges = await BadgeAward.find({ userId }).select('badgeSlug awardedAt').lean();
   const earnedSlugs = new Set(
     earnedBadges.map((b: { badgeSlug: string; awardedAt?: Date }) => b.badgeSlug)
@@ -26,15 +26,11 @@ export default async function EmployerBadgesPage() {
 
   // Badge points — all employer badge marksRewards sum to 100
   const totalPoints = definitions
-    .filter((def: IBadgeDefinition & Record<string, unknown>) => earnedSlugs.has(def.badgeSlug))
-    .reduce(
-      (sum: number, def: IBadgeDefinition & Record<string, unknown>) =>
-        sum + ((def.marksReward as number) || 0),
-      0
-    );
+    .filter((def) => earnedSlugs.has(def.badgeSlug))
+    .reduce((sum: number, def) => sum + (def.marksReward || 0), 0);
 
   const progressList = await Promise.all(
-    definitions.map(async (def: IBadgeDefinition & Record<string, unknown>) => {
+    definitions.map(async (def: BadgeCatalogDefinition) => {
       const isEarned = earnedSlugs.has(def.badgeSlug);
       let count = 0;
 
@@ -42,7 +38,7 @@ export default async function EmployerBadgesPage() {
         count = def.thresholdValue;
       } else {
         try {
-          count = await getEventCount(userId, def.triggerEvent, def as unknown as IBadgeDefinition);
+          count = await getEventCount(userId, def.triggerEvent, def);
           if (count >= def.thresholdValue) count = def.thresholdValue;
         } catch {}
       }
@@ -194,7 +190,7 @@ export default async function EmployerBadgesPage() {
                               color: isEarned ? '#1E40AF' : '#64748B',
                             }}
                           >
-                            +{(def.marksReward as number) || 0} pts
+                            +{def.marksReward || 0} pts
                           </span>
                         </div>
                         <div
