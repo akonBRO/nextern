@@ -12,14 +12,15 @@ export type VerificationStatus = 'pending' | 'approved' | 'rejected';
 type RoutedUser = {
   role?: UserRole;
   verificationStatus?: VerificationStatus;
+  mustChangePassword?: boolean;
 };
 
-const PENDING_APPROVAL_ROLES: UserRole[] = ['employer', 'advisor', 'dept_head'];
+const PENDING_APPROVAL_ROLES: UserRole[] = ['employer'];
 const AUTH_ONLY_ROUTES = ['/login', '/register', '/verify-email'];
 const ROLE_ROUTE_PREFIXES: { prefix: string; roles: UserRole[] }[] = [
   { prefix: '/student', roles: ['student'] },
   { prefix: '/employer', roles: ['employer'] },
-  { prefix: '/advisor', roles: ['advisor'] },
+  { prefix: '/advisor', roles: ['advisor', 'dept_head'] },
   { prefix: '/dept', roles: ['dept_head'] },
   { prefix: '/admin', roles: ['admin'] },
 ];
@@ -32,7 +33,20 @@ export function requiresAdminApproval(role?: UserRole) {
   return !!role && PENDING_APPROVAL_ROLES.includes(role);
 }
 
+export function roleSatisfiesRequirement(actualRole: UserRole | undefined, requiredRole: UserRole) {
+  if (!actualRole) return false;
+  if (requiredRole === 'advisor') {
+    return actualRole === 'advisor' || actualRole === 'dept_head';
+  }
+
+  return actualRole === requiredRole;
+}
+
 export function getDefaultAuthenticatedRoute(user: RoutedUser) {
+  if (user.mustChangePassword) {
+    return '/setup-password';
+  }
+
   if (!user.role) return '/';
   if (requiresAdminApproval(user.role) && user.verificationStatus !== 'approved') {
     return '/pending-approval';
@@ -58,14 +72,17 @@ function canAccessCallbackPath(role: UserRole | undefined, path: string) {
     return true;
   }
 
-  return !!role && matchedRoute.roles.includes(role);
+  return (
+    !!role &&
+    matchedRoute.roles.some((requiredRole) => roleSatisfiesRequirement(role, requiredRole))
+  );
 }
 
 export function getPostLoginRedirect(user: RoutedUser, callbackUrl?: string | null) {
   const defaultRoute = getDefaultAuthenticatedRoute(user);
   const safeCallbackUrl = isSafeInternalPath(callbackUrl) ? callbackUrl : null;
 
-  if (defaultRoute === '/pending-approval') {
+  if (defaultRoute === '/pending-approval' || defaultRoute === '/setup-password') {
     return defaultRoute;
   }
 

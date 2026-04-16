@@ -244,20 +244,24 @@ function normalizeDashboardIdentity(identity: string | { userId?: string; email?
 
 async function resolveRoleUser<TSelected extends { _id: mongoose.Types.ObjectId }>(
   identity: string | { userId?: string; email?: string },
-  role: 'employer' | 'advisor' | 'dept_head',
+  role: 'employer' | 'advisor' | 'dept_head' | Array<'employer' | 'advisor' | 'dept_head'>,
   select: string
 ) {
   const { userId, email } = normalizeDashboardIdentity(identity);
   let user: TSelected | null = null;
   let oid: mongoose.Types.ObjectId | null = null;
+  const roles = Array.isArray(role) ? role : [role];
+  const roleQuery = roles.length === 1 ? roles[0] : { $in: roles };
 
   if (typeof userId === 'string' && mongoose.Types.ObjectId.isValid(userId)) {
     oid = new mongoose.Types.ObjectId(userId);
-    user = (await User.findOne({ _id: oid, role }).select(select).lean()) as TSelected | null;
+    user = (await User.findOne({ _id: oid, role: roleQuery })
+      .select(select)
+      .lean()) as TSelected | null;
   }
 
   if (!user && email) {
-    user = (await User.findOne({ email: email.toLowerCase().trim(), role })
+    user = (await User.findOne({ email: email.toLowerCase().trim(), role: roleQuery })
       .select(select)
       .lean()) as TSelected | null;
 
@@ -410,16 +414,26 @@ export async function getAdvisorDashboardData(
     _id: mongoose.Types.ObjectId;
     name: string;
     email: string;
+    role: 'advisor' | 'dept_head';
     image?: string;
     institutionName?: string;
     advisoryDepartment?: string;
     designation?: string;
-  }>(identity, 'advisor', 'name email image institutionName advisoryDepartment designation');
+  }>(
+    identity,
+    ['advisor', 'dept_head'],
+    'name email role image institutionName advisoryDepartment designation'
+  );
 
   if (!user || !oid) throw new Error('Advisor not found');
+  const isDeptHead = user.role === 'dept_head';
 
   const [students, actions, chromeCounts] = await Promise.all([
-    User.find({ assignedAdvisorId: oid, role: 'student' })
+    User.find(
+      isDeptHead
+        ? { role: 'student', university: user.institutionName }
+        : { assignedAdvisorId: oid, role: 'student' }
+    )
       .select('name university department opportunityScore profileCompleteness cgpa')
       .sort({ opportunityScore: 1, profileCompleteness: 1 })
       .lean(),
@@ -561,7 +575,7 @@ export async function getAdvisorDashboardData(
       image: user.image,
       subtitle:
         [user.designation, user.institutionName].filter(Boolean).join(' at ') ||
-        'Advisor workspace',
+        (isDeptHead ? 'Department head advisor view' : 'Advisor workspace'),
       ...chromeCounts,
       userId: oid.toString(),
     },

@@ -3,6 +3,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import {
   Activity,
@@ -1118,6 +1119,16 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
             Verification, accounts, finance, support, and analytics from one command surface.
           </p>
           <nav className={styles.nav}>{navItems}</nav>
+          <div className={styles.sidebarShortcutGroup}>
+            <div className={styles.sidebarGroupLabel}>Academic tools</div>
+            <Link href="/admin/dept-heads" className={styles.sidebarShortcutLink}>
+              <span className={styles.navButtonInner}>
+                <UserCog size={16} />
+                <span>Department heads</span>
+              </span>
+              <span className={styles.sidebarShortcutMeta}>Open page</span>
+            </Link>
+          </div>
           <div className={styles.sidebarFoot}>
             <div className={styles.sidebarStat}>
               <span>Revenue</span>

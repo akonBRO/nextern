@@ -4,96 +4,10 @@ import { connectDB } from '@/lib/db';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import { DashboardPage, DashboardSection, HeroCard } from '@/components/dashboard/DashboardContent';
 import { getBadgeDefinitions, type BadgeCatalogDefinition } from '@/lib/badge-definitions';
+import { getDepartmentNavItems } from '@/lib/academic-navigation';
 import { BadgeAward } from '@/models/BadgeAward';
 import { getEventCount } from '@/lib/badge-engine';
 import { Trophy } from 'lucide-react';
-
-const deptNavItems = [
-  {
-    label: 'Overview',
-    href: '/dept/dashboard',
-    icon: 'dashboard' as const,
-  },
-  {
-    label: 'Events',
-    icon: 'calendar' as const,
-    items: [
-      {
-        label: 'Post Event',
-        href: '/dept/events/new',
-        description: 'Publish a webinar or workshop for students.',
-        icon: 'calendar' as const,
-      },
-      {
-        label: 'My Events',
-        href: '/dept/events',
-        description: 'View and manage all your posted events.',
-        icon: 'file' as const,
-      },
-    ],
-  },
-  {
-    label: 'Cohort',
-    icon: 'users' as const,
-    items: [
-      {
-        label: 'Top students',
-        href: '/dept/dashboard#students',
-        description: 'Track the strongest students by opportunity score and profile readiness.',
-        icon: 'users' as const,
-      },
-      {
-        label: 'Pipeline',
-        href: '/dept/dashboard#pipeline',
-        description: 'See the aggregate hiring journey for your department cohort.',
-        icon: 'insights' as const,
-      },
-    ],
-  },
-  {
-    label: 'Analytics',
-    icon: 'insights' as const,
-    items: [
-      {
-        label: 'Skill heatmap',
-        href: '/dept/dashboard#heatmap',
-        description: 'Most common skills across the department cohort.',
-        icon: 'sparkles' as const,
-      },
-      {
-        label: 'Industry alignment',
-        href: '/dept/dashboard#alignment',
-        description: 'Student skills vs employer demand.',
-        icon: 'insights' as const,
-      },
-      {
-        label: 'Semester trend',
-        href: '/dept/dashboard#trend',
-        description: 'Semester-over-semester readiness trajectory.',
-        icon: 'target' as const,
-      },
-    ],
-  },
-  {
-    label: 'Opportunities',
-    icon: 'briefcase' as const,
-    items: [
-      {
-        label: 'Openings',
-        href: '/dept/dashboard#openings',
-        description: 'Active roles relevant to your university and department.',
-        icon: 'briefcase' as const,
-      },
-      {
-        label: 'Benchmarks',
-        href: '/dept/dashboard#benchmarks',
-        description: 'Department-level thresholds and readiness guardrails.',
-        icon: 'target' as const,
-      },
-    ],
-  },
-  { label: 'Badges', href: '/dept/badges', icon: 'shield' as const },
-];
 
 export default async function DeptBadgesPage() {
   const session = await auth();
@@ -141,7 +55,7 @@ export default async function DeptBadgesPage() {
       role="departmentHead"
       roleLabel="Department workspace"
       homeHref="/dept/dashboard"
-      navItems={deptNavItems}
+      navItems={getDepartmentNavItems()}
       user={{
         name: session.user.name ?? 'Department Head',
         email: session.user.email ?? '',

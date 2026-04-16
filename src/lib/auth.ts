@@ -78,6 +78,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           isVerified: user.isVerified,
           isEmailVerified: user.isVerified,
           verificationStatus: user.verificationStatus,
+          mustChangePassword: user.mustChangePassword,
         };
       },
     }),
@@ -109,6 +110,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isVerified = user.isVerified;
         token.isEmailVerified = user.isEmailVerified;
         token.verificationStatus = user.verificationStatus;
+        token.mustChangePassword = user.mustChangePassword;
         token.picture = user.image; // ✅ ensure picture is set initially
       }
 
@@ -117,7 +119,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         await connectDB();
         const dbUser = await User.findOne({
           email: token.email.toLowerCase().trim(),
-        }).select('_id role isVerified verificationStatus image');
+        }).select('_id role isVerified verificationStatus image mustChangePassword');
 
         if (dbUser) {
           token.id = dbUser._id.toString();
@@ -125,6 +127,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.isVerified = dbUser.isVerified;
           token.isEmailVerified = dbUser.isVerified;
           token.verificationStatus = dbUser.verificationStatus;
+          token.mustChangePassword = dbUser.mustChangePassword;
           token.picture = dbUser.image ?? token.picture; // ✅ keep image synced
         }
       }
@@ -139,6 +142,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.isVerified = freshUser.isVerified;
           token.isEmailVerified = freshUser.isVerified;
           token.verificationStatus = freshUser.verificationStatus;
+          token.mustChangePassword = freshUser.mustChangePassword;
           token.picture = freshUser.image ?? token.picture; // ← ✅ ADDED LINE
         }
       }
@@ -166,6 +170,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           | 'approved'
           | 'rejected'
           | undefined;
+        session.user.mustChangePassword = token.mustChangePassword as boolean | undefined;
 
         // ✅ ADD THIS LINE (sync image to frontend)
         session.user.image = (token.picture ?? session.user.image) as string | null;
@@ -182,6 +187,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const grantedCalendarAccess = hasGoogleCalendarScope(account.scope);
 
         const existingUser = await User.findOne({ email: user.email?.toLowerCase() });
+
+        if (existingUser && ['advisor', 'dept_head'].includes(existingUser.role)) {
+          return false;
+        }
 
         if (!existingUser) {
           const createdUser = await User.create({
@@ -203,6 +212,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.role = createdUser.role;
           user.isVerified = createdUser.isVerified;
           user.verificationStatus = createdUser.verificationStatus;
+          user.mustChangePassword = createdUser.mustChangePassword;
         } else {
           if (user.image && !existingUser.image) {
             await User.findByIdAndUpdate(existingUser._id, { image: user.image });
@@ -218,6 +228,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.role = existingUser.role;
           user.isVerified = existingUser.isVerified;
           user.verificationStatus = existingUser.verificationStatus;
+          user.mustChangePassword = existingUser.mustChangePassword;
         }
       }
       return true;

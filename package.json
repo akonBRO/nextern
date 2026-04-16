@@ -10,7 +10,8 @@
     "prepare": "husky",
     "test": "echo \"No tests yet\"",
     "type-check": "tsc --noEmit",
-    "seed:badges": "tsx src/scripts/seedBadges.ts"
+    "seed:badges": "tsx src/scripts/seedBadges.ts",
+    "cleanup:academic": "tsx src/scripts/removeLegacyAcademicAccounts.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
