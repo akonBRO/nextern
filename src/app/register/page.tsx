@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { NexternLogo } from '@/components/brand/NexternLogo';
 
-type Role = 'student' | 'employer' | 'advisor' | 'dept_head';
+type Role = 'student' | 'employer';
 
 /* ── ICONS ─────────────────────────────────────────────────────────── */
 const ArrowLeftIcon = () => (
@@ -145,41 +145,6 @@ const BuildingIcon = () => (
     <path d="M9 22V12h6v10M8 7h.01M12 7h.01M16 7h.01M8 11h.01M16 11h.01" />
   </svg>
 );
-const UsersIcon = () => (
-  <svg
-    width="26"
-    height="26"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.7"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-  </svg>
-);
-const SchoolIcon = () => (
-  <svg
-    width="26"
-    height="26"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.7"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M14 22v-4a2 2 0 1 0-4 0v4" />
-    <path d="m18 10 3.447 1.724a1 1 0 0 1 .553.894V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7.382a1 1 0 0 1 .553-.894L6 10Z" />
-    <path d="M18 5v5" />
-    <path d="m4 6 8-4 8 4" />
-    <path d="M6 10v5" />
-  </svg>
-);
 const UserIcon = () => (
   <svg
     width="16"
@@ -268,32 +233,6 @@ const ROLES = [
     badgeColor: '#92400E',
     perks: ['AI-ranked applicant pipeline', 'Batch-hire across 14+ unis', 'Built-in interviews'],
   },
-  {
-    id: 'advisor' as Role,
-    Icon: UsersIcon,
-    title: 'University Advisor',
-    desc: 'Guide students with AI analytics & reports',
-    accent: '#0284C7',
-    bg: '#E0F2FE',
-    border: '#BAE6FD',
-    badge: 'Requires approval',
-    badgeBg: '#FEF3C7',
-    badgeColor: '#92400E',
-    perks: ['Per-student AI reports', 'Readiness dashboard', 'Cohort skill tracking'],
-  },
-  {
-    id: 'dept_head' as Role,
-    Icon: SchoolIcon,
-    title: 'Department Head',
-    desc: 'Monitor cohort-wide career readiness',
-    accent: '#B45309',
-    bg: '#FEF3C7',
-    border: '#FDE68A',
-    badge: 'Requires approval',
-    badgeBg: '#FEF3C7',
-    badgeColor: '#92400E',
-    perks: ['Skill heatmap view', 'Department analytics', 'Curriculum alignment data'],
-  },
 ];
 
 const BD_UNIVERSITIES = [
@@ -347,6 +286,7 @@ function Field({
   return (
     <div>
       <label
+        htmlFor={name}
         style={{
           display: 'block',
           fontSize: 13,
@@ -490,7 +430,9 @@ function PasswordStrength({ password }: { password: string }) {
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const defaultRole = (searchParams.get('role') as Role) || null;
+  const requestedRole = searchParams.get('role');
+  const defaultRole =
+    requestedRole === 'student' || requestedRole === 'employer' ? requestedRole : null;
 
   const [step, setStep] = useState<1 | 2>(defaultRole ? 2 : 1);
   const [role, setRole] = useState<Role | null>(defaultRole);
@@ -552,13 +494,6 @@ export default function RegisterPage() {
         tradeLicenseNo: form.tradeLicenseNo,
         headquartersCity: form.headquartersCity,
       });
-    } else {
-      Object.assign(payload, {
-        institutionName: form.institutionName,
-        advisorStaffId: form.advisorStaffId,
-        designation: form.designation,
-        advisoryDepartment: form.advisoryDepartment,
-      });
     }
 
     try {
@@ -596,7 +531,7 @@ export default function RegisterPage() {
   }
 
   const activeRole = ROLES.find((r) => r.id === role);
-  const needsApproval = role === 'employer' || role === 'advisor' || role === 'dept_head';
+  const needsApproval = role === 'employer';
 
   const focusStyle = (field: string, hasError?: boolean): React.CSSProperties => ({
     borderColor: hasError ? '#FECACA' : focusedField === field ? '#2563EB' : '#E2E8F0',
@@ -1299,11 +1234,7 @@ export default function RegisterPage() {
                       textTransform: 'uppercase',
                     }}
                   >
-                    {role === 'student'
-                      ? 'Academic Details'
-                      : role === 'employer'
-                        ? 'Company Details'
-                        : 'Institution Details'}
+                    {role === 'student' ? 'Academic Details' : 'Company Details'}
                   </div>
 
                   {/* STUDENT */}
@@ -1454,90 +1385,28 @@ export default function RegisterPage() {
                       </div>
                     </>
                   )}
+                </div>
 
-                  {/* ADVISOR / DEPT HEAD */}
-                  {(role === 'advisor' || role === 'dept_head') && (
-                    <>
-                      <Field
-                        name="institutionName"
-                        label="University / Institution"
-                        error={errors.institutionName}
-                      >
-                        <SelectWrapper>
-                          <select
-                            value={form.institutionName}
-                            onChange={(e) => set('institutionName', e.target.value)}
-                            onFocus={() => setFocusedField('inst')}
-                            onBlur={() => setFocusedField(null)}
-                            required
-                            style={{
-                              ...inputStyle(false, !!errors.institutionName),
-                              ...focusStyle('inst'),
-                              paddingRight: 36,
-                            }}
-                          >
-                            <option value="">Select institution</option>
-                            {BD_UNIVERSITIES.map((u) => (
-                              <option key={u} value={u}>
-                                {u}
-                              </option>
-                            ))}
-                          </select>
-                        </SelectWrapper>
-                      </Field>
-                      <Field
-                        name="advisoryDepartment"
-                        label="Department"
-                        error={errors.advisoryDepartment}
-                      >
-                        <input
-                          type="text"
-                          value={form.advisoryDepartment}
-                          onChange={(e) => set('advisoryDepartment', e.target.value)}
-                          onFocus={() => setFocusedField('ad')}
-                          onBlur={() => setFocusedField(null)}
-                          placeholder="e.g. CSE, EEE"
-                          required
-                          style={{
-                            ...inputStyle(false, !!errors.advisoryDepartment),
-                            ...focusStyle('ad'),
-                          }}
-                        />
-                      </Field>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                        <Field name="designation" label="Designation" error={errors.designation}>
-                          <input
-                            type="text"
-                            value={form.designation}
-                            onChange={(e) => set('designation', e.target.value)}
-                            onFocus={() => setFocusedField('des')}
-                            onBlur={() => setFocusedField(null)}
-                            placeholder="e.g. Senior Lecturer"
-                            required
-                            style={{
-                              ...inputStyle(false, !!errors.designation),
-                              ...focusStyle('des'),
-                            }}
-                          />
-                        </Field>
-                        <Field name="advisorStaffId" label="Staff ID" error={errors.advisorStaffId}>
-                          <input
-                            type="text"
-                            value={form.advisorStaffId}
-                            onChange={(e) => set('advisorStaffId', e.target.value)}
-                            onFocus={() => setFocusedField('sid2')}
-                            onBlur={() => setFocusedField(null)}
-                            placeholder="Your institution ID"
-                            required
-                            style={{
-                              ...inputStyle(false, !!errors.advisorStaffId),
-                              ...focusStyle('sid2'),
-                            }}
-                          />
-                        </Field>
-                      </div>
-                    </>
-                  )}
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 12,
+                    background: '#EFF6FF',
+                    border: '1px solid #BFDBFE',
+                    borderRadius: 12,
+                    padding: '14px 16px',
+                  }}
+                >
+                  <div style={{ color: '#2563EB', flexShrink: 0, marginTop: 1 }}>
+                    <InfoIcon />
+                  </div>
+                  <div style={{ color: '#1E3A8A', fontSize: 13, lineHeight: 1.6 }}>
+                    <strong style={{ display: 'block', marginBottom: 2 }}>
+                      Academic accounts are provisioned internally
+                    </strong>
+                    Advisor and department head accounts can no longer sign up from the public
+                    website. They are created from the superadmin or department head workspace.
+                  </div>
                 </div>
 
                 {/* Approval notice */}

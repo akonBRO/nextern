@@ -12,6 +12,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   EMAIL_NOT_VERIFIED: 'Please verify your email before logging in.',
   CredentialsSignin: 'Invalid email or password.',
   OAuthAccountNotLinked: 'This email is linked to a different sign-in method.',
+  AccessDenied: 'Google sign-in is not available for this account. Use email and password.',
 };
 
 /* ── ICONS ─────────────────────────────────────────────────────────── */
@@ -224,6 +225,7 @@ export default function LoginPage() {
   const { data: session, status } = useSession();
   const callbackUrl = searchParams.get('callbackUrl') ?? '';
   const urlError = searchParams.get('error');
+  const passwordSet = searchParams.get('passwordSet') === '1';
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState(
@@ -549,6 +551,31 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
+
+          {/* Status Banner */}
+          {passwordSet && !error && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 10,
+                background: '#ECFDF5',
+                border: '1px solid #A7F3D0',
+                borderRadius: 12,
+                padding: '12px 16px',
+                color: '#166534',
+                fontSize: 14,
+                marginBottom: 24,
+              }}
+            >
+              <div style={{ flexShrink: 0, marginTop: 1 }}>
+                <CheckIcon />
+              </div>
+              <span>
+                Password updated successfully. Please sign in again with your new password.
+              </span>
+            </div>
+          )}
 
           {/* Error Banner */}
           {error && (

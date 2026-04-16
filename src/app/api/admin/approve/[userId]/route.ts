@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 import { sendEmail } from '@/lib/email';
+import { getLoginUrl } from '@/lib/app-url';
 import { AdminApproveSchema } from '@/lib/validations';
 import { onProfileVerified } from '@/lib/events';
 
@@ -32,6 +33,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
 
     const user = await User.findById(userId);
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    if (user.role === 'advisor' || user.role === 'dept_head') {
+      return NextResponse.json(
+        {
+          error:
+            'Advisor and department head accounts are no longer approved from this queue. Use the dedicated provisioning pages instead.',
+        },
+        { status: 400 }
+      );
+    }
 
     const newStatus = parsed.data.action === 'approve' ? 'approved' : 'rejected';
 
@@ -53,6 +63,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
       parsed.data.action === 'approve'
         ? 'Your Nextern account has been approved'
         : 'Your Nextern account application was not approved';
+    const loginUrl = getLoginUrl();
 
     const html =
       parsed.data.action === 'approve'
@@ -64,7 +75,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
           <div style="padding:32px;">
             <p style="color:#1E293B;font-size:16px;">Hi ${user.name},</p>
             <p style="color:#64748B;font-size:15px;line-height:1.7;">Your account has been <strong style="color:#10B981;">approved</strong>. You can now log in and access all platform features.</p>
-            <a href="${process.env.NEXTAUTH_URL}/login" style="display:inline-block;background:#2563EB;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Go to Dashboard</a>
+            <a href="${loginUrl}" style="display:inline-block;background:#2563EB;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Go to Dashboard</a>
           </div>
         </div>`
         : `

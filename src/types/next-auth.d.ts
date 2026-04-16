@@ -12,6 +12,7 @@ declare module 'next-auth' {
       isVerified: boolean;
       isEmailVerified: boolean;
       verificationStatus?: 'pending' | 'approved' | 'rejected';
+      mustChangePassword?: boolean;
     } & DefaultSession['user'];
   }
 
@@ -21,6 +22,7 @@ declare module 'next-auth' {
     isVerified: boolean;
     isEmailVerified: boolean;
     verificationStatus?: 'pending' | 'approved' | 'rejected';
+    mustChangePassword?: boolean;
   }
 }
 
@@ -31,5 +33,6 @@ declare module 'next-auth/jwt' {
     isVerified: boolean;
     isEmailVerified: boolean;
     verificationStatus?: 'pending' | 'approved' | 'rejected';
+    mustChangePassword?: boolean;
   }
 }

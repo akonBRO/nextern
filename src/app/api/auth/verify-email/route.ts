@@ -9,6 +9,7 @@ import { verifyOTP } from '@/lib/otp';
 import { sendEmail, welcomeEmailTemplate } from '@/lib/email';
 import { VerifyEmailSchema } from '@/lib/validations';
 import { rateLimit, rateLimits } from '@/lib/rate-limit';
+import { requiresAdminApproval } from '@/lib/role-routing';
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,7 +70,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       message: 'Email verified successfully. You can now log in.',
       role: user.role,
-      requiresAdminApproval: user.role !== 'student' && user.verificationStatus === 'pending',
+      requiresAdminApproval:
+        requiresAdminApproval(user.role) && user.verificationStatus === 'pending',
     });
   } catch (error) {
     console.error('[VERIFY EMAIL ERROR]', error);

@@ -41,41 +41,6 @@ const inputBase: React.CSSProperties = {
   background: C.white,
 };
 
-const BD_UNIS = [
-  'BRAC University',
-  'North South University (NSU)',
-  'AIUB',
-  'Independent University Bangladesh (IUB)',
-  'East West University (EWU)',
-  'Daffodil International University (DIU)',
-  'ULAB',
-  'United International University (UIU)',
-  'KUET',
-  'RUET',
-  'CUET',
-  'BUET',
-  'SUST',
-  'Dhaka University (DU)',
-  'IUT',
-];
-
-const BD_DEPTS = [
-  'CSE',
-  'EEE',
-  'BBA',
-  'MBA',
-  'ECE',
-  'Civil',
-  'Architecture',
-  'Pharmacy',
-  'Law',
-  'English',
-  'Economics',
-  'Finance',
-  'Marketing',
-  'Accounting',
-];
-
 function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <div
@@ -179,10 +144,8 @@ export default function DeptProfilePage() {
           phone: form.phone || undefined,
           bio: form.bio || undefined,
           city: form.city || undefined,
-          institutionName: form.institutionName || undefined,
           advisorStaffId: form.advisorStaffId || undefined,
           designation: form.designation || undefined,
-          advisoryDepartment: form.advisoryDepartment || undefined,
           linkedinUrl: form.linkedinUrl || undefined,
           notificationPreferences: form.notificationPreferences,
         }),
@@ -440,32 +403,20 @@ export default function DeptProfilePage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <Field label="Institution / University">
-              <select
+              <input
+                type="text"
                 value={form.institutionName}
-                onChange={(e) => set('institutionName', e.target.value)}
-                style={{ ...inputBase, appearance: 'none' as const }}
-              >
-                <option value="">Select institution</option>
-                {BD_UNIS.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-              </select>
+                readOnly
+                style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
+              />
             </Field>
             <Field label="Department">
-              <select
+              <input
+                type="text"
                 value={form.advisoryDepartment}
-                onChange={(e) => set('advisoryDepartment', e.target.value)}
-                style={{ ...inputBase, appearance: 'none' as const }}
-              >
-                <option value="">Select department</option>
-                {BD_DEPTS.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+                readOnly
+                style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
+              />
             </Field>
             <Field label="Designation / Title">
               <input
