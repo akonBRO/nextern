@@ -16,7 +16,11 @@ export interface AIResult<T> {
 }
 
 function providerName(provider: AIRequestedProvider) {
-  return provider === 'gemini' ? 'Gemini' : 'Groq';
+  switch (provider) {
+    case 'gemini':
+    case 'groq':
+      return 'Nextern AI';
+  }
 }
 
 export function buildAIProviderMeta(
@@ -64,6 +68,14 @@ export function sanitizeAIProviderError(provider: AIRequestedProvider, error: un
     return `${name} is not configured for this environment.`;
   }
 
+  if (
+    message.includes('503') ||
+    message.includes('service unavailable') ||
+    message.includes('high demand')
+  ) {
+    return `${name} is experiencing high demand right now.`;
+  }
+
   if (message.includes('429') || message.includes('rate limit')) {
     return `${name} is rate-limited right now.`;
   }
@@ -88,11 +100,9 @@ export function describeAIExecutionMeta(meta: AIExecutionMeta) {
 
   if (meta.mode === 'ai') {
     return {
-      badgeLabel: `AI-generated with ${requestedName}`,
+      badgeLabel: 'Nextern AI Generated',
       badgeTone: 'info' as const,
-      detail: meta.model
-        ? `${requestedName} completed this request successfully using ${meta.model}.`
-        : `${requestedName} completed this request successfully.`,
+      detail: `${requestedName} completed this request successfully.`,
     };
   }
 

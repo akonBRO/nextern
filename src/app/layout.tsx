@@ -2,6 +2,7 @@
 import type { Metadata } from 'next';
 import { SessionProvider } from 'next-auth/react';
 import { auth } from '@/lib/auth';
+import GlobalFooter from '@/components/site/GlobalFooter';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -9,6 +10,14 @@ export const metadata: Metadata = {
   description:
     'Connect students with internships, employers with talent, and universities with insight. AI-powered career readiness for Bangladesh universities.',
   keywords: ['internship', 'jobs', 'campus hiring', 'Bangladesh', 'BRAC', 'NSU', 'career'],
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/nextern_top_logo.jpg', type: 'image/jpeg' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/nextern_top_logo.jpg',
+  },
   openGraph: {
     title: 'Nextern — Campus Career Readiness Platform',
     description: 'Smart internship matching powered by AI for Bangladesh university students.',
@@ -31,6 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="antialiased">
         <SessionProvider session={session}>{children}</SessionProvider>
+        <GlobalFooter />
       </body>
     </html>
   );

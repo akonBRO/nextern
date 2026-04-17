@@ -1,6 +1,6 @@
 'use client';
 // src/app/student/applications/ApplicationsTabs.tsx
-// Tabbed view — Applications tab + Events tab — Fully Responsive
+// Tabbed view — Applications tab + Events tab
 
 import { useState } from 'react';
 import type { ReactNode } from 'react';
@@ -19,25 +19,31 @@ import {
   MapPin,
   Clock,
   ChevronRight,
+  MessageCircle,
+  X,
+  ShieldAlert,
 } from 'lucide-react';
 
+const ELIGIBLE_STATUSES = ['shortlisted', 'assessment_sent', 'interview_scheduled', 'hired'];
+
 /* ─── Status config ─────────────────────────────────────────────────────────── */
+
 const STATUS_CONFIG: Record<
   string,
   { label: string; tone: 'info' | 'success' | 'warning' | 'neutral'; icon: ReactNode }
 > = {
-  applied: { label: 'Applied', tone: 'info', icon: <Send size={10} /> },
-  under_review: { label: 'Under Review', tone: 'warning', icon: <Eye size={10} /> },
-  shortlisted: { label: 'Shortlisted', tone: 'info', icon: <Star size={10} /> },
-  assessment_sent: { label: 'Assessment Sent', tone: 'info', icon: <ClipboardList size={10} /> },
+  applied: { label: 'Applied', tone: 'info', icon: <Send size={11} /> },
+  under_review: { label: 'Under Review', tone: 'warning', icon: <Eye size={11} /> },
+  shortlisted: { label: 'Shortlisted', tone: 'info', icon: <Star size={11} /> },
+  assessment_sent: { label: 'Assessment Sent', tone: 'info', icon: <ClipboardList size={11} /> },
   interview_scheduled: {
     label: 'Interview Scheduled',
     tone: 'info',
-    icon: <CalendarCheck size={10} />,
+    icon: <CalendarCheck size={11} />,
   },
-  hired: { label: 'Hired', tone: 'success', icon: <BadgeCheck size={10} /> },
-  rejected: { label: 'Not Selected', tone: 'warning', icon: <XCircle size={10} /> },
-  withdrawn: { label: 'Withdrawn', tone: 'neutral', icon: <Undo2 size={10} /> },
+  hired: { label: 'Hired', tone: 'success', icon: <BadgeCheck size={11} /> },
+  rejected: { label: 'Not Selected', tone: 'warning', icon: <XCircle size={11} /> },
+  withdrawn: { label: 'Withdrawn', tone: 'neutral', icon: <Undo2 size={11} /> },
 };
 
 const TONE_STYLES = {
@@ -47,7 +53,6 @@ const TONE_STYLES = {
   neutral: { bg: '#F8FAFC', color: '#64748B', border: '#E2E8F0' },
 };
 
-/* ─── Types ──────────────────────────────────────────────────────────────────── */
 type AppItem = {
   _id: string;
   status: string;
@@ -55,6 +60,11 @@ type AppItem = {
   resumeUrlSnapshot: string | null;
   appliedAt: string;
   fitScore: number | null;
+  assessmentAssignmentId: string | null;
+  assessmentDueAt: string | null;
+  assessmentSubmittedAt: string | null;
+  interviewSessionId: string | null;
+  interviewScheduledAt: string | null;
   isEventRegistration: boolean;
   statusHistory: { status: string; changedAt: string }[];
   job: {
@@ -65,10 +75,10 @@ type AppItem = {
     city: string | null;
     locationType: string;
     applicationDeadline: string | null;
+    employerId: string | null;
   } | null;
 };
 
-/* ─── Helpers ────────────────────────────────────────────────────────────────── */
 function formatShortDate(d?: string | null) {
   if (!d) return 'No date';
   return new Intl.DateTimeFormat('en-BD', {
@@ -313,131 +323,275 @@ const RESPONSIVE_STYLES = `
 `;
 
 /* ─── AppCard ────────────────────────────────────────────────────────────────── */
-function AppCard({ app, isEvent }: { app: AppItem; isEvent: boolean }) {
+function AppCard({
+  app,
+  isEvent,
+  onShowWarning,
+}: {
+  app: AppItem;
+  isEvent: boolean;
+  onShowWarning: () => void;
+}) {
+  const isEligible = ELIGIBLE_STATUSES.includes(app.status);
+
   const cfg = STATUS_CONFIG[app.status] ?? STATUS_CONFIG['applied'];
   const toneStyle = TONE_STYLES[cfg.tone];
   const job = app.job;
+  const assessmentReady = Boolean(app.assessmentAssignmentId);
+  const interviewReady = Boolean(app.interviewSessionId);
 
   return (
-    <div className="app-card">
-      <div className="app-card-inner">
-        {/* ── Left body ── */}
-        <div className="app-card-body">
-          {/* Title row */}
-          <div className="app-card-title-row">
-            <h3 className="app-card-title">{job?.title ?? 'Job Removed'}</h3>
-
-            {/* Status badge */}
-            <span
-              className="badge"
+    <div
+      style={{
+        background: '#fff',
+        borderRadius: 16,
+        border: '1px solid #E2E8F0',
+        padding: '18px 22px',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+        transition: 'box-shadow 0.15s',
+      }}
+      onMouseOver={(e) => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)')}
+      onMouseOut={(e) => (e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)')}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 14,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              flexWrap: 'wrap',
+              marginBottom: 5,
+            }}
+          >
+            <h3
               style={{
+                fontSize: 15,
+                fontWeight: 800,
+                color: '#0F172A',
+                fontFamily: 'var(--font-display)',
+                margin: 0,
+              }}
+            >
+              {job?.title ?? 'Job Removed'}
+            </h3>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
                 background: toneStyle.bg,
                 color: toneStyle.color,
-                borderColor: toneStyle.border,
+                border: `1px solid ${toneStyle.border}`,
+                padding: '3px 10px',
+                borderRadius: 999,
+                fontSize: 11,
+                fontWeight: 700,
               }}
             >
               {cfg.icon} {cfg.label}
             </span>
-
-            {/* Fit score */}
-            {typeof app.fitScore === 'number' &&
-              !isEvent &&
-              (() => {
-                const fc = getFitColor(app.fitScore);
-                return (
-                  <span
-                    className="badge"
-                    style={{ background: fc.bg, color: fc.color, borderColor: fc.border }}
-                  >
-                    {app.fitScore}% fit
-                  </span>
-                );
-              })()}
+            {typeof app.fitScore === 'number' && !isEvent && (
+              <span
+                style={{
+                  background:
+                    app.fitScore >= 70 ? '#ECFDF5' : app.fitScore >= 40 ? '#EFF6FF' : '#FFFBEB',
+                  color:
+                    app.fitScore >= 70 ? '#065F46' : app.fitScore >= 40 ? '#2563EB' : '#92400E',
+                  border: `1px solid ${
+                    app.fitScore >= 70 ? '#A7F3D0' : app.fitScore >= 40 ? '#BFDBFE' : '#FDE68A'
+                  }`,
+                  padding: '3px 10px',
+                  borderRadius: 999,
+                  fontSize: 11,
+                  fontWeight: 700,
+                }}
+              >
+                {app.fitScore}% fit
+              </span>
+            )}
           </div>
 
-          {/* Meta line */}
-          <div className="app-card-meta">
-            {job?.companyName && <span>{job.companyName}</span>}
-            {job?.city && (
-              <>
-                <span className="app-card-meta-dot">·</span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                  <MapPin size={11} /> {job.city}
-                </span>
-              </>
-            )}
-            {job?.locationType && (
-              <>
-                <span className="app-card-meta-dot">·</span>
-                <span>{formatStatusLabel(job.locationType)}</span>
-              </>
-            )}
-            <span
-              className="app-card-date"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}
-            >
-              <Clock size={10} />
+          <div style={{ color: '#64748B', fontSize: 13 }}>
+            {job?.companyName}
+            {job?.city && ` · ${job.city}`}
+            {job?.locationType && ` · ${formatStatusLabel(job.locationType)}`}
+            <span style={{ color: '#94A3B8', marginLeft: 8 }}>
               {isEvent ? 'Registered' : 'Applied'} {formatShortDate(app.appliedAt)}
             </span>
           </div>
 
-          {/* Event deadline */}
           {isEvent && job?.applicationDeadline && (
             <div
               style={{
-                marginTop: 7,
-                display: 'inline-flex',
+                marginTop: 6,
+                display: 'flex',
                 alignItems: 'center',
-                gap: 5,
+                gap: 6,
                 color: '#7C3AED',
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: 600,
-                background: '#F5F3FF',
-                border: '1px solid #DDD6FE',
-                padding: '3px 9px',
-                borderRadius: 999,
               }}
             >
-              <CalendarDays size={11} /> Event deadline: {formatShortDate(job.applicationDeadline)}
+              <CalendarDays size={13} /> Event deadline: {formatShortDate(job.applicationDeadline)}
             </div>
           )}
 
-          {/* Cover letter preview */}
           {app.coverLetter && !isEvent && (
-            <div className="app-card-cover">
-              &ldquo;{app.coverLetter.slice(0, 180)}
-              {app.coverLetter.length > 180 ? '…' : ''}&rdquo;
+            <div
+              style={{
+                background: '#F8FAFC',
+                borderRadius: 8,
+                padding: '7px 11px',
+                marginTop: 10,
+                fontSize: 12,
+                color: '#64748B',
+                fontStyle: 'italic',
+                borderLeft: '2px solid #E2E8F0',
+              }}
+            >
+              &quot;{app.coverLetter.slice(0, 160)}
+              {app.coverLetter.length > 160 ? '...' : ''}&quot;
             </div>
           )}
 
-          {/* Status history */}
           {app.statusHistory && app.statusHistory.length > 1 && (
-            <div className="app-card-history">
-              {app.statusHistory.slice(-3).map((h, i, arr) => (
-                <span key={i} className="app-card-history-step">
-                  {formatStatusLabel(h.status)}{' '}
-                  <span style={{ opacity: 0.6 }}>({formatShortDate(h.changedAt)})</span>
-                  {i < arr.length - 1 && <span style={{ marginLeft: 4 }}>→</span>}
+            <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {app.statusHistory.slice(-3).map((h, i) => (
+                <span key={i} style={{ fontSize: 11, color: '#94A3B8' }}>
+                  {formatStatusLabel(h.status)} ({formatShortDate(h.changedAt)})
+                  {i < Math.min(app.statusHistory.length, 3) - 1 && ' →'}
                 </span>
               ))}
             </div>
           )}
+
+          {!isEvent && (assessmentReady || interviewReady) ? (
+            <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {assessmentReady ? (
+                <Link
+                  href={`/student/assessments/${app.assessmentAssignmentId}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: '#EFF6FF',
+                    color: '#2563EB',
+                    border: '1px solid #BFDBFE',
+                    borderRadius: 999,
+                    padding: '6px 10px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <ClipboardList size={13} />
+                  {app.assessmentSubmittedAt ? 'Review assessment' : 'Open assessment'}
+                </Link>
+              ) : null}
+
+              {interviewReady ? (
+                <Link
+                  href={`/student/interviews/${app.interviewSessionId}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: '#F5F3FF',
+                    color: '#7C3AED',
+                    border: '1px solid #DDD6FE',
+                    borderRadius: 999,
+                    padding: '6px 10px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <CalendarCheck size={13} />
+                  {app.interviewScheduledAt
+                    ? `Interview ${formatShortDate(app.interviewScheduledAt)}`
+                    : 'Open interview'}
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
-        {/* ── Right actions ── */}
-        <div className="app-card-actions">
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            alignItems: 'flex-end',
+            flexShrink: 0,
+          }}
+        >
           {job?._id && (
-            <Link href={`/student/jobs/${job._id}`} className="app-card-link">
-              View {isEvent ? 'Event' : 'Job'} <ChevronRight size={13} />
+            <Link
+              href={`/student/jobs/${job._id}`}
+              style={{
+                color: '#2563EB',
+                fontSize: 13,
+                fontWeight: 600,
+                textDecoration: 'none',
+              }}
+            >
+              View {isEvent ? 'Event' : 'Job'} →
             </Link>
           )}
+          {!isEvent &&
+            job?.employerId &&
+            (isEligible ? (
+              <Link
+                href={`/student/messages?user=${job.employerId}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  color: '#7C3AED',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  marginTop: 2,
+                }}
+              >
+                <MessageCircle size={13} /> Message →
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={onShowWarning}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  color: '#94A3B8',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  marginTop: 2,
+                }}
+              >
+                <MessageCircle size={13} /> Message →
+              </button>
+            ))}
         </div>
       </div>
     </div>
   );
 }
 
-/* ─── Main export ────────────────────────────────────────────────────────────── */
 export default function ApplicationsTabs({
   applications,
   events,
@@ -446,6 +600,7 @@ export default function ApplicationsTabs({
   events: AppItem[];
 }) {
   const [activeTab, setActiveTab] = useState<'applications' | 'events'>('applications');
+  const [showWarning, setShowWarning] = useState(false);
 
   const tabs = [
     {
@@ -466,33 +621,54 @@ export default function ApplicationsTabs({
   const isEvent = activeTab === 'events';
 
   return (
-    <>
+    <div
+      style={{
+        background: '#fff',
+        borderRadius: 20,
+        border: '1px solid #E2E8F0',
+        overflow: 'hidden',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+      }}
+    >
       {/* Inject responsive styles once */}
       <style>{RESPONSIVE_STYLES}</style>
 
       <div className="tabs-wrapper">
         {/* Tab bar */}
-        <div className="tabs-bar" role="tablist">
+        <div style={{ display: 'flex', borderBottom: '1px solid #E2E8F0', background: '#FAFBFC' }}>
           {tabs.map((tab) => (
             <button
               key={tab.key}
-              role="tab"
-              aria-selected={activeTab === tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`tab-btn${activeTab === tab.key ? 'active' : ''}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '16px 24px',
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: activeTab === tab.key ? 700 : 500,
+                color: activeTab === tab.key ? '#2563EB' : '#64748B',
+                borderBottom: `2px solid ${activeTab === tab.key ? '#2563EB' : 'transparent'}`,
+                transition: 'all 0.15s',
+                fontFamily: 'var(--font-body)',
+              }}
             >
-              <span
-                style={{ color: activeTab === tab.key ? '#2563EB' : '#94A3B8', display: 'flex' }}
-              >
+              <span style={{ color: activeTab === tab.key ? '#2563EB' : '#94A3B8' }}>
                 {tab.icon}
               </span>
               {tab.label}
               <span
-                className="badge"
                 style={{
                   background: activeTab === tab.key ? '#EFF6FF' : '#F1F5F9',
                   color: activeTab === tab.key ? '#2563EB' : '#64748B',
-                  borderColor: activeTab === tab.key ? '#BFDBFE' : '#E2E8F0',
+                  border: `1px solid ${activeTab === tab.key ? '#BFDBFE' : '#E2E8F0'}`,
+                  padding: '2px 8px',
+                  borderRadius: 999,
+                  fontSize: 11,
+                  fontWeight: 700,
                 }}
               >
                 {tab.count}
@@ -502,33 +678,166 @@ export default function ApplicationsTabs({
         </div>
 
         {/* Content */}
-        <div className="tabs-content" role="tabpanel">
+        <div style={{ padding: '20px 22px' }}>
           {activeItems.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">
-                {isEvent ? <CalendarDays size={40} /> : <BriefcaseBusiness size={40} />}
+            <div
+              style={{
+                borderRadius: 14,
+                border: '1px dashed #CBD5E1',
+                background: '#F8FAFC',
+                padding: '40px 20px',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ marginBottom: 12, color: '#94A3B8' }}>
+                {isEvent ? <CalendarDays size={36} /> : <BriefcaseBusiness size={36} />}
               </div>
-              <div className="empty-title">
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
                 {isEvent ? 'No events registered yet' : 'No applications yet'}
               </div>
-              <p className="empty-desc">
+              <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
                 {isEvent
                   ? 'Register for webinars and workshops from the job feed to see them here.'
                   : 'Apply to jobs and internships from the job feed to track them here.'}
-              </p>
-              <Link href="/student/jobs" className="empty-cta">
-                Browse {isEvent ? 'Events' : 'Jobs'} <ChevronRight size={14} />
+              </div>
+              <Link
+                href="/student/jobs"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  marginTop: 16,
+                  background: '#2563EB',
+                  color: '#fff',
+                  padding: '10px 20px',
+                  borderRadius: 10,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  fontFamily: 'var(--font-display)',
+                }}
+              >
+                Browse {isEvent ? 'Events' : 'Jobs'} →
               </Link>
             </div>
           ) : (
-            <div className="cards-list">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {activeItems.map((app) => (
-                <AppCard key={app._id} app={app} isEvent={isEvent} />
+                <AppCard
+                  key={app._id}
+                  app={app}
+                  isEvent={isEvent}
+                  onShowWarning={() => setShowWarning(true)}
+                />
               ))}
             </div>
           )}
         </div>
       </div>
-    </>
+
+      {/* Eligibility warning modal */}
+      {showWarning && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(15,23,42,0.5)',
+            backdropFilter: 'blur(6px)',
+          }}
+          onClick={() => setShowWarning(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#fff',
+              borderRadius: 24,
+              padding: '32px 36px',
+              maxWidth: 420,
+              width: '90vw',
+              boxShadow: '0 32px 80px rgba(15,23,42,0.22)',
+              textAlign: 'center',
+              position: 'relative',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowWarning(false)}
+              style={{
+                position: 'absolute',
+                top: 14,
+                right: 14,
+                background: '#F1F5F9',
+                border: 'none',
+                borderRadius: 8,
+                width: 30,
+                height: 30,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#64748B',
+              }}
+            >
+              <X size={16} />
+            </button>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 16,
+                background: 'linear-gradient(135deg, #FEF3C7, #FFFBEB)',
+                border: '1px solid #FDE68A',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                color: '#D97706',
+              }}
+            >
+              <ShieldAlert size={28} />
+            </div>
+            <h3
+              style={{
+                fontSize: 18,
+                fontWeight: 900,
+                color: '#0F172A',
+                fontFamily: 'var(--font-display)',
+                margin: '0 0 8px',
+              }}
+            >
+              Not eligible to message yet
+            </h3>
+            <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7, margin: '0 0 20px' }}>
+              You can message the employer once your application status reaches{' '}
+              <strong style={{ color: '#0F172A' }}>Shortlisted</strong>,{' '}
+              <strong style={{ color: '#0F172A' }}>Assessment Sent</strong>,{' '}
+              <strong style={{ color: '#0F172A' }}>Interview Scheduled</strong>, or{' '}
+              <strong style={{ color: '#0F172A' }}>Hired</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowWarning(false)}
+              style={{
+                background: '#0F172A',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 12,
+                padding: '10px 24px',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: 'var(--font-display)',
+              }}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

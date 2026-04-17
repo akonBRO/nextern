@@ -24,6 +24,7 @@ export interface IApplication extends Document {
   appliedAt: Date;
   coverLetter?: string;
   resumeUrlSnapshot?: string;
+  generatedResumeUrlSnapshot?: string;
   isEventRegistration: boolean;
 
   fitScore?: number;
@@ -36,13 +37,18 @@ export interface IApplication extends Document {
   fitAnalysisMeta?: AIExecutionMeta;
 
   assessmentId?: mongoose.Types.ObjectId;
+  assessmentAssignmentId?: mongoose.Types.ObjectId;
   assessmentScore?: number;
   assessmentPassed?: boolean;
+  assessmentDueAt?: Date;
+  assessmentSubmittedAt?: Date;
 
   interviewScheduledAt?: Date;
+  interviewSessionId?: mongoose.Types.ObjectId;
   agoraChannelId?: string;
   interviewNotes?: string;
   interviewRecordingUrl?: string;
+  interviewScore?: number;
 
   statusHistory: IStatusHistoryEntry[];
   employerNotes?: string;
@@ -73,6 +79,7 @@ const ApplicationSchema = new Schema<IApplication>(
     appliedAt: { type: Date, default: Date.now },
     coverLetter: { type: String, maxlength: 2000 },
     resumeUrlSnapshot: { type: String },
+    generatedResumeUrlSnapshot: { type: String },
     isEventRegistration: { type: Boolean, default: false },
     fitScore: { type: Number, min: 0, max: 100 },
     hardGaps: [{ type: String }],
@@ -98,12 +105,17 @@ const ApplicationSchema = new Schema<IApplication>(
       fallbackReason: { type: String, default: null },
     },
     assessmentId: { type: Schema.Types.ObjectId, ref: 'Assessment' },
+    assessmentAssignmentId: { type: Schema.Types.ObjectId, ref: 'AssessmentAssignment' },
     assessmentScore: { type: Number },
     assessmentPassed: { type: Boolean },
+    assessmentDueAt: { type: Date },
+    assessmentSubmittedAt: { type: Date },
     interviewScheduledAt: { type: Date },
+    interviewSessionId: { type: Schema.Types.ObjectId, ref: 'InterviewSession' },
     agoraChannelId: { type: String },
     interviewNotes: { type: String, select: false },
     interviewRecordingUrl: { type: String },
+    interviewScore: { type: Number },
     googleCalendarEventId: { type: String },
     statusHistory: [
       {

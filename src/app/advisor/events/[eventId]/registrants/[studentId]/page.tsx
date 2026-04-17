@@ -40,28 +40,7 @@ import {
   Link2,
   Code2,
 } from 'lucide-react';
-
-const navItems = [
-  { label: 'Overview', href: '/advisor/dashboard', icon: 'dashboard' as const },
-  {
-    label: 'Events',
-    icon: 'calendar' as const,
-    items: [
-      {
-        label: 'My Events',
-        href: '/advisor/events',
-        description: 'View and manage your posted events.',
-        icon: 'file' as const,
-      },
-      {
-        label: 'Post Event',
-        href: '/advisor/events/new',
-        description: 'Publish a webinar or workshop.',
-        icon: 'calendar' as const,
-      },
-    ],
-  },
-];
+import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
 
 const STATUS_CFG: Record<
   string,
@@ -246,7 +225,7 @@ export default async function StudentApplicationPage({
       role="advisor"
       roleLabel="Advisor dashboard"
       homeHref="/advisor/dashboard"
-      navItems={navItems}
+      navItems={ADVISOR_NAV_ITEMS}
       user={{
         name: advisor?.name ?? 'Advisor',
         email: advisor?.email ?? '',
@@ -256,6 +235,7 @@ export default async function StudentApplicationPage({
           'Advisor workspace',
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
+        userId: session.user.id,
       }}
     >
       <DashboardPage>

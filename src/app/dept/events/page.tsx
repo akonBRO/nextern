@@ -12,6 +12,7 @@ import { User } from '@/models/User';
 import mongoose from 'mongoose';
 import Link from 'next/link';
 import DashboardShell from '@/components/dashboard/DashboardShell';
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 import {
   DashboardPage,
   DashboardSection,
@@ -153,7 +154,7 @@ export default async function DeptEventsPage() {
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
-      navItems={navItems}
+      navItems={DEPT_NAV_ITEMS}
       user={{
         name: deptHead?.name ?? 'Dept Head',
         email: deptHead?.email ?? '',
@@ -163,6 +164,7 @@ export default async function DeptEventsPage() {
           'Department workspace',
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
+        userId: session.user.id,
       }}
     >
       <DashboardPage>

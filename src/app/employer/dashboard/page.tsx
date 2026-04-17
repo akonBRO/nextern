@@ -1,6 +1,8 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
+import { getEmployerCalendarEvents } from '@/lib/employer-calendar-events';
+import { getEmployerRecommendationRequests } from '@/lib/employer-recommendation-requests';
 import {
   ActionLink,
   DashboardPage,
@@ -8,6 +10,7 @@ import {
   EmptyState,
   HeroCard,
   Panel,
+  ProgressBar,
   StatCard,
   Tag,
   formatCompactNumber,
@@ -15,19 +18,26 @@ import {
   formatStatusLabel,
 } from '@/components/dashboard/DashboardContent';
 import { getEmployerDashboardData } from '@/lib/role-dashboard';
+import { getUsageSummary } from '@/lib/premium';
 import {
   BriefcaseBusiness,
   CheckCircle2,
   Clock3,
+  CreditCard,
+  Crown,
   Globe,
   MapPin,
+  SendToBack,
   Sparkles,
+  Target,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
+import CalendarBoard from '@/components/calendar/CalendarBoard';
 
 const navItems = [
   { label: 'Overview', href: '/employer/dashboard', icon: 'dashboard' as const },
+  { label: 'Calendar', href: '/employer/calendar', icon: 'calendar' as const },
   { label: 'Job Listings', href: '/employer/jobs', icon: 'briefcase' as const },
   {
     label: 'Hiring',
@@ -63,28 +73,44 @@ const navItems = [
         description: 'Surface the strongest student matches already in your pipeline.',
         icon: 'sparkles' as const,
       },
+      {
+        label: 'Recommendation requests',
+        href: '/employer/recommendations',
+        description: 'Review advisor and department-head endorsements for your active roles.',
+        icon: 'target' as const,
+      },
     ],
   },
+  { label: 'Badges', href: '/employer/badges', icon: 'shield' as const },
 ];
 
 function statusTone(isActive: boolean): 'success' | 'warning' {
   return isActive ? 'success' : 'warning';
 }
 
-// Conversion rate helper
-function conversionRate(numerator: number, denominator: number): string {
-  if (denominator === 0) return '0%';
-  return `${Math.round((numerator / denominator) * 100)}%`;
+function usageLabel(value: number | null) {
+  return value === null ? 'Unlimited' : `${value} left`;
+}
+
+function usagePercent(count: number, limit: number | null) {
+  if (limit === null) return 100;
+  if (limit === 0) return 0;
+  return Math.min(100, Math.round((count / limit) * 100));
 }
 
 export default async function EmployerDashboard() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
-  const data = await getEmployerDashboardData({
-    userId: session.user.id,
-    email: session.user.email ?? undefined,
-  });
+  const [data, usage, calendarEvents, recommendationData] = await Promise.all([
+    getEmployerDashboardData({
+      userId: session.user.id,
+      email: session.user.email ?? undefined,
+    }),
+    getUsageSummary(session.user.id),
+    getEmployerCalendarEvents(session.user.id, 24).catch(() => []),
+    getEmployerRecommendationRequests(session.user.id),
+  ]);
 
   // Profile completeness score
   const profileItems = [
@@ -97,26 +123,13 @@ export default async function EmployerDashboard() {
     (profileItems.filter(Boolean).length / profileItems.length) * 100
   );
 
-  // Hiring health score (simple calculation)
-  const hiringHealth =
-    data.stats.totalApplications > 0
-      ? Math.min(
-          100,
-          Math.round(
-            (data.stats.shortlisted / Math.max(data.stats.totalApplications, 1)) * 40 +
-              (data.stats.interviews / Math.max(data.stats.totalApplications, 1)) * 30 +
-              (data.stats.hired / Math.max(data.stats.totalApplications, 1)) * 30 * 3
-          )
-        )
-      : 0;
-
   return (
     <DashboardShell
       role="employer"
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"
       navItems={navItems}
-      user={data.chromeUser}
+      user={{ ...data.chromeUser, isPremium: usage.isPremium, userId: session.user.id }}
     >
       <DashboardPage>
         {/* ── Hero ── */}
@@ -182,6 +195,7 @@ export default async function EmployerDashboard() {
             <>
               <ActionLink href="/employer/jobs/new" label="Post new job" />
               <ActionLink href="/employer/jobs" label="View listings" tone="ghost" />
+              <ActionLink href="/employer/ai" label="AI hiring" tone="ghost" />
             </>
           }
           aside={
@@ -400,6 +414,284 @@ export default async function EmployerDashboard() {
             />
           </div>
         </section>
+        <DashboardSection
+          id="calendar"
+          title="Calendar"
+          description="Track interview schedules, job deadlines, and employer-hosted event dates with the same interactive monthly planner used in the student experience."
+        >
+          <CalendarBoard
+            events={calendarEvents}
+            isCalendarConnected={false}
+            mode="dashboard"
+            boardTitle="Hiring Calendar"
+            boardSubtitle="Browse month by month, track interviews, deadlines, and employer-hosted events."
+            fullCalendarHref="/employer/calendar"
+            manageCalendarHref={null}
+            showConnectionStatus={false}
+            eventHrefTemplate="/employer/jobs/:jobId/applicants"
+            emptyNextEventMessage="No upcoming hiring events yet. Post roles, publish events, or schedule interviews to fill this planner."
+          />
+        </DashboardSection>
+
+        <DashboardSection
+          id="recommendations"
+          title="Recommendation requests"
+          description="Formal endorsements from advisors and department heads flow into your employer workspace here."
+        >
+          <Panel
+            title="Academic endorsements"
+            description="Respond to teacher-submitted recommendations for your active jobs with a clear hiring signal."
+            action={
+              <Link
+                href="/employer/recommendations"
+                style={{
+                  color: '#2563EB',
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  fontWeight: 800,
+                }}
+              >
+                Open requests
+              </Link>
+            }
+          >
+            {recommendationData.requests.length > 0 ? (
+              <div style={{ display: 'grid', gap: 12 }}>
+                {recommendationData.requests.slice(0, 3).map((request) => (
+                  <div
+                    key={request.id}
+                    style={{
+                      borderRadius: 18,
+                      border: '1px solid #E2E8F0',
+                      background: '#FFFFFF',
+                      padding: 16,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <Tag
+                            label={
+                              request.requestStatus === 'hold'
+                                ? 'On hold'
+                                : formatStatusLabel(request.requestStatus)
+                            }
+                            tone={
+                              request.requestStatus === 'accepted'
+                                ? 'success'
+                                : request.requestStatus === 'rejected' ||
+                                    request.requestStatus === 'hold'
+                                  ? 'warning'
+                                  : 'info'
+                            }
+                          />
+                          {typeof request.fitScore === 'number' ? (
+                            <Tag label={`${request.fitScore}% fit`} tone="success" />
+                          ) : null}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 10,
+                            fontSize: 16,
+                            fontWeight: 800,
+                            color: '#1E293B',
+                          }}
+                        >
+                          {request.student.name} for {request.job?.title ?? request.title}
+                        </div>
+                        <div style={{ marginTop: 6, fontSize: 13, color: '#64748B' }}>
+                          Recommended by {request.recommender.name}
+                          {request.recommender.designation
+                            ? ` · ${request.recommender.designation}`
+                            : ''}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          width: 42,
+                          height: 42,
+                          borderRadius: 14,
+                          background: '#F5F3FF',
+                          color: '#7C3AED',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <SendToBack size={18} />
+                      </div>
+                    </div>
+                    <p
+                      style={{
+                        margin: '10px 0 0',
+                        fontSize: 13,
+                        lineHeight: 1.7,
+                        color: '#475569',
+                      }}
+                    >
+                      {request.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="No recommendation requests"
+                description="Academic endorsements for your active roles will appear here automatically."
+              />
+            )}
+          </Panel>
+        </DashboardSection>
+
+        <DashboardSection
+          id="ai-hiring"
+          title="AI hiring & premium access"
+          description="Employer AI is visible from your dashboard. Premium employers get unlimited shortlists and postings; regular employers keep monthly free limits."
+        >
+          <div
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}
+            className="dashboard-grid-three"
+          >
+            <Panel
+              title="AI applicant shortlist"
+              description="Rank applicants from each job pipeline using fit scores, gaps, and student profile signals."
+              action={
+                <Link
+                  href="/employer/ai"
+                  style={{
+                    color: '#2563EB',
+                    textDecoration: 'none',
+                    fontSize: 13,
+                    fontWeight: 800,
+                  }}
+                >
+                  Open AI center
+                </Link>
+              }
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                <Target size={22} color="#2563EB" />
+                <div>
+                  <div
+                    style={{
+                      fontSize: 30,
+                      lineHeight: 1,
+                      color: '#1E293B',
+                      fontWeight: 900,
+                      fontFamily: 'var(--font-display)',
+                    }}
+                  >
+                    {usageLabel(usage.remaining.aiApplicantShortlist)}
+                  </div>
+                  <div style={{ marginTop: 4, fontSize: 12, color: '#64748B', fontWeight: 700 }}>
+                    {usage.limits.aiApplicantShortlist === null
+                      ? `${usage.counts.aiApplicantShortlist} generated this month`
+                      : `${usage.counts.aiApplicantShortlist}/${usage.limits.aiApplicantShortlist} used this month`}
+                  </div>
+                </div>
+              </div>
+              <ProgressBar
+                value={usagePercent(
+                  usage.counts.aiApplicantShortlist,
+                  usage.limits.aiApplicantShortlist
+                )}
+              />
+            </Panel>
+
+            <Panel
+              title="Premium status"
+              description={
+                usage.isPremium
+                  ? 'Employer AI tools are unlocked without monthly caps.'
+                  : 'Upgrade when you need unlimited AI shortlists, postings, and priority visibility.'
+              }
+              action={
+                <Link
+                  href={usage.isPremium ? '/employer/subscription' : '/employer/premium'}
+                  style={{
+                    color: '#2563EB',
+                    textDecoration: 'none',
+                    fontSize: 13,
+                    fontWeight: 800,
+                  }}
+                >
+                  {usage.isPremium ? 'Billing' : 'Upgrade'}
+                </Link>
+              }
+            >
+              <div style={{ display: 'grid', gap: 12 }}>
+                <Tag
+                  label={usage.isPremium ? 'Premium active' : 'Regular employer'}
+                  tone={usage.isPremium ? 'success' : 'warning'}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Crown size={22} color={usage.isPremium ? '#F59E0B' : '#64748B'} />
+                  <div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: '#1E293B' }}>
+                      {usageLabel(usage.remaining.jobPosting)}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>
+                      Job postings this month
+                    </div>
+                  </div>
+                </div>
+                <ProgressBar
+                  value={usagePercent(usage.counts.jobPosting, usage.limits.jobPosting)}
+                  tone="success"
+                />
+              </div>
+            </Panel>
+
+            <Panel
+              title="Payment options"
+              description="Employer Premium checkout is available through local mobile payment and cards."
+              action={
+                <Link
+                  href="/employer/subscription"
+                  style={{
+                    color: '#2563EB',
+                    textDecoration: 'none',
+                    fontSize: 13,
+                    fontWeight: 800,
+                  }}
+                >
+                  Billing
+                </Link>
+              }
+            >
+              <div style={{ display: 'grid', gap: 10 }}>
+                {['bKash', 'Visa', 'Mastercard'].map((method) => (
+                  <div
+                    key={method}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '10px 12px',
+                      borderRadius: 12,
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      fontSize: 13,
+                      fontWeight: 800,
+                      color: '#1E293B',
+                    }}
+                  >
+                    <CreditCard size={15} color="#2563EB" />
+                    {method}
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          </div>
+        </DashboardSection>
 
         {/* ── Hiring pipeline ── */}
         <DashboardSection
@@ -862,7 +1154,7 @@ export default async function EmployerDashboard() {
             .dashboard-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
           }
           @media (max-width: 900px) {
-            .dashboard-stats-grid, .dashboard-grid-two, .dashboard-inline-grid { grid-template-columns: 1fr !important; }
+            .dashboard-stats-grid, .dashboard-grid-two, .dashboard-grid-three, .dashboard-inline-grid { grid-template-columns: 1fr !important; }
           }
         `}</style>
       </DashboardPage>

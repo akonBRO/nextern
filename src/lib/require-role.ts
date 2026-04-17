@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import {
   getDashboardForRole,
   getDefaultAuthenticatedRoute,
+  roleSatisfiesRequirement,
   type UserRole,
 } from '@/lib/role-routing';
 
@@ -18,16 +19,21 @@ export async function requireRole(role: UserRole) {
     redirect(`/verify-email?email=${encodeURIComponent(session.user.email ?? '')}`);
   }
 
+  if (session.user.mustChangePassword) {
+    redirect('/setup-password');
+  }
+
   const redirectTarget = getDefaultAuthenticatedRoute({
     role: session.user.role,
     verificationStatus: session.user.verificationStatus,
+    mustChangePassword: session.user.mustChangePassword,
   });
 
   if (redirectTarget === '/pending-approval') {
     redirect(redirectTarget);
   }
 
-  if (session.user.role !== role) {
+  if (!roleSatisfiesRequirement(session.user.role, role)) {
     redirect(redirectTarget);
   }
 

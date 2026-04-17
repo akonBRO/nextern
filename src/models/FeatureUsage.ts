@@ -4,12 +4,14 @@ export interface IFeatureUsage extends Document {
   userId: mongoose.Types.ObjectId;
   feature:
     | 'skill_gap_analysis'
+    | 'smart_job_recommendation'
     | 'mock_interview'
     | 'training_path'
     | 'career_advice'
     | 'job_posting'
-    | 'mentorship_request';
-  metadata?: Record<string, string>;
+    | 'mentorship_request'
+    | 'ai_applicant_shortlist';
+  metadata?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,11 +23,13 @@ const FeatureUsageSchema = new Schema<IFeatureUsage>(
       type: String,
       enum: [
         'skill_gap_analysis',
+        'smart_job_recommendation',
         'mock_interview',
         'training_path',
         'career_advice',
         'job_posting',
         'mentorship_request',
+        'ai_applicant_shortlist',
       ],
       required: true,
     },

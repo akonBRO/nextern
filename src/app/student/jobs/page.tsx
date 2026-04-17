@@ -4,7 +4,9 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
+import { getUsageSummary } from '@/lib/premium';
 import { Job } from '@/models/Job';
+import { JobView } from '@/models/JobView';
 import { Application } from '@/models/Application';
 import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
@@ -52,15 +54,33 @@ async function getJobFeedData(userId: string) {
       },
     ];
   }
+  if (student.yearOfStudy) {
+    query.$and = [
+      ...((query.$and as Record<string, unknown>[]) ?? []),
+      {
+        $or: [{ targetYears: { $size: 0 } }, { targetYears: student.yearOfStudy }],
+      },
+    ];
+  }
 
   const [jobs, applications] = await Promise.all([
-    Job.find(query).sort({ isPremiumListing: -1, createdAt: -1 }).limit(30).lean(),
+    Job.find(query).sort({ isPremiumListing: -1, createdAt: -1 }).limit(100).lean(),
     Application.find({ studentId: oid, isWithdrawn: { $ne: true } })
       .select('jobId fitScore fitScoreComputedAt')
       .lean(),
   ]);
 
+  const jobViews = await JobView.find({
+    studentId: oid,
+    jobId: { $in: jobs.map((job) => job._id) },
+  })
+    .select('jobId isSaved')
+    .lean();
+
   const appliedJobIds = new Set(applications.map((application) => application.jobId.toString()));
+  const savedJobIds = new Set(
+    jobViews.filter((jobView) => jobView.isSaved).map((jobView) => jobView.jobId.toString())
+  );
   const aiFitScores = new Map(
     applications
       .filter(
@@ -90,12 +110,17 @@ async function getJobFeedData(userId: string) {
       stipendBDT: job.stipendBDT,
       isStipendNegotiable: job.isStipendNegotiable,
       applicationDeadline: job.applicationDeadline?.toISOString(),
+      createdAt: job.createdAt?.toISOString(),
       requiredSkills: (job.requiredSkills ?? []).slice(0, 5),
       applicationCount: job.applicationCount ?? 0,
       isBatchHiring: job.isBatchHiring,
       isPremiumListing: job.isPremiumListing,
       fitScore,
       hasApplied: appliedJobIds.has(job._id.toString()),
+      isSaved: savedJobIds.has(job._id.toString()),
+      whyRecommended: null,
+      recommendationScore: null,
+      matchedSignals: [],
     };
   });
 
@@ -124,7 +149,10 @@ export default async function StudentJobsPage() {
   if (!session?.user?.id) redirect('/login');
   if (session.user.role !== 'student') redirect('/student/dashboard');
 
-  const data = await getJobFeedData(session.user.id);
+  const [data, usage] = await Promise.all([
+    getJobFeedData(session.user.id),
+    getUsageSummary(session.user.id),
+  ]);
   if (!data) redirect('/login');
 
   const { student, jobs, totalJobs, appliedCount, chrome } = data;
@@ -139,10 +167,11 @@ export default async function StudentJobsPage() {
         name: student.name,
         email: student.email,
         image: student.image,
+        userId: session.user.id,
         subtitle:
           [student.university, student.department].filter(Boolean).join(' | ') ||
           'Student workspace',
-        isPremium: Boolean(student.isPremium),
+        isPremium: Boolean(usage.isPremium),
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
       }}
@@ -207,7 +236,7 @@ export default async function StudentJobsPage() {
           }
         />
 
-        <JobFeedClient jobs={jobs} />
+        <JobFeedClient jobs={jobs} initialSmartUsage={JSON.parse(JSON.stringify(usage))} />
       </DashboardPage>
     </DashboardShell>
   );

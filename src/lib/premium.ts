@@ -11,9 +11,11 @@ type CountWindow = { start: Date; end: Date };
 
 export type PremiumFeature =
   | 'skillGapAnalysis'
+  | 'smartJobRecommendation'
   | 'mockInterview'
   | 'mentorshipRequest'
   | 'jobPosting'
+  | 'aiApplicantShortlist'
   | 'trainingPath'
   | 'advancedAnalytics'
   | 'priorityRecommendations';
@@ -30,21 +32,27 @@ export type UsageSummary = {
   premiumExpiresAt: string | null;
   counts: {
     skillGapAnalysis: number;
+    smartJobRecommendation: number;
     mockInterview: number;
     mentorshipRequest: number;
     jobPosting: number;
+    aiApplicantShortlist: number;
   };
   limits: {
     skillGapAnalysis: number | null;
+    smartJobRecommendation: number | null;
     mockInterview: number | null;
     mentorshipRequest: number | null;
     jobPosting: number | null;
+    aiApplicantShortlist: number | null;
   };
   remaining: {
     skillGapAnalysis: number | null;
+    smartJobRecommendation: number | null;
     mockInterview: number | null;
     mentorshipRequest: number | null;
     jobPosting: number | null;
+    aiApplicantShortlist: number | null;
   };
 };
 
@@ -115,10 +123,22 @@ export async function getUsageSummary(userId: string): Promise<UsageSummary> {
     Promise.resolve(getCurrentMonthWindow()),
   ]);
 
-  const [skillGapAnalysis, mockInterview, mentorshipRequest, jobPosting] = await Promise.all([
+  const [
+    skillGapAnalysis,
+    smartJobRecommendation,
+    mockInterview,
+    mentorshipRequest,
+    jobPosting,
+    aiApplicantShortlist,
+  ] = await Promise.all([
     FeatureUsage.countDocuments({
       userId,
       feature: 'skill_gap_analysis',
+      createdAt: { $gte: window.start, $lt: window.end },
+    }),
+    FeatureUsage.countDocuments({
+      userId,
+      feature: 'smart_job_recommendation',
       createdAt: { $gte: window.start, $lt: window.end },
     }),
     MockInterviewSession.countDocuments({
@@ -133,6 +153,11 @@ export async function getUsageSummary(userId: string): Promise<UsageSummary> {
       employerId: userId,
       createdAt: { $gte: window.start, $lt: window.end },
     }),
+    FeatureUsage.countDocuments({
+      userId,
+      feature: 'ai_applicant_shortlist',
+      createdAt: { $gte: window.start, $lt: window.end },
+    }),
   ]);
 
   const limits = getFeatureLimit(premiumStatus.isPremium);
@@ -141,21 +166,33 @@ export async function getUsageSummary(userId: string): Promise<UsageSummary> {
     ...premiumStatus,
     counts: {
       skillGapAnalysis,
+      smartJobRecommendation,
       mockInterview,
       mentorshipRequest,
       jobPosting,
+      aiApplicantShortlist,
     },
     limits: {
       skillGapAnalysis: normalizeLimit(limits.skillGapAnalysisPerMonth),
+      smartJobRecommendation: normalizeLimit(limits.smartJobRecommendationsPerMonth),
       mockInterview: normalizeLimit(limits.mockInterviewsPerMonth),
       mentorshipRequest: normalizeLimit(limits.mentorshipRequestsPerMonth),
       jobPosting: normalizeLimit(limits.jobPostingsPerMonth),
+      aiApplicantShortlist: normalizeLimit(limits.aiApplicantShortlistsPerMonth),
     },
     remaining: {
       skillGapAnalysis: normalizeRemaining(limits.skillGapAnalysisPerMonth, skillGapAnalysis),
+      smartJobRecommendation: normalizeRemaining(
+        limits.smartJobRecommendationsPerMonth,
+        smartJobRecommendation
+      ),
       mockInterview: normalizeRemaining(limits.mockInterviewsPerMonth, mockInterview),
       mentorshipRequest: normalizeRemaining(limits.mentorshipRequestsPerMonth, mentorshipRequest),
       jobPosting: normalizeRemaining(limits.jobPostingsPerMonth, jobPosting),
+      aiApplicantShortlist: normalizeRemaining(
+        limits.aiApplicantShortlistsPerMonth,
+        aiApplicantShortlist
+      ),
     },
   };
 }
@@ -181,9 +218,11 @@ export async function checkFeatureAccess(userId: string, feature: PremiumFeature
 
   const remainingMap = {
     skillGapAnalysis: usage.remaining.skillGapAnalysis,
+    smartJobRecommendation: usage.remaining.smartJobRecommendation,
     mockInterview: usage.remaining.mockInterview,
     mentorshipRequest: usage.remaining.mentorshipRequest,
     jobPosting: usage.remaining.jobPosting,
+    aiApplicantShortlist: usage.remaining.aiApplicantShortlist,
   } as const;
 
   const humanLabels: Record<
@@ -191,9 +230,11 @@ export async function checkFeatureAccess(userId: string, feature: PremiumFeature
     string
   > = {
     skillGapAnalysis: 'skill gap analyses',
+    smartJobRecommendation: 'smart job recommendations',
     mockInterview: 'mock interviews',
     mentorshipRequest: 'mentorship requests',
     jobPosting: 'job postings',
+    aiApplicantShortlist: 'AI applicant shortlists',
   };
 
   if (feature in remainingMap) {

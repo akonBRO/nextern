@@ -14,9 +14,16 @@ import {
 } from 'lucide-react';
 import { PLANS } from '@/lib/subscription-plans';
 import StripeCheckoutModal from '@/components/payments/StripeCheckoutModal';
+import { PaymentMethodLogo, type PaymentMethodId } from '@/components/payments/PaymentMethodLogo';
 
 const plan = PLANS.employer_premium;
-type PayMethod = 'bkash' | 'visa' | 'mastercard';
+type PayMethod = PaymentMethodId;
+
+const PAY_METHODS: { id: PayMethod; label: string }[] = [
+  { id: 'bkash', label: 'bKash' },
+  { id: 'visa', label: 'Visa' },
+  { id: 'mastercard', label: 'Mastercard' },
+];
 
 const C = {
   blue: '#2563EB',
@@ -26,7 +33,34 @@ const C = {
   bg: '#F1F5F9',
 };
 
-export default function EmployerPremiumClient({ isPremium }: { isPremium: boolean }) {
+type EmployerPremiumUsage = {
+  counts: {
+    aiApplicantShortlist: number;
+    jobPosting: number;
+  };
+  limits: {
+    aiApplicantShortlist: number | null;
+    jobPosting: number | null;
+  };
+  remaining: {
+    aiApplicantShortlist: number | null;
+    jobPosting: number | null;
+  };
+};
+
+function usageText(remaining?: number | null) {
+  if (remaining === null) return 'Unlimited';
+  if (typeof remaining === 'number') return `${remaining} left this month`;
+  return 'Usage loading';
+}
+
+export default function EmployerPremiumClient({
+  isPremium,
+  usage,
+}: {
+  isPremium: boolean;
+  usage?: EmployerPremiumUsage;
+}) {
   const [method, setMethod] = useState<PayMethod>('bkash');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -58,21 +92,39 @@ export default function EmployerPremiumClient({ isPremium }: { isPremium: boolea
         <p style={{ color: '#64748B', fontSize: 15, marginBottom: 24 }}>
           All premium hiring features are active on your account.
         </p>
-        <Link
-          href="/employer/subscription"
-          style={{
-            display: 'inline-block',
-            background: '#2563EB',
-            color: '#fff',
-            padding: '12px 24px',
-            borderRadius: 12,
-            textDecoration: 'none',
-            fontWeight: 700,
-            fontSize: 14,
-          }}
-        >
-          Manage Subscription →
-        </Link>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <Link
+            href="/employer/subscription"
+            style={{
+              display: 'inline-block',
+              background: '#2563EB',
+              color: '#fff',
+              padding: '12px 24px',
+              borderRadius: 12,
+              textDecoration: 'none',
+              fontWeight: 700,
+              fontSize: 14,
+            }}
+          >
+            Manage Subscription
+          </Link>
+          <Link
+            href="/employer/ai"
+            style={{
+              display: 'inline-block',
+              background: 'rgba(255,255,255,0.08)',
+              color: '#CBD5E1',
+              padding: '12px 24px',
+              borderRadius: 12,
+              textDecoration: 'none',
+              fontWeight: 700,
+              fontSize: 14,
+              border: '1px solid rgba(255,255,255,0.12)',
+            }}
+          >
+            Open AI Hiring Center
+          </Link>
+        </div>
       </div>
     );
   }
@@ -171,6 +223,46 @@ export default function EmployerPremiumClient({ isPremium }: { isPremium: boolea
               </span>
               <span style={{ color: '#64748B', fontSize: 14 }}>/month</span>
             </div>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 10,
+              marginBottom: 24,
+            }}
+          >
+            {[
+              {
+                label: 'AI shortlists',
+                free: usageText(usage?.remaining.aiApplicantShortlist),
+                premium: 'Unlimited',
+              },
+              {
+                label: 'Job postings',
+                free: usageText(usage?.remaining.jobPosting),
+                premium: 'Unlimited',
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 14,
+                  padding: '12px 14px',
+                }}
+              >
+                <div style={{ color: '#94A3B8', fontSize: 11, fontWeight: 800 }}>{item.label}</div>
+                <div style={{ color: '#F8FAFC', fontSize: 13, fontWeight: 900, marginTop: 5 }}>
+                  Regular: {item.free}
+                </div>
+                <div style={{ color: '#FDE68A', fontSize: 12, fontWeight: 800, marginTop: 3 }}>
+                  Premium: {item.premium}
+                </div>
+              </div>
+            ))}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -282,10 +374,10 @@ export default function EmployerPremiumClient({ isPremium }: { isPremium: boolea
               Payment Method
             </label>
             <div style={{ display: 'flex', gap: 8 }}>
-              {(['bkash', 'visa', 'mastercard'] as PayMethod[]).map((paymentMethod) => (
+              {PAY_METHODS.map((paymentMethod) => (
                 <button
-                  key={paymentMethod}
-                  onClick={() => setMethod(paymentMethod)}
+                  key={paymentMethod.id}
+                  onClick={() => setMethod(paymentMethod.id)}
                   style={{
                     flex: 1,
                     padding: '11px 8px',
@@ -293,16 +385,17 @@ export default function EmployerPremiumClient({ isPremium }: { isPremium: boolea
                     cursor: 'pointer',
                     fontSize: 12,
                     fontWeight: 700,
-                    border: `2px solid ${method === paymentMethod ? C.blue : C.border}`,
-                    background: method === paymentMethod ? '#EFF6FF' : '#fff',
-                    color: method === paymentMethod ? C.blue : C.muted,
+                    border: `2px solid ${method === paymentMethod.id ? C.blue : C.border}`,
+                    background: method === paymentMethod.id ? '#EFF6FF' : '#fff',
+                    color: method === paymentMethod.id ? C.blue : C.muted,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 5,
                   }}
                 >
-                  {paymentMethod === 'bkash'
-                    ? '🔴 bKash'
-                    : paymentMethod === 'visa'
-                      ? '💳 Visa'
-                      : '💳 MC'}
+                  <PaymentMethodLogo method={paymentMethod.id} height={24} />
+                  <span>{paymentMethod.label}</span>
                 </button>
               ))}
             </div>

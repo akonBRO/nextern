@@ -12,6 +12,7 @@ import { User } from '@/models/User';
 import mongoose from 'mongoose';
 import Link from 'next/link';
 import DashboardShell from '@/components/dashboard/DashboardShell';
+import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
 import {
   DashboardPage,
   DashboardSection,
@@ -165,7 +166,7 @@ export default async function AdvisorEventsPage() {
       role="advisor"
       roleLabel="Advisor dashboard"
       homeHref="/advisor/dashboard"
-      navItems={navItems}
+      navItems={ADVISOR_NAV_ITEMS}
       user={{
         name: advisor?.name ?? 'Advisor',
         email: advisor?.email ?? '',
@@ -175,6 +176,7 @@ export default async function AdvisorEventsPage() {
           'Advisor workspace',
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
+        userId: session.user.id,
       }}
     >
       <DashboardPage>

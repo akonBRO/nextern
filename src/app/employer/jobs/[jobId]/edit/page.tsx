@@ -5,7 +5,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle2, AlertCircle, ChevronRight, ChevronLeft, Rocket } from 'lucide-react';
+import EmployerClientShell from '@/components/employer/EmployerClientShell';
+import { CheckCircle2, AlertCircle, ChevronLeft } from 'lucide-react';
 
 const C = {
   blue: '#2563EB',
@@ -409,448 +410,458 @@ export default function EditJobPage() {
 
   if (fetching) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: C.bg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: 'var(--font-body)',
-        }}
-      >
-        <div style={{ textAlign: 'center', color: C.gray }}>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              border: `3px solid ${C.border}`,
-              borderTopColor: C.blue,
-              borderRadius: '50%',
-              margin: '0 auto 16px',
-              animation: 'spin 0.8s linear infinite',
-            }}
-          />
-          Loading job data…
+      <EmployerClientShell>
+        <div
+          style={{
+            minHeight: '50vh',
+            background: C.bg,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontFamily: 'var(--font-body)',
+          }}
+        >
+          <div style={{ textAlign: 'center', color: C.gray }}>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                border: `3px solid ${C.border}`,
+                borderTopColor: C.blue,
+                borderRadius: '50%',
+                margin: '0 auto 16px',
+                animation: 'spin 0.8s linear infinite',
+              }}
+            />
+            Loading job data...
+          </div>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
+      </EmployerClientShell>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
-      {/* Header */}
-      <div
-        style={{
-          background: `linear-gradient(145deg, ${C.dark}, ${C.indigo})`,
-          padding: '24px 0 28px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-        }}
-      >
-        <div style={{ maxWidth: 820, margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ marginBottom: 16 }}>
-            <Link
-              href="/employer/jobs"
-              style={{ color: C.gray, textDecoration: 'none', fontSize: 14, fontWeight: 500 }}
-            >
-              ← Back to Jobs
-            </Link>
-          </div>
-          <h1
-            style={{
-              fontSize: 24,
-              fontWeight: 900,
-              color: '#F8FAFC',
-              fontFamily: 'var(--font-display)',
-              marginBottom: 4,
-            }}
-          >
-            Edit Job Listing
-          </h1>
-          <p style={{ color: C.gray, fontSize: 13 }}>
-            Update the details below. Changes are saved immediately on publish.
-          </p>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 820, margin: '28px auto', padding: '0 24px' }}>
-        {error && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              background: C.dangerBg,
-              border: `1px solid ${C.dangerBorder}`,
-              borderRadius: 12,
-              padding: '12px 16px',
-              color: '#991B1B',
-              fontSize: 14,
-              marginBottom: 20,
-            }}
-          >
-            <AlertCircle size={15} />
-            {error}
-          </div>
-        )}
-
+    <EmployerClientShell>
+      <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
+        {/* Header */}
         <div
           style={{
-            background: C.white,
-            borderRadius: 20,
-            border: `1px solid ${C.border}`,
-            boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
-            overflow: 'hidden',
+            background: `linear-gradient(145deg, ${C.dark}, ${C.indigo})`,
+            padding: '24px 0 28px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
         >
-          <div style={{ padding: '32px 36px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {/* Basic info */}
-            <div>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: C.light,
-                  letterSpacing: 1.2,
-                  textTransform: 'uppercase',
-                  marginBottom: 18,
-                  paddingBottom: 10,
-                  borderBottom: `1px solid ${C.bg}`,
-                }}
+          <div style={{ maxWidth: 820, margin: '0 auto', padding: '0 24px' }}>
+            <div style={{ marginBottom: 16 }}>
+              <Link
+                href="/employer/jobs"
+                style={{ color: C.gray, textDecoration: 'none', fontSize: 14, fontWeight: 500 }}
               >
-                Basic Information
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <Field label="Listing Type">
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-                    {[
-                      { v: 'internship', l: '🎓 Internship' },
-                      { v: 'part-time', l: '⏰ Part-time' },
-                      { v: 'full-time', l: '💼 Full-time' },
-                      { v: 'campus-drive', l: '🏫 Campus Drive' },
-                      { v: 'webinar', l: '🌐 Webinar' },
-                      { v: 'workshop', l: '🔧 Workshop' },
-                    ].map((t) => (
-                      <button
-                        key={t.v}
-                        type="button"
-                        onClick={() => set('type', t.v)}
-                        style={{
-                          padding: '10px',
-                          borderRadius: 10,
-                          border: `2px solid ${form.type === t.v ? C.blue : C.border}`,
-                          background: form.type === t.v ? C.blueBg : C.white,
-                          color: form.type === t.v ? C.blue : C.gray,
-                          fontWeight: 700,
-                          fontSize: 12,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {t.l}
-                      </button>
-                    ))}
-                  </div>
-                </Field>
-                <Field label="Job Title" error={errors.title}>
-                  <input
-                    type="text"
-                    value={form.title}
-                    onChange={(e) => set('title', e.target.value)}
-                    style={inputBase}
-                  />
-                </Field>
-                <Field label="Description">
-                  <textarea
-                    value={form.description}
-                    onChange={(e) => set('description', e.target.value)}
-                    rows={5}
-                    style={{ ...inputBase, resize: 'vertical' }}
-                  />
-                </Field>
-                <TagInput
-                  label="Key Responsibilities"
-                  tags={form.responsibilities}
-                  onChange={(v) => set('responsibilities', v)}
-                />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                  <Field label="Work Mode">
-                    <select
-                      value={form.locationType}
-                      onChange={(e) => set('locationType', e.target.value)}
-                      style={{ ...inputBase, appearance: 'none' as const }}
-                    >
-                      <option value="onsite">Onsite</option>
-                      <option value="remote">Remote</option>
-                      <option value="hybrid">Hybrid</option>
-                    </select>
-                  </Field>
-                  <Field label="City" required={false}>
-                    <input
-                      type="text"
-                      value={form.city}
-                      onChange={(e) => set('city', e.target.value)}
-                      style={inputBase}
-                    />
-                  </Field>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-                  <Field label="Stipend (BDT/mo)" required={false}>
-                    <input
-                      type="number"
-                      value={form.stipendBDT}
-                      onChange={(e) => set('stipendBDT', e.target.value)}
-                      min="0"
-                      style={inputBase}
-                    />
-                  </Field>
-                  <Field label="Duration (months)" required={false}>
-                    <input
-                      type="number"
-                      value={form.durationMonths}
-                      onChange={(e) => set('durationMonths', e.target.value)}
-                      min="1"
-                      style={inputBase}
-                    />
-                  </Field>
-                  <Field label="Academic Session" required={false}>
-                    <input
-                      type="text"
-                      value={form.academicSession}
-                      onChange={(e) => set('academicSession', e.target.value)}
-                      placeholder="Spring 2026"
-                      style={inputBase}
-                    />
-                  </Field>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                  <Field label="Application Deadline" error={errors.applicationDeadline}>
-                    <input
-                      type="date"
-                      value={form.applicationDeadline}
-                      onChange={(e) => set('applicationDeadline', e.target.value)}
-                      style={inputBase}
-                    />
-                  </Field>
-                  <Field label="Start Date" required={false}>
-                    <input
-                      type="date"
-                      value={form.startDate}
-                      onChange={(e) => set('startDate', e.target.value)}
-                      style={inputBase}
-                    />
-                  </Field>
-                </div>
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    cursor: 'pointer',
-                    fontSize: 14,
-                    color: C.gray,
-                    fontWeight: 600,
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={form.isStipendNegotiable}
-                    onChange={(e) => set('isStipendNegotiable', e.target.checked)}
-                    style={{ width: 16, height: 16, accentColor: C.blue }}
-                  />
-                  Stipend is negotiable
-                </label>
-              </div>
+                ← Back to Jobs
+              </Link>
             </div>
+            <h1
+              style={{
+                fontSize: 24,
+                fontWeight: 900,
+                color: '#F8FAFC',
+                fontFamily: 'var(--font-display)',
+                marginBottom: 4,
+              }}
+            >
+              Edit Job Listing
+            </h1>
+            <p style={{ color: C.gray, fontSize: 13 }}>
+              Update the details below. Changes are saved immediately on publish.
+            </p>
+          </div>
+        </div>
 
-            {/* Targeting */}
-            <div>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: C.light,
-                  letterSpacing: 1.2,
-                  textTransform: 'uppercase',
-                  marginBottom: 18,
-                  paddingBottom: 10,
-                  borderBottom: `1px solid ${C.bg}`,
-                }}
-              >
-                Targeting
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <ChipGroup
-                  label="Target Universities"
-                  options={BD_UNIS}
-                  selected={form.targetUniversities}
-                  onChange={(v) => set('targetUniversities', v)}
-                />
-                <ChipGroup
-                  label="Target Departments"
-                  options={BD_DEPTS}
-                  selected={form.targetDepartments}
-                  onChange={(v) => set('targetDepartments', v)}
-                />
-              </div>
-            </div>
-
-            {/* Requirements */}
-            <div>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: C.light,
-                  letterSpacing: 1.2,
-                  textTransform: 'uppercase',
-                  marginBottom: 18,
-                  paddingBottom: 10,
-                  borderBottom: `1px solid ${C.bg}`,
-                }}
-              >
-                Requirement Profile
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <TagInput
-                  label="Required Skills"
-                  tags={form.requiredSkills}
-                  onChange={(v) => set('requiredSkills', v)}
-                />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                  <Field label="Minimum CGPA" required={false}>
-                    <input
-                      type="number"
-                      value={form.minimumCGPA}
-                      onChange={(e) => set('minimumCGPA', e.target.value)}
-                      min="0"
-                      max="4"
-                      step="0.1"
-                      style={inputBase}
-                    />
-                  </Field>
-                  <Field label="Experience Expectations" required={false}>
-                    <input
-                      type="text"
-                      value={form.experienceExpectations}
-                      onChange={(e) => set('experienceExpectations', e.target.value)}
-                      style={inputBase}
-                    />
-                  </Field>
-                </div>
-                <TagInput
-                  label="Required Courses"
-                  tags={form.requiredCourses}
-                  onChange={(v) => set('requiredCourses', v)}
-                />
-              </div>
-            </div>
-
-            {/* Status toggle */}
+        <div style={{ maxWidth: 820, margin: '28px auto', padding: '0 24px' }}>
+          {error && (
             <div
               style={{
-                background: form.isActive ? C.successBg : '#F8FAFC',
-                border: `1.5px solid ${form.isActive ? C.successBorder : C.border}`,
-                borderRadius: 14,
-                padding: '16px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                background: C.dangerBg,
+                border: `1px solid ${C.dangerBorder}`,
+                borderRadius: 12,
+                padding: '12px 16px',
+                color: '#991B1B',
+                fontSize: 14,
+                marginBottom: 20,
+              }}
+            >
+              <AlertCircle size={15} />
+              {error}
+            </div>
+          )}
+
+          <div
+            style={{
+              background: C.white,
+              borderRadius: 20,
+              border: `1px solid ${C.border}`,
+              boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{ padding: '32px 36px', display: 'flex', flexDirection: 'column', gap: 24 }}
+            >
+              {/* Basic info */}
+              <div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: C.light,
+                    letterSpacing: 1.2,
+                    textTransform: 'uppercase',
+                    marginBottom: 18,
+                    paddingBottom: 10,
+                    borderBottom: `1px solid ${C.bg}`,
+                  }}
+                >
+                  Basic Information
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  <Field label="Listing Type">
+                    <div
+                      style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}
+                    >
+                      {[
+                        { v: 'internship', l: '🎓 Internship' },
+                        { v: 'part-time', l: '⏰ Part-time' },
+                        { v: 'full-time', l: '💼 Full-time' },
+                        { v: 'campus-drive', l: '🏫 Campus Drive' },
+                        { v: 'webinar', l: '🌐 Webinar' },
+                        { v: 'workshop', l: '🔧 Workshop' },
+                      ].map((t) => (
+                        <button
+                          key={t.v}
+                          type="button"
+                          onClick={() => set('type', t.v)}
+                          style={{
+                            padding: '10px',
+                            borderRadius: 10,
+                            border: `2px solid ${form.type === t.v ? C.blue : C.border}`,
+                            background: form.type === t.v ? C.blueBg : C.white,
+                            color: form.type === t.v ? C.blue : C.gray,
+                            fontWeight: 700,
+                            fontSize: 12,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {t.l}
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+                  <Field label="Job Title" error={errors.title}>
+                    <input
+                      type="text"
+                      value={form.title}
+                      onChange={(e) => set('title', e.target.value)}
+                      style={inputBase}
+                    />
+                  </Field>
+                  <Field label="Description">
+                    <textarea
+                      value={form.description}
+                      onChange={(e) => set('description', e.target.value)}
+                      rows={5}
+                      style={{ ...inputBase, resize: 'vertical' }}
+                    />
+                  </Field>
+                  <TagInput
+                    label="Key Responsibilities"
+                    tags={form.responsibilities}
+                    onChange={(v) => set('responsibilities', v)}
+                  />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <Field label="Work Mode">
+                      <select
+                        value={form.locationType}
+                        onChange={(e) => set('locationType', e.target.value)}
+                        style={{ ...inputBase, appearance: 'none' as const }}
+                      >
+                        <option value="onsite">Onsite</option>
+                        <option value="remote">Remote</option>
+                        <option value="hybrid">Hybrid</option>
+                      </select>
+                    </Field>
+                    <Field label="City" required={false}>
+                      <input
+                        type="text"
+                        value={form.city}
+                        onChange={(e) => set('city', e.target.value)}
+                        style={inputBase}
+                      />
+                    </Field>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                    <Field label="Stipend (BDT/mo)" required={false}>
+                      <input
+                        type="number"
+                        value={form.stipendBDT}
+                        onChange={(e) => set('stipendBDT', e.target.value)}
+                        min="0"
+                        style={inputBase}
+                      />
+                    </Field>
+                    <Field label="Duration (months)" required={false}>
+                      <input
+                        type="number"
+                        value={form.durationMonths}
+                        onChange={(e) => set('durationMonths', e.target.value)}
+                        min="1"
+                        style={inputBase}
+                      />
+                    </Field>
+                    <Field label="Academic Session" required={false}>
+                      <input
+                        type="text"
+                        value={form.academicSession}
+                        onChange={(e) => set('academicSession', e.target.value)}
+                        placeholder="Spring 2026"
+                        style={inputBase}
+                      />
+                    </Field>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <Field label="Application Deadline" error={errors.applicationDeadline}>
+                      <input
+                        type="date"
+                        value={form.applicationDeadline}
+                        onChange={(e) => set('applicationDeadline', e.target.value)}
+                        style={inputBase}
+                      />
+                    </Field>
+                    <Field label="Start Date" required={false}>
+                      <input
+                        type="date"
+                        value={form.startDate}
+                        onChange={(e) => set('startDate', e.target.value)}
+                        style={inputBase}
+                      />
+                    </Field>
+                  </div>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      cursor: 'pointer',
+                      fontSize: 14,
+                      color: C.gray,
+                      fontWeight: 600,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={form.isStipendNegotiable}
+                      onChange={(e) => set('isStipendNegotiable', e.target.checked)}
+                      style={{ width: 16, height: 16, accentColor: C.blue }}
+                    />
+                    Stipend is negotiable
+                  </label>
+                </div>
+              </div>
+
+              {/* Targeting */}
+              <div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: C.light,
+                    letterSpacing: 1.2,
+                    textTransform: 'uppercase',
+                    marginBottom: 18,
+                    paddingBottom: 10,
+                    borderBottom: `1px solid ${C.bg}`,
+                  }}
+                >
+                  Targeting
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  <ChipGroup
+                    label="Target Universities"
+                    options={BD_UNIS}
+                    selected={form.targetUniversities}
+                    onChange={(v) => set('targetUniversities', v)}
+                  />
+                  <ChipGroup
+                    label="Target Departments"
+                    options={BD_DEPTS}
+                    selected={form.targetDepartments}
+                    onChange={(v) => set('targetDepartments', v)}
+                  />
+                </div>
+              </div>
+
+              {/* Requirements */}
+              <div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: C.light,
+                    letterSpacing: 1.2,
+                    textTransform: 'uppercase',
+                    marginBottom: 18,
+                    paddingBottom: 10,
+                    borderBottom: `1px solid ${C.bg}`,
+                  }}
+                >
+                  Requirement Profile
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  <TagInput
+                    label="Required Skills"
+                    tags={form.requiredSkills}
+                    onChange={(v) => set('requiredSkills', v)}
+                  />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <Field label="Minimum CGPA" required={false}>
+                      <input
+                        type="number"
+                        value={form.minimumCGPA}
+                        onChange={(e) => set('minimumCGPA', e.target.value)}
+                        min="0"
+                        max="4"
+                        step="0.1"
+                        style={inputBase}
+                      />
+                    </Field>
+                    <Field label="Experience Expectations" required={false}>
+                      <input
+                        type="text"
+                        value={form.experienceExpectations}
+                        onChange={(e) => set('experienceExpectations', e.target.value)}
+                        style={inputBase}
+                      />
+                    </Field>
+                  </div>
+                  <TagInput
+                    label="Required Courses"
+                    tags={form.requiredCourses}
+                    onChange={(v) => set('requiredCourses', v)}
+                  />
+                </div>
+              </div>
+
+              {/* Status toggle */}
+              <div
+                style={{
+                  background: form.isActive ? C.successBg : '#F8FAFC',
+                  border: `1.5px solid ${form.isActive ? C.successBorder : C.border}`,
+                  borderRadius: 14,
+                  padding: '16px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 800, color: C.text, fontSize: 14 }}>Listing Status</div>
+                  <div style={{ color: C.gray, fontSize: 13, marginTop: 2 }}>
+                    {form.isActive
+                      ? 'Active — visible to students'
+                      : 'Closed — hidden from students'}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => set('isActive', !form.isActive)}
+                  style={{
+                    width: 48,
+                    height: 26,
+                    borderRadius: 999,
+                    background: form.isActive ? C.success : C.border,
+                    border: 'none',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background 0.2s',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      background: C.white,
+                      position: 'absolute',
+                      top: 3,
+                      left: form.isActive ? 25 : 3,
+                      transition: 'left 0.2s',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div
+              style={{
+                borderTop: `1px solid ${C.bg}`,
+                padding: '20px 36px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                background: '#FAFBFC',
               }}
             >
-              <div>
-                <div style={{ fontWeight: 800, color: C.text, fontSize: 14 }}>Listing Status</div>
-                <div style={{ color: C.gray, fontSize: 13, marginTop: 2 }}>
-                  {form.isActive ? 'Active — visible to students' : 'Closed — hidden from students'}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => set('isActive', !form.isActive)}
+              <Link
+                href="/employer/jobs"
                 style={{
-                  width: 48,
-                  height: 26,
-                  borderRadius: 999,
-                  background: form.isActive ? C.success : C.border,
-                  border: 'none',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.2s',
-                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  padding: '10px 20px',
+                  border: `1.5px solid ${C.border}`,
+                  borderRadius: 10,
+                  background: C.white,
+                  color: C.gray,
+                  textDecoration: 'none',
+                  fontSize: 14,
+                  fontWeight: 600,
                 }}
               >
-                <div
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: '50%',
-                    background: C.white,
-                    position: 'absolute',
-                    top: 3,
-                    left: form.isActive ? 25 : 3,
-                    transition: 'left 0.2s',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-                  }}
-                />
+                <ChevronLeft size={15} /> Cancel
+              </Link>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  padding: '10px 28px',
+                  background: loading ? '#93C5FD' : `linear-gradient(135deg, ${C.blue}, #1D4ED8)`,
+                  color: C.white,
+                  border: 'none',
+                  borderRadius: 10,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  fontFamily: 'var(--font-display)',
+                  boxShadow: loading ? 'none' : '0 4px 12px rgba(37,99,235,0.35)',
+                }}
+              >
+                <CheckCircle2 size={15} />
+                {loading ? 'Saving…' : 'Save Changes'}
               </button>
             </div>
           </div>
-
-          {/* Footer */}
-          <div
-            style={{
-              borderTop: `1px solid ${C.bg}`,
-              padding: '20px 36px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: '#FAFBFC',
-            }}
-          >
-            <Link
-              href="/employer/jobs"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 7,
-                padding: '10px 20px',
-                border: `1.5px solid ${C.border}`,
-                borderRadius: 10,
-                background: C.white,
-                color: C.gray,
-                textDecoration: 'none',
-                fontSize: 14,
-                fontWeight: 600,
-              }}
-            >
-              <ChevronLeft size={15} /> Cancel
-            </Link>
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 7,
-                padding: '10px 28px',
-                background: loading ? '#93C5FD' : `linear-gradient(135deg, ${C.blue}, #1D4ED8)`,
-                color: C.white,
-                border: 'none',
-                borderRadius: 10,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: 14,
-                fontWeight: 700,
-                fontFamily: 'var(--font-display)',
-                boxShadow: loading ? 'none' : '0 4px 12px rgba(37,99,235,0.35)',
-              }}
-            >
-              <CheckCircle2 size={15} />
-              {loading ? 'Saving…' : 'Save Changes'}
-            </button>
-          </div>
         </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
+    </EmployerClientShell>
   );
 }

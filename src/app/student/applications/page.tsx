@@ -32,7 +32,10 @@ async function getApplicationsData(userId: string) {
   const [student, allApplications, unreadNotifs, unreadMsgs] = await Promise.all([
     User.findById(oid).select('name email image university department').lean(),
     Application.find({ studentId: oid })
-      .populate('jobId', 'title type companyName city locationType applicationDeadline isActive')
+      .populate(
+        'jobId',
+        'title type companyName city locationType applicationDeadline isActive employerId'
+      )
       .sort({ appliedAt: -1 })
       .lean(),
     Notification.countDocuments({ userId: oid, isRead: false }),
@@ -64,6 +67,7 @@ async function getApplicationsData(userId: string) {
       city?: string;
       locationType: string;
       applicationDeadline?: Date;
+      employerId?: { _id: string } | string;
     } | null;
     return {
       _id: app._id.toString(),
@@ -72,6 +76,11 @@ async function getApplicationsData(userId: string) {
       resumeUrlSnapshot: app.resumeUrlSnapshot ?? null,
       appliedAt: app.appliedAt?.toISOString() ?? new Date().toISOString(),
       fitScore: app.fitScore ?? null,
+      assessmentAssignmentId: app.assessmentAssignmentId?.toString() ?? null,
+      assessmentDueAt: app.assessmentDueAt?.toISOString() ?? null,
+      assessmentSubmittedAt: app.assessmentSubmittedAt?.toISOString() ?? null,
+      interviewSessionId: app.interviewSessionId?.toString() ?? null,
+      interviewScheduledAt: app.interviewScheduledAt?.toISOString() ?? null,
       isEventRegistration: app.isEventRegistration,
       statusHistory: (app.statusHistory ?? []).map((h: { status: string; changedAt?: Date }) => ({
         status: h.status,
@@ -86,6 +95,10 @@ async function getApplicationsData(userId: string) {
             city: job.city ?? null,
             locationType: job.locationType,
             applicationDeadline: job.applicationDeadline?.toISOString() ?? null,
+            employerId:
+              typeof job.employerId === 'object' && job.employerId
+                ? (job.employerId as { _id: string })._id?.toString()
+                : (job.employerId?.toString() ?? null),
           }
         : null,
     };
@@ -120,6 +133,7 @@ export default async function StudentApplicationsPage() {
         name: student?.name ?? 'Student',
         email: student?.email ?? '',
         image: student?.image,
+        userId: session.user.id,
         subtitle:
           [student?.university, student?.department].filter(Boolean).join(' | ') ||
           'Student workspace',

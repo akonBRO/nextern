@@ -10,24 +10,20 @@ import { Application } from '@/models/Application';
 import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { User } from '@/models/User';
+import { getUsageSummary } from '@/lib/premium';
 import mongoose from 'mongoose';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
   DashboardPage,
-  DashboardSection,
-  EmptyState,
   HeroCard,
   ActionLink,
   Panel,
   StatCard,
-  Tag,
   formatCompactNumber,
   formatShortDate,
   formatStatusLabel,
 } from '@/components/dashboard/DashboardContent';
 import { Users, CheckCircle2, Clock3, Trophy } from 'lucide-react';
-import Link from 'next/link';
-import ApplicantActions from './ApplicantActions';
 import BatchHiringPanel from './BatchHiringPanel';
 
 const navItems = [
@@ -46,7 +42,7 @@ async function getApplicantsData(jobId: string, employerId: string) {
     Application.find({ jobId: jid, employerId: oid, isEventRegistration: false })
       .populate(
         'studentId',
-        'name email university department cgpa skills opportunityScore resumeUrl image yearOfStudy'
+        'name email university department cgpa skills opportunityScore resumeUrl generatedResumeUrl image yearOfStudy'
       )
       .sort({ fitScore: -1, appliedAt: -1 })
       .lean(),
@@ -145,7 +141,10 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
   if (session.user.role !== 'employer') redirect('/employer/dashboard');
 
   const { jobId } = await params;
-  const data = await getApplicantsData(jobId, session.user.id);
+  const [data, usage] = await Promise.all([
+    getApplicantsData(jobId, session.user.id),
+    getUsageSummary(session.user.id),
+  ]);
   if (!data) redirect('/employer/jobs');
 
   const { employer, job, applications, stats, universityStats, chrome } = data;
@@ -161,6 +160,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
       cgpa?: number;
       skills?: string[];
       resumeUrl?: string;
+      generatedResumeUrl?: string;
       image?: string;
       yearOfStudy?: number;
     };
@@ -170,6 +170,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
       fitScore: app.fitScore ?? 0,
       appliedAt: app.appliedAt?.toISOString() ?? '',
       resumeUrlSnapshot: app.resumeUrlSnapshot || student?.resumeUrl || '',
+      generatedResumeUrlSnapshot: student?.generatedResumeUrl || '',
       student: {
         _id: student?._id?.toString() ?? '',
         name: student?.name ?? 'Unknown',
@@ -194,6 +195,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
         email: employer?.email ?? '',
         image: employer?.image,
         subtitle: employer?.companyName ?? 'Employer workspace',
+        userId: session.user.id,
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
       }}
@@ -300,6 +302,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
             pipeline: u.pipeline,
           }))}
           totalApplications={stats.total}
+          usage={JSON.parse(JSON.stringify(usage))}
         />
 
         <style>{`

@@ -19,28 +19,7 @@ import {
   formatCompactNumber,
 } from '@/components/dashboard/DashboardContent';
 import { Users, MapPin, Clock, FileText, PencilLine } from 'lucide-react';
-
-const navItems = [
-  { label: 'Overview', href: '/advisor/dashboard', icon: 'dashboard' as const },
-  {
-    label: 'Events',
-    icon: 'calendar' as const,
-    items: [
-      {
-        label: 'Post Event',
-        href: '/advisor/events/new',
-        description: 'Publish a webinar or workshop for students.',
-        icon: 'calendar' as const,
-      },
-      {
-        label: 'My Events',
-        href: '/advisor/events',
-        description: 'View and manage all your posted events.',
-        icon: 'file' as const,
-      },
-    ],
-  },
-];
+import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
 
 async function getEventDetail(eventId: string, advisorId: string) {
   await connectDB();
@@ -137,7 +116,7 @@ export default async function AdvisorEventApplicantsPage({
       role="advisor"
       roleLabel="Advisor dashboard"
       homeHref="/advisor/dashboard"
-      navItems={navItems}
+      navItems={ADVISOR_NAV_ITEMS}
       user={{
         name: advisor?.name ?? 'Advisor',
         email: advisor?.email ?? '',
@@ -147,6 +126,7 @@ export default async function AdvisorEventApplicantsPage({
           'Advisor workspace',
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
+        userId: session.user.id,
       }}
     >
       <DashboardPage>

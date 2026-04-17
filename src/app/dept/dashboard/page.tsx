@@ -5,6 +5,7 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
+import { getDepartmentNavItems } from '@/lib/academic-navigation';
 import {
   DashboardPage,
   DashboardSection,
@@ -18,7 +19,10 @@ import {
   formatCompactNumber,
   formatShortDate,
 } from '@/components/dashboard/DashboardContent';
+import CalendarBoard from '@/components/calendar/CalendarBoard';
 import { getDeptDashboardData } from '@/lib/role-dashboard';
+import { getDeptCalendarEvents } from '@/lib/academic-calendar-events';
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 import { BriefcaseBusiness, GraduationCap, LineChart, Sparkles, Target, Users } from 'lucide-react';
 import { User } from '@/models/User';
 import { Job } from '@/models/Job';
@@ -106,18 +110,22 @@ const navItems = [
       },
     ],
   },
+  { label: 'Badges', href: '/dept/badges', icon: 'shield' as const },
 ];
 
 async function getDeptExtras(userId: string) {
   await connectDB();
   const oid = new mongoose.Types.ObjectId(userId);
-  const [deptHead, totalEvents] = await Promise.all([
+  const [deptHead, totalEvents, calendarEvents] = await Promise.all([
     User.findById(oid)
-      .select('name bio city linkedinUrl institutionName advisoryDepartment designation image')
+      .select(
+        'name bio city linkedinUrl institutionName advisoryDepartment designation image googleCalendarConnected'
+      )
       .lean(),
     Job.countDocuments({ employerId: oid, type: { $in: ['webinar', 'workshop'] } }),
+    getDeptCalendarEvents(userId, 24),
   ]);
-  return { deptHead, totalEvents };
+  return { deptHead, totalEvents, calendarEvents };
 }
 
 export default async function DeptDashboard() {
@@ -132,7 +140,7 @@ export default async function DeptDashboard() {
     getDeptExtras(session.user.id),
   ]);
 
-  const { deptHead, totalEvents } = extras;
+  const { deptHead, totalEvents, calendarEvents } = extras;
   const benchmark = data.department.benchmark;
   const { readinessDistribution, skillHeatmap, industryAlignment, semesterTrend } = data;
 
@@ -141,8 +149,8 @@ export default async function DeptDashboard() {
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
-      navItems={navItems}
-      user={data.chromeUser}
+      navItems={DEPT_NAV_ITEMS}
+      user={{ ...data.chromeUser, userId: session.user.id }}
     >
       <DashboardPage>
         {/* ── Hero ── */}
@@ -220,8 +228,8 @@ export default async function DeptDashboard() {
           actions={
             <>
               <ActionLink href="/dept/events/new" label="Post event" />
-              <ActionLink href="/dept/events" label="All Events" tone="ghost" />
-              <ActionLink href="#students" label="Top students" tone="ghost" />
+              <ActionLink href="/dept/students" label="Student Directory" tone="ghost" />
+              <ActionLink href="/dept/advisors" label="Manage Advisors" tone="ghost" />
             </>
           }
           aside={
@@ -334,6 +342,23 @@ export default async function DeptDashboard() {
         </section>
 
         {/* ── Readiness Distribution ── */}
+        <DashboardSection
+          id="calendar"
+          title="Calendar"
+          description="Track only your own posted department events, including registration deadlines and event dates."
+        >
+          <CalendarBoard
+            events={calendarEvents}
+            isCalendarConnected={deptHead?.googleCalendarConnected ?? false}
+            boardTitle="Department Calendar"
+            boardSubtitle="Keep only your hosted department sessions and registration cutoffs on one board."
+            fullCalendarHref="/dept/calendar"
+            manageCalendarHref="/dept/profile#calendar"
+            eventHrefTemplate="/dept/events/:jobId/registrants"
+            emptyNextEventMessage="No hosted department events are coming up yet. Post a workshop or webinar to populate this planner."
+          />
+        </DashboardSection>
+
         <DashboardSection
           id="readiness"
           title="Readiness distribution"

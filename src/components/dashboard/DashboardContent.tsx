@@ -228,12 +228,14 @@ export function StatCard({
   hint,
   Icon,
   accent = palette.primary,
+  showIcon = true,
 }: {
   label: string;
   value: string;
   hint?: string;
   Icon: LucideIcon;
   accent?: string;
+  showIcon?: boolean;
 }) {
   return (
     <div
@@ -245,27 +247,34 @@ export function StatCard({
         boxShadow: '0 16px 32px rgba(15,23,42,0.06)',
       }}
     >
-      <div
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
-      >
+      {showIcon ? (
         <div
           style={{
-            width: 48,
-            height: 48,
-            borderRadius: 16,
-            background: `${accent}14`,
-            color: accent,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
           }}
         >
-          <Icon size={20} strokeWidth={2} />
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 16,
+              background: `${accent}14`,
+              color: accent,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Icon size={20} strokeWidth={2} />
+          </div>
         </div>
-      </div>
+      ) : null}
       <div
         style={{
-          marginTop: 18,
+          marginTop: showIcon ? 18 : 0,
           fontSize: 32,
           lineHeight: 1,
           color: palette.text,

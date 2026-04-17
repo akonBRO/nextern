@@ -1,10 +1,10 @@
 'use client';
 // src/app/student/profile/page.tsx
-// Student profile — view + edit all academic and career fields
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
 import {
   AlertCircle,
   CheckCircle2,
@@ -22,11 +22,22 @@ import {
   FileText,
   Upload,
   ExternalLink,
+  Eye,
+  Layers,
+  MapPin,
+  Mail,
+  Phone,
+  Bell,
+  Calendar,
 } from 'lucide-react';
 import { useUploadThing } from '@/lib/uploadthing';
+import CalendarConnectButton from '@/components/calendar/CalendarConnectButton';
 
 const C = {
   blue: '#2563EB',
+  blueDark: '#1D4ED8',
+  teal: '#0D9488',
+  tealDark: '#0F766E',
   indigo: '#1E293B',
   bg: '#F1F5F9',
   gray: '#64748B',
@@ -34,6 +45,7 @@ const C = {
   warning: '#F59E0B',
   white: '#fff',
   dark: '#0F172A',
+  mid: '#334155',
   border: '#E2E8F0',
   text: '#0F172A',
   muted: '#374151',
@@ -45,6 +57,8 @@ const C = {
   successBorder: '#A7F3D0',
   blueBg: '#EFF6FF',
   blueBorder: '#BFDBFE',
+  tealBg: '#F0FDFA',
+  tealBorder: '#99F6E4',
 };
 
 const inputBase: React.CSSProperties = {
@@ -94,6 +108,7 @@ const BD_DEPTS = [
   'Accounting',
 ];
 
+// ── Sub-components ─────────────────────────────────────────────────────────
 function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <div
@@ -252,7 +267,367 @@ function TagInput({
   );
 }
 
+const RS = ({ title }: { title: string }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '14px 0 8px' }}>
+    <div style={{ width: 3, height: 13, background: C.teal, borderRadius: 2, flexShrink: 0 }} />
+    <div
+      style={{
+        fontSize: 9,
+        fontWeight: 800,
+        color: C.teal,
+        letterSpacing: 1.1,
+        textTransform: 'uppercase' as const,
+      }}
+    >
+      {title}
+    </div>
+    <div style={{ flex: 1, height: 0.75, background: C.border }} />
+  </div>
+);
+
+const Pill = ({
+  label,
+  color,
+  bg,
+  border,
+}: {
+  label: string;
+  color: string;
+  bg: string;
+  border: string;
+}) => (
+  <span
+    style={{
+      display: 'inline-block',
+      background: bg,
+      color,
+      border: `0.75px solid ${border}`,
+      padding: '2px 8px',
+      borderRadius: 999,
+      fontSize: 8,
+      fontWeight: 600,
+      marginRight: 4,
+      marginBottom: 4,
+    }}
+  >
+    {label}
+  </span>
+);
+
+// In-Platform Resume Preview Card
+function InPlatformResume({ user }: { user: UserData | null }) {
+  if (!user) return null;
+
+  const hasContent =
+    user.bio || user.university || user.skills.length > 0 || user.projects.length > 0;
+
+  return (
+    <div
+      style={{
+        border: `1px solid ${C.border}`,
+        borderRadius: 14,
+        overflow: 'hidden',
+        background: C.white,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+      }}
+    >
+      {/* Resume header band */}
+      <div
+        style={{
+          background: `linear-gradient(135deg, ${C.dark}, ${C.indigo})`,
+          padding: '20px 24px 16px',
+          borderBottom: `3px solid ${C.blue}`,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          {/* Avatar */}
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #2563EB, #0D9488)',
+              border: '2px solid rgba(255,255,255,0.15)',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 20,
+              fontWeight: 900,
+              color: '#fff',
+              fontFamily: 'var(--font-display)',
+              flexShrink: 0,
+            }}
+          >
+            {user.image ? (
+              <Image
+                src={user.image}
+                alt={user.name}
+                width={52}
+                height={52}
+                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+              />
+            ) : (
+              user.name.charAt(0).toUpperCase()
+            )}
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 17,
+                fontWeight: 900,
+                color: '#F8FAFC',
+                fontFamily: 'var(--font-display)',
+                letterSpacing: '-0.2px',
+              }}
+            >
+              {user.name}
+            </div>
+            {(user.department || user.university) && (
+              <div style={{ fontSize: 9.5, color: '#93C5FD', marginTop: 2 }}>
+                {[user.department, user.university].filter(Boolean).join('  ·  ')}
+              </div>
+            )}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
+              {user.email && (
+                <span
+                  style={{
+                    fontSize: 8,
+                    color: '#94A3B8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 3,
+                  }}
+                >
+                  <Mail size={9} />
+                  {user.email}
+                </span>
+              )}
+              {user.phone && (
+                <span
+                  style={{
+                    fontSize: 8,
+                    color: '#94A3B8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 3,
+                  }}
+                >
+                  <Phone size={9} />
+                  {user.phone}
+                </span>
+              )}
+              {user.city && (
+                <span
+                  style={{
+                    fontSize: 8,
+                    color: '#94A3B8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 3,
+                  }}
+                >
+                  <MapPin size={9} />
+                  {user.city}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Resume body */}
+      <div style={{ padding: '4px 24px 20px', fontFamily: 'var(--font-body)' }}>
+        {!hasContent && (
+          <div style={{ textAlign: 'center', padding: '28px 0', color: C.light, fontSize: 13 }}>
+            Fill in your profile details above and save — your in-platform resume will appear here.
+          </div>
+        )}
+
+        {/* Summary */}
+        {user.bio && (
+          <>
+            <RS title="Professional Summary" />
+            <p style={{ fontSize: 9.5, color: C.mid, lineHeight: 1.75, margin: 0 }}>{user.bio}</p>
+          </>
+        )}
+
+        {/* Education */}
+        {(user.university || user.cgpa != null) && (
+          <>
+            <RS title="Education" />
+            <div
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+            >
+              <div>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: C.dark }}>
+                  {user.university}
+                </div>
+                <div style={{ fontSize: 9, color: C.gray, marginTop: 2 }}>
+                  {[
+                    user.department,
+                    user.yearOfStudy ? `Year ${user.yearOfStudy}` : '',
+                    user.currentSemester,
+                  ]
+                    .filter(Boolean)
+                    .join('  ·  ')}
+                </div>
+              </div>
+              {user.cgpa != null && (
+                <div
+                  style={{
+                    background: C.blueBg,
+                    border: `1px solid ${C.blueBorder}`,
+                    borderRadius: 7,
+                    padding: '4px 10px',
+                    fontSize: 9,
+                    fontWeight: 800,
+                    color: C.blue,
+                  }}
+                >
+                  CGPA {user.cgpa.toFixed(2)} / 4.00
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Skills */}
+        {user.skills.length > 0 && (
+          <>
+            <RS title="Skills" />
+            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+              {user.skills.map((s) => (
+                <Pill key={s} label={s} color={C.tealDark} bg={C.tealBg} border={C.tealBorder} />
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Projects */}
+        {user.projects.length > 0 && (
+          <>
+            <RS title="Projects" />
+            {user.projects.map((proj, i) => (
+              <div
+                key={i}
+                style={{
+                  marginBottom: 10,
+                  paddingBottom: 10,
+                  borderBottom: i < user.projects.length - 1 ? `1px solid ${C.border}` : 'none',
+                }}
+              >
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: C.dark }}>{proj.title}</div>
+                {proj.techStack?.length > 0 && (
+                  <div style={{ fontSize: 8, color: C.teal, fontWeight: 600, margin: '3px 0' }}>
+                    {proj.techStack.join('  ·  ')}
+                  </div>
+                )}
+                {proj.description && (
+                  <div style={{ fontSize: 9, color: C.gray, lineHeight: 1.65 }}>
+                    {proj.description}
+                  </div>
+                )}
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* Certifications */}
+        {user.certifications.length > 0 && (
+          <>
+            <RS title="Certifications" />
+            {user.certifications.map((cert, i) => (
+              <div
+                key={i}
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 7 }}
+              >
+                <div
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: C.blue,
+                    marginTop: 4,
+                    flexShrink: 0,
+                  }}
+                />
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: C.dark }}>{cert.name}</div>
+                  <div style={{ fontSize: 8.5, color: C.light }}>{cert.issuedBy}</div>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* Completed Courses */}
+        {user.completedCourses.length > 0 && (
+          <>
+            <RS title="Completed Courses" />
+            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+              {user.completedCourses.map((c) => (
+                <Pill key={c} label={c} color={C.gray} bg="#F8FAFC" border={C.border} />
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Online Presence */}
+        {(user.linkedinUrl || user.githubUrl || user.portfolioUrl) && (
+          <>
+            <RS title="Online Presence" />
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+              {user.linkedinUrl && (
+                <span style={{ fontSize: 9, color: C.blue }}>
+                  {user.linkedinUrl.replace(/^https?:\/\/(www\.)?/, '')}
+                </span>
+              )}
+              {user.githubUrl && (
+                <span style={{ fontSize: 9, color: C.blue }}>
+                  {user.githubUrl.replace(/^https?:\/\/(www\.)?/, '')}
+                </span>
+              )}
+              {user.portfolioUrl && (
+                <span style={{ fontSize: 9, color: C.blue }}>
+                  {user.portfolioUrl.replace(/^https?:\/\/(www\.)?/, '')}
+                </span>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Footer */}
+        {hasContent && (
+          <div
+            style={{
+              marginTop: 16,
+              paddingTop: 12,
+              borderTop: `1px solid ${C.border}`,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <div style={{ fontSize: 7.5, color: C.light }}>Generated by Nextern</div>
+            <div style={{ fontSize: 7.5, color: C.light }}>
+              {new Date().toLocaleDateString('en-US', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Types ──────────────────────────────────────────────────────────────────
 type UserData = {
+  _id?: string;
+  id?: string;
   name: string;
   email: string;
   image?: string;
@@ -271,6 +646,7 @@ type UserData = {
   portfolioUrl?: string;
   city?: string;
   resumeUrl?: string;
+  generatedResumeUrl?: string;
   isGraduated?: boolean;
   profileCompleteness?: number;
   opportunityScore?: number;
@@ -282,30 +658,108 @@ type UserData = {
     repoUrl?: string;
   }[];
   certifications: { name: string; issuedBy: string; credentialUrl?: string }[];
+  googleCalendarConnected?: boolean;
+  notificationPreferences?: Record<string, boolean>;
 };
 
+type StudentAcademicReview = {
+  id: string;
+  headline: string;
+  summary: string;
+  strengths: string[];
+  growthAreas: string[];
+  readinessLevel: 'priority_support' | 'developing' | 'ready';
+  profileScore?: number;
+  createdAt: string;
+  reviewer: {
+    name: string;
+    role: string;
+    designation?: string;
+    department?: string;
+    institution?: string;
+  };
+};
+
+type StudentJobRecommendation = {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  focusSkills: string[];
+  fitScore?: number;
+  resourceUrl?: string;
+  createdAt: string;
+  recommender: {
+    name: string;
+    role: string;
+    designation?: string;
+  };
+  job: {
+    id: string;
+    title: string;
+    companyName: string;
+    type: string;
+  } | null;
+};
+
+// Main page
 export default function StudentProfilePage() {
   const [user, setUser] = useState<UserData | null>(null);
   const [fetching, setFetching] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [graduationSaving, setGraduationSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [badges, setBadges] = useState<
     { badgeName: string; badgeIcon: string; awardedAt: string; badgeSlug: string }[]
   >([]);
+  const [academicReviews, setAcademicReviews] = useState<StudentAcademicReview[]>([]);
+  const [jobRecommendations, setJobRecommendations] = useState<StudentJobRecommendation[]>([]);
 
-  // ── Resume upload state ──
+  // Resume upload state
   const { startUpload, isUploading } = useUploadThing('resumeUploader');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeUploading, setResumeUploading] = useState(false);
-  const uploading = resumeUploading || isUploading;
   const [resumeError, setResumeError] = useState('');
   const [resumeSaved, setResumeSaved] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [showUploadZone, setShowUploadZone] = useState(false);
+  const uploading = resumeUploading || isUploading;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const resumeUrlRef = useRef<string | undefined>(undefined);
 
-  const [form, setForm] = useState({
+  useEffect(() => {
+    resumeUrlRef.current = user?.resumeUrl;
+  }, [user?.resumeUrl]);
+
+  // ── Live preview of in-platform resume (updates on save) ──
+  const [previewUser, setPreviewUser] = useState<UserData | null>(null);
+  const [form, setFormState] = useState<{
+    name: string;
+    phone: string;
+    bio: string;
+    studentId: string;
+    university: string;
+    department: string;
+    yearOfStudy: string;
+    currentSemester: string;
+    cgpa: string;
+    skills: string[];
+    completedCourses: string[];
+    linkedinUrl: string;
+    githubUrl: string;
+    portfolioUrl: string;
+    city: string;
+    isGraduated: boolean;
+    notificationPreferences: Record<string, boolean>;
+    projects: {
+      title: string;
+      description: string;
+      techStack: string[];
+      projectUrl: string;
+      repoUrl: string;
+    }[];
+    certifications: { name: string; issuedBy: string; credentialUrl: string }[];
+  }>({
     name: '',
     phone: '',
     bio: '',
@@ -315,21 +769,16 @@ export default function StudentProfilePage() {
     yearOfStudy: '',
     currentSemester: '',
     cgpa: '',
-    skills: [] as string[],
-    completedCourses: [] as string[],
+    skills: [],
+    completedCourses: [],
     linkedinUrl: '',
     githubUrl: '',
     portfolioUrl: '',
     city: '',
     isGraduated: false,
-    projects: [] as {
-      title: string;
-      description: string;
-      techStack: string[];
-      projectUrl: string;
-      repoUrl: string;
-    }[],
-    certifications: [] as { name: string; issuedBy: string; credentialUrl: string }[],
+    notificationPreferences: {},
+    projects: [],
+    certifications: [],
   });
 
   useEffect(() => {
@@ -338,7 +787,8 @@ export default function StudentProfilePage() {
       .then((data) => {
         const u = data.user;
         setUser(u);
-        setForm({
+        setPreviewUser(u);
+        setFormState({
           name: u.name ?? '',
           phone: u.phone ?? '',
           bio: u.bio ?? '',
@@ -367,6 +817,7 @@ export default function StudentProfilePage() {
             issuedBy: c.issuedBy ?? '',
             credentialUrl: c.credentialUrl ?? '',
           })),
+          notificationPreferences: u.notificationPreferences ?? {},
         });
       })
       .catch(() => setError('Failed to load profile'))
@@ -378,14 +829,23 @@ export default function StudentProfilePage() {
         if (data.badges) setBadges(data.badges);
       })
       .catch(console.error);
+
+    fetch('/api/student/academic-feedback')
+      .then((r) => r.json())
+      .then((data) => {
+        setAcademicReviews(data.reviews ?? []);
+        setJobRecommendations(data.recommendations ?? []);
+      })
+      .catch(console.error);
   }, []);
 
   function set(field: string, value: unknown) {
-    setForm((p) => ({ ...p, [field]: value }));
+    setFormState((p) => ({ ...p, [field]: value }));
   }
 
+  // Projects
   function addProject() {
-    setForm((p) => ({
+    setFormState((p) => ({
       ...p,
       projects: [
         ...p.projects,
@@ -394,34 +854,69 @@ export default function StudentProfilePage() {
     }));
   }
   function removeProject(i: number) {
-    setForm((p) => ({ ...p, projects: p.projects.filter((_, idx) => idx !== i) }));
+    setFormState((p) => ({ ...p, projects: p.projects.filter((_, idx) => idx !== i) }));
   }
   function setProject(i: number, field: string, value: unknown) {
-    setForm((p) => {
-      const updated = [...p.projects];
-      updated[i] = { ...updated[i], [field]: value };
-      return { ...p, projects: updated };
+    setFormState((p) => {
+      const u = [...p.projects];
+      u[i] = { ...u[i], [field]: value };
+      return { ...p, projects: u };
     });
   }
 
+  // Certifications
   function addCert() {
-    setForm((p) => ({
+    setFormState((p) => ({
       ...p,
       certifications: [...p.certifications, { name: '', issuedBy: '', credentialUrl: '' }],
     }));
   }
   function removeCert(i: number) {
-    setForm((p) => ({ ...p, certifications: p.certifications.filter((_, idx) => idx !== i) }));
+    setFormState((p) => ({ ...p, certifications: p.certifications.filter((_, idx) => idx !== i) }));
   }
   function setCert(i: number, field: string, value: string) {
-    setForm((p) => {
-      const updated = [...p.certifications];
-      updated[i] = { ...updated[i], [field]: value };
-      return { ...p, certifications: updated };
+    setFormState((p) => {
+      const u = [...p.certifications];
+      u[i] = { ...u[i], [field]: value };
+      return { ...p, certifications: u };
     });
   }
 
-  // ── Resume upload handler ──
+  async function handleGraduationToggle(isGraduated: boolean) {
+    setGraduationSaving(true);
+    setError('');
+    setFormState((p) => ({ ...p, isGraduated }));
+
+    try {
+      const res = await fetch('/api/users/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isGraduated }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? 'Failed to save graduation status.');
+        setFormState((p) => ({ ...p, isGraduated: !isGraduated }));
+        return;
+      }
+
+      setUser((prev) =>
+        prev ? { ...prev, isGraduated: data.user.isGraduated ?? isGraduated } : prev
+      );
+      setPreviewUser((prev) =>
+        prev ? { ...prev, isGraduated: data.user.isGraduated ?? isGraduated } : prev
+      );
+      set('isGraduated', data.user.isGraduated ?? isGraduated);
+    } catch {
+      setError('Network error. Please try again.');
+      setFormState((p) => ({ ...p, isGraduated: !isGraduated }));
+    } finally {
+      setGraduationSaving(false);
+    }
+  }
+
+  // Resume upload
   function handleFileSelect(file: File) {
     setResumeError('');
     setResumeSaved(false);
@@ -447,15 +942,12 @@ export default function StudentProfilePage() {
         setResumeError('Upload failed. Please try again.');
         return;
       }
-      const uploadedUrl = res[0].ufsUrl;
-      setUser((prev) => (prev ? { ...prev, resumeUrl: uploadedUrl } : prev));
+      setUser((prev) => (prev ? { ...prev, resumeUrl: res[0].ufsUrl } : prev));
       setResumeFile(null);
       setResumeSaved(true);
-      setShowUploadZone(false);
       setTimeout(() => setResumeSaved(false), 4000);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Upload failed. Please try again.';
-      setResumeError(message);
+      setResumeError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
     } finally {
       setResumeUploading(false);
     }
@@ -470,10 +962,6 @@ export default function StudentProfilePage() {
       });
       if (res.ok) {
         setUser((prev) => (prev ? { ...prev, resumeUrl: undefined } : prev));
-        setShowDeleteConfirm(false);
-        setResumeSaved(false);
-      } else {
-        setResumeError('Failed to delete resume. Please try again.');
         setShowDeleteConfirm(false);
       }
     } catch {
@@ -491,6 +979,7 @@ export default function StudentProfilePage() {
         name: form.name,
         phone: form.phone || undefined,
         bio: form.bio || undefined,
+        studentId: form.studentId || undefined,
         university: form.university || undefined,
         department: form.department || undefined,
         yearOfStudy: form.yearOfStudy ? parseInt(form.yearOfStudy) : undefined,
@@ -503,19 +992,36 @@ export default function StudentProfilePage() {
         portfolioUrl: form.portfolioUrl || undefined,
         city: form.city || undefined,
         isGraduated: form.isGraduated,
+        projects: form.projects.map((p) => ({
+          title: p.title,
+          description: p.description || '',
+          techStack: p.techStack,
+          projectUrl: p.projectUrl || undefined,
+          repoUrl: p.repoUrl || undefined,
+        })),
+        certifications: form.certifications.map((c) => ({
+          name: c.name,
+          issuedBy: c.issuedBy,
+          credentialUrl: c.credentialUrl || undefined,
+        })),
+        notificationPreferences: form.notificationPreferences,
       };
+
       const res = await fetch('/api/users/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
+
       if (!res.ok) {
         setError(data.error ?? 'Failed to save');
         return;
       }
-      setUser(data.user);
+      setUser((prev) => ({ ...data.user, resumeUrl: prev?.resumeUrl }));
+      setPreviewUser({ ...data.user, resumeUrl: user?.resumeUrl });
       setSaved(true);
+      set('isGraduated', data.user.isGraduated ?? false);
       setTimeout(() => setSaved(false), 3000);
     } catch {
       setError('Network error. Please try again.');
@@ -524,7 +1030,7 @@ export default function StudentProfilePage() {
     }
   }
 
-  if (fetching)
+  if (fetching) {
     return (
       <div
         style={{
@@ -540,12 +1046,13 @@ export default function StudentProfilePage() {
         </div>
       </div>
     );
+  }
 
   const completeness = user?.profileCompleteness ?? 0;
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
-      {/* Header */}
+      {/* ── Header ── */}
       <div
         style={{
           background: `linear-gradient(145deg, ${C.dark}, ${C.indigo})`,
@@ -570,37 +1077,21 @@ export default function StudentProfilePage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              {/* ✅ Avatar: <Image> instead of <img> */}
-              <div
-                style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 28,
-                  fontWeight: 900,
-                  color: '#fff',
-                  fontFamily: 'var(--font-display)',
-                  flexShrink: 0,
-                  border: '3px solid rgba(255,255,255,0.15)',
-                  overflow: 'hidden',
+              <ProfilePictureUpload
+                currentImage={user?.image ?? null}
+                name={user?.name ?? ''}
+                size={72}
+                radius="50%"
+                gradient="linear-gradient(135deg, #2563EB, #22D3EE)"
+                onUploaded={(url) => {
+                  setUser((p) => (p ? { ...p, image: url } : p));
+                  setPreviewUser((p) => (p ? { ...p, image: url } : p));
                 }}
-              >
-                {user?.image ? (
-                  <Image
-                    src={user.image}
-                    alt={user.name ?? ''}
-                    width={72}
-                    height={72}
-                    style={{ objectFit: 'cover' }}
-                  />
-                ) : (
-                  (user?.name?.charAt(0) ?? 'S')
-                )}
-              </div>
+                onRemoved={() => {
+                  setUser((p) => (p ? { ...p, image: undefined } : p));
+                  setPreviewUser((p) => (p ? { ...p, image: undefined } : p));
+                }}
+              />
               <div>
                 <h1
                   style={{
@@ -620,7 +1111,6 @@ export default function StudentProfilePage() {
                 </div>
               </div>
             </div>
-
             {/* Completeness */}
             <div
               style={{
@@ -666,8 +1156,8 @@ export default function StudentProfilePage() {
                     height: '100%',
                     background:
                       completeness >= 80
-                        ? 'linear-gradient(90deg, #10B981, #34D399)'
-                        : 'linear-gradient(90deg, #F59E0B, #FBBF24)',
+                        ? 'linear-gradient(90deg,#10B981,#34D399)'
+                        : 'linear-gradient(90deg,#F59E0B,#FBBF24)',
                     borderRadius: 999,
                     transition: 'width 0.4s ease',
                   }}
@@ -678,6 +1168,7 @@ export default function StudentProfilePage() {
         </div>
       </div>
 
+      {/* ── Body ── */}
       <div
         style={{
           maxWidth: 900,
@@ -725,7 +1216,7 @@ export default function StudentProfilePage() {
           </div>
         )}
 
-        {/* ── Section 1: Personal Info ── */}
+        {/* 1 — Personal Info */}
         <div
           style={{
             background: C.white,
@@ -788,7 +1279,7 @@ export default function StudentProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 2: Academic Info ── */}
+        {/* 2 — Academic Info */}
         <div
           style={{
             background: C.white,
@@ -888,10 +1379,11 @@ export default function StudentProfilePage() {
               <input
                 type="checkbox"
                 checked={form.isGraduated}
-                onChange={(e) => set('isGraduated', e.target.checked)}
+                onChange={(e) => void handleGraduationToggle(e.target.checked)}
+                disabled={graduationSaving}
                 style={{ width: 16, height: 16, accentColor: C.blue }}
               />
-              I have graduated
+              {graduationSaving ? 'Saving graduation status…' : 'I have graduated'}
             </label>
           </div>
           <div style={{ marginTop: 16 }}>
@@ -905,7 +1397,7 @@ export default function StudentProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 3: Resume Upload ── */}
+        {/* 3 — Resume (PDF Upload) */}
         <div
           style={{
             background: C.white,
@@ -1059,7 +1551,7 @@ export default function StudentProfilePage() {
             </div>
           )}
 
-          {/* Drag & drop upload zone */}
+          {/* Drop zone */}
           <label
             htmlFor="resume-upload"
             style={{
@@ -1084,8 +1576,8 @@ export default function StudentProfilePage() {
             onDrop={(e) => {
               e.preventDefault();
               setDragOver(false);
-              const file = e.dataTransfer.files?.[0];
-              if (file) handleFileSelect(file);
+              const f = e.dataTransfer.files?.[0];
+              if (f) handleFileSelect(f);
             }}
           >
             <input
@@ -1095,12 +1587,11 @@ export default function StudentProfilePage() {
               disabled={uploading}
               style={{ display: 'none' }}
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleFileSelect(file);
+                const f = e.target.files?.[0];
+                if (f) handleFileSelect(f);
                 e.target.value = '';
               }}
             />
-
             <div
               style={{
                 width: 56,
@@ -1112,7 +1603,6 @@ export default function StudentProfilePage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: resumeFile ? C.blue : C.light,
-                transition: 'all 0.2s',
               }}
             >
               {resumeUploading ? (
@@ -1131,7 +1621,6 @@ export default function StudentProfilePage() {
                 <FileText size={24} />
               )}
             </div>
-
             {resumeFile ? (
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: C.blue }}>
@@ -1151,7 +1640,7 @@ export default function StudentProfilePage() {
                   <span style={{ color: C.blue, fontWeight: 700, textDecoration: 'underline' }}>
                     click to browse
                   </span>{' '}
-                  — PDF only, max 4MB
+                  — PDF only, max 8MB
                 </div>
               </div>
             )}
@@ -1188,7 +1677,7 @@ export default function StudentProfilePage() {
                   gap: 7,
                   background: resumeUploading
                     ? '#93C5FD'
-                    : `linear-gradient(135deg, ${C.blue}, #1D4ED8)`,
+                    : `linear-gradient(135deg,${C.blue},#1D4ED8)`,
                   color: '#fff',
                   border: 'none',
                   borderRadius: 10,
@@ -1198,7 +1687,6 @@ export default function StudentProfilePage() {
                   cursor: uploading ? 'not-allowed' : 'pointer',
                   fontFamily: 'var(--font-display)',
                   boxShadow: resumeUploading ? 'none' : '0 4px 12px rgba(37,99,235,0.3)',
-                  transition: 'all 0.15s',
                 }}
               >
                 {resumeUploading ? (
@@ -1244,14 +1732,75 @@ export default function StudentProfilePage() {
               </button>
             </div>
           )}
-
           <div style={{ fontSize: 12, color: C.light, marginTop: 12 }}>
             📎 Your resume is automatically attached to every job application you submit on Nextern.
             {user?.resumeUrl ? ' Upload a new file to replace the current one.' : ''}
           </div>
         </div>
 
-        {/* ── Section 4: Skills ── */}
+        {/* ── NEW: In-Platform Resume ── */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 16,
+              paddingBottom: 14,
+              borderBottom: `1px solid ${C.bg}`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ color: C.teal }}>
+                <Layers size={18} />
+              </div>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 800,
+                  color: C.text,
+                  fontFamily: 'var(--font-display)',
+                }}
+              >
+                In-Platform Resume
+              </div>
+            </div>
+            <Link
+              href="/student/resume"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: C.tealBg,
+                color: C.teal,
+                border: `1px solid ${C.tealBorder}`,
+                padding: '7px 14px',
+                borderRadius: 9,
+                fontSize: 12,
+                fontWeight: 700,
+                textDecoration: 'none',
+              }}
+            >
+              <Eye size={13} /> Full View & Download
+            </Link>
+          </div>
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16, lineHeight: 1.6 }}>
+            This is your Nextern-generated resume — built from your profile data above. It updates
+            every time you <strong>Save Profile</strong>. Use the Resume Builder to download it as a
+            PDF.
+          </div>
+          <InPlatformResume user={previewUser} />
+        </div>
+
+        {/* 4 — Skills */}
         <div
           style={{
             background: C.white,
@@ -1275,7 +1824,7 @@ export default function StudentProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 5: Projects ── */}
+        {/* 5 — Projects */}
         <div
           style={{
             background: C.white,
@@ -1344,92 +1893,96 @@ export default function StudentProfilePage() {
               No projects added yet. Click Add Project to get started.
             </div>
           )}
-          {form.projects.map((proj, i) => (
-            <div
-              key={i}
-              style={{
-                border: `1px solid ${C.border}`,
-                borderRadius: 14,
-                padding: '18px 20px',
-                marginBottom: 12,
-                background: '#FAFBFC',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.gray }}>Project {i + 1}</div>
-                <button
-                  type="button"
-                  onClick={() => removeProject(i)}
-                  style={{
-                    background: C.dangerBg,
-                    color: C.danger,
-                    border: `1px solid ${C.dangerBorder}`,
-                    borderRadius: 8,
-                    padding: '4px 10px',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                  }}
-                >
-                  <Trash2 size={12} /> Remove
-                </button>
+          <div style={{ maxHeight: 600, overflowY: 'auto', paddingRight: 8 }}>
+            {form.projects.map((proj, i) => (
+              <div
+                key={i}
+                style={{
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 14,
+                  padding: '18px 20px',
+                  marginBottom: 12,
+                  background: '#FAFBFC',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.gray }}>
+                    Project {i + 1}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeProject(i)}
+                    style={{
+                      background: C.dangerBg,
+                      color: C.danger,
+                      border: `1px solid ${C.dangerBorder}`,
+                      borderRadius: 8,
+                      padding: '4px 10px',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <Trash2 size={12} /> Remove
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <Field label="Project Title" required>
+                    <input
+                      type="text"
+                      value={proj.title}
+                      onChange={(e) => setProject(i, 'title', e.target.value)}
+                      placeholder="e.g. E-Commerce Platform"
+                      style={inputBase}
+                    />
+                  </Field>
+                  <Field label="Live URL">
+                    <input
+                      type="url"
+                      value={proj.projectUrl}
+                      onChange={(e) => setProject(i, 'projectUrl', e.target.value)}
+                      placeholder="https://myproject.com"
+                      style={inputBase}
+                    />
+                  </Field>
+                  <Field label="GitHub Repo">
+                    <input
+                      type="url"
+                      value={proj.repoUrl}
+                      onChange={(e) => setProject(i, 'repoUrl', e.target.value)}
+                      placeholder="https://github.com/..."
+                      style={inputBase}
+                    />
+                  </Field>
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <Field label="Description">
+                    <textarea
+                      value={proj.description}
+                      onChange={(e) => setProject(i, 'description', e.target.value)}
+                      placeholder="What did you build and what technologies did you use?"
+                      rows={2}
+                      style={{ ...inputBase, resize: 'vertical' }}
+                    />
+                  </Field>
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <Field label="Tech Stack">
+                    <TagInput
+                      tags={proj.techStack}
+                      onChange={(v) => setProject(i, 'techStack', v)}
+                      placeholder="e.g. React, Node.js — press Enter"
+                    />
+                  </Field>
+                </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <Field label="Project Title" required>
-                  <input
-                    type="text"
-                    value={proj.title}
-                    onChange={(e) => setProject(i, 'title', e.target.value)}
-                    placeholder="e.g. E-Commerce Platform"
-                    style={inputBase}
-                  />
-                </Field>
-                <Field label="Live URL">
-                  <input
-                    type="url"
-                    value={proj.projectUrl}
-                    onChange={(e) => setProject(i, 'projectUrl', e.target.value)}
-                    placeholder="https://myproject.com"
-                    style={inputBase}
-                  />
-                </Field>
-                <Field label="GitHub Repo">
-                  <input
-                    type="url"
-                    value={proj.repoUrl}
-                    onChange={(e) => setProject(i, 'repoUrl', e.target.value)}
-                    placeholder="https://github.com/..."
-                    style={inputBase}
-                  />
-                </Field>
-              </div>
-              <div style={{ marginTop: 12 }}>
-                <Field label="Description">
-                  <textarea
-                    value={proj.description}
-                    onChange={(e) => setProject(i, 'description', e.target.value)}
-                    placeholder="What did you build and what technologies did you use?"
-                    rows={2}
-                    style={{ ...inputBase, resize: 'vertical' }}
-                  />
-                </Field>
-              </div>
-              <div style={{ marginTop: 12 }}>
-                <Field label="Tech Stack">
-                  <TagInput
-                    tags={proj.techStack}
-                    onChange={(v) => setProject(i, 'techStack', v)}
-                    placeholder="e.g. React, Node.js — press Enter"
-                  />
-                </Field>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        {/* ── Section 6: Certifications ── */}
+        {/* 6 — Certifications */}
         <div
           style={{
             background: C.white,
@@ -1498,74 +2051,76 @@ export default function StudentProfilePage() {
               No certifications added yet.
             </div>
           )}
-          {form.certifications.map((cert, i) => (
-            <div
-              key={i}
-              style={{
-                border: `1px solid ${C.border}`,
-                borderRadius: 14,
-                padding: '18px 20px',
-                marginBottom: 12,
-                background: '#FAFBFC',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.gray }}>
-                  Certificate {i + 1}
+          <div style={{ maxHeight: 400, overflowY: 'auto', paddingRight: 8 }}>
+            {form.certifications.map((cert, i) => (
+              <div
+                key={i}
+                style={{
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 14,
+                  padding: '18px 20px',
+                  marginBottom: 12,
+                  background: '#FAFBFC',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.gray }}>
+                    Certificate {i + 1}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeCert(i)}
+                    style={{
+                      background: C.dangerBg,
+                      color: C.danger,
+                      border: `1px solid ${C.dangerBorder}`,
+                      borderRadius: 8,
+                      padding: '4px 10px',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <Trash2 size={12} /> Remove
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => removeCert(i)}
-                  style={{
-                    background: C.dangerBg,
-                    color: C.danger,
-                    border: `1px solid ${C.dangerBorder}`,
-                    borderRadius: 8,
-                    padding: '4px 10px',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                  }}
-                >
-                  <Trash2 size={12} /> Remove
-                </button>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <Field label="Certificate Name" required>
+                    <input
+                      type="text"
+                      value={cert.name}
+                      onChange={(e) => setCert(i, 'name', e.target.value)}
+                      placeholder="e.g. AWS Cloud Practitioner"
+                      style={inputBase}
+                    />
+                  </Field>
+                  <Field label="Issued By" required>
+                    <input
+                      type="text"
+                      value={cert.issuedBy}
+                      onChange={(e) => setCert(i, 'issuedBy', e.target.value)}
+                      placeholder="e.g. Amazon Web Services"
+                      style={inputBase}
+                    />
+                  </Field>
+                  <Field label="Credential URL">
+                    <input
+                      type="url"
+                      value={cert.credentialUrl}
+                      onChange={(e) => setCert(i, 'credentialUrl', e.target.value)}
+                      placeholder="https://credential.net/..."
+                      style={inputBase}
+                    />
+                  </Field>
+                </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <Field label="Certificate Name" required>
-                  <input
-                    type="text"
-                    value={cert.name}
-                    onChange={(e) => setCert(i, 'name', e.target.value)}
-                    placeholder="e.g. AWS Cloud Practitioner"
-                    style={inputBase}
-                  />
-                </Field>
-                <Field label="Issued By" required>
-                  <input
-                    type="text"
-                    value={cert.issuedBy}
-                    onChange={(e) => setCert(i, 'issuedBy', e.target.value)}
-                    placeholder="e.g. Amazon Web Services"
-                    style={inputBase}
-                  />
-                </Field>
-                <Field label="Credential URL">
-                  <input
-                    type="url"
-                    value={cert.credentialUrl}
-                    onChange={(e) => setCert(i, 'credentialUrl', e.target.value)}
-                    placeholder="https://credential.net/..."
-                    style={inputBase}
-                  />
-                </Field>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        {/* ── Section 7: Online Presence ── */}
+        {/* 7 — Online Presence */}
         <div
           style={{
             background: C.white,
@@ -1646,7 +2201,7 @@ export default function StudentProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 7: Badges & Achievements ── */}
+        {/* 8 — Badges */}
         <div
           style={{
             background: C.white,
@@ -1678,8 +2233,11 @@ export default function StudentProfilePage() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))',
                 gap: 12,
+                maxHeight: 400,
+                overflowY: 'auto',
+                paddingRight: 8,
               }}
             >
               {badges.map((b) => (
@@ -1710,6 +2268,745 @@ export default function StudentProfilePage() {
           )}
         </div>
 
+        {/* 9 — Google Calendar */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<FileText size={18} />} label="Advisor & Department Feedback" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.7 }}>
+            Reviews and recommendations from your advisor or department head are saved here so you
+            can track formal profile feedback and job-specific guidance in one place.
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+              gap: 18,
+            }}
+            className="student-feedback-grid"
+          >
+            <div
+              style={{
+                borderRadius: 16,
+                border: `1px solid ${C.border}`,
+                background: '#F8FAFC',
+                padding: 18,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    background: C.tealBg,
+                    border: `1px solid ${C.tealBorder}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: C.tealDark,
+                  }}
+                >
+                  <FileText size={16} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
+                    Profile Reviews
+                  </div>
+                  <div style={{ fontSize: 12, color: C.gray }}>
+                    Overall academic and readiness guidance
+                  </div>
+                </div>
+              </div>
+
+              {academicReviews.length === 0 ? (
+                <div
+                  style={{
+                    borderRadius: 12,
+                    border: `1px dashed ${C.border}`,
+                    background: C.white,
+                    padding: '18px 16px',
+                    color: C.light,
+                    fontSize: 13,
+                    lineHeight: 1.7,
+                  }}
+                >
+                  No academic reviews have been added yet.
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {academicReviews.map((review) => {
+                    const readinessPalette =
+                      review.readinessLevel === 'ready'
+                        ? { bg: C.successBg, border: C.successBorder, color: C.success }
+                        : review.readinessLevel === 'priority_support'
+                          ? { bg: C.dangerBg, border: C.dangerBorder, color: C.danger }
+                          : { bg: '#FFFBEB', border: '#FDE68A', color: C.warning };
+
+                    return (
+                      <div
+                        key={review.id}
+                        style={{
+                          borderRadius: 14,
+                          border: `1px solid ${C.border}`,
+                          background: C.white,
+                          padding: 16,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
+                              {review.headline}
+                            </div>
+                            <div style={{ fontSize: 12, color: C.gray, marginTop: 4 }}>
+                              {review.reviewer.name}
+                              {review.reviewer.designation
+                                ? ` · ${review.reviewer.designation}`
+                                : ''}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '6px 10px',
+                                borderRadius: 999,
+                                background: readinessPalette.bg,
+                                border: `1px solid ${readinessPalette.border}`,
+                                color: readinessPalette.color,
+                                fontSize: 11,
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              {review.readinessLevel.replace(/_/g, ' ')}
+                            </span>
+                            {typeof review.profileScore === 'number' ? (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '6px 10px',
+                                  borderRadius: 999,
+                                  background: C.blueBg,
+                                  border: `1px solid ${C.blueBorder}`,
+                                  color: C.blue,
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  textTransform: 'uppercase',
+                                }}
+                              >
+                                Profile {review.profileScore}%
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <p
+                          style={{
+                            margin: '12px 0 0',
+                            fontSize: 13,
+                            color: C.gray,
+                            lineHeight: 1.7,
+                          }}
+                        >
+                          {review.summary}
+                        </p>
+
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                            gap: 10,
+                            marginTop: 12,
+                          }}
+                          className="student-feedback-detail-grid"
+                        >
+                          <div
+                            style={{
+                              borderRadius: 12,
+                              border: `1px solid ${C.successBorder}`,
+                              background: C.successBg,
+                              padding: 12,
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 800,
+                                color: C.success,
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.8,
+                              }}
+                            >
+                              Strengths
+                            </div>
+                            <div
+                              style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}
+                            >
+                              {review.strengths.length > 0 ? (
+                                review.strengths.map((item) => (
+                                  <span
+                                    key={`${review.id}:${item}:strength`}
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      padding: '5px 9px',
+                                      borderRadius: 999,
+                                      background: C.white,
+                                      border: `1px solid ${C.successBorder}`,
+                                      color: C.success,
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {item}
+                                  </span>
+                                ))
+                              ) : (
+                                <span style={{ fontSize: 12, color: C.gray }}>
+                                  No strengths listed.
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div
+                            style={{
+                              borderRadius: 12,
+                              border: '1px solid #FDE68A',
+                              background: '#FFFBEB',
+                              padding: 12,
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 800,
+                                color: C.warning,
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.8,
+                              }}
+                            >
+                              Growth Areas
+                            </div>
+                            <div
+                              style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}
+                            >
+                              {review.growthAreas.length > 0 ? (
+                                review.growthAreas.map((item) => (
+                                  <span
+                                    key={`${review.id}:${item}:gap`}
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      padding: '5px 9px',
+                                      borderRadius: 999,
+                                      background: C.white,
+                                      border: '1px solid #FDE68A',
+                                      color: '#B45309',
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {item}
+                                  </span>
+                                ))
+                              ) : (
+                                <span style={{ fontSize: 12, color: C.gray }}>
+                                  No growth areas listed.
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: 11, color: C.light, marginTop: 12 }}>
+                          Added {new Date(review.createdAt).toLocaleDateString()}
+                          {review.reviewer.institution ? ` · ${review.reviewer.institution}` : ''}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div
+              style={{
+                borderRadius: 16,
+                border: `1px solid ${C.border}`,
+                background: '#F8FAFC',
+                padding: 18,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    background: C.blueBg,
+                    border: `1px solid ${C.blueBorder}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: C.blue,
+                  }}
+                >
+                  <Briefcase size={16} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
+                    Job Recommendations
+                  </div>
+                  <div style={{ fontSize: 12, color: C.gray }}>
+                    Roles your teachers think you should prioritize
+                  </div>
+                </div>
+              </div>
+
+              {jobRecommendations.length === 0 ? (
+                <div
+                  style={{
+                    borderRadius: 12,
+                    border: `1px dashed ${C.border}`,
+                    background: C.white,
+                    padding: '18px 16px',
+                    color: C.light,
+                    fontSize: 13,
+                    lineHeight: 1.7,
+                  }}
+                >
+                  No job recommendations have been added yet.
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {jobRecommendations.map((recommendation) => {
+                    const priorityPalette =
+                      recommendation.priority === 'high'
+                        ? { bg: C.dangerBg, border: C.dangerBorder, color: C.danger }
+                        : recommendation.priority === 'medium'
+                          ? { bg: '#FFFBEB', border: '#FDE68A', color: C.warning }
+                          : { bg: C.blueBg, border: C.blueBorder, color: C.blue };
+
+                    return (
+                      <div
+                        key={recommendation.id}
+                        style={{
+                          borderRadius: 14,
+                          border: `1px solid ${C.border}`,
+                          background: C.white,
+                          padding: 16,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
+                              {recommendation.title}
+                            </div>
+                            <div style={{ fontSize: 12, color: C.gray, marginTop: 4 }}>
+                              {recommendation.job
+                                ? `${recommendation.job.companyName} · ${recommendation.job.type.replace(/-/g, ' ')}`
+                                : recommendation.recommender.name}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '6px 10px',
+                                borderRadius: 999,
+                                background: priorityPalette.bg,
+                                border: `1px solid ${priorityPalette.border}`,
+                                color: priorityPalette.color,
+                                fontSize: 11,
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              {recommendation.priority}
+                            </span>
+                            {typeof recommendation.fitScore === 'number' ? (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '6px 10px',
+                                  borderRadius: 999,
+                                  background: C.successBg,
+                                  border: `1px solid ${C.successBorder}`,
+                                  color: C.success,
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  textTransform: 'uppercase',
+                                }}
+                              >
+                                Fit {recommendation.fitScore}%
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <p
+                          style={{
+                            margin: '12px 0 0',
+                            fontSize: 13,
+                            color: C.gray,
+                            lineHeight: 1.7,
+                          }}
+                        >
+                          {recommendation.description}
+                        </p>
+
+                        {recommendation.focusSkills.length > 0 ? (
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+                            {recommendation.focusSkills.map((skill) => (
+                              <span
+                                key={`${recommendation.id}:${skill}`}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '5px 9px',
+                                  borderRadius: 999,
+                                  background: C.blueBg,
+                                  border: `1px solid ${C.blueBorder}`,
+                                  color: C.blue,
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            flexWrap: 'wrap',
+                            marginTop: 12,
+                          }}
+                        >
+                          <div style={{ fontSize: 11, color: C.light }}>
+                            Recommended by {recommendation.recommender.name}
+                            {recommendation.recommender.designation
+                              ? ` · ${recommendation.recommender.designation}`
+                              : ''}
+                          </div>
+                          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                            {recommendation.job ? (
+                              <Link
+                                href={`/student/jobs/${recommendation.job.id}`}
+                                style={{
+                                  color: C.blue,
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  textDecoration: 'none',
+                                }}
+                              >
+                                View Job
+                              </Link>
+                            ) : null}
+                            {recommendation.resourceUrl ? (
+                              <a
+                                href={recommendation.resourceUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                  color: C.teal,
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  textDecoration: 'none',
+                                }}
+                              >
+                                Open Resource
+                              </a>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div
+          id="calendar"
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Calendar size={18} />} label="Google Calendar" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16, lineHeight: 1.6 }}>
+            Connect your Google Calendar to automatically sync job application deadlines, scheduled
+            interviews, and registered events. Updates happen instantly — no manual tracking needed.
+          </div>
+          <CalendarConnectButton isConnected={user?.googleCalendarConnected ?? false} />
+        </div>
+
+        {/* 10 — Notification Preferences */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Bell size={18} />} label="Notification Preferences" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
+            Control which notifications you receive. All are enabled by default. Changes are saved
+            when you click <strong>Save Profile</strong>.
+          </div>
+
+          {/* Application Status group */}
+          <div style={{ marginBottom: 24 }}>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: C.light,
+                letterSpacing: 1,
+                textTransform: 'uppercase' as const,
+                marginBottom: 12,
+              }}
+            >
+              Application Status Updates
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                {
+                  key: 'application_under_review',
+                  label: '👀 Under Review',
+                  desc: 'When an employer starts reviewing your application',
+                },
+                {
+                  key: 'application_shortlisted',
+                  label: '🎉 Shortlisted',
+                  desc: 'When you get shortlisted for a role',
+                },
+                {
+                  key: 'application_assessment_sent',
+                  label: '📋 Assessment Sent',
+                  desc: 'When an assessment is assigned to you',
+                },
+                {
+                  key: 'application_interview',
+                  label: '📅 Interview Scheduled',
+                  desc: 'When an interview is booked for you',
+                },
+                {
+                  key: 'application_hired',
+                  label: '🎊 Hired',
+                  desc: 'When you are selected for a role',
+                },
+                {
+                  key: 'application_rejected',
+                  label: '📩 Not Selected',
+                  desc: 'When an employer decides not to proceed',
+                },
+                {
+                  key: 'application_withdrawn',
+                  label: '↩️ Withdrawn',
+                  desc: 'When your application is withdrawn',
+                },
+              ].map((item) => {
+                const isOn = form.notificationPreferences[item.key] !== false;
+                return (
+                  <div
+                    key={item.key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      background: '#FAFBFC',
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                        {item.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        set('notificationPreferences', {
+                          ...form.notificationPreferences,
+                          [item.key]: !isOn,
+                        })
+                      }
+                      style={{
+                        width: 44,
+                        height: 24,
+                        borderRadius: 999,
+                        border: 'none',
+                        background: isOn ? C.blue : C.border,
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background 0.2s',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: '50%',
+                          background: C.white,
+                          position: 'absolute',
+                          top: 3,
+                          left: isOn ? 23 : 3,
+                          transition: 'left 0.2s',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                        }}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Other notifications group */}
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: C.light,
+                letterSpacing: 1,
+                textTransform: 'uppercase' as const,
+                marginBottom: 12,
+              }}
+            >
+              Other Notifications
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                {
+                  key: 'deadline_reminders',
+                  label: '⏰ Deadline Reminders',
+                  desc: '3 days before a saved job closes',
+                },
+                {
+                  key: 'job_matches',
+                  label: '⚡ Job Matches',
+                  desc: 'When a new job matches your profile',
+                },
+                {
+                  key: 'badge_earned',
+                  label: '🏅 Badges Earned',
+                  desc: 'When you unlock a new achievement',
+                },
+                {
+                  key: 'advisor_notes',
+                  label: '💬 Advisor Notes',
+                  desc: 'When your advisor sends you a note',
+                },
+              ].map((item) => {
+                const isOn = form.notificationPreferences[item.key] !== false;
+                return (
+                  <div
+                    key={item.key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      background: '#FAFBFC',
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                        {item.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        set('notificationPreferences', {
+                          ...form.notificationPreferences,
+                          [item.key]: !isOn,
+                        })
+                      }
+                      style={{
+                        width: 44,
+                        height: 24,
+                        borderRadius: 999,
+                        border: 'none',
+                        background: isOn ? C.blue : C.border,
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background 0.2s',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: '50%',
+                          background: C.white,
+                          position: 'absolute',
+                          top: 3,
+                          left: isOn ? 23 : 3,
+                          transition: 'left 0.2s',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                        }}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* Save button */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}>
           <button
@@ -1720,7 +3017,7 @@ export default function StudentProfilePage() {
               alignItems: 'center',
               gap: 8,
               padding: '13px 32px',
-              background: saving ? '#93C5FD' : `linear-gradient(135deg, ${C.blue}, #1D4ED8)`,
+              background: saving ? '#93C5FD' : `linear-gradient(135deg,${C.blue},#1D4ED8)`,
               color: C.white,
               border: 'none',
               borderRadius: 12,
@@ -1737,7 +3034,7 @@ export default function StudentProfilePage() {
         </div>
       </div>
 
-      {/* ── Delete Resume Confirmation Modal ── */}
+      {/* Delete resume modal */}
       {showDeleteConfirm && (
         <div
           style={{
@@ -1848,6 +3145,12 @@ export default function StudentProfilePage() {
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 980px) {
+          .student-feedback-grid,
+          .student-feedback-detail-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
       `}</style>
     </div>
   );

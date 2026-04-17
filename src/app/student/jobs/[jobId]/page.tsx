@@ -7,6 +7,7 @@ import { getUsageSummary } from '@/lib/premium';
 import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
 import { Job } from '@/models/Job';
+import { JobView } from '@/models/JobView';
 import { Application } from '@/models/Application';
 import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
@@ -33,8 +34,11 @@ import {
   Wrench,
 } from 'lucide-react';
 import JobApplyButton from './JobApplyButton';
+import MessageEmployerButton from './MessageEmployerButton';
 import AISkillAnalysisCard from './AISkillAnalysisCard';
 import JobFitScoreCard from './JobFitScoreCard';
+import StudentReviewForm from '@/components/reviews/StudentReviewForm';
+import ReputationHistory from '@/components/reviews/ReputationHistory';
 
 const TYPE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   internship: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE' },
@@ -61,8 +65,26 @@ async function getJobData(jobId: string, userId: string) {
 
   if (!job) return null;
 
-  // Increment view count
-  Job.findByIdAndUpdate(jobId, { $inc: { viewCount: 1 } }).exec();
+  const viewedAt = new Date();
+  const jobViewSet: Record<string, unknown> = { lastViewedAt: viewedAt };
+  if (existingApp) jobViewSet.isApplied = true;
+
+  await Promise.all([
+    Job.findByIdAndUpdate(jobId, { $inc: { viewCount: 1 } }),
+    JobView.findOneAndUpdate(
+      { studentId: oid, jobId },
+      {
+        $inc: { viewCount: 1 },
+        $set: jobViewSet,
+        $setOnInsert: {
+          studentId: oid,
+          jobId,
+          firstViewedAt: viewedAt,
+        },
+      },
+      { upsert: true }
+    ),
+  ]);
 
   // Compute fit score
   const userSkills = new Set((student?.skills ?? []).map((s: string) => s.toLowerCase()));
@@ -83,6 +105,7 @@ async function getJobData(jobId: string, userId: string) {
     student,
     job,
     hasApplied: !!existingApp,
+    applicationId: existingApp?._id?.toString() ?? null,
     applicationStatus: existingApp?.status ?? null,
     savedAnalysis: existingApp?.fitScoreComputedAt
       ? {
@@ -123,6 +146,7 @@ export default async function StudentJobDetailPage({
     student,
     job,
     hasApplied,
+    applicationId,
     applicationStatus,
     savedAnalysis,
     fitScore,
@@ -143,6 +167,7 @@ export default async function StudentJobDetailPage({
         name: student?.name ?? 'Student',
         email: student?.email ?? '',
         image: student?.image,
+        userId: session.user.id,
         subtitle:
           [student?.university, student?.department].filter(Boolean).join(' | ') ||
           'Student workspace',
@@ -382,6 +407,12 @@ export default async function StudentJobDetailPage({
                 isActive={isActive}
                 isExpired={isExpired ?? false}
               />
+              {hasApplied && (
+                <MessageEmployerButton
+                  employerId={job.employerId.toString()}
+                  applicationStatus={applicationStatus}
+                />
+              )}
               {/* ✅ Fixed: <a> → <Link> for internal navigation */}
               <Link
                 href="/student/jobs"
@@ -442,6 +473,23 @@ export default async function StudentJobDetailPage({
                   ))}
                 </ul>
               </Panel>
+            )}
+
+            {/* Employer Reputation */}
+            <Panel title="Company Reputation" description="">
+              <div style={{ margin: '-10px 0' }}>
+                <ReputationHistory userId={job.employerId.toString()} userRole="employer" />
+              </div>
+            </Panel>
+
+            {/* Student Review Form (if hired) */}
+            {applicationStatus === 'hired' && (
+              <div style={{ marginTop: 8 }}>
+                <StudentReviewForm
+                  applicationId={applicationId || ''}
+                  employerId={job.employerId.toString()}
+                />
+              </div>
             )}
           </div>
 

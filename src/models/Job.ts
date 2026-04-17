@@ -15,29 +15,28 @@ export interface IJob extends Document {
   applicationDeadline?: Date; // stored for M3 calendar reminders
   startDate?: Date;
   durationMonths?: number; // typical BD internships: 3 months
-
   // ── Targeting filters ──────────────────────────────────
+
   targetUniversities: string[]; // empty = open to all universities
   targetDepartments: string[]; // empty = open to all departments
   targetYears: number[]; // empty = open to all years
-
   // ── Internship Requirement Profile (feeds M2 AI engine) ─
+
   requiredSkills: string[]; // Sabbir's gap engine reads this
   minimumCGPA?: number; // 0.00–4.00 BD scale
   requiredCourses: string[]; // Sabbir's fit score reads this
   experienceExpectations?: string;
-  preferredCertifications: string[];
+  preferredCertifications: string[]; // ── Batch hiring ───────────────────────────────────────
 
-  // ── Batch hiring ───────────────────────────────────────
   isBatchHiring: boolean;
-  batchUniversities: string[];
+  batchUniversities: string[]; // ── Metadata ───────────────────────────────────────────
 
-  // ── Metadata ───────────────────────────────────────────
   applicationCount: number; // incremented on each application
   viewCount: number; // incremented on each JobView
   isActive: boolean;
   isPremiumListing: boolean;
   academicSession?: string; // 'Spring 2026'
+  ownerGoogleCalendarEventId?: string;
 }
 
 const JobSchema = new Schema<IJob>(
@@ -75,6 +74,7 @@ const JobSchema = new Schema<IJob>(
     isActive: { type: Boolean, default: true },
     isPremiumListing: { type: Boolean, default: false },
     academicSession: { type: String },
+    ownerGoogleCalendarEventId: { type: String },
   },
   { timestamps: true }
 );

@@ -262,9 +262,9 @@ export default function AISkillAnalysisCard({
               See how ready you are for {jobTitle}
             </h2>
             <p style={{ margin: '10px 0 0', color: '#D6E4FF', fontSize: 14, lineHeight: 1.7 }}>
-              Gemini compares your profile with this role and highlights missing skills, strengths,
-              and next steps. If Gemini is unavailable, the card now shows that clearly and falls
-              back to local backup logic.
+              Nextern AI compares your profile with this role and highlights missing skills,
+              strengths, and next steps. If Nextern AI is unavailable, the card now shows that
+              clearly and falls back to local backup logic.
             </p>
           </div>
 

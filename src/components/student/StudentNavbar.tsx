@@ -3,22 +3,27 @@
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import {
-  Bell,
   BriefcaseBusiness,
   ChevronDown,
   ClipboardList,
+  FolderKanban,
   Home,
   LogOut,
   Mail,
   UserCircle2,
+  Wallet,
 } from 'lucide-react';
 import { useState } from 'react';
+import { NexternLogo } from '@/components/brand/NexternLogo';
+import NotificationBell from '@/components/notifications/NotificationBell';
+import MessageBell from '@/components/messaging/MessageBell';
 
 interface NavbarProps {
   user: {
     name: string;
     email: string;
     image?: string;
+    userId: string;
     opportunityScore: number;
     profileCompleteness: number;
     unreadNotifications: number;
@@ -28,6 +33,7 @@ interface NavbarProps {
 
 export default function StudentNavbar({ user }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [freelanceMenuOpen, setFreelanceMenuOpen] = useState(false);
   const initials = user.name
     .split(' ')
     .map((part) => part[0])
@@ -73,27 +79,14 @@ export default function StudentNavbar({ user }: NavbarProps) {
             textDecoration: 'none',
           }}
         >
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 12,
-              background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <span style={{ color: '#FFFFFF', fontWeight: 900, fontFamily: 'var(--font-display)' }}>
-              N
-            </span>
-          </div>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-display)' }}>
-              nextern<span style={{ color: '#22D3EE' }}>.</span>
-            </div>
-            <div style={{ fontSize: 12, color: '#94A3B8' }}>Student dashboard</div>
-          </div>
+          <NexternLogo
+            markSize={38}
+            markRadius={12}
+            textSize={18}
+            textColor="#FFFFFF"
+            subtitle="Student dashboard"
+            subtitleColor="#94A3B8"
+          />
         </Link>
 
         {/* ── Nav links + user menu ── */}
@@ -147,41 +140,181 @@ export default function StudentNavbar({ user }: NavbarProps) {
             Applications
           </Link>
 
-          {/* Messages chip */}
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '8px 12px',
-              borderRadius: 999,
-              background: 'rgba(255,255,255,0.05)',
-              color: '#D8E3F1',
-              fontSize: 12,
-              fontWeight: 700,
-            }}
-          >
-            <Mail size={14} strokeWidth={2} color="#22D3EE" />
-            {user.unreadMessages}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setFreelanceMenuOpen((value) => !value)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                border: 'none',
+                background: 'transparent',
+                color: '#CBD5E1',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              <FolderKanban size={15} strokeWidth={2} />
+              Freelance
+              <ChevronDown
+                size={14}
+                strokeWidth={2}
+                style={{
+                  transform: freelanceMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease',
+                }}
+              />
+            </button>
+
+            {freelanceMenuOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 10px)',
+                  left: 0,
+                  zIndex: 90,
+                  width: 260,
+                  background: '#FFFFFF',
+                  borderRadius: 18,
+                  border: '1px solid #D9E2EC',
+                  boxShadow: '0 18px 42px rgba(15,23,42,0.12)',
+                  padding: 10,
+                }}
+              >
+                {[
+                  {
+                    href: '/student/freelance?view=board',
+                    label: 'Marketplace',
+                    description: 'Browse the live freelance board',
+                    icon: <FolderKanban size={15} strokeWidth={2} />,
+                  },
+                  {
+                    href: '/student/freelance?view=services',
+                    label: 'My Services',
+                    description: 'Manage your service listings',
+                    icon: <BriefcaseBusiness size={15} strokeWidth={2} />,
+                  },
+                  {
+                    href: '/student/freelance?view=freelancerOrders',
+                    label: 'Freelancer Orders',
+                    description: 'Track work you are delivering',
+                    icon: <ClipboardList size={15} strokeWidth={2} />,
+                  },
+                  {
+                    href: '/student/freelance?view=finance',
+                    label: 'Earnings & Invoices',
+                    description: 'View balance, invoices, and withdrawals',
+                    icon: <Wallet size={15} strokeWidth={2} />,
+                  },
+                ].map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setFreelanceMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 10,
+                      padding: '11px 12px',
+                      borderRadius: 12,
+                      textDecoration: 'none',
+                      color: '#1E293B',
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      marginBottom: 6,
+                    }}
+                    onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
+                    onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
+                  >
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 10,
+                        background: '#EFF6FF',
+                        color: '#2563EB',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {item.icon}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                        {item.label}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                        {item.description}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Alerts chip */}
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '8px 12px',
-              borderRadius: 999,
-              background: 'rgba(255,255,255,0.05)',
-              color: '#D8E3F1',
-              fontSize: 12,
-              fontWeight: 700,
-            }}
-          >
-            <Bell size={14} strokeWidth={2} color="#22D3EE" />
-            {user.unreadNotifications}
-          </div>
+          {/* Messages chip — static */}
+          {user.userId ? (
+            <MessageBell
+              userId={user.userId}
+              initialUnread={user.unreadMessages}
+              href="/student/messages"
+            />
+          ) : (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '9px 12px',
+                borderRadius: 999,
+                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.05)',
+                color: '#D8E3F1',
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              <span style={{ display: 'inline-flex', color: '#22D3EE' }}>
+                <Mail size={14} strokeWidth={2} />
+              </span>
+              <span>Messages</span>
+              <span style={{ color: '#FFFFFF' }}>{user.unreadMessages}</span>
+            </div>
+          )}
+
+          {/* ── Real-time Notification Bell ── */}
+          {user.userId ? (
+            <NotificationBell
+              userId={user.userId}
+              initialUnread={user.unreadNotifications}
+              notificationsHref="/student/notifications"
+            />
+          ) : (
+            // Fallback static chip if userId not provided
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '9px 12px',
+                borderRadius: 999,
+                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.05)',
+                color: '#D8E3F1',
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              <span style={{ display: 'inline-flex', color: '#22D3EE' }}>🔔</span>
+              <span>Alerts</span>
+              <span style={{ color: '#FFFFFF' }}>{user.unreadNotifications}</span>
+            </div>
+          )}
 
           {/* User menu */}
           <div style={{ position: 'relative' }}>
@@ -402,6 +535,48 @@ export default function StudentNavbar({ user }: NavbarProps) {
                       </div>
                       <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
                         Track your pipeline
+                      </div>
+                    </div>
+                  </Link>
+
+                  <Link
+                    href="/student/freelance?view=board"
+                    onClick={() => setMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '11px 12px',
+                      borderRadius: 12,
+                      textDecoration: 'none',
+                      color: '#1E293B',
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                    }}
+                    onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
+                    onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
+                  >
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 10,
+                        background: '#EFF6FF',
+                        color: '#2563EB',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <FolderKanban size={15} strokeWidth={2} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                        Freelance Board
+                      </div>
+                      <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                        Offer services and manage gigs
                       </div>
                     </div>
                   </Link>

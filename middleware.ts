@@ -25,13 +25,14 @@ type MiddlewareToken = {
   role?: UserRole;
   isVerified?: boolean;
   verificationStatus?: VerificationStatus;
+  mustChangePassword?: boolean;
 };
 
 // Protected route prefixes and their allowed roles
 const ROLE_ROUTES: { prefix: string; roles: UserRole[] }[] = [
   { prefix: '/student', roles: ['student'] },
   { prefix: '/employer', roles: ['employer'] },
-  { prefix: '/advisor', roles: ['advisor'] },
+  { prefix: '/advisor', roles: ['advisor', 'dept_head'] },
   { prefix: '/dept', roles: ['dept_head'] },
   { prefix: '/admin', roles: ['admin'] },
 ];
@@ -39,13 +40,12 @@ const ROLE_ROUTES: { prefix: string; roles: UserRole[] }[] = [
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Skip middleware for static assets and NextAuth internals
+  // Skip middleware for static assets and API routes
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
     pathname.includes('.') ||
-    pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/api/uploadthing')
+    pathname.startsWith('/api/')
   ) {
     return NextResponse.next();
   }
@@ -81,6 +81,10 @@ export default async function middleware(req: NextRequest) {
     const verifyUrl = new URL('/verify-email', req.url);
     verifyUrl.searchParams.set('email', token?.email ?? '');
     return NextResponse.redirect(verifyUrl);
+  }
+
+  if (token?.mustChangePassword && pathname !== '/setup-password') {
+    return NextResponse.redirect(new URL('/setup-password', req.url));
   }
 
   if (

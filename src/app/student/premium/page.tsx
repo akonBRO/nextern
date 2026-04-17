@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { PLANS } from '@/lib/subscription-plans';
 import StripeCheckoutModal from '@/components/payments/StripeCheckoutModal';
+import { NexternLogo } from '@/components/brand/NexternLogo';
+import { PaymentMethodLogo, type PaymentMethodId } from '@/components/payments/PaymentMethodLogo';
 
 const plan = PLANS.student_premium;
 
@@ -33,12 +35,12 @@ const C = {
   success: '#10B981',
 };
 
-type PayMethod = 'bkash' | 'visa' | 'mastercard';
+type PayMethod = PaymentMethodId;
 
-const PAY_METHODS: { id: PayMethod; label: string; logo: string; hint: string }[] = [
-  { id: 'bkash', label: 'bKash', logo: '🔴', hint: 'Redirect to bKash checkout' },
-  { id: 'visa', label: 'Visa', logo: '💳', hint: 'Secure card payment via Stripe' },
-  { id: 'mastercard', label: 'Mastercard', logo: '💳', hint: 'Secure card payment via Stripe' },
+const PAY_METHODS: { id: PayMethod; label: string; hint: string }[] = [
+  { id: 'bkash', label: 'bKash', hint: 'Redirect to bKash checkout' },
+  { id: 'visa', label: 'Visa', hint: 'Secure card payment via Stripe' },
+  { id: 'mastercard', label: 'Mastercard', hint: 'Secure card payment via Stripe' },
 ];
 
 const FEATURE_ICONS: Record<string, ElementType> = {
@@ -174,42 +176,15 @@ export default function StudentPremiumPage() {
             href="/student/dashboard"
             style={{ display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none' }}
           >
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 14,
-                background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 12px 24px rgba(34,211,238,0.2)',
-              }}
-            >
-              <span
-                style={{
-                  color: '#fff',
-                  fontSize: 18,
-                  fontWeight: 900,
-                  fontFamily: 'var(--font-display)',
-                }}
-              >
-                N
-              </span>
-            </div>
-            <div>
-              <div
-                style={{
-                  color: '#fff',
-                  fontSize: 20,
-                  fontWeight: 800,
-                  fontFamily: 'var(--font-display)',
-                }}
-              >
-                nextern<span style={{ color: '#22D3EE' }}>.</span>
-              </div>
-              <div style={{ color: '#9FB4D0', fontSize: 12 }}>Student</div>
-            </div>
+            <NexternLogo
+              markSize={40}
+              markRadius={14}
+              markShadow="0 12px 24px rgba(34,211,238,0.2)"
+              textSize={20}
+              textColor="#fff"
+              subtitle="Student"
+              subtitleColor="#9FB4D0"
+            />
           </Link>
 
           <Link
@@ -544,7 +519,7 @@ export default function StudentPremiumPage() {
                   { feature: 'Training Paths', free: 'No', premium: 'Yes' },
                   { feature: 'Resume AI Review', free: 'No', premium: 'Yes' },
                   { feature: 'GER PDF Export', free: 'No', premium: 'Yes' },
-                  { feature: 'Priority Job Feed', free: 'No', premium: 'Yes' },
+                  { feature: 'Smart Job Recommendations', free: '10/month', premium: 'Unlimited' },
                 ].map((row) => (
                   <div key={row.feature} style={{ display: 'contents' }}>
                     <div
@@ -674,7 +649,7 @@ export default function StudentPremiumPage() {
                       gap: 4,
                     }}
                   >
-                    <span style={{ fontSize: 20 }}>{paymentMethod.logo}</span>
+                    <PaymentMethodLogo method={paymentMethod.id} height={28} />
                     <span
                       style={{
                         fontSize: 12,
@@ -785,57 +760,6 @@ export default function StudentPremiumPage() {
           </div>
         </div>
       </main>
-
-      <footer
-        style={{
-          background: '#1E293B',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-          marginTop: 48,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1320,
-            margin: '0 auto',
-            padding: '20px 24px 26px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 12,
-            flexWrap: 'wrap',
-          }}
-        >
-          <div>
-            <div
-              style={{
-                color: '#fff',
-                fontSize: 14,
-                fontWeight: 700,
-                fontFamily: 'var(--font-display)',
-              }}
-            >
-              nextern<span style={{ color: '#22D3EE' }}>.</span>
-            </div>
-            <div style={{ color: '#94A3B8', fontSize: 12, marginTop: 4 }}>
-              Premium unlocks your full potential.
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
-            <Link
-              href="/student/dashboard"
-              style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}
-            >
-              Dashboard
-            </Link>
-            <a
-              href="mailto:support@nextern.app"
-              style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}
-            >
-              Support
-            </a>
-          </div>
-        </div>
-      </footer>
 
       <style>{`
         @media (max-width: 860px) {

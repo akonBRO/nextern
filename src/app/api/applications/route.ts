@@ -8,6 +8,8 @@ import { connectDB } from '@/lib/db';
 import { Application } from '@/models/Application';
 import { UpdateApplicationStatusSchema } from '@/lib/validations';
 import { onApplicationStatusChanged } from '@/lib/events';
+import { Job } from '@/models/Job';
+import { syncInterviewToCalendar, removeCalendarEvent } from '@/lib/calendar';
 
 // ── GET ───────────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
@@ -87,7 +89,8 @@ export async function PATCH(req: NextRequest) {
 
     await connectDB();
 
-    const application = await Application.findById(appId);
+    // Fetch application
+    const application = await Application.findById(appId).lean();
     if (!application) {
       return NextResponse.json({ error: 'Application not found' }, { status: 404 });
     }
@@ -95,13 +98,16 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const previousStatus = application.status;
+    const newStatus = parsed.data.status;
+
     const updated = await Application.findByIdAndUpdate(
       appId,
       {
-        $set: { status: parsed.data.status },
+        $set: { status: newStatus },
         $push: {
           statusHistory: {
-            status: parsed.data.status,
+            status: newStatus,
             changedAt: new Date(),
             changedBy: session.user.id,
             note: parsed.data.note,
@@ -111,10 +117,42 @@ export async function PATCH(req: NextRequest) {
       { new: true }
     );
 
-    // Fire event hook for badge/notification system
-    await onApplicationStatusChanged(application.studentId.toString(), parsed.data.status).catch(
-      () => {}
-    );
+    // ── Calendar sync on status change ────────────────────────────────────
+    if (newStatus !== previousStatus) {
+      await onApplicationStatusChanged(application.studentId.toString(), newStatus).catch(() => {});
+
+      // Handle calendar events based on new status
+      try {
+        if (newStatus === 'interview_scheduled' && updated?.interviewScheduledAt) {
+          const job = await Job.findById(application.jobId).select('title companyName').lean();
+
+          if (job) {
+            await syncInterviewToCalendar(
+              application.studentId.toString(),
+              appId,
+              job.title,
+              job.companyName,
+              updated.interviewScheduledAt,
+              updated.googleCalendarEventId // pass existing ID to update if rescheduled
+            );
+          }
+        } else if (newStatus === 'withdrawn' || newStatus === 'rejected') {
+          // Remove calendar event when application ends
+          if (updated?.googleCalendarEventId) {
+            await removeCalendarEvent(
+              application.studentId.toString(),
+              updated.googleCalendarEventId
+            );
+            await Application.findByIdAndUpdate(appId, {
+              $unset: { googleCalendarEventId: '' },
+            });
+          }
+        }
+      } catch (calErr) {
+        console.error('[CALENDAR SYNC ON STATUS CHANGE]', calErr);
+        // non-blocking — never crash the response
+      }
+    }
 
     return NextResponse.json({ message: 'Status updated successfully', application: updated });
   } catch (error) {

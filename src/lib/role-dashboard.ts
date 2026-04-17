@@ -7,6 +7,7 @@ import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { AdvisorAction } from '@/models/AdvisorAction';
 import { DepartmentBenchmark } from '@/models/DepartmentBenchmark';
+import { Review } from '@/models/Review';
 
 export type ChromeUser = {
   name: string;
@@ -15,6 +16,7 @@ export type ChromeUser = {
   subtitle: string;
   unreadNotifications: number;
   unreadMessages: number;
+  userId?: string;
 };
 
 export type PipelineMetric = {
@@ -109,6 +111,17 @@ export type AdvisorDashboardData = {
     scheduledAt: string;
   }[];
   topSkillGaps: string[];
+  reputationStats: {
+    totalReviews: number;
+    totalRecommendations: number;
+    avgWorkQuality: number;
+  };
+  recentRecommendations: {
+    id: string;
+    studentName: string;
+    companyName: string;
+    text: string;
+  }[];
 };
 
 export type DepartmentDashboardData = {
@@ -231,20 +244,24 @@ function normalizeDashboardIdentity(identity: string | { userId?: string; email?
 
 async function resolveRoleUser<TSelected extends { _id: mongoose.Types.ObjectId }>(
   identity: string | { userId?: string; email?: string },
-  role: 'employer' | 'advisor' | 'dept_head',
+  role: 'employer' | 'advisor' | 'dept_head' | Array<'employer' | 'advisor' | 'dept_head'>,
   select: string
 ) {
   const { userId, email } = normalizeDashboardIdentity(identity);
   let user: TSelected | null = null;
   let oid: mongoose.Types.ObjectId | null = null;
+  const roles = Array.isArray(role) ? role : [role];
+  const roleQuery = roles.length === 1 ? roles[0] : { $in: roles };
 
   if (typeof userId === 'string' && mongoose.Types.ObjectId.isValid(userId)) {
     oid = new mongoose.Types.ObjectId(userId);
-    user = (await User.findOne({ _id: oid, role }).select(select).lean()) as TSelected | null;
+    user = (await User.findOne({ _id: oid, role: roleQuery })
+      .select(select)
+      .lean()) as TSelected | null;
   }
 
   if (!user && email) {
-    user = (await User.findOne({ email: email.toLowerCase().trim(), role })
+    user = (await User.findOne({ email: email.toLowerCase().trim(), role: roleQuery })
       .select(select)
       .lean()) as TSelected | null;
 
@@ -354,6 +371,7 @@ export async function getEmployerDashboardData(
       image: user.image,
       subtitle: user.companyName ?? 'Employer workspace',
       ...chromeCounts,
+      userId: oid.toString(),
     },
     company: {
       companyName: user.companyName ?? 'Your company',
@@ -396,16 +414,26 @@ export async function getAdvisorDashboardData(
     _id: mongoose.Types.ObjectId;
     name: string;
     email: string;
+    role: 'advisor' | 'dept_head';
     image?: string;
     institutionName?: string;
     advisoryDepartment?: string;
     designation?: string;
-  }>(identity, 'advisor', 'name email image institutionName advisoryDepartment designation');
+  }>(
+    identity,
+    ['advisor', 'dept_head'],
+    'name email role image institutionName advisoryDepartment designation'
+  );
 
   if (!user || !oid) throw new Error('Advisor not found');
+  const isDeptHead = user.role === 'dept_head';
 
   const [students, actions, chromeCounts] = await Promise.all([
-    User.find({ assignedAdvisorId: oid, role: 'student' })
+    User.find(
+      isDeptHead
+        ? { role: 'student', university: user.institutionName }
+        : { assignedAdvisorId: oid, role: 'student' }
+    )
       .select('name university department opportunityScore profileCompleteness cgpa')
       .sort({ opportunityScore: 1, profileCompleteness: 1 })
       .lean(),
@@ -417,13 +445,23 @@ export async function getAdvisorDashboardData(
   ]);
 
   const studentIds = students.map((student) => student._id);
-  const [applications, interviewJobs] = await Promise.all([
+  const [applications, interviewJobs, reviews] = await Promise.all([
     studentIds.length
       ? Application.find({ studentId: { $in: studentIds }, isEventRegistration: false })
           .select('studentId jobId status interviewScheduledAt hardGaps')
           .lean()
       : [],
     studentIds.length ? Job.find({}).select('title companyName').lean() : [],
+    studentIds.length
+      ? Review.find({
+          revieweeId: { $in: studentIds },
+          reviewType: 'employer_to_student',
+          isPublic: true,
+          isVerified: true,
+        })
+          .populate('reviewerId', 'name companyDetails.companyName')
+          .lean()
+      : [],
   ]);
 
   const flaggedStudentIds = new Set(
@@ -484,6 +522,52 @@ export async function getAdvisorDashboardData(
 
   const priorityStudents = attentionStudents.filter((student) => student.priorityFlagged).length;
 
+  let totalWorkQuality = 0;
+  let totalRecommendations = 0;
+  const rawRecommendations: {
+    id: string;
+    studentName: string;
+    companyName: string;
+    text: string;
+    createdAt: Date;
+  }[] = [];
+
+  reviews.forEach(
+    (r: {
+      _id: unknown;
+      workQualityRating?: number;
+      isRecommended?: boolean;
+      recommendationText?: string;
+      revieweeId: unknown;
+      reviewerId?: { name?: string; companyDetails?: { companyName?: string } };
+      createdAt: Date;
+    }) => {
+      if (r.workQualityRating) totalWorkQuality += r.workQualityRating;
+      if (r.isRecommended) {
+        totalRecommendations++;
+      }
+      if (r.recommendationText) {
+        rawRecommendations.push({
+          id: String(r._id),
+          studentName: studentMap.get(String(r.revieweeId))?.name ?? 'Unknown Student',
+          companyName: r.reviewerId?.companyDetails?.companyName || r.reviewerId?.name || 'Company',
+          text: r.recommendationText,
+          createdAt: r.createdAt,
+        });
+      }
+    }
+  );
+
+  const recentRecommendations = rawRecommendations
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5)
+    .map((r) => ({
+      id: r.id,
+      studentName: r.studentName,
+      companyName: r.companyName,
+      text: r.text,
+    }));
+
   return {
     chromeUser: {
       name: user.name,
@@ -491,8 +575,9 @@ export async function getAdvisorDashboardData(
       image: user.image,
       subtitle:
         [user.designation, user.institutionName].filter(Boolean).join(' at ') ||
-        'Advisor workspace',
+        (isDeptHead ? 'Department head advisor view' : 'Advisor workspace'),
       ...chromeCounts,
+      userId: oid.toString(),
     },
     advisor: {
       institutionName: user.institutionName,
@@ -510,6 +595,12 @@ export async function getAdvisorDashboardData(
     recentActions,
     upcomingInterviews,
     topSkillGaps,
+    reputationStats: {
+      totalReviews: reviews.length,
+      totalRecommendations,
+      avgWorkQuality: reviews.length ? Number((totalWorkQuality / reviews.length).toFixed(1)) : 0,
+    },
+    recentRecommendations,
   };
 }
 
@@ -672,6 +763,7 @@ export async function getDeptDashboardData(
         [user.designation, user.advisoryDepartment].filter(Boolean).join(' | ') ||
         'Department workspace',
       ...chromeCounts,
+      userId: oid.toString(),
     },
     department: {
       institutionName: user.institutionName,

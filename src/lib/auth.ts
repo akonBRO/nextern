@@ -10,10 +10,20 @@ import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 
-const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+const authSecret = (process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET)?.trim();
 
 function isValidObjectId(value: unknown): value is string {
   return typeof value === 'string' && mongoose.Types.ObjectId.isValid(value);
+}
+
+function hasGoogleCalendarScope(scope?: string | null): boolean {
+  if (typeof scope !== 'string') return false;
+
+  const grantedScopes = new Set(scope.split(/\s+/).filter(Boolean));
+  return (
+    grantedScopes.has('https://www.googleapis.com/auth/calendar') ||
+    grantedScopes.has('https://www.googleapis.com/auth/calendar.events')
+  );
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -68,6 +78,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           isVerified: user.isVerified,
           isEmailVerified: user.isVerified,
           verificationStatus: user.verificationStatus,
+          mustChangePassword: user.mustChangePassword,
         };
       },
     }),
@@ -99,6 +110,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isVerified = user.isVerified;
         token.isEmailVerified = user.isEmailVerified;
         token.verificationStatus = user.verificationStatus;
+        token.mustChangePassword = user.mustChangePassword;
+        token.picture = user.image; // ✅ ensure picture is set initially
       }
 
       // Heal stale or provider-derived tokens that do not carry our MongoDB user id.
@@ -106,7 +119,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         await connectDB();
         const dbUser = await User.findOne({
           email: token.email.toLowerCase().trim(),
-        }).select('_id role isVerified verificationStatus');
+        }).select('_id role isVerified verificationStatus image mustChangePassword');
 
         if (dbUser) {
           token.id = dbUser._id.toString();
@@ -114,6 +127,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.isVerified = dbUser.isVerified;
           token.isEmailVerified = dbUser.isVerified;
           token.verificationStatus = dbUser.verificationStatus;
+          token.mustChangePassword = dbUser.mustChangePassword;
+          token.picture = dbUser.image ?? token.picture; // ✅ keep image synced
         }
       }
 
@@ -127,6 +142,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.isVerified = freshUser.isVerified;
           token.isEmailVerified = freshUser.isVerified;
           token.verificationStatus = freshUser.verificationStatus;
+          token.mustChangePassword = freshUser.mustChangePassword;
+          token.picture = freshUser.image ?? token.picture; // ← ✅ ADDED LINE
         }
       }
 
@@ -153,6 +170,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           | 'approved'
           | 'rejected'
           | undefined;
+        session.user.mustChangePassword = token.mustChangePassword as boolean | undefined;
+
+        // ✅ ADD THIS LINE (sync image to frontend)
+        session.user.image = (token.picture ?? session.user.image) as string | null;
       }
       return session;
     },
@@ -163,34 +184,51 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
         await connectDB();
+        const grantedCalendarAccess = hasGoogleCalendarScope(account.scope);
 
         const existingUser = await User.findOne({ email: user.email?.toLowerCase() });
 
+        if (existingUser && ['advisor', 'dept_head'].includes(existingUser.role)) {
+          return false;
+        }
+
         if (!existingUser) {
-          // New Google user — create with student role by default
-          // They will be prompted to complete their profile on first login
           const createdUser = await User.create({
             name: user.name,
             email: user.email?.toLowerCase(),
             image: user.image,
             role: 'student',
-            isVerified: true, // Google email is already verified
+            isVerified: true,
             verificationStatus: 'approved',
+            // ── Save refresh token if provided ──
+            ...(account.refresh_token && grantedCalendarAccess
+              ? {
+                  googleRefreshToken: account.refresh_token,
+                  googleCalendarConnected: true,
+                }
+              : {}),
           });
           user.id = createdUser._id.toString();
           user.role = createdUser.role;
           user.isVerified = createdUser.isVerified;
           user.verificationStatus = createdUser.verificationStatus;
+          user.mustChangePassword = createdUser.mustChangePassword;
         } else {
-          // Existing user — update their Google profile picture if needed
           if (user.image && !existingUser.image) {
             await User.findByIdAndUpdate(existingUser._id, { image: user.image });
           }
-          // Attach existing user ID to the NextAuth user object
+          // ── Update refresh token if a new one was issued ──
+          if (account.refresh_token && grantedCalendarAccess) {
+            await User.findByIdAndUpdate(existingUser._id, {
+              googleRefreshToken: account.refresh_token,
+              googleCalendarConnected: true,
+            });
+          }
           user.id = existingUser._id.toString();
           user.role = existingUser.role;
           user.isVerified = existingUser.isVerified;
           user.verificationStatus = existingUser.verificationStatus;
+          user.mustChangePassword = existingUser.mustChangePassword;
         }
       }
       return true;

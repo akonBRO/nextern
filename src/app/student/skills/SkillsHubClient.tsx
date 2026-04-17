@@ -213,8 +213,8 @@ export default function SkillsHubClient({
         style={{
           borderRadius: 24,
           padding: 24,
-          background:
-            'linear-gradient(135deg, rgba(30,41,59,0.98), rgba(37,99,235,0.94) 62%, rgba(34,211,238,0.9))',
+          background: '#FFFFFF',
+          border: `1px solid ${C.border}`,
           boxShadow: '0 26px 60px rgba(15,23,42,0.16)',
         }}
       >
@@ -235,23 +235,23 @@ export default function SkillsHubClient({
                 gap: 8,
                 padding: '8px 12px',
                 borderRadius: 999,
-                border: '1px solid rgba(255,255,255,0.14)',
-                background: 'rgba(255,255,255,0.08)',
-                color: '#DCEBFF',
+                border: '1px solid #BFDBFE',
+                background: '#EFF6FF',
+                color: C.blue,
                 fontSize: 12,
                 fontWeight: 700,
                 textTransform: 'uppercase',
               }}
             >
               <Sparkles size={14} />
-              Gemini + Groq workspace
+              Nextern AI workspace
             </div>
             <h2
               style={{
                 margin: '16px 0 0',
                 fontSize: 30,
                 lineHeight: 1.08,
-                color: '#FFFFFF',
+                color: C.text,
                 fontWeight: 900,
                 fontFamily: 'var(--font-display)',
               }}
@@ -261,32 +261,32 @@ export default function SkillsHubClient({
             <p
               style={{
                 margin: '12px 0 0',
-                color: '#D6E4FF',
+                color: C.muted,
                 fontSize: 14,
                 maxWidth: 640,
                 lineHeight: 1.7,
               }}
             >
-              Every AI feature now tells you whether Gemini or Groq answered directly, or whether
-              the platform had to fall back to local backup logic.
+              Every AI feature now shows when Nextern AI generated the result directly and when
+              fallback-generated logic was used instead.
             </p>
           </div>
 
           <div style={{ display: 'grid', gap: 10, minWidth: 260 }}>
             <div
               style={{
-                background: 'rgba(255,255,255,0.08)',
+                background: C.bg,
                 borderRadius: 16,
-                border: '1px solid rgba(255,255,255,0.12)',
+                border: `1px solid ${C.border}`,
                 padding: '14px 16px',
               }}
             >
-              <div style={{ color: '#9FB4D0', fontSize: 12, fontWeight: 700 }}>
+              <div style={{ color: C.muted, fontSize: 12, fontWeight: 700 }}>
                 Skill analyses this month
               </div>
               <div
                 style={{
-                  color: '#FFFFFF',
+                  color: C.text,
                   fontSize: 28,
                   fontWeight: 900,
                   fontFamily: 'var(--font-display)',
@@ -295,7 +295,7 @@ export default function SkillsHubClient({
               >
                 {usage.counts.skillGapAnalysis}
               </div>
-              <div style={{ color: '#D6E4FF', fontSize: 12, marginTop: 4 }}>
+              <div style={{ color: C.muted, fontSize: 12, marginTop: 4 }}>
                 {usage.isPremium
                   ? 'Unlimited on Premium'
                   : `${usage.remaining.skillGapAnalysis ?? 0} free analyses left this month`}
@@ -304,16 +304,16 @@ export default function SkillsHubClient({
 
             <div
               style={{
-                background: 'rgba(255,255,255,0.08)',
+                background: C.bg,
                 borderRadius: 16,
-                border: '1px solid rgba(255,255,255,0.12)',
+                border: `1px solid ${C.border}`,
                 padding: '14px 16px',
               }}
             >
-              <div style={{ color: '#9FB4D0', fontSize: 12, fontWeight: 700 }}>Mock interviews</div>
+              <div style={{ color: C.muted, fontSize: 12, fontWeight: 700 }}>Mock interviews</div>
               <div
                 style={{
-                  color: '#FFFFFF',
+                  color: C.text,
                   fontSize: 28,
                   fontWeight: 900,
                   fontFamily: 'var(--font-display)',
@@ -322,7 +322,7 @@ export default function SkillsHubClient({
               >
                 {usage.counts.mockInterview}
               </div>
-              <div style={{ color: '#D6E4FF', fontSize: 12, marginTop: 4 }}>
+              <div style={{ color: C.muted, fontSize: 12, marginTop: 4 }}>
                 {usage.isPremium
                   ? 'Unlimited on Premium'
                   : `${usage.remaining.mockInterview ?? 0} free mock interviews left this month`}
@@ -338,18 +338,21 @@ export default function SkillsHubClient({
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              background: 'rgba(245,158,11,0.15)',
-              border: '1px solid rgba(245,158,11,0.3)',
+              background: '#FFF7ED',
+              border: '1px solid #FCD34D',
               borderRadius: 999,
               padding: '8px 14px',
-              color: '#FDE68A',
+              color: '#92400E',
               fontSize: 12,
               fontWeight: 700,
             }}
           >
             <Crown size={14} />
             Premium unlocks personalized training paths and unlimited AI runs.
-            <Link href="/student/premium" style={{ color: '#FFFFFF', textDecoration: 'none' }}>
+            <Link
+              href="/student/premium"
+              style={{ color: C.blue, fontWeight: 700, textDecoration: 'none' }}
+            >
               Upgrade
             </Link>
           </div>
@@ -752,7 +755,7 @@ export default function SkillsHubClient({
                 Career advice coach
               </h3>
               <p style={{ margin: '8px 0 0', fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
-                Ask Gemini what to do next based on your profile and current career goals.
+                Ask Nextern AI what to do next based on your profile and current career goals.
               </p>
             </div>
 

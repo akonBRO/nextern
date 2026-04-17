@@ -4,7 +4,9 @@ import { connectDB } from '@/lib/db';
 import { Job } from '@/models/Job';
 import { User } from '@/models/User';
 import mongoose from 'mongoose';
+import Link from 'next/link';
 import DashboardShell from '@/components/dashboard/DashboardShell';
+import { getAdvisorNavItems } from '@/lib/academic-navigation';
 import {
   ActionLink,
   DashboardPage,
@@ -19,7 +21,10 @@ import {
   formatShortDate,
   formatStatusLabel,
 } from '@/components/dashboard/DashboardContent';
+import CalendarBoard from '@/components/calendar/CalendarBoard';
 import { getAdvisorDashboardData } from '@/lib/role-dashboard';
+import { getAdvisorCalendarEvents } from '@/lib/academic-calendar-events';
+import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
 import {
   CalendarClock,
   CalendarDays,
@@ -28,6 +33,8 @@ import {
   MapPin,
   Target,
   Users,
+  Star,
+  MessageSquare,
 } from 'lucide-react';
 
 const navItems = [
@@ -54,6 +61,12 @@ const navItems = [
         description: 'Repeated hard-skill gaps across your advisee cohort.',
         icon: 'target' as const,
       },
+      {
+        label: 'Cohort Reputation',
+        href: '/advisor/dashboard#reputation',
+        description: 'Aggregated reviews and formal recommendations from employers.',
+        icon: 'star' as const,
+      },
     ],
   },
   {
@@ -74,20 +87,22 @@ const navItems = [
       },
     ],
   },
+  { label: 'Badges', href: '/advisor/badges', icon: 'shield' as const },
 ];
 
 async function getAdvisorExtras(userId: string) {
   await connectDB();
   const oid = new mongoose.Types.ObjectId(userId);
-  const [advisor, totalEvents] = await Promise.all([
+  const [advisor, totalEvents, calendarEvents] = await Promise.all([
     User.findById(oid)
       .select(
-        'name email image phone bio city institutionName advisoryDepartment designation linkedinUrl advisorStaffId'
+        'name email image phone bio city institutionName advisoryDepartment designation linkedinUrl advisorStaffId googleCalendarConnected'
       )
       .lean(),
     Job.countDocuments({ employerId: oid, type: { $in: ['webinar', 'workshop'] } }),
+    getAdvisorCalendarEvents(userId, 24),
   ]);
-  return { advisor, totalEvents };
+  return { advisor, totalEvents, calendarEvents };
 }
 
 export default async function AdvisorDashboard() {
@@ -102,7 +117,7 @@ export default async function AdvisorDashboard() {
     getAdvisorExtras(session.user.id),
   ]);
 
-  const { advisor, totalEvents } = extras;
+  const { advisor, totalEvents, calendarEvents } = extras;
 
   const quickStats = [
     { label: 'Advisees', value: String(data.stats.totalAdvisees), color: '#22D3EE' },
@@ -116,8 +131,8 @@ export default async function AdvisorDashboard() {
       role="advisor"
       roleLabel="Advisor dashboard"
       homeHref="/advisor/dashboard"
-      navItems={navItems}
-      user={data.chromeUser}
+      navItems={ADVISOR_NAV_ITEMS}
+      user={{ ...data.chromeUser, userId: session.user.id }}
     >
       <DashboardPage>
         {/* ── Hero ── */}
@@ -166,7 +181,7 @@ export default async function AdvisorDashboard() {
           actions={
             <>
               <ActionLink href="/advisor/events/new" label="Post Event" />
-              <ActionLink href="/advisor/events" label="My Events" tone="ghost" />
+              <ActionLink href="/advisor/students" label="Student Directory" tone="ghost" />
             </>
           }
           aside={
@@ -409,6 +424,23 @@ export default async function AdvisorDashboard() {
 
         {/* ── Student attention queue ── */}
         <DashboardSection
+          id="calendar"
+          title="Calendar"
+          description="Track only your own posted webinars and workshops, including registration deadlines and event dates."
+        >
+          <CalendarBoard
+            events={calendarEvents}
+            isCalendarConnected={advisor?.googleCalendarConnected ?? false}
+            boardTitle="Advising Calendar"
+            boardSubtitle="Monitor only your hosted sessions and registration cutoffs from one board."
+            fullCalendarHref="/advisor/calendar"
+            manageCalendarHref="/advisor/profile#calendar"
+            eventHrefTemplate="/advisor/events/:jobId/registrants"
+            emptyNextEventMessage="No hosted advisor events are coming up yet. Post a workshop or webinar to populate this planner."
+          />
+        </DashboardSection>
+
+        <DashboardSection
           id="students"
           title="Student attention queue"
           description="Students flagged as needing immediate coaching based on low scores, low profile completion, or advisor flags."
@@ -429,6 +461,9 @@ export default async function AdvisorDashboard() {
                   display: 'grid',
                   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
                   gap: 14,
+                  maxHeight: 400,
+                  overflowY: 'auto',
+                  paddingRight: 8,
                 }}
                 className="dashboard-grid-two"
               >
@@ -511,7 +546,15 @@ export default async function AdvisorDashboard() {
               action={<Tag label={`${data.upcomingInterviews.length} upcoming`} tone="info" />}
             >
               {data.upcomingInterviews.length > 0 ? (
-                <div style={{ display: 'grid', gap: 12 }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: 12,
+                    maxHeight: 400,
+                    overflowY: 'auto',
+                    paddingRight: 8,
+                  }}
+                >
                   {data.upcomingInterviews.map((interview) => (
                     <div
                       key={interview.id}
@@ -577,7 +620,7 @@ export default async function AdvisorDashboard() {
                       ))}
                     </div>
                     <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid #F1F5F9' }}>
-                      <a
+                      <Link
                         href="/advisor/events/new"
                         style={{
                           display: 'inline-flex',
@@ -594,7 +637,7 @@ export default async function AdvisorDashboard() {
                         }}
                       >
                         📅 Run a workshop on these gaps →
-                      </a>
+                      </Link>
                     </div>
                   </>
                 ) : (
@@ -605,6 +648,163 @@ export default async function AdvisorDashboard() {
                 )}
               </Panel>
             </div>
+          </div>
+        </DashboardSection>
+
+        {/* ── Reputation & Verified Reviews ── */}
+        <DashboardSection
+          id="reputation"
+          title="Cohort Reputation & Verified Reviews"
+          description="Aggregated review and recommendation data from employer evaluations of your advisees."
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 2fr)',
+              gap: 16,
+            }}
+            className="dashboard-grid-two"
+          >
+            <Panel title="Reputation Overview" description="Advising cohort aggregated feedback.">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '16px',
+                    background: '#F8FAFC',
+                    borderRadius: '12px',
+                    border: '1px solid #E2E8F0',
+                  }}
+                >
+                  <div style={{ fontSize: 13, color: '#64748B', fontWeight: 600 }}>
+                    Total Verified Reviews
+                  </div>
+                  <div style={{ fontSize: 18, color: '#0F172A', fontWeight: 800 }}>
+                    {data.reputationStats.totalReviews}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '16px',
+                    background: '#F8FAFC',
+                    borderRadius: '12px',
+                    border: '1px solid #E2E8F0',
+                  }}
+                >
+                  <div style={{ fontSize: 13, color: '#64748B', fontWeight: 600 }}>
+                    Formal Recommendations
+                  </div>
+                  <div style={{ fontSize: 18, color: '#10B981', fontWeight: 800 }}>
+                    {data.reputationStats.totalRecommendations}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '16px',
+                    background: '#FEF3C7',
+                    borderRadius: '12px',
+                    border: '1px solid #FDE68A',
+                  }}
+                >
+                  <div style={{ fontSize: 13, color: '#92400E', fontWeight: 600 }}>
+                    Avg Work Quality
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 18,
+                      color: '#B45309',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    {data.reputationStats.avgWorkQuality.toFixed(1)}{' '}
+                    <Star size={16} fill="currentColor" />
+                  </div>
+                </div>
+              </div>
+            </Panel>
+
+            <Panel
+              title="Recent Company Feedback"
+              description="The latest formal endorsements earned by your advisees."
+            >
+              {data.recentRecommendations && data.recentRecommendations.length > 0 ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 12,
+                    maxHeight: 400,
+                    overflowY: 'auto',
+                    paddingRight: 8,
+                  }}
+                >
+                  {data.recentRecommendations.map((rec) => (
+                    <div
+                      key={rec.id}
+                      style={{
+                        padding: '14px 16px',
+                        border: '1px solid #E2E8F0',
+                        borderRadius: '12px',
+                        background: '#FFFFFF',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start',
+                          marginBottom: 6,
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+                            {rec.studentName}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: '#64748B',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
+                          >
+                            Earned endorsement from{' '}
+                            <b style={{ color: '#334155' }}>{rec.companyName}</b>
+                          </div>
+                        </div>
+                        <Tag label="Recommended" tone="success" />
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: '#475569',
+                          lineHeight: 1.6,
+                          marginTop: 8,
+                          paddingLeft: 12,
+                          borderLeft: '2px solid #E2E8F0',
+                        }}
+                      >
+                        &ldquo;{rec.text}&rdquo;
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="No formal endorsements yet"
+                  description="When employers leave formal text recommendations validating an advisee's work, it will appear here."
+                />
+              )}
+            </Panel>
           </div>
         </DashboardSection>
 
@@ -619,7 +819,15 @@ export default async function AdvisorDashboard() {
             description="Recent plan updates, notes, and priority flags."
           >
             {data.recentActions.length > 0 ? (
-              <div style={{ display: 'grid', gap: 12 }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gap: 12,
+                  maxHeight: 400,
+                  overflowY: 'auto',
+                  paddingRight: 8,
+                }}
+              >
                 {data.recentActions.map((action) => (
                   <div
                     key={action.id}

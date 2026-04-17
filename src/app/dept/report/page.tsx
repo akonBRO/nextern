@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 import {
   DashboardPage,
   DashboardSection,
@@ -95,7 +96,7 @@ export default async function DeptReportPage() {
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
-      navItems={navItems}
+      navItems={DEPT_NAV_ITEMS}
       user={data.chromeUser}
     >
       <DashboardPage>

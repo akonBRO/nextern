@@ -2,9 +2,22 @@
 // src/app/dept/profile/page.tsx
 // Department Head profile — standalone page with teal accent
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { AlertCircle, CheckCircle2, GraduationCap, User, Save, Linkedin } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  AlertCircle,
+  Bell,
+  Calendar,
+  CheckCircle2,
+  GraduationCap,
+  Mail,
+  User,
+  Save,
+  Linkedin,
+} from 'lucide-react';
+import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
+import CalendarConnectButton from '@/components/calendar/CalendarConnectButton';
 
 const C = {
   teal: '#0D9488',
@@ -39,41 +52,6 @@ const inputBase: React.CSSProperties = {
   color: C.text,
   background: C.white,
 };
-
-const BD_UNIS = [
-  'BRAC University',
-  'North South University (NSU)',
-  'AIUB',
-  'Independent University Bangladesh (IUB)',
-  'East West University (EWU)',
-  'Daffodil International University (DIU)',
-  'ULAB',
-  'United International University (UIU)',
-  'KUET',
-  'RUET',
-  'CUET',
-  'BUET',
-  'SUST',
-  'Dhaka University (DU)',
-  'IUT',
-];
-
-const BD_DEPTS = [
-  'CSE',
-  'EEE',
-  'BBA',
-  'MBA',
-  'ECE',
-  'Civil',
-  'Architecture',
-  'Pharmacy',
-  'Law',
-  'English',
-  'Economics',
-  'Finance',
-  'Marketing',
-  'Accounting',
-];
 
 function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
@@ -119,6 +97,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export default function DeptProfilePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasTriggeredCalendarSync = useRef(false);
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [fetching, setFetching] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -135,6 +116,8 @@ export default function DeptProfilePage() {
     designation: '',
     advisoryDepartment: '',
     linkedinUrl: '',
+    notificationPreferences: {} as Record<string, boolean>,
+    emailPreferences: {} as Record<string, boolean>,
   });
 
   useEffect(() => {
@@ -153,13 +136,44 @@ export default function DeptProfilePage() {
           designation: u.designation ?? '',
           advisoryDepartment: u.advisoryDepartment ?? '',
           linkedinUrl: u.linkedinUrl ?? '',
+          notificationPreferences: u.notificationPreferences ?? {},
+          emailPreferences: u.emailPreferences ?? {},
         });
       })
       .catch(() => setError('Failed to load profile'))
       .finally(() => setFetching(false));
   }, []);
 
-  function set(field: string, value: string) {
+  useEffect(() => {
+    if (!Boolean(user?.googleCalendarConnected)) return;
+    if (searchParams.get('calendar') !== 'connected') return;
+    if (hasTriggeredCalendarSync.current) return;
+
+    hasTriggeredCalendarSync.current = true;
+    let isActive = true;
+
+    void (async () => {
+      try {
+        await fetch('/api/calendar/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resync: true }),
+        });
+      } catch {
+        // silent
+      } finally {
+        if (!isActive) return;
+        router.replace('/dept/profile#calendar');
+        router.refresh();
+      }
+    })();
+
+    return () => {
+      isActive = false;
+    };
+  }, [router, searchParams, user]);
+
+  function set(field: string, value: unknown) {
     setForm((p) => ({ ...p, [field]: value }));
   }
 
@@ -176,11 +190,11 @@ export default function DeptProfilePage() {
           phone: form.phone || undefined,
           bio: form.bio || undefined,
           city: form.city || undefined,
-          institutionName: form.institutionName || undefined,
           advisorStaffId: form.advisorStaffId || undefined,
           designation: form.designation || undefined,
-          advisoryDepartment: form.advisoryDepartment || undefined,
           linkedinUrl: form.linkedinUrl || undefined,
+          notificationPreferences: form.notificationPreferences,
+          emailPreferences: form.emailPreferences,
         }),
       });
       const data = await res.json();
@@ -232,36 +246,29 @@ export default function DeptProfilePage() {
             ← Back to Dashboard
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}>
-            {/* Avatar */}
-            <div
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: '50%',
-                background: `linear-gradient(135deg, ${C.teal}, ${C.tealDark})`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 28,
-                fontWeight: 900,
-                color: '#fff',
-                fontFamily: 'var(--font-display)',
-                flexShrink: 0,
-                border: '3px solid rgba(255,255,255,0.12)',
-                overflow: 'hidden',
+            <ProfilePictureUpload
+              currentImage={(user?.image as string) ?? null}
+              name={form.name ?? ''}
+              size={72}
+              radius="50%"
+              gradient={`linear-gradient(135deg, ${C.teal}, ${C.tealDark})`}
+              onUploaded={async (url) => {
+                await fetch('/api/users/profile', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ image: url }),
+                });
+                setUser((prev) => (prev ? { ...prev, image: url } : prev));
               }}
-            >
-              {user?.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={user.image as string}
-                  alt=""
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                (form.name?.charAt(0) ?? 'D')
-              )}
-            </div>
+              onRemoved={async () => {
+                await fetch('/api/users/profile', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ image: null }),
+                });
+                setUser((prev) => (prev ? { ...prev, image: undefined } : prev));
+              }}
+            />
 
             <div>
               {/* Role badge */}
@@ -443,32 +450,20 @@ export default function DeptProfilePage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <Field label="Institution / University">
-              <select
+              <input
+                type="text"
                 value={form.institutionName}
-                onChange={(e) => set('institutionName', e.target.value)}
-                style={{ ...inputBase, appearance: 'none' as const }}
-              >
-                <option value="">Select institution</option>
-                {BD_UNIS.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-              </select>
+                readOnly
+                style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
+              />
             </Field>
             <Field label="Department">
-              <select
+              <input
+                type="text"
                 value={form.advisoryDepartment}
-                onChange={(e) => set('advisoryDepartment', e.target.value)}
-                style={{ ...inputBase, appearance: 'none' as const }}
-              >
-                <option value="">Select department</option>
-                {BD_DEPTS.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+                readOnly
+                style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
+              />
             </Field>
             <Field label="Designation / Title">
               <input
@@ -513,7 +508,210 @@ export default function DeptProfilePage() {
           </div>
         </div>
 
+        <div
+          id="calendar"
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Calendar size={18} />} label="Google Calendar" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16, lineHeight: 1.6 }}>
+            Connect your Google Calendar to keep department-hosted webinar and workshop schedules,
+            registration deadlines, and key planning reminders visible in one timeline.
+          </div>
+          <CalendarConnectButton
+            isConnected={Boolean(user?.googleCalendarConnected)}
+            callbackUrl="/dept/profile?calendar=connected#calendar"
+            description="Sync hosted department events and calendar reminders to your Google Calendar automatically."
+            connectedDescription="Hosted events and department reminders sync automatically"
+          />
+        </div>
+
+        {/* Notification Preferences */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Bell size={18} />} label="Notification Preferences" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
+            Control which department notifications you receive. All options are enabled by default.
+          </div>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {[
+              {
+                key: 'event_registrations',
+                label: 'Event registrations',
+                desc: 'When a student registers for your event.',
+              },
+              {
+                key: 'deadline_reminders',
+                label: 'Registration deadline reminders',
+                desc: 'When one of your hosted events is approaching its registration deadline.',
+              },
+              {
+                key: 'event_reminders',
+                label: 'Event start reminders',
+                desc: 'When one of your hosted webinars or workshops is about to begin.',
+              },
+              {
+                key: 'badge_earned',
+                label: 'Badge earned',
+                desc: 'When your department head account earns a new platform badge.',
+              },
+            ].map((item) => {
+              const isOn = form.notificationPreferences[item.key] !== false;
+              return (
+                <div
+                  key={item.key}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    background: '#FAFBFC',
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 12,
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{item.label}</div>
+                    <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      set('notificationPreferences', {
+                        ...form.notificationPreferences,
+                        [item.key]: !isOn,
+                      })
+                    }
+                    style={{
+                      width: 44,
+                      height: 24,
+                      borderRadius: 999,
+                      border: 'none',
+                      background: isOn ? C.tealDark : C.border,
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background 0.2s',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: '50%',
+                        background: C.white,
+                        position: 'absolute',
+                        top: 3,
+                        left: isOn ? 23 : 3,
+                        transition: 'left 0.2s',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                      }}
+                    />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* ── Save button ── */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Mail size={18} />} label="Email Preferences" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
+            Decide which department email reminders should be delivered to your inbox. In-app
+            notifications remain controlled separately above.
+          </div>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {[
+              {
+                key: 'deadline_reminders',
+                label: 'Registration deadline emails',
+                desc: 'Email reminders to students before registration closes for one of your hosted events.',
+              },
+              {
+                key: 'event_reminders',
+                label: 'Event date emails',
+                desc: 'Email reminders to students before one of your hosted webinars or workshops begins.',
+              },
+            ].map((item) => {
+              const isOn = form.emailPreferences[item.key] !== false;
+              return (
+                <div
+                  key={item.key}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    background: '#FAFBFC',
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 12,
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{item.label}</div>
+                    <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      set('emailPreferences', {
+                        ...form.emailPreferences,
+                        [item.key]: !isOn,
+                      })
+                    }
+                    style={{
+                      width: 44,
+                      height: 24,
+                      borderRadius: 999,
+                      border: 'none',
+                      background: isOn ? C.tealDark : C.border,
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background 0.2s',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: '50%',
+                        background: C.white,
+                        position: 'absolute',
+                        top: 3,
+                        left: isOn ? 23 : 3,
+                        transition: 'left 0.2s',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                      }}
+                    />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}>
           <button
             onClick={handleSave}

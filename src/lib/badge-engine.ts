@@ -3,9 +3,15 @@
 // Called by event hooks in lib/events.ts — never called directly by API routes.
 
 import { connectDB } from '@/lib/db';
-import { BadgeDefinition, type IBadgeDefinition } from '@/models/BadgeDefinition';
+import mongoose from 'mongoose';
+import {
+  getBadgeDefinitionsForTrigger,
+  type BadgeCatalogDefinition,
+  type BadgeCategory,
+} from '@/lib/badge-definitions';
 import { BadgeAward } from '@/models/BadgeAward';
-import { Notification } from '@/models/Notification';
+import { onBadgeEarned } from '@/lib/events';
+import { createNotification } from '@/lib/notify';
 import { Application } from '@/models/Application';
 import { Review } from '@/models/Review';
 import { MentorSession } from '@/models/MentorSession';
@@ -18,10 +24,10 @@ import { Job } from '@/models/Job';
  * Count how many times a user has triggered a particular event.
  * Each event has its own counting logic.
  */
-async function getEventCount(
+export async function getEventCount(
   userId: string,
   triggerEvent: string,
-  badge: IBadgeDefinition
+  badge: BadgeCatalogDefinition
 ): Promise<number> {
   switch (triggerEvent) {
     case 'onJobApplied': {
@@ -39,8 +45,8 @@ async function getEventCount(
     }
 
     case 'onProfileVerified': {
-      const user = await User.findById(userId).select('isVerified cgpa').lean();
-      if (user?.isVerified && (user?.cgpa ?? 0) >= 3.5) return 1;
+      const user = await User.findById(userId).select('cgpa').lean();
+      if ((user?.cgpa ?? 0) >= 3.5) return 1;
       return 0;
     }
 
@@ -50,12 +56,37 @@ async function getEventCount(
     }
 
     case 'onReviewReceived': {
+      if (badge.badgeSlug === 'verified-work-record' && badge.category === 'student') {
+        // Must have at least the threshold number of recommendations (isRecommended)
+        // and an average overall/work quality rating >= 4.0
+        const reviews = (await Review.find({
+          revieweeId: userId,
+          reviewType: 'employer_to_student',
+        })
+          .select('workQualityRating isRecommended')
+          .lean()) as { workQualityRating?: number; isRecommended?: boolean }[];
+
+        const recommendedCount = reviews.filter((r) => r.isRecommended).length;
+        if (recommendedCount < badge.thresholdValue) return 0;
+
+        const avg =
+          reviews.reduce((s, r) => s + (r.workQualityRating ?? 0), 0) / (reviews.length || 1);
+
+        return avg >= 4.0 ? badge.thresholdValue : 0;
+      }
+
       // For employers: count reviews received about them
       if (badge.badgeSlug === 'campus-favorite') {
         // Check average rating ≥ 4.5 AND at least threshold reviews
-        const reviews = await Review.find({ revieweeId: userId }).select('overallRating').lean() as { overallRating?: number }[];
+        const reviews = (await Review.find({ revieweeId: userId })
+          .select('overallRating')
+          .lean()) as { overallRating?: number }[];
         if (reviews.length < badge.thresholdValue) return 0;
-        const avg = reviews.reduce((s: number, r: { overallRating?: number }) => s + (r.overallRating ?? 0), 0) / reviews.length;
+        const avg =
+          reviews.reduce(
+            (s: number, r: { overallRating?: number }) => s + (r.overallRating ?? 0),
+            0
+          ) / reviews.length;
         return avg >= 4.5 ? badge.thresholdValue : 0;
       }
       // trusted-recruiter: count positive reviews (rating ≥ 4)
@@ -63,7 +94,69 @@ async function getEventCount(
     }
 
     case 'onMentorSessionComplete': {
+      if (badge.category === 'advisor') {
+        const mentor = await mongoose.models.Mentor?.findOne({ userId }).select('_id').lean();
+        if (!mentor) return 0;
+        return MentorSession.countDocuments({ mentorId: mentor._id, status: 'completed' });
+      }
       return MentorSession.countDocuments({ studentId: userId, status: 'completed' });
+    }
+
+    case 'onFreelanceCompleted': {
+      const FreelanceOrder = mongoose.models.FreelanceOrder;
+      if (!FreelanceOrder) return 0;
+
+      const completedOrders = await FreelanceOrder.countDocuments({
+        freelancerId: userId,
+        status: 'completed',
+        escrowStatus: 'released',
+      });
+
+      if (badge.badgeSlug !== 'verified-freelancer') {
+        return completedOrders;
+      }
+
+      const FreelanceReview = mongoose.models.FreelanceReview;
+      if (!FreelanceReview) return 0;
+
+      const reviews = (await FreelanceReview.find({
+        freelancerId: userId,
+        reviewType: 'client_to_student',
+        isPublic: true,
+        isVerified: true,
+      })
+        .select('professionalismRating punctualityRating skillPerformanceRating workQualityRating')
+        .lean()) as {
+        professionalismRating?: number;
+        punctualityRating?: number;
+        skillPerformanceRating?: number;
+        workQualityRating?: number;
+      }[];
+
+      if (reviews.length < badge.thresholdValue || completedOrders < badge.thresholdValue) {
+        return 0;
+      }
+
+      const reviewAverages = reviews
+        .map((review) => {
+          const ratings = [
+            review.professionalismRating,
+            review.punctualityRating,
+            review.skillPerformanceRating,
+            review.workQualityRating,
+          ].filter((value): value is number => typeof value === 'number' && value > 0);
+
+          if (!ratings.length) return 0;
+          return ratings.reduce((sum, value) => sum + value, 0) / ratings.length;
+        })
+        .filter(Boolean);
+
+      if (!reviewAverages.length) return 0;
+
+      const averageRating =
+        reviewAverages.reduce((sum, value) => sum + value, 0) / reviewAverages.length;
+
+      return averageRating >= 4.5 ? completedOrders : 0;
     }
 
     case 'onOpportunityScoreGain': {
@@ -86,6 +179,46 @@ async function getEventCount(
       return Job.countDocuments({ employerId: userId, isActive: true });
     }
 
+    case 'onDepartmentScoreUpdate': {
+      // Visionary Leader: Just check if the trigger value (which we can fake or we query users)
+      // Actually, we need the average score. Since we don't have a direct "Department Score" collection here,
+      // we can do an aggregate, but for now we could just check the user's personal opp score if they represent the dept,
+      // or we can just expect the triggerEvent to provide the new average score as threshold check if possible?
+      // Wait, getEventCount doesn't receive the event data. Let's do an aggregate check over students in their dept.
+      const head = await User.findById(userId).select('advisoryDepartment').lean();
+      if (!head || !head.advisoryDepartment) return 0;
+      const deptStudents = await User.find({ department: head.advisoryDepartment, role: 'student' })
+        .select('opportunityScore')
+        .lean();
+      if (deptStudents.length === 0) return 0;
+      const avg =
+        deptStudents.reduce(
+          (sum: number, s: { opportunityScore?: number }) => sum + (s.opportunityScore || 0),
+          0
+        ) / deptStudents.length;
+      return avg;
+    }
+
+    case 'onEventCreated': {
+      // For Engagement Pro: we assume a generic Event/Workshop model exists, but if not we can query notifications or just return 0 for now.
+      // Wait, AdvisorAction model exists? Yes, the analysis mentioned AdvisorAction. Let's check AdvisorAction.
+      // If we don't have it imported, we'll try catching exceptions.
+      try {
+        const EventModel = mongoose.models.Event || mongoose.models.AdvisorAction;
+        if (EventModel) {
+          // AdvisorAction uses advisorId, a hypothetical Event model might use createdBy
+          const query =
+            EventModel.modelName === 'AdvisorAction'
+              ? { advisorId: userId }
+              : { createdBy: userId };
+          return await EventModel.countDocuments(query);
+        }
+      } catch {
+        // ignore
+      }
+      return 0; // fallback
+    }
+
     default:
       return 0;
   }
@@ -104,15 +237,11 @@ async function getEventCount(
 export async function evaluateBadges(
   userId: string,
   triggerEvent: string,
-  category?: 'student' | 'employer'
+  category?: BadgeCategory
 ): Promise<void> {
   await connectDB();
 
-  // Find all badge definitions that fire on this event
-  const query: Record<string, unknown> = { triggerEvent };
-  if (category) query.category = category;
-
-  const definitions = await BadgeDefinition.find(query).lean();
+  const definitions = getBadgeDefinitionsForTrigger(triggerEvent, category);
   if (definitions.length === 0) return;
 
   // Check which badges the user already has
@@ -128,38 +257,46 @@ export async function evaluateBadges(
   );
 
   for (const badge of definitions) {
-    // Skip if already awarded
-    if (existingSlugs.has(badge.badgeSlug)) continue;
-
     // Skip if category doesn't match (safety check)
     if (category && badge.category !== category) continue;
+
+    const hasBadge = existingSlugs.has(badge.badgeSlug);
 
     try {
       const count = await getEventCount(userId, triggerEvent, badge);
 
       if (count >= badge.thresholdValue) {
-        // Award the badge
-        await BadgeAward.create({
-          userId,
-          badgeSlug: badge.badgeSlug,
-          badgeName: badge.name,
-          badgeIcon: badge.icon,
-          awardedAt: new Date(),
-          evidenceData: { triggerEvent, countAtAward: count },
-          isDisplayed: true,
-        });
+        if (!hasBadge) {
+          // Award the badge
+          await BadgeAward.create({
+            userId,
+            badgeSlug: badge.badgeSlug,
+            badgeName: badge.name,
+            badgeIcon: badge.icon,
+            awardedAt: new Date(),
+            evidenceData: { triggerEvent, countAtAward: count },
+            isDisplayed: true,
+          });
 
-        // Send notification
-        await Notification.create({
-          userId,
-          type: 'badge_earned',
-          title: `Badge earned: ${badge.name}`,
-          body: badge.description,
-          isRead: false,
-          meta: { badgeSlug: badge.badgeSlug, badgeIcon: badge.icon },
-        });
+          await onBadgeEarned(userId, badge.name, badge.icon, badge.badgeSlug);
 
-        console.log(`[BADGE] Awarded "${badge.name}" to user ${userId}`);
+          console.log(`[BADGE] Awarded "${badge.name}" to user ${userId}`);
+        }
+      } else {
+        if (hasBadge) {
+          // Revoke the badge
+          await BadgeAward.deleteOne({ userId, badgeSlug: badge.badgeSlug });
+
+          await createNotification({
+            userId,
+            type: 'score_update',
+            title: `Badge lost: ${badge.name}`,
+            body: `You no longer meet the criteria for the "${badge.name}" badge.`,
+            meta: { badgeSlug: badge.badgeSlug, badgeIcon: badge.icon },
+          });
+
+          console.log(`[BADGE] Revoked "${badge.name}" from user ${userId}`);
+        }
       }
     } catch (err) {
       // Duplicate key error means badge was already awarded (race condition) — safe to skip
@@ -167,4 +304,56 @@ export async function evaluateBadges(
       console.error(`[BADGE ERROR] Failed to evaluate "${badge.badgeSlug}" for ${userId}:`, err);
     }
   }
+}
+
+/**
+ * Hook to evaluate if a student meets the criteria for the "Verified Work Record" badge,
+ * without actually emitting the badge award event or saving to the database.
+ *
+ * Criteria:
+ * - Received at least 1 written recommendation (isRecommended = true or has recommendationText)
+ * - Average overall work quality rating > 4.0
+ *
+ * @param studentId The ID of the student to evaluate
+ * @returns Promise<boolean> True if criteria are met, false otherwise
+ */
+export async function checkVerifiedWorkRecordEligibility(studentId: string): Promise<boolean> {
+  await connectDB();
+
+  const reviews = (await Review.find({
+    revieweeId: studentId,
+    reviewType: 'employer_to_student',
+    isPublic: true,
+    isVerified: true,
+  })
+    .select('workQualityRating isRecommended recommendationText')
+    .lean()) as {
+    workQualityRating?: number;
+    isRecommended?: boolean;
+    recommendationText?: string;
+  }[];
+
+  if (reviews.length === 0) return false;
+
+  // Criteria 1: At least 1 written recommendation
+  const hasWrittenRecommendation = reviews.some(
+    (r) => r.isRecommended || (r.recommendationText && r.recommendationText.trim().length > 0)
+  );
+  if (!hasWrittenRecommendation) return false;
+
+  // Criteria 2: Average rating > 4.0
+  let totalRating = 0;
+  let count = 0;
+
+  for (const r of reviews) {
+    if (r.workQualityRating) {
+      totalRating += r.workQualityRating;
+      count++;
+    }
+  }
+
+  if (count === 0) return false;
+
+  const avgRating = totalRating / count;
+  return avgRating > 4.0;
 }

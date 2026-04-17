@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getDefaultAuthenticatedRoute } from '@/lib/role-routing';
 import SignOutRedirectButton from '@/components/auth/SignOutRedirectButton';
+import { NexternLogo } from '@/components/brand/NexternLogo';
 
 const ROLE_LABELS: Record<string, string> = {
   employer: 'employer account',
@@ -273,6 +274,7 @@ export default async function PendingApprovalPage() {
   const redirectTarget = getDefaultAuthenticatedRoute({
     role: session.user.role,
     verificationStatus: session.user.verificationStatus,
+    mustChangePassword: session.user.mustChangePassword,
   });
 
   if (redirectTarget !== '/pending-approval') {
@@ -359,38 +361,7 @@ export default async function PendingApprovalPage() {
               gap: 10,
             }}
           >
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
-                borderRadius: 9,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <span
-                style={{
-                  color: '#fff',
-                  fontSize: 17,
-                  fontWeight: 900,
-                  fontFamily: 'var(--font-display)',
-                }}
-              >
-                N
-              </span>
-            </div>
-            <span
-              style={{
-                color: '#fff',
-                fontSize: 19,
-                fontWeight: 800,
-                fontFamily: 'var(--font-display)',
-              }}
-            >
-              nextern<span style={{ color: '#22D3EE' }}>.</span>
-            </span>
+            <NexternLogo markSize={34} markRadius={9} textSize={19} textColor="#fff" />
           </Link>
           <SignOutRedirectButton
             redirectTo="/"
