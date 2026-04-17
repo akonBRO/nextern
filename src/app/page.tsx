@@ -624,6 +624,7 @@ export default async function LandingPage() {
       getDefaultAuthenticatedRoute({
         role: session.user.role,
         verificationStatus: session.user.verificationStatus,
+        mustChangePassword: session.user.mustChangePassword,
       })
     );
   }

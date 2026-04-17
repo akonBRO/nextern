@@ -274,6 +274,7 @@ export default async function PendingApprovalPage() {
   const redirectTarget = getDefaultAuthenticatedRoute({
     role: session.user.role,
     verificationStatus: session.user.verificationStatus,
+    mustChangePassword: session.user.mustChangePassword,
   });
 
   if (redirectTarget !== '/pending-approval') {

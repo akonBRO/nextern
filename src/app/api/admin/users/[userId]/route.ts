@@ -117,6 +117,21 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     const data = parsed.data;
+    const academicRoles = new Set(['advisor', 'dept_head']);
+    if (
+      data.role &&
+      data.role !== existingUser.role &&
+      (academicRoles.has(data.role) || academicRoles.has(existingUser.role))
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Academic role changes must use the dedicated department head or advisor provisioning flow.',
+        },
+        { status: 400 }
+      );
+    }
+
     const updates: Record<string, unknown> = {};
 
     const plainAssignments = [
