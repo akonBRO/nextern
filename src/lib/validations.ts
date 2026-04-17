@@ -293,60 +293,68 @@ export const AdminMessageModerationSchema = z.object({
 
 // ── Module 1 — Job, Recruitment & Career Events System ───────────────────────
 
-export const CreateJobSchema = z
-  .object({
-    title: z.string().min(3, 'Title must be at least 3 characters').max(120),
-    type: z.enum(['internship', 'part-time', 'full-time', 'campus-drive', 'webinar', 'workshop']),
-    description: z.string().min(20, 'Description must be at least 20 characters').max(5000),
-    responsibilities: z.array(z.string().min(1)).max(20).optional().default([]),
-    locationType: z.enum(['onsite', 'remote', 'hybrid']),
-    city: z.string().max(80).optional(),
+const JobSchemaBase = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters').max(120),
+  type: z.enum(['internship', 'part-time', 'full-time', 'campus-drive', 'webinar', 'workshop']),
+  description: z.string().min(20, 'Description must be at least 20 characters').max(5000),
+  responsibilities: z.array(z.string().min(1)).max(20).optional().default([]),
+  locationType: z.enum(['onsite', 'remote', 'hybrid']),
+  city: z.string().max(80).optional(),
 
-    stipendBDT: z.number().int().min(0).optional(),
-    isStipendNegotiable: z.boolean().optional().default(false),
+  stipendBDT: z.number().int().min(0).optional(),
+  isStipendNegotiable: z.boolean().optional().default(false),
 
-    applicationDeadline: z.string().min(1, 'Deadline is required'),
-    startDate: z.string().optional(),
-    durationMonths: z.number().int().min(1).max(24).optional(),
+  applicationDeadline: z.string().min(1, 'Deadline is required'),
+  startDate: z.string().optional(),
+  durationMonths: z.number().int().min(1).max(24).optional(),
 
-    targetUniversities: z.array(z.string()).optional().default([]),
-    targetDepartments: z.array(z.string()).optional().default([]),
-    targetYears: z.array(z.number().int().min(1).max(5)).optional().default([]),
+  targetUniversities: z.array(z.string()).optional().default([]),
+  targetDepartments: z.array(z.string()).optional().default([]),
+  targetYears: z.array(z.number().int().min(1).max(5)).optional().default([]),
 
-    requiredSkills: z.array(z.string()).optional().default([]),
-    minimumCGPA: z.number().min(0).max(4.0).optional(),
-    requiredCourses: z.array(z.string()).optional().default([]),
-    experienceExpectations: z.string().max(500).optional(),
-    preferredCertifications: z.array(z.string()).optional().default([]),
+  requiredSkills: z.array(z.string()).optional().default([]),
+  minimumCGPA: z.number().min(0).max(4.0).optional(),
+  requiredCourses: z.array(z.string()).optional().default([]),
+  experienceExpectations: z.string().max(500).optional(),
+  preferredCertifications: z.array(z.string()).optional().default([]),
 
-    isBatchHiring: z.boolean().optional().default(false),
-    batchUniversities: z.array(z.string()).optional().default([]),
+  isBatchHiring: z.boolean().optional().default(false),
+  batchUniversities: z.array(z.string()).optional().default([]),
 
-    isActive: z.boolean().optional().default(true),
-    academicSession: z.string().max(20).optional(),
-  })
-  .superRefine((data, ctx) => {
-    const isEvent = data.type === 'webinar' || data.type === 'workshop';
+  isActive: z.boolean().optional().default(true),
+  academicSession: z.string().max(20).optional(),
+});
 
-    if (isEvent && !data.startDate) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['startDate'],
-        message: 'Event date is required',
-      });
-    }
+function addJobDateValidationIssues(
+  data: { type?: string; startDate?: string; applicationDeadline?: string },
+  ctx: z.RefinementCtx,
+  options?: { requireEventStartDate?: boolean }
+) {
+  const isEvent = data.type === 'webinar' || data.type === 'workshop';
 
-    if (data.startDate && data.applicationDeadline && data.startDate < data.applicationDeadline) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['startDate'],
-        message: 'Event date must be on or after the registration deadline',
-      });
-    }
-  });
+  if (options?.requireEventStartDate && isEvent && !data.startDate) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['startDate'],
+      message: 'Event date is required',
+    });
+  }
 
-export const UpdateJobSchema = CreateJobSchema.partial().extend({
-  isActive: z.boolean().optional(),
+  if (data.startDate && data.applicationDeadline && data.startDate < data.applicationDeadline) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['startDate'],
+      message: 'Event date must be on or after the registration deadline',
+    });
+  }
+}
+
+export const CreateJobSchema = JobSchemaBase.superRefine((data, ctx) => {
+  addJobDateValidationIssues(data, ctx, { requireEventStartDate: true });
+});
+
+export const UpdateJobSchema = JobSchemaBase.partial().superRefine((data, ctx) => {
+  addJobDateValidationIssues(data, ctx);
 });
 
 export const AdminJobUpdateSchema = UpdateJobSchema.extend({
