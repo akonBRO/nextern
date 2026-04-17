@@ -8,6 +8,7 @@ import {
   sendEmail,
   applicationStatusEmailTemplate,
   deadlineReminderEmailTemplate,
+  employerApplicationNotificationEmailTemplate,
   eventRegistrationConfirmationEmailTemplate,
   hostedEventReminderEmailTemplate,
   registeredEventReminderEmailTemplate,
@@ -233,6 +234,7 @@ const DEFAULT_NOTIFICATION_PREFERENCES: Record<string, boolean> = {
 };
 
 const DEFAULT_EMAIL_PREFERENCES: Record<string, boolean> = {
+  application_received: true,
   deadline_reminders: true,
   event_registrations: true,
   event_reminders: true,
@@ -326,12 +328,16 @@ export async function notifyEmployerApplicationReceived(
   applicationId: string,
   options?: { isEventRegistration?: boolean }
 ) {
-  let employerRole: string | undefined;
+  const employer = await User.findById(employerId)
+    .select('role email name emailPreferences')
+    .lean();
 
-  if (options?.isEventRegistration) {
-    const employer = await User.findById(employerId).select('role').lean();
-    employerRole = employer?.role as string | undefined;
-  }
+  const employerRole = employer?.role as string | undefined;
+  const employerEmail = employer?.email as string | undefined;
+  const employerName = employer?.name as string | undefined;
+  const employerEmailPreferences = employer?.emailPreferences as
+    | Record<string, boolean>
+    | undefined;
 
   const isAdvisorEvent =
     options?.isEventRegistration && (employerRole === 'advisor' || employerRole === 'dept_head');
@@ -352,6 +358,26 @@ export async function notifyEmployerApplicationReceived(
     link: isAdvisorEvent ? advisorEventLink : `/employer/jobs/${jobId}/applicants`,
     meta: { jobId, applicationId, studentName, companyName, icon: 'Users' },
     preferenceKey: options?.isEventRegistration ? 'event_registrations' : 'application_received',
+  });
+
+  if (employerRole !== 'employer' || !employerEmail) return;
+
+  const emailPrefs = normalizeEmailPreferences(employerEmailPreferences);
+  const emailPreferenceKey = options?.isEventRegistration
+    ? 'event_registrations'
+    : 'application_received';
+  if (emailPrefs[emailPreferenceKey] === false) return;
+
+  const { subject, html } = employerApplicationNotificationEmailTemplate({
+    employerName: employerName?.trim() || 'Employer',
+    studentName,
+    opportunityTitle: jobTitle,
+    organizationName: companyName,
+    isEventRegistration: options?.isEventRegistration,
+  });
+
+  void sendEmail({ to: employerEmail, subject, html }).catch((error) => {
+    console.error('[EMPLOYER APPLICATION EMAIL ERROR]', error);
   });
 }
 
@@ -672,4 +698,102 @@ export async function notifyRegisteredEventReminder(params: {
     .catch((err) => {
       console.error('[REGISTERED EVENT EMAIL ERROR]', err);
     });
+}
+
+export async function notifyEmployerRecommendationRequest(params: {
+  employerId: string;
+  studentId: string;
+  studentName: string;
+  recommenderId: string;
+  recommenderName: string;
+  recommenderRole: 'advisor' | 'dept_head';
+  recommendationId: string;
+  jobId: string;
+  jobTitle: string;
+  companyName: string;
+}) {
+  const {
+    employerId,
+    studentId,
+    studentName,
+    recommenderId,
+    recommenderName,
+    recommenderRole,
+    recommendationId,
+    jobId,
+    jobTitle,
+    companyName,
+  } = params;
+
+  await createNotification({
+    userId: employerId,
+    type: 'recommendation_request',
+    title: `Recommendation request for ${studentName}`,
+    body: `${recommenderName} (${recommenderRole === 'dept_head' ? 'Department head' : 'Advisor'}) recommended ${studentName} for "${jobTitle}" at ${companyName}. Review the request and mark it as accepted, rejected, or on hold.`,
+    link: '/employer/recommendations',
+    meta: {
+      recommendationId,
+      studentId,
+      recommenderId,
+      jobId,
+      jobTitle,
+      companyName,
+      icon: 'SendToBack',
+    },
+  });
+}
+
+export async function notifyRecommendationRequestDecision(params: {
+  recommendationId: string;
+  recommenderId: string;
+  recommenderRole: 'advisor' | 'dept_head';
+  employerName: string;
+  studentId: string;
+  studentName: string;
+  jobId: string;
+  jobTitle: string;
+  requestStatus: 'accepted' | 'rejected' | 'hold';
+}) {
+  const {
+    recommendationId,
+    recommenderId,
+    recommenderRole,
+    employerName,
+    studentId,
+    studentName,
+    jobId,
+    jobTitle,
+    requestStatus,
+  } = params;
+
+  const statusLabel =
+    requestStatus === 'hold'
+      ? 'placed on hold'
+      : requestStatus === 'accepted'
+        ? 'accepted'
+        : 'rejected';
+  const title =
+    requestStatus === 'hold'
+      ? 'Recommendation request placed on hold'
+      : `Recommendation request ${requestStatus}`;
+  const link =
+    recommenderRole === 'dept_head'
+      ? `/dept/recommendations?studentId=${studentId}`
+      : `/advisor/recommendations?studentId=${studentId}`;
+
+  await createNotification({
+    userId: recommenderId,
+    type: 'recommendation_request',
+    title,
+    body: `${employerName} ${statusLabel} your recommendation for ${studentName} on "${jobTitle}".`,
+    link,
+    meta: {
+      recommendationId,
+      studentId,
+      jobId,
+      jobTitle,
+      requestStatus,
+      icon: 'SendToBack',
+    },
+  });
 }
