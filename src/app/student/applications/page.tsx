@@ -1,6 +1,6 @@
 // src/app/student/applications/page.tsx
 // Student application tracker — uses DashboardShell
-// Tabs: Applications | Events
+// Tabs: Applications | Events — Fully Responsive
 
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -24,6 +24,7 @@ import {
 import { BriefcaseBusiness, CheckCircle2, Trophy, CalendarDays } from 'lucide-react';
 import ApplicationsTabs from './ApplicationsTabs';
 
+/* ─── Data fetcher ───────────────────────────────────────────────────────────── */
 async function getApplicationsData(userId: string) {
   await connectDB();
   const oid = new mongoose.Types.ObjectId(userId);
@@ -41,7 +42,6 @@ async function getApplicationsData(userId: string) {
     Message.countDocuments({ receiverId: oid, isRead: false }),
   ]);
 
-  // Separate job applications from event registrations
   const applications = allApplications.filter((a) => !a.isEventRegistration);
   const events = allApplications.filter((a) => a.isEventRegistration);
 
@@ -58,7 +58,6 @@ async function getApplicationsData(userId: string) {
       : 0,
   };
 
-  // Serialize for client component
   const serialize = (app: (typeof allApplications)[0]) => {
     const job = app.jobId as {
       _id: string;
@@ -114,6 +113,7 @@ async function getApplicationsData(userId: string) {
   };
 }
 
+/* ─── Page ───────────────────────────────────────────────────────────────────── */
 export default async function StudentApplicationsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
@@ -142,6 +142,7 @@ export default async function StudentApplicationsPage() {
       }}
     >
       <DashboardPage>
+        {/* ── Hero ── */}
         <HeroCard
           eyebrow="Activity tracker"
           title="Your applications & events"
@@ -160,36 +161,19 @@ export default async function StudentApplicationsPage() {
                 border: '1px solid rgba(255,255,255,0.16)',
               }}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {/* Summary grid — 2-col on all sizes, text scales down on mobile */}
+              <div className="summary-grid">
                 {[
                   { label: 'Applications', value: stats.totalApps, color: '#F8FAFC' },
                   { label: 'Events', value: stats.totalEvents, color: '#22D3EE' },
                   { label: 'Shortlisted', value: stats.shortlisted, color: '#10B981' },
                   { label: 'Avg Fit', value: `${stats.avgFit}%`, color: '#F59E0B' },
                 ].map((s) => (
-                  <div
-                    key={s.label}
-                    style={{
-                      background: 'rgba(255,255,255,0.08)',
-                      borderRadius: 12,
-                      padding: '12px 14px',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 22,
-                        fontWeight: 900,
-                        color: s.color,
-                        fontFamily: 'var(--font-display)',
-                        lineHeight: 1,
-                      }}
-                    >
+                  <div key={s.label} className="summary-cell">
+                    <div className="summary-value" style={{ color: s.color }}>
                       {s.value}
                     </div>
-                    <div style={{ color: '#9FB4D0', fontSize: 12, marginTop: 4, fontWeight: 600 }}>
-                      {s.label}
-                    </div>
+                    <div className="summary-label">{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -197,12 +181,9 @@ export default async function StudentApplicationsPage() {
           }
         />
 
-        {/* Stat cards */}
-        <section style={{ marginTop: 22 }}>
-          <div
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}
-            className="dashboard-stats-grid"
-          >
+        {/* ── Stat cards ── */}
+        <section className="stats-section">
+          <div className="stats-grid">
             <StatCard
               label="Job applications"
               value={formatCompactNumber(stats.totalApps)}
@@ -229,7 +210,7 @@ export default async function StudentApplicationsPage() {
           </div>
         </section>
 
-        {/* Tabbed content — client component */}
+        {/* ── Tabbed content ── */}
         <DashboardSection
           id="activity"
           title="Activity"
@@ -238,9 +219,69 @@ export default async function StudentApplicationsPage() {
           <ApplicationsTabs applications={applications} events={events} />
         </DashboardSection>
 
+        {/* ── Responsive styles ── */}
         <style>{`
-          @media (max-width: 960px) {
-            .dashboard-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          /* Stats section spacing */
+          .stats-section { margin-top: 20px; }
+
+          /* Stats grid — 4 cols → 2 cols → 1 col */
+          .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+          }
+
+          /* Summary grid inside hero aside */
+          .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+          }
+          .summary-cell {
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 12px 14px;
+            border: 1px solid rgba(255,255,255,0.1);
+          }
+          .summary-value {
+            font-size: 22px;
+            font-weight: 900;
+            font-family: var(--font-display, system-ui);
+            line-height: 1;
+          }
+          .summary-label {
+            color: #9FB4D0;
+            font-size: 12px;
+            margin-top: 4px;
+            font-weight: 600;
+          }
+
+          /* ── Tablet (≤ 1024px): 2-col stats ── */
+          @media (max-width: 1024px) {
+            .stats-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+          }
+
+          /* ── Small tablet (≤ 768px) ── */
+          @media (max-width: 768px) {
+            .stats-section { margin-top: 16px; }
+            .stats-grid { gap: 10px; }
+            .summary-value { font-size: 20px; }
+            .summary-cell { padding: 10px 12px; border-radius: 10px; }
+          }
+
+          /* ── Mobile (≤ 480px): 1-col stats ── */
+          @media (max-width: 480px) {
+            .stats-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 8px;
+            }
+            .stats-section { margin-top: 12px; }
+            .summary-value { font-size: 18px; }
+            .summary-label { font-size: 11px; }
+            .summary-cell { padding: 9px 10px; border-radius: 9px; }
+            .summary-grid { gap: 8px; }
           }
         `}</style>
       </DashboardPage>

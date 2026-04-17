@@ -20,7 +20,11 @@ const BadgeDefinitionSchema = new Schema<IBadgeDefinition>(
     name: { type: String, required: true },
     description: { type: String, required: true },
     icon: { type: String, required: true },
-    category: { type: String, enum: ['student', 'employer', 'advisor', 'dept_head'], required: true },
+    category: {
+      type: String,
+      enum: ['student', 'employer', 'advisor', 'dept_head'],
+      required: true,
+    },
     criteria: { type: String, required: true },
     triggerEvent: { type: String, required: true },
     thresholdValue: { type: Number, default: 1 },
