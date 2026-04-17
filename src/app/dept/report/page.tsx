@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
-import { getDepartmentNavItems } from '@/lib/academic-navigation';
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 import {
   DashboardPage,
   DashboardSection,
@@ -21,7 +21,46 @@ import {
 import { getDeptDashboardData } from '@/lib/role-dashboard';
 import { BriefcaseBusiness, Target, Users, FileText, Sparkles } from 'lucide-react';
 
-const navItems = getDepartmentNavItems();
+const navItems = [
+  { label: 'Overview', href: '/dept/dashboard', icon: 'dashboard' as const },
+  {
+    label: 'Events',
+    icon: 'calendar' as const,
+    items: [
+      {
+        label: 'Post Event',
+        href: '/dept/events/new',
+        description: 'Publish a webinar or workshop for students.',
+        icon: 'calendar' as const,
+      },
+      {
+        label: 'My Events',
+        href: '/dept/events',
+        description: 'View and manage all your posted events.',
+        icon: 'file' as const,
+      },
+    ],
+  },
+  {
+    label: 'Analytics',
+    icon: 'insights' as const,
+    items: [
+      {
+        label: 'Dashboard',
+        href: '/dept/dashboard',
+        description: 'Full analytics overview.',
+        icon: 'insights' as const,
+      },
+      {
+        label: 'Report',
+        href: '/dept/report',
+        description: 'Export strategic readiness report.',
+        icon: 'file' as const,
+      },
+    ],
+  },
+  { label: 'My Profile', href: '/dept/profile', icon: 'users' as const },
+];
 
 export default async function DeptReportPage() {
   const session = await auth();
@@ -57,7 +96,7 @@ export default async function DeptReportPage() {
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
-      navItems={navItems}
+      navItems={DEPT_NAV_ITEMS}
       user={data.chromeUser}
     >
       <DashboardPage>

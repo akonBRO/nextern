@@ -15,6 +15,7 @@ import {
   syncSavedJobDeadlineToCalendar,
   syncInterviewToCalendar,
   syncEventRegistrationToCalendar,
+  syncOwnedEventToCalendar,
 } from '@/lib/calendar';
 import mongoose from 'mongoose';
 
@@ -47,94 +48,121 @@ export async function POST(req: NextRequest) {
       const oid = new mongoose.Types.ObjectId(session.user.id);
       const now = new Date();
 
-      // Find all active applications without calendar events
-      const applications = await Application.find({
-        studentId: oid,
-        status: { $nin: ['rejected', 'withdrawn'] },
-        googleCalendarEventId: { $exists: false },
-      }).lean();
-      const activeApplicationJobIds = new Set(applications.map((app) => app.jobId.toString()));
-      const savedJobs = await JobView.find({
-        studentId: oid,
-        isSaved: true,
-        googleCalendarEventId: { $exists: false },
-      })
-        .populate('jobId', 'title companyName applicationDeadline isActive')
-        .lean();
-
       let synced = 0;
 
-      for (const app of applications) {
-        const job = await Job.findById(app.jobId)
-          .select('title companyName applicationDeadline startDate type')
+      if (session.user.role === 'student') {
+        const applications = await Application.find({
+          studentId: oid,
+          status: { $nin: ['rejected', 'withdrawn'] },
+          googleCalendarEventId: { $exists: false },
+        }).lean();
+        const activeApplicationJobIds = new Set(applications.map((app) => app.jobId.toString()));
+        const savedJobs = await JobView.find({
+          studentId: oid,
+          isSaved: true,
+          googleCalendarEventId: { $exists: false },
+        })
+          .populate('jobId', 'title companyName applicationDeadline isActive')
           .lean();
 
-        if (!job) continue;
+        for (const app of applications) {
+          const job = await Job.findById(app.jobId)
+            .select('title companyName applicationDeadline startDate type')
+            .lean();
 
-        // Sync interview if scheduled
-        if (
-          app.status === 'interview_scheduled' &&
-          app.interviewScheduledAt &&
-          app.interviewScheduledAt > now
-        ) {
-          await syncInterviewToCalendar(
-            session.user.id,
-            app._id.toString(),
-            job.title,
-            job.companyName,
-            app.interviewScheduledAt
-          );
-          synced++;
-          continue;
+          if (!job) continue;
+
+          if (
+            app.status === 'interview_scheduled' &&
+            app.interviewScheduledAt &&
+            app.interviewScheduledAt > now
+          ) {
+            await syncInterviewToCalendar(
+              session.user.id,
+              app._id.toString(),
+              job.title,
+              job.companyName,
+              app.interviewScheduledAt
+            );
+            synced++;
+            continue;
+          }
+
+          if (app.isEventRegistration && job.startDate && job.startDate > now) {
+            await syncEventRegistrationToCalendar(
+              session.user.id,
+              app._id.toString(),
+              job.title,
+              job.companyName,
+              job.startDate
+            );
+            synced++;
+            continue;
+          }
+
+          if (
+            !app.isEventRegistration &&
+            job.applicationDeadline &&
+            job.applicationDeadline > now
+          ) {
+            await syncJobDeadlineToCalendar(
+              session.user.id,
+              app._id.toString(),
+              job.title,
+              job.companyName,
+              job.applicationDeadline
+            );
+            synced++;
+          }
         }
 
-        // Sync event registrations
-        if (app.isEventRegistration && job.startDate && job.startDate > now) {
-          await syncEventRegistrationToCalendar(
-            session.user.id,
-            app._id.toString(),
-            job.title,
-            job.companyName,
-            job.startDate
-          );
-          synced++;
-          continue;
-        }
+        for (const savedJob of savedJobs) {
+          const job = savedJob.jobId as unknown as {
+            _id: mongoose.Types.ObjectId;
+            title: string;
+            companyName: string;
+            applicationDeadline?: Date;
+            isActive?: boolean;
+          } | null;
 
-        // Sync job deadlines
-        if (!app.isEventRegistration && job.applicationDeadline && job.applicationDeadline > now) {
-          await syncJobDeadlineToCalendar(
+          if (!job?.applicationDeadline || job.isActive === false) continue;
+          if (job.applicationDeadline <= now) continue;
+          if (activeApplicationJobIds.has(job._id.toString())) continue;
+
+          await syncSavedJobDeadlineToCalendar(
             session.user.id,
-            app._id.toString(),
+            savedJob._id.toString(),
             job.title,
             job.companyName,
             job.applicationDeadline
           );
           synced++;
         }
-      }
+      } else if (session.user.role === 'advisor' || session.user.role === 'dept_head') {
+        const ownedEvents = await Job.find({
+          employerId: oid,
+          type: { $in: ['webinar', 'workshop'] },
+          isActive: true,
+          startDate: { $gt: now },
+        })
+          .select('title companyName type startDate applicationDeadline ownerGoogleCalendarEventId')
+          .lean();
 
-      for (const savedJob of savedJobs) {
-        const job = savedJob.jobId as unknown as {
-          _id: mongoose.Types.ObjectId;
-          title: string;
-          companyName: string;
-          applicationDeadline?: Date;
-          isActive?: boolean;
-        } | null;
+        for (const event of ownedEvents) {
+          if (!event.startDate || (event.type !== 'webinar' && event.type !== 'workshop')) continue;
 
-        if (!job?.applicationDeadline || job.isActive === false) continue;
-        if (job.applicationDeadline <= now) continue;
-        if (activeApplicationJobIds.has(job._id.toString())) continue;
-
-        await syncSavedJobDeadlineToCalendar(
-          session.user.id,
-          savedJob._id.toString(),
-          job.title,
-          job.companyName,
-          job.applicationDeadline
-        );
-        synced++;
+          await syncOwnedEventToCalendar(
+            session.user.id,
+            event._id.toString(),
+            event.title,
+            event.companyName,
+            event.startDate,
+            event.type,
+            event.applicationDeadline,
+            event.ownerGoogleCalendarEventId
+          );
+          synced++;
+        }
       }
 
       return NextResponse.json({

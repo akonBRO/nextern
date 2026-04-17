@@ -18,7 +18,9 @@ export async function onJobApplied(userId: string, jobId: string) {
   // 2. Notify student + notify event owner (employer/dept head)
   try {
     await connectDB();
-    const job = await Job.findById(jobId).select('title companyName employerId type').lean();
+    const job = await Job.findById(jobId)
+      .select('title companyName employerId type startDate')
+      .lean();
 
     if (job) {
       const app = await Application.findOne({
@@ -32,7 +34,12 @@ export async function onJobApplied(userId: string, jobId: string) {
       const isEvent = job.type === 'webinar' || job.type === 'workshop';
 
       // Notify student their application/registration was submitted
-      await notifyJobApplied(userId, job.title, job.companyName, appId);
+      await notifyJobApplied(userId, job.title, job.companyName, appId, {
+        isEventRegistration: isEvent,
+        eventDate: isEvent
+          ? ((job as { startDate?: Date | null }).startDate ?? undefined)
+          : undefined,
+      });
 
       // Notify the job owner (employer or dept head) that someone applied/registered
       const { User } = await import('@/models/User');

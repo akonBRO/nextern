@@ -12,7 +12,7 @@ import { User } from '@/models/User';
 import mongoose from 'mongoose';
 import Link from 'next/link';
 import DashboardShell from '@/components/dashboard/DashboardShell';
-import { getDepartmentNavItems } from '@/lib/academic-navigation';
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 import {
   DashboardPage,
   DashboardSection,
@@ -27,7 +27,45 @@ import {
 import { CalendarDays, Users, Clock, FileText } from 'lucide-react';
 import CloseJobButton from '@/app/employer/jobs/CloseJobButton';
 
-const navItems = getDepartmentNavItems();
+const navItems = [
+  { label: 'Overview', href: '/dept/dashboard', icon: 'dashboard' as const },
+  {
+    label: 'Events',
+    icon: 'calendar' as const,
+    items: [
+      {
+        label: 'Post Event',
+        href: '/dept/events/new',
+        description: 'Publish a webinar or workshop for students.',
+        icon: 'calendar' as const,
+      },
+      {
+        label: 'My Events',
+        href: '/dept/events',
+        description: 'View and manage all your posted events.',
+        icon: 'file' as const,
+      },
+    ],
+  },
+  {
+    label: 'Analytics',
+    icon: 'insights' as const,
+    items: [
+      {
+        label: 'Benchmarks',
+        href: '/dept/dashboard#benchmarks',
+        description: 'Set cohort thresholds.',
+        icon: 'target' as const,
+      },
+      {
+        label: 'Report',
+        href: '/dept/report',
+        description: 'Export strategic readiness report.',
+        icon: 'file' as const,
+      },
+    ],
+  },
+];
 
 const TYPE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   webinar: { bg: '#F0F9FF', color: '#0369A1', border: '#BAE6FD' },
@@ -116,7 +154,7 @@ export default async function DeptEventsPage() {
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
-      navItems={navItems}
+      navItems={DEPT_NAV_ITEMS}
       user={{
         name: deptHead?.name ?? 'Dept Head',
         email: deptHead?.email ?? '',

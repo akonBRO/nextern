@@ -407,7 +407,7 @@ export default async function EmployerDashboard() {
         </section>
         <DashboardSection
           id="calendar"
-          title="Hiring calendar"
+          title="Calendar"
           description="Track interview schedules, job deadlines, and employer-hosted event dates with the same interactive monthly planner used in the student experience."
         >
           <CalendarBoard

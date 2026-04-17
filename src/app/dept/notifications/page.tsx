@@ -3,14 +3,14 @@ import { redirect } from 'next/navigation';
 import { Bell, CalendarDays, Users } from 'lucide-react';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import NotificationsPageClient from '@/components/notifications/NotificationsPageClient';
-import { getDepartmentNavItems } from '@/lib/academic-navigation';
+
 import { getDeptDashboardData } from '@/lib/role-dashboard';
-const navItems = getDepartmentNavItems();
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 
 const DEPT_FILTER_TABS = [
   { value: 'all', label: 'All', icon: <Bell size={13} /> },
   { value: 'application_received', label: 'Registrations', icon: <Users size={13} /> },
-  { value: 'deadline_reminder', label: 'Deadlines', icon: <CalendarDays size={13} /> },
+  { value: 'deadline_reminder', label: 'Calendar Alerts', icon: <CalendarDays size={13} /> },
 ];
 
 export default async function DeptNotificationsPage() {
@@ -27,13 +27,13 @@ export default async function DeptNotificationsPage() {
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
-      navItems={navItems}
-      user={data.chromeUser}
+      navItems={DEPT_NAV_ITEMS}
+      user={{ ...data.chromeUser, userId: session.user.id }}
     >
       <NotificationsPageClient
         dashboardHref="/dept/dashboard"
         title="Notifications"
-        subtitle="Track important updates for your department and student cohort."
+        subtitle="Track student registrations and hosted-event calendar reminders."
         filterTabs={DEPT_FILTER_TABS}
       />
     </DashboardShell>

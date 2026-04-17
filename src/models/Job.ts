@@ -36,6 +36,7 @@ export interface IJob extends Document {
   isActive: boolean;
   isPremiumListing: boolean;
   academicSession?: string; // 'Spring 2026'
+  ownerGoogleCalendarEventId?: string;
 }
 
 const JobSchema = new Schema<IJob>(
@@ -73,6 +74,7 @@ const JobSchema = new Schema<IJob>(
     isActive: { type: Boolean, default: true },
     isPremiumListing: { type: Boolean, default: false },
     academicSession: { type: String },
+    ownerGoogleCalendarEventId: { type: String },
   },
   { timestamps: true }
 );

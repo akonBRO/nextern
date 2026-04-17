@@ -148,6 +148,7 @@ export const UpdateAdvisorProfileSchema = z.object({
   city: z.string().max(60).optional(),
   linkedinUrl: z.string().url().optional().or(z.literal('')),
   notificationPreferences: z.record(z.string(), z.boolean()).optional(),
+  emailPreferences: z.record(z.string(), z.boolean()).optional(),
 });
 
 export const ChangePasswordSchema = z
@@ -292,7 +293,7 @@ export const AdminMessageModerationSchema = z.object({
 
 // ── Module 1 — Job, Recruitment & Career Events System ───────────────────────
 
-export const CreateJobSchema = z.object({
+const JobSchemaBase = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(120),
   type: z.enum(['internship', 'part-time', 'full-time', 'campus-drive', 'webinar', 'workshop']),
   description: z.string().min(20, 'Description must be at least 20 characters').max(5000),
@@ -324,8 +325,36 @@ export const CreateJobSchema = z.object({
   academicSession: z.string().max(20).optional(),
 });
 
-export const UpdateJobSchema = CreateJobSchema.partial().extend({
-  isActive: z.boolean().optional(),
+function addJobDateValidationIssues(
+  data: { type?: string; startDate?: string; applicationDeadline?: string },
+  ctx: z.RefinementCtx,
+  options?: { requireEventStartDate?: boolean }
+) {
+  const isEvent = data.type === 'webinar' || data.type === 'workshop';
+
+  if (options?.requireEventStartDate && isEvent && !data.startDate) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['startDate'],
+      message: 'Event date is required',
+    });
+  }
+
+  if (data.startDate && data.applicationDeadline && data.startDate < data.applicationDeadline) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['startDate'],
+      message: 'Event date must be on or after the registration deadline',
+    });
+  }
+}
+
+export const CreateJobSchema = JobSchemaBase.superRefine((data, ctx) => {
+  addJobDateValidationIssues(data, ctx, { requireEventStartDate: true });
+});
+
+export const UpdateJobSchema = JobSchemaBase.partial().superRefine((data, ctx) => {
+  addJobDateValidationIssues(data, ctx);
 });
 
 export const AdminJobUpdateSchema = UpdateJobSchema.extend({

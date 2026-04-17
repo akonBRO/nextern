@@ -7,13 +7,22 @@ import { auth, signIn } from '@/lib/auth';
 
 const DEFAULT_CALLBACK_URL = '/student/dashboard?calendar=connected#calendar';
 
+function getDefaultCallbackUrl(role?: string | null) {
+  if (role === 'advisor') return '/advisor/profile?calendar=connected#calendar';
+  if (role === 'dept_head') return '/dept/profile?calendar=connected#calendar';
+  if (role === 'employer') return '/employer/dashboard#calendar';
+  return DEFAULT_CALLBACK_URL;
+}
+
 export async function GET(req: NextRequest) {
   const baseUrl = process.env.NEXTAUTH_URL ?? req.nextUrl.origin;
   const callbackUrl = req.nextUrl.searchParams.get('callbackUrl');
-  const redirectTo =
-    callbackUrl && callbackUrl.startsWith('/') ? callbackUrl : DEFAULT_CALLBACK_URL;
-
   const session = await auth();
+  const redirectTo =
+    callbackUrl && callbackUrl.startsWith('/')
+      ? callbackUrl
+      : getDefaultCallbackUrl(session?.user?.role ?? null);
+
   if (!session?.user?.id) {
     const loginUrl = new URL('/login', baseUrl);
     loginUrl.searchParams.set('callbackUrl', redirectTo);

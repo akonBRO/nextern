@@ -12,7 +12,7 @@ import { User } from '@/models/User';
 import mongoose from 'mongoose';
 import Link from 'next/link';
 import DashboardShell from '@/components/dashboard/DashboardShell';
-import { getAdvisorNavItems } from '@/lib/academic-navigation';
+import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
 import {
   DashboardPage,
   DashboardSection,
@@ -29,7 +29,45 @@ import {
 import { CalendarDays, Users, Clock, PlusCircle, FileText } from 'lucide-react';
 import CloseJobButton from '@/app/employer/jobs/CloseJobButton';
 
-const navItems = getAdvisorNavItems();
+const navItems = [
+  { label: 'Overview', href: '/advisor/dashboard', icon: 'dashboard' as const },
+  {
+    label: 'My Students',
+    icon: 'users' as const,
+    items: [
+      {
+        label: 'Attention queue',
+        href: '/advisor/dashboard#students',
+        description: 'Students that need immediate coaching.',
+        icon: 'users' as const,
+      },
+      {
+        label: 'Upcoming interviews',
+        href: '/advisor/dashboard#interviews',
+        description: 'Students with approaching interviews.',
+        icon: 'calendar' as const,
+      },
+    ],
+  },
+  {
+    label: 'Events',
+    icon: 'calendar' as const,
+    items: [
+      {
+        label: 'Post Event',
+        href: '/advisor/events/new',
+        description: 'Publish a webinar or workshop for students.',
+        icon: 'calendar' as const,
+      },
+      {
+        label: 'My Events',
+        href: '/advisor/events',
+        description: 'View and manage all your posted events.',
+        icon: 'file' as const,
+      },
+    ],
+  },
+];
 
 const TYPE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   webinar: { bg: '#F0F9FF', color: '#0369A1', border: '#BAE6FD' },
@@ -128,7 +166,7 @@ export default async function AdvisorEventsPage() {
       role="advisor"
       roleLabel="Advisor dashboard"
       homeHref="/advisor/dashboard"
-      navItems={navItems}
+      navItems={ADVISOR_NAV_ITEMS}
       user={{
         name: advisor?.name ?? 'Advisor',
         email: advisor?.email ?? '',
