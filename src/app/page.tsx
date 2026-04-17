@@ -9,7 +9,6 @@ import React from 'react';
 import { NexternLogo } from '@/components/brand/NexternLogo';
 import { getDefaultAuthenticatedRoute } from '@/lib/role-routing';
 
-/* â”€â”€â”€ INLINE SVG ICONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const Icons = {
   Brain: () => (
     <svg
