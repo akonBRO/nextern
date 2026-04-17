@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AssessmentSubmitSchema } from '@/lib/validations';
-import { submitAssessmentAssignment } from '@/lib/hiring-suite';
+import { PremiumAccessError, submitAssessmentAssignment } from '@/lib/hiring-suite';
 
 type Params = { params: Promise<{ assignmentId: string }> };
 
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     console.error('[ASSESSMENT SUBMIT ERROR]', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to submit assessment.' },
-      { status: 500 }
+      { status: error instanceof PremiumAccessError ? error.status : 500 }
     );
   }
 }

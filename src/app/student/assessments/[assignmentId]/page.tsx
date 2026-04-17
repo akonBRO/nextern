@@ -7,6 +7,7 @@ import { AssessmentSubmission } from '@/models/AssessmentSubmission';
 import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { User } from '@/models/User';
+import { syncPremiumStatus } from '@/lib/premium';
 import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
@@ -69,7 +70,10 @@ export default async function StudentAssessmentDetailPage({
   if (session.user.role !== 'student') redirect('/student/dashboard');
 
   const { assignmentId } = await params;
-  const data = await getAssessmentWorkspace(session.user.id, assignmentId);
+  const [data, premiumStatus] = await Promise.all([
+    getAssessmentWorkspace(session.user.id, assignmentId),
+    syncPremiumStatus(session.user.id),
+  ]);
   if (!data) redirect('/student/assessments');
 
   const job = data.assignment.jobId as { title: string; companyName: string } | null;
@@ -85,6 +89,7 @@ export default async function StudentAssessmentDetailPage({
         email: data.student?.email ?? '',
         image: data.student?.image,
         userId: session.user.id,
+        isPremium: premiumStatus.isPremium,
         subtitle:
           [data.student?.university, data.student?.department].filter(Boolean).join(' | ') ||
           'Student workspace',
@@ -139,11 +144,35 @@ export default async function StudentAssessmentDetailPage({
           title="Assessment"
           description="Use the workspace below to start, complete, and review this evaluation."
         >
-          <StudentAssessmentClient
-            assignment={JSON.parse(JSON.stringify(data.assignment))}
-            assessment={JSON.parse(JSON.stringify(data.assessment))}
-            submission={JSON.parse(JSON.stringify(data.submission))}
-          />
+          {premiumStatus.isPremium ? (
+            <StudentAssessmentClient
+              assignment={JSON.parse(JSON.stringify(data.assignment))}
+              assessment={JSON.parse(JSON.stringify(data.assessment))}
+              submission={JSON.parse(JSON.stringify(data.submission))}
+            />
+          ) : (
+            <Panel
+              title="Student Premium Required"
+              description="This assessment has already been assigned to you. Upgrade to Student Premium to start, complete, and submit it from this workspace."
+              action={<ActionLink href="/student/premium" label="Upgrade to Student Premium" />}
+            >
+              <div
+                style={{
+                  borderRadius: 16,
+                  border: '1px solid #FDE68A',
+                  background: '#FFFBEB',
+                  padding: '14px 16px',
+                  color: '#92400E',
+                  fontSize: 13,
+                  lineHeight: 1.7,
+                  fontWeight: 600,
+                }}
+              >
+                Assessment access is locked until Student Premium is active. Your assignment and
+                deadline remain saved here, and you can return to start it after upgrading.
+              </div>
+            </Panel>
+          )}
         </DashboardSection>
       </DashboardPage>
     </DashboardShell>

@@ -26,6 +26,16 @@ const ACTIVE_APPLICATION_STATUSES = ['under_review', 'shortlisted', 'assessment_
 type SubmissionAnswer = IAssessmentSubmission['answers'][number];
 type AssessmentTestCase = NonNullable<AssessmentQuestionDraft['testCases']>[number];
 
+export class PremiumAccessError extends Error {
+  status: number;
+
+  constructor(message: string, status = 403) {
+    super(message);
+    this.name = 'PremiumAccessError';
+    this.status = status;
+  }
+}
+
 function asObjectId(value: string | mongoose.Types.ObjectId) {
   return typeof value === 'string' ? new mongoose.Types.ObjectId(value) : value;
 }
@@ -113,28 +123,23 @@ async function getPremiumEligibleUserIds(userIds: string[]) {
   return eligible;
 }
 
-async function assertPremiumEligibility(employerId: string, studentIds: string[]) {
-  const eligibleIds = await getPremiumEligibleUserIds([employerId, ...studentIds]);
+async function assertEmployerPremiumEligibility(employerId: string) {
+  const eligibleIds = await getPremiumEligibleUserIds([employerId]);
   if (!eligibleIds.has(employerId)) {
-    throw new Error('Employer Premium is required to use assessments and interviews.');
+    throw new PremiumAccessError('Employer Premium is required to use assessments and interviews.');
   }
+}
 
-  const missingStudentIds = studentIds.filter((studentId) => !eligibleIds.has(studentId));
-  if (missingStudentIds.length === 0) {
+async function assertStudentPremiumAccess(studentId: string, feature: 'assessment' | 'interview') {
+  const eligibleIds = await getPremiumEligibleUserIds([studentId]);
+  if (eligibleIds.has(studentId)) {
     return;
   }
 
-  const ineligibleStudents = await User.find({ _id: { $in: missingStudentIds.map(asObjectId) } })
-    .select('name')
-    .lean();
-  const names = ineligibleStudents
-    .map((student) => student.name)
-    .filter(Boolean)
-    .join(', ');
-  throw new Error(
-    names
-      ? `These candidates need Student Premium before they can receive assessments or interviews: ${names}.`
-      : 'Every selected candidate must have Student Premium before you can continue.'
+  throw new PremiumAccessError(
+    feature === 'assessment'
+      ? 'Student Premium is required to start this assessment. Upgrade your plan to continue.'
+      : 'Student Premium is required to join this interview. Upgrade your plan to continue.'
   );
 }
 
@@ -344,6 +349,7 @@ export async function createAssessment(input: {
   applicationIds?: string[];
 }) {
   await connectDB();
+  await assertEmployerPremiumEligibility(input.employerId);
 
   const job = await Job.findOne({ _id: input.jobId, employerId: input.employerId })
     .select('_id')
@@ -423,8 +429,7 @@ export async function assignAssessmentToApplications(input: {
     throw new Error('Only under-review or shortlisted candidates can receive assessments.');
   }
 
-  const studentIds = applications.map((application) => application.studentId.toString());
-  await assertPremiumEligibility(input.employerId, studentIds);
+  await assertEmployerPremiumEligibility(input.employerId);
 
   const assignmentDueAt = input.dueAt ?? assessment.dueAt ?? undefined;
   const createdAssignments: mongoose.Types.ObjectId[] = [];
@@ -494,7 +499,7 @@ export async function startAssessmentAssignment(assignmentId: string, studentId:
     throw new Error('This assessment is no longer active.');
   }
 
-  await assertPremiumEligibility(assignment.employerId.toString(), [studentId]);
+  await assertStudentPremiumAccess(studentId, 'assessment');
 
   if (assignment.dueAt && !assessment.allowLateSubmission && assignment.dueAt < new Date()) {
     assignment.status = 'expired';
@@ -542,6 +547,8 @@ export async function runAssessmentCodingQuestion(input: {
     throw new Error('Assessment assignment not found.');
   }
 
+  await assertStudentPremiumAccess(input.studentId, 'assessment');
+
   const assessment = await Assessment.findById(assignment.assessmentId).lean();
   if (!assessment) {
     throw new Error('Assessment not found.');
@@ -580,6 +587,8 @@ export async function submitAssessmentAssignment(input: {
   if (!assignment) {
     throw new Error('Assessment assignment not found.');
   }
+
+  await assertStudentPremiumAccess(input.studentId, 'assessment');
 
   const assessment = await Assessment.findById(assignment.assessmentId).lean();
   if (!assessment) {
@@ -812,8 +821,7 @@ export async function scheduleInterviewSessions(input: {
     throw new Error('Some selected applications could not be found.');
   }
 
-  const studentIds = applications.map((application) => application.studentId.toString());
-  await assertPremiumEligibility(input.employerId, studentIds);
+  await assertEmployerPremiumEligibility(input.employerId);
 
   const interviews = [];
   for (const application of applications) {
@@ -881,7 +889,11 @@ export async function issueInterviewJoinToken(input: {
     throw new Error('You do not have access to this interview.');
   }
 
-  await assertPremiumEligibility(interview.employerId.toString(), [interview.studentId.toString()]);
+  if (input.role === 'student') {
+    await assertStudentPremiumAccess(input.userId, 'interview');
+  } else {
+    await assertEmployerPremiumEligibility(input.userId);
+  }
 
   const { appId, appCertificate } = ensureAgoraConfig();
   const uid = derivedAgoraUid(`${input.userId}:${interview._id.toString()}:${input.role}`);

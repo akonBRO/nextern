@@ -681,6 +681,7 @@ export default function FreelanceWorkspace({ role }: { role: WorkspaceRole }) {
 
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(currentView);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [serviceListings, setServiceListings] = useState<Listing[]>([]);
   const [clientOrders, setClientOrders] = useState<OrderSummary[]>([]);
   const [freelancerOrders, setFreelancerOrders] = useState<OrderSummary[]>([]);
   const [financeData, setFinanceData] = useState<FreelanceFinancePayload | null>(null);
@@ -753,14 +754,17 @@ export default function FreelanceWorkspace({ role }: { role: WorkspaceRole }) {
 
     return {
       activeListings,
-      myServices: listings.filter((listing) => listing.canEdit).length,
+      myServices: serviceListings.length,
       clientOrders: clientOrders.length,
       freelancerOrders: freelancerOrders.length,
       totalEscrowHeld,
     };
-  }, [clientOrders, freelancerOrders, listings]);
+  }, [clientOrders, freelancerOrders, listings, serviceListings]);
 
-  const myListings = useMemo(() => listings.filter((listing) => listing.canEdit), [listings]);
+  const myListings = useMemo(
+    () => serviceListings.filter((listing) => listing.canEdit),
+    [serviceListings]
+  );
 
   const financeSummary = financeData?.summary ?? {
     accountBalanceBDT: 0,
@@ -826,10 +830,22 @@ export default function FreelanceWorkspace({ role }: { role: WorkspaceRole }) {
       if (filters.minBudget.trim()) params.set('minBudget', filters.minBudget.trim());
       if (filters.maxBudget.trim()) params.set('maxBudget', filters.maxBudget.trim());
 
-      const data = await requestJson<{ listings: Listing[] }>(
+      const boardRequest = requestJson<{ listings: Listing[] }>(
         `/api/freelance/listings?${params.toString()}`
       );
-      setListings(data.listings ?? []);
+
+      if (role === 'student') {
+        const mineRequest = requestJson<{ listings: Listing[] }>(
+          '/api/freelance/listings?mine=true'
+        );
+        const [boardData, mineData] = await Promise.all([boardRequest, mineRequest]);
+        setListings(boardData.listings ?? []);
+        setServiceListings(mineData.listings ?? []);
+      } else {
+        const data = await boardRequest;
+        setListings(data.listings ?? []);
+        setServiceListings([]);
+      }
     } catch (error) {
       setFlash({
         tone: 'error',
@@ -838,7 +854,7 @@ export default function FreelanceWorkspace({ role }: { role: WorkspaceRole }) {
     } finally {
       setBoardLoading(false);
     }
-  }, [filters, requestJson]);
+  }, [filters, requestJson, role]);
 
   const loadFinance = useCallback(async () => {
     setFinanceLoading(true);

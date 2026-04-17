@@ -5,6 +5,7 @@ import { InterviewSession } from '@/models/InterviewSession';
 import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { User } from '@/models/User';
+import { syncPremiumStatus } from '@/lib/premium';
 import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
@@ -56,7 +57,10 @@ export default async function StudentInterviewDetailPage({
   if (session.user.role !== 'student') redirect('/student/dashboard');
 
   const { interviewId } = await params;
-  const data = await getStudentInterviewWorkspace(session.user.id, interviewId);
+  const [data, premiumStatus] = await Promise.all([
+    getStudentInterviewWorkspace(session.user.id, interviewId),
+    syncPremiumStatus(session.user.id),
+  ]);
   if (!data.interview) redirect('/student/interviews');
 
   const interview = data.interview;
@@ -73,6 +77,7 @@ export default async function StudentInterviewDetailPage({
         email: data.student?.email ?? '',
         image: data.student?.image,
         userId: session.user.id,
+        isPremium: premiumStatus.isPremium,
         subtitle:
           [data.student?.university, data.student?.department].filter(Boolean).join(' | ') ||
           'Student workspace',
@@ -124,7 +129,31 @@ export default async function StudentInterviewDetailPage({
           title="Interview Workspace"
           description="Use the room below to join the call, manage consent, and review the live session status."
         >
-          <InterviewRoomClient role="student" interview={JSON.parse(JSON.stringify(interview))} />
+          {premiumStatus.isPremium ? (
+            <InterviewRoomClient role="student" interview={JSON.parse(JSON.stringify(interview))} />
+          ) : (
+            <Panel
+              title="Student Premium Required"
+              description="This interview has been scheduled for you already. Upgrade to Student Premium to enter the room and participate in the live session."
+              action={<ActionLink href="/student/premium" label="Upgrade to Student Premium" />}
+            >
+              <div
+                style={{
+                  borderRadius: 16,
+                  border: '1px solid #FDE68A',
+                  background: '#FFFBEB',
+                  padding: '14px 16px',
+                  color: '#92400E',
+                  fontSize: 13,
+                  lineHeight: 1.7,
+                  fontWeight: 600,
+                }}
+              >
+                Interview access is locked until Student Premium is active. Your schedule stays
+                visible here, and you can join the session after upgrading.
+              </div>
+            </Panel>
+          )}
         </DashboardSection>
       </DashboardPage>
     </DashboardShell>

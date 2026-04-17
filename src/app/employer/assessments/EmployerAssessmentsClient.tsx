@@ -64,6 +64,11 @@ type BuilderQuestion = AssessmentQuestionDraft & {
   acceptedAnswersText: string;
 };
 
+type ValidationIssue = {
+  path?: string;
+  message?: string;
+};
+
 function createQuestion(type: AssessmentQuestionType, index: number): BuilderQuestion {
   return {
     index,
@@ -105,6 +110,48 @@ function formatDateTime(value?: string | null) {
     hour: 'numeric',
     minute: '2-digit',
   }).format(new Date(value));
+}
+
+function formatValidationPath(path?: string) {
+  if (!path) return 'Validation';
+
+  const normalized = path.replace(
+    /\.(\d+)\./g,
+    (_match, index) => ` question ${Number(index) + 1} `
+  );
+
+  return normalized
+    .replace(/^jobId$/, 'Job')
+    .replace(/^title$/, 'Assessment title')
+    .replace(/^questions$/, 'Questions')
+    .replace(/questionText/g, 'prompt')
+    .replace(/correctOptionIndex/g, 'correct option')
+    .replace(/acceptedAnswers/g, 'accepted answers')
+    .replace(/attachments/g, 'attachments')
+    .replace(/\./g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function formatAssessmentApiError(data: {
+  error?: string;
+  details?: Record<string, string[] | undefined>;
+  issues?: ValidationIssue[];
+}) {
+  const firstIssue = data.issues?.find((issue) => issue.message);
+  if (firstIssue?.message) {
+    const label = formatValidationPath(firstIssue.path);
+    return `${label}: ${firstIssue.message}`;
+  }
+
+  const detailEntry = Object.entries(data.details ?? {}).find(
+    ([, messages]) => Array.isArray(messages) && messages.length > 0
+  );
+  if (detailEntry) {
+    return `${formatValidationPath(detailEntry[0])}: ${detailEntry[1]?.[0]}`;
+  }
+
+  return data.error ?? 'Unable to create the assessment right now.';
 }
 
 const fieldStyle = {
@@ -178,19 +225,23 @@ export default function EmployerAssessmentsClient({
 
     updateQuestion(questionIndex, (question) => ({
       ...question,
-      attachments: [...(question.attachments ?? []), ...assets].slice(0, 8),
+      attachments: [...(question.attachments ?? []), ...assets].slice(0, 5),
     }));
   }
 
   function validateBuilder() {
     if (!selectedJobId) return 'Choose a job before creating an assessment.';
-    if (!title.trim()) return 'Add a clear assessment title.';
+    if (title.trim().length < 3) return 'Assessment title must be at least 3 characters.';
     if (!questions.length) return 'Add at least one question.';
 
     const invalidQuestion = questions.find((question) => {
-      if (!question.questionText.trim()) return true;
+      if (question.questionText.trim().length < 10) return true;
+      if ((question.attachments?.length ?? 0) > 5) return true;
       if (question.type === 'mcq') {
-        return ((question.options ?? []).filter((option) => option.trim()).length ?? 0) < 2;
+        const trimmedOptions = (question.options ?? []).map((option) => option.trim());
+        const filledOptions = trimmedOptions.filter(Boolean);
+        const selectedOption = trimmedOptions[question.correctOptionIndex ?? 0];
+        return filledOptions.length < 2 || !selectedOption;
       }
       if (question.type === 'coding') {
         return !(question.testCases ?? []).some(
@@ -199,44 +250,52 @@ export default function EmployerAssessmentsClient({
       }
       return false;
     });
-
-    return invalidQuestion ? 'Every question needs the required prompt and answer setup.' : null;
+    return invalidQuestion
+      ? 'Each question needs a prompt of at least 10 characters, valid answer setup, and no more than 5 attachments.'
+      : null;
   }
 
   function buildPayloadQuestions() {
-    return questions.map((question, index) => ({
-      index: index + 1,
-      type: question.type,
-      questionText: question.questionText.trim(),
-      marks: Math.max(1, Number(question.marks) || 0),
-      options:
-        question.type === 'mcq'
-          ? (question.options ?? []).map((option) => option.trim()).filter(Boolean)
-          : undefined,
-      correctOptionIndex: question.type === 'mcq' ? (question.correctOptionIndex ?? 0) : undefined,
-      acceptedAnswers:
-        question.type === 'short_answer'
-          ? question.acceptedAnswersText
-              .split('\n')
-              .map((answer) => answer.trim())
-              .filter(Boolean)
-          : undefined,
-      enablePlagiarismCheck:
-        question.type === 'short_answer' || question.type === 'case_study'
-          ? Boolean(question.enablePlagiarismCheck)
-          : undefined,
-      language: question.type === 'coding' ? question.language : undefined,
-      starterCode: question.type === 'coding' ? question.starterCode : undefined,
-      testCases:
-        question.type === 'coding'
-          ? (question.testCases ?? []).filter(
-              (testCase) => testCase.input.trim() || testCase.expectedOutput.trim()
-            )
-          : undefined,
-      rubric: question.type === 'case_study' ? question.rubric : undefined,
-      attachments: question.attachments?.length ? question.attachments : undefined,
-      maxWords: question.type === 'case_study' ? question.maxWords : undefined,
-    }));
+    return questions.map((question, index) => {
+      const trimmedOptions = (question.options ?? []).map((option) => option.trim());
+      const filledOptions = question.type === 'mcq' ? trimmedOptions.filter(Boolean) : undefined;
+      const selectedOptionValue =
+        question.type === 'mcq' ? trimmedOptions[question.correctOptionIndex ?? 0] : undefined;
+
+      return {
+        index: index + 1,
+        type: question.type,
+        questionText: question.questionText.trim(),
+        marks: Math.max(1, Number(question.marks) || 0),
+        options: filledOptions,
+        correctOptionIndex:
+          question.type === 'mcq'
+            ? Math.max(0, filledOptions?.findIndex((option) => option === selectedOptionValue) ?? 0)
+            : undefined,
+        acceptedAnswers:
+          question.type === 'short_answer'
+            ? question.acceptedAnswersText
+                .split('\n')
+                .map((answer) => answer.trim())
+                .filter(Boolean)
+            : undefined,
+        enablePlagiarismCheck:
+          question.type === 'short_answer' || question.type === 'case_study'
+            ? Boolean(question.enablePlagiarismCheck)
+            : undefined,
+        language: question.type === 'coding' ? question.language : undefined,
+        starterCode: question.type === 'coding' ? question.starterCode : undefined,
+        testCases:
+          question.type === 'coding'
+            ? (question.testCases ?? []).filter(
+                (testCase) => testCase.input.trim() || testCase.expectedOutput.trim()
+              )
+            : undefined,
+        rubric: question.type === 'case_study' ? question.rubric : undefined,
+        attachments: question.attachments?.length ? question.attachments : undefined,
+        maxWords: question.type === 'case_study' ? question.maxWords : undefined,
+      };
+    });
   }
 
   function handleCreateAssessment() {
@@ -267,12 +326,16 @@ export default function EmployerAssessmentsClient({
             applicationIds: initialApplicationIds.length ? initialApplicationIds : undefined,
           }),
         });
-        const data = (await res.json()) as { error?: string };
+        const data = (await res.json()) as {
+          error?: string;
+          details?: Record<string, string[] | undefined>;
+          issues?: ValidationIssue[];
+        };
 
         if (!res.ok) {
           setNotice({
             tone: 'error',
-            text: data.error ?? 'Unable to create the assessment right now.',
+            text: formatAssessmentApiError(data),
           });
           return;
         }
@@ -339,6 +402,7 @@ export default function EmployerAssessmentsClient({
   return (
     <div className="assessment-center-grid">
       <div
+        className="assessment-builder-panel"
         style={{
           background: '#FFFFFF',
           borderRadius: 24,
@@ -381,9 +445,9 @@ export default function EmployerAssessmentsClient({
                 Assessment builder
               </div>
               <div style={{ marginTop: 4, fontSize: 13, color: '#64748B', lineHeight: 1.6 }}>
-                Build multiple-choice tests, short answers, coding challenges with Judge0, or
-                case-study tasks. When opened from the applicant pipeline, the created assessment is
-                sent immediately and application status updates automatically.
+                Build multiple-choice tests, short answers, coding challenges with the live code
+                runner, or case-study tasks. When opened from the applicant pipeline, the created
+                assessment is sent immediately and application status updates automatically.
               </div>
             </div>
             <span
@@ -577,10 +641,8 @@ export default function EmployerAssessmentsClient({
             ))}
           </div>
 
-          <div
-            style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}
-          >
-            <div>
+          <div className="assessment-question-toolbar">
+            <div className="assessment-question-toolbar-copy">
               <div
                 style={{
                   fontSize: 15,
@@ -596,7 +658,7 @@ export default function EmployerAssessmentsClient({
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <div className="assessment-question-toolbar-actions">
               {[
                 { label: 'MCQ', type: 'mcq' },
                 { label: 'Short answer', type: 'short_answer' },
@@ -1151,7 +1213,10 @@ export default function EmployerAssessmentsClient({
         </div>
       </div>
 
-      <aside style={{ display: 'grid', gap: 16, alignContent: 'start' }}>
+      <aside
+        className="assessment-library-panel"
+        style={{ display: 'grid', gap: 16, alignContent: 'start' }}
+      >
         <div
           style={{
             background: '#FFFFFF',
@@ -1350,14 +1415,27 @@ export default function EmployerAssessmentsClient({
       <style>{`
         .assessment-center-grid {
           display: grid;
-          grid-template-columns: minmax(0, 1.25fr) 390px;
+          grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
           gap: 18px;
+          align-items: start;
+        }
+
+        .assessment-builder-panel,
+        .assessment-library-panel {
+          min-width: 0;
         }
 
         .assessment-meta-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr 180px 180px 220px 150px;
+          grid-template-columns:
+            minmax(0, 1.05fr)
+            minmax(0, 1.3fr)
+            minmax(110px, 0.72fr)
+            minmax(110px, 0.72fr)
+            minmax(170px, 1fr)
+            minmax(96px, 0.6fr);
           gap: 14px;
+          align-items: end;
         }
 
         .assessment-code-grid {
@@ -1385,6 +1463,24 @@ export default function EmployerAssessmentsClient({
           gap: 10px;
         }
 
+        .assessment-question-toolbar {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .assessment-question-toolbar-copy {
+          min-width: 0;
+        }
+
+        .assessment-question-toolbar-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          max-width: 100%;
+        }
+
         .spin {
           animation: spin 0.9s linear infinite;
         }
@@ -1401,6 +1497,10 @@ export default function EmployerAssessmentsClient({
           .assessment-testcase-grid,
           .assessment-case-grid {
             grid-template-columns: 1fr !important;
+          }
+
+          .assessment-question-toolbar-actions {
+            width: 100%;
           }
         }
       `}</style>

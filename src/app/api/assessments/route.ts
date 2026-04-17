@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { CreateAssessmentSchema } from '@/lib/validations';
-import { createAssessment } from '@/lib/hiring-suite';
+import { createAssessment, PremiumAccessError } from '@/lib/hiring-suite';
 import { Assessment } from '@/models/Assessment';
 import { AssessmentAssignment } from '@/models/AssessmentAssignment';
 
@@ -93,7 +93,14 @@ export async function POST(req: NextRequest) {
     const parsed = CreateAssessmentSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        {
+          error: 'Validation failed',
+          details: parsed.error.flatten().fieldErrors,
+          issues: parsed.error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        },
         { status: 400 }
       );
     }
@@ -120,7 +127,7 @@ export async function POST(req: NextRequest) {
     console.error('[ASSESSMENTS POST ERROR]', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to create assessment.' },
-      { status: 500 }
+      { status: error instanceof PremiumAccessError ? error.status : 500 }
     );
   }
 }

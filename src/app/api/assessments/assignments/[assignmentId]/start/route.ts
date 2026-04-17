@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { startAssessmentAssignment } from '@/lib/hiring-suite';
+import { PremiumAccessError, startAssessmentAssignment } from '@/lib/hiring-suite';
 
 type Params = { params: Promise<{ assignmentId: string }> };
 
@@ -18,7 +18,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
     console.error('[ASSESSMENT START ERROR]', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to start assessment.' },
-      { status: 500 }
+      { status: error instanceof PremiumAccessError ? error.status : 500 }
     );
   }
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { ScheduleInterviewSchema } from '@/lib/validations';
-import { scheduleInterviewSessions } from '@/lib/hiring-suite';
+import { scheduleInterviewSessions, PremiumAccessError } from '@/lib/hiring-suite';
 import { InterviewSession } from '@/models/InterviewSession';
 
 export async function GET(req: NextRequest) {
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     console.error('[INTERVIEWS POST ERROR]', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to schedule interview.' },
-      { status: 500 }
+      { status: error instanceof PremiumAccessError ? error.status : 500 }
     );
   }
 }

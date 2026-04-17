@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { AssessmentActionSchema, GradeAssessmentSchema } from '@/lib/validations';
-import { assignAssessmentToApplications, gradeAssessmentAssignment } from '@/lib/hiring-suite';
+import {
+  assignAssessmentToApplications,
+  gradeAssessmentAssignment,
+  PremiumAccessError,
+} from '@/lib/hiring-suite';
 import { Assessment } from '@/models/Assessment';
 import { AssessmentAssignment } from '@/models/AssessmentAssignment';
 import { AssessmentSubmission } from '@/models/AssessmentSubmission';
@@ -115,7 +119,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     console.error('[ASSESSMENT DETAIL PATCH ERROR]', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to update assessment.' },
-      { status: 500 }
+      { status: error instanceof PremiumAccessError ? error.status : 500 }
     );
   }
 }
