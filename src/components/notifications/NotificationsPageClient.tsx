@@ -17,6 +17,7 @@ import {
   Zap,
   Star,
   TrendingUp,
+  SendToBack,
 } from 'lucide-react';
 
 const C = {
@@ -80,6 +81,13 @@ const DEFAULT_TYPE_CONFIG: Record<
     bg: '#EFF6FF',
     border: '#BFDBFE',
     label: 'Update',
+  },
+  recommendation_request: {
+    icon: <SendToBack size={15} />,
+    color: '#7C3AED',
+    bg: '#F5F3FF',
+    border: '#DDD6FE',
+    label: 'Recommendation',
   },
   deadline_reminder: {
     icon: <CalendarDays size={15} />,

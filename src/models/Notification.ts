@@ -4,6 +4,7 @@ export type NotificationType =
   | 'job_match'
   | 'deadline_reminder'
   | 'status_update'
+  | 'recommendation_request'
   | 'message_received'
   | 'badge_earned'
   | 'score_update'

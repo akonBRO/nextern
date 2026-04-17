@@ -50,6 +50,12 @@ export const EMPLOYER_NAV_ITEMS: DashboardNavItem[] = [
         description: 'Open applicant pipelines and batch-send assessments or interview invites.',
         icon: 'users',
       },
+      {
+        label: 'Recommendation Requests',
+        href: '/employer/recommendations',
+        description: 'Review advisor and department-head endorsements for your active jobs.',
+        icon: 'target',
+      },
     ],
   },
   {

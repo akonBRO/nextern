@@ -15,6 +15,7 @@ import {
   Save,
   Award,
   Bell,
+  Mail,
 } from 'lucide-react';
 
 const C = {
@@ -145,6 +146,10 @@ export default function EmployerProfilePage() {
       application_received: true,
       event_registrations: true,
     } as Record<string, boolean>,
+    emailPreferences: {
+      application_received: true,
+      event_registrations: true,
+    } as Record<string, boolean>,
   });
 
   useEffect(() => {
@@ -167,6 +172,11 @@ export default function EmployerProfilePage() {
             application_received: true,
             event_registrations: true,
             ...(u.notificationPreferences ?? {}),
+          },
+          emailPreferences: {
+            application_received: true,
+            event_registrations: true,
+            ...(u.emailPreferences ?? {}),
           },
         });
       })
@@ -203,6 +213,7 @@ export default function EmployerProfilePage() {
           companyDescription: form.companyDescription || undefined,
           headquartersCity: form.headquartersCity || undefined,
           notificationPreferences: form.notificationPreferences,
+          emailPreferences: form.emailPreferences,
         }),
       });
       const data = await res.json();
@@ -246,6 +257,16 @@ export default function EmployerProfilePage() {
       notificationPreferences: {
         ...prev.notificationPreferences,
         [key]: prev.notificationPreferences[key] === false,
+      },
+    }));
+  }
+
+  function toggleEmailPreference(key: string) {
+    setForm((prev) => ({
+      ...prev,
+      emailPreferences: {
+        ...prev.emailPreferences,
+        [key]: prev.emailPreferences[key] === false,
       },
     }));
   }
@@ -705,6 +726,92 @@ export default function EmployerProfilePage() {
                     <button
                       type="button"
                       onClick={() => toggleNotificationPreference(item.key)}
+                      aria-pressed={isOn}
+                      style={{
+                        width: 44,
+                        height: 24,
+                        borderRadius: 999,
+                        border: 'none',
+                        background: isOn ? C.blue : C.border,
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background 0.2s',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: '50%',
+                          background: C.white,
+                          position: 'absolute',
+                          top: 3,
+                          left: isOn ? 23 : 3,
+                          transition: 'left 0.2s',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                        }}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section 6: Email Preferences */}
+          <div
+            style={{
+              background: C.white,
+              borderRadius: 18,
+              border: `1px solid ${C.border}`,
+              padding: '24px 28px',
+              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+            }}
+          >
+            <SectionHeader icon={<Mail size={18} />} label="Email Preferences" />
+            <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
+              Decide which employer email updates should be delivered to your inbox. In-app
+              notifications remain controlled separately above.
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                {
+                  key: 'application_received',
+                  label: 'Job application emails',
+                  desc: 'Email alerts when a student applies to one of your job postings',
+                },
+                {
+                  key: 'event_registrations',
+                  label: 'Workshop & webinar registration emails',
+                  desc: 'Email alerts when a student registers for one of your hosted events',
+                },
+              ].map((item) => {
+                const isOn = form.emailPreferences[item.key] !== false;
+                return (
+                  <div
+                    key={item.key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      background: '#FAFBFC',
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 12,
+                      gap: 16,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                        {item.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggleEmailPreference(item.key)}
                       aria-pressed={isOn}
                       style={{
                         width: 44,

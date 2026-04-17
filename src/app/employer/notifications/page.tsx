@@ -5,7 +5,6 @@ import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   Bell,
-  CheckCheck,
   Briefcase,
   Award,
   CalendarDays,
@@ -17,6 +16,7 @@ import {
   Users,
   ExternalLink,
   Filter,
+  SendToBack,
 } from 'lucide-react';
 
 const C = {
@@ -72,6 +72,13 @@ const TYPE_CONFIG: Record<
     bg: C.blueBg,
     border: C.blueBorder,
     label: 'Status Update',
+  },
+  recommendation_request: {
+    icon: <SendToBack size={15} />,
+    color: C.violet,
+    bg: '#F5F3FF',
+    border: '#DDD6FE',
+    label: 'Recommendation',
   },
   deadline_reminder: {
     icon: <CalendarDays size={15} />,
@@ -154,6 +161,7 @@ function timeAgo(iso: string) {
 
 const FILTER_TABS = [
   { value: 'all', label: 'All', icon: <Bell size={13} /> },
+  { value: 'recommendation_request', label: 'Recommendations', icon: <SendToBack size={13} /> },
   { value: 'application_received', label: 'Applications', icon: <Users size={13} /> },
   { value: 'status_update', label: 'Status', icon: <Briefcase size={13} /> },
   { value: 'message_received', label: 'Messages', icon: <MessageSquare size={13} /> },
@@ -165,7 +173,6 @@ export default function EmployerNotificationsPage() {
   const [notifications, setNotifs] = useState<Notif[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [markingAll, setMarkingAll] = useState(false);
   const [filter, setFilter] = useState('all');
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
@@ -192,14 +199,6 @@ export default function EmployerNotificationsPage() {
     await fetch(`/api/notifications?id=${id}`, { method: 'PATCH' });
     setNotifs((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)));
     setUnread((prev) => Math.max(0, prev - 1));
-  }
-
-  async function markAllRead() {
-    setMarkingAll(true);
-    await fetch('/api/notifications', { method: 'PATCH' });
-    setNotifs((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    setUnread(0);
-    setMarkingAll(false);
   }
 
   return (

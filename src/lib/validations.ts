@@ -128,6 +128,7 @@ export const UpdateEmployerProfileSchema = z.object({
   companyDescription: z.string().max(1000).optional(),
   headquartersCity: z.string().max(60).optional(),
   notificationPreferences: z.record(z.string(), z.boolean()).optional(),
+  emailPreferences: z.record(z.string(), z.boolean()).optional(),
 });
 
 export const UpdateAdvisorProfileSchema = z.object({
@@ -379,6 +380,41 @@ export const UpdateApplicationStatusSchema = z.object({
   note: z.string().max(500).optional(),
 });
 
+export const OpportunityRecommendationSchema = z.object({
+  studentId: z.string().length(24, 'Invalid student ID'),
+  category: z.literal('job'),
+  title: z.string().min(3, 'Title must be at least 3 characters').max(160),
+  description: z.string().min(12, 'Description must be at least 12 characters').max(2400),
+  priority: z.enum(['high', 'medium', 'low']).default('medium'),
+  focusSkills: z.array(z.string().max(80)).max(8).optional().default([]),
+  linkedJobId: z.string().length(24, 'Select a job to recommend'),
+  resourceUrl: z.string().url().optional().or(z.literal('')),
+  fitScore: z.number().min(0).max(100).optional(),
+});
+
+export const UpdateOpportunityRecommendationSchema = z.object({
+  status: z.enum(['active', 'archived']),
+});
+
+export const EmployerRecommendationRequestDecisionSchema = z.object({
+  requestStatus: z.enum(['accepted', 'rejected', 'hold']),
+  employerResponseNote: z.string().max(1200).optional().or(z.literal('')),
+});
+
+export const AcademicReviewSchema = z.object({
+  studentId: z.string().length(24, 'Invalid student ID'),
+  headline: z.string().min(3).max(160),
+  summary: z.string().min(20).max(2400),
+  strengths: z.array(z.string().max(120)).max(6).optional().default([]),
+  growthAreas: z.array(z.string().max(120)).max(6).optional().default([]),
+  readinessLevel: z.enum(['priority_support', 'developing', 'ready']),
+  profileScore: z.number().min(0).max(100).optional(),
+});
+
+export const UpdateAcademicReviewSchema = z.object({
+  status: z.enum(['active', 'archived']),
+});
+
 const HiringAssetSchema = z.object({
   url: z.string().url(),
   name: z.string().min(1).max(160),
@@ -614,6 +650,7 @@ export type CreateAdvisorInput = z.infer<typeof CreateAdvisorSchema>;
 export type CreateJobInput = z.infer<typeof CreateJobSchema>;
 export type UpdateJobInput = z.infer<typeof UpdateJobSchema>;
 export type ApplyJobInput = z.infer<typeof ApplyJobSchema>;
+export type OpportunityRecommendationInput = z.infer<typeof OpportunityRecommendationSchema>;
 export type FreelanceListingInput = z.infer<typeof FreelanceListingSchema>;
 export type FreelanceOrderCreateInput = z.infer<typeof FreelanceOrderCreateSchema>;
 export type FreelanceWithdrawalCreateInput = z.infer<typeof FreelanceWithdrawalCreateSchema>;

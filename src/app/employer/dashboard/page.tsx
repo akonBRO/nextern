@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import { getEmployerCalendarEvents } from '@/lib/employer-calendar-events';
+import { getEmployerRecommendationRequests } from '@/lib/employer-recommendation-requests';
 import {
   ActionLink,
   DashboardPage,
@@ -26,6 +27,7 @@ import {
   Crown,
   Globe,
   MapPin,
+  SendToBack,
   Sparkles,
   Target,
   Users,
@@ -71,6 +73,12 @@ const navItems = [
         description: 'Surface the strongest student matches already in your pipeline.',
         icon: 'sparkles' as const,
       },
+      {
+        label: 'Recommendation requests',
+        href: '/employer/recommendations',
+        description: 'Review advisor and department-head endorsements for your active roles.',
+        icon: 'target' as const,
+      },
     ],
   },
   { label: 'Badges', href: '/employer/badges', icon: 'shield' as const },
@@ -94,13 +102,14 @@ export default async function EmployerDashboard() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
-  const [data, usage, calendarEvents] = await Promise.all([
+  const [data, usage, calendarEvents, recommendationData] = await Promise.all([
     getEmployerDashboardData({
       userId: session.user.id,
       email: session.user.email ?? undefined,
     }),
     getUsageSummary(session.user.id),
     getEmployerCalendarEvents(session.user.id, 24).catch(() => []),
+    getEmployerRecommendationRequests(session.user.id),
   ]);
 
   // Profile completeness score
@@ -422,6 +431,124 @@ export default async function EmployerDashboard() {
             eventHrefTemplate="/employer/jobs/:jobId/applicants"
             emptyNextEventMessage="No upcoming hiring events yet. Post roles, publish events, or schedule interviews to fill this planner."
           />
+        </DashboardSection>
+
+        <DashboardSection
+          id="recommendations"
+          title="Recommendation requests"
+          description="Formal endorsements from advisors and department heads flow into your employer workspace here."
+        >
+          <Panel
+            title="Academic endorsements"
+            description="Respond to teacher-submitted recommendations for your active jobs with a clear hiring signal."
+            action={
+              <Link
+                href="/employer/recommendations"
+                style={{
+                  color: '#2563EB',
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  fontWeight: 800,
+                }}
+              >
+                Open requests
+              </Link>
+            }
+          >
+            {recommendationData.requests.length > 0 ? (
+              <div style={{ display: 'grid', gap: 12 }}>
+                {recommendationData.requests.slice(0, 3).map((request) => (
+                  <div
+                    key={request.id}
+                    style={{
+                      borderRadius: 18,
+                      border: '1px solid #E2E8F0',
+                      background: '#FFFFFF',
+                      padding: 16,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <Tag
+                            label={
+                              request.requestStatus === 'hold'
+                                ? 'On hold'
+                                : formatStatusLabel(request.requestStatus)
+                            }
+                            tone={
+                              request.requestStatus === 'accepted'
+                                ? 'success'
+                                : request.requestStatus === 'rejected' ||
+                                    request.requestStatus === 'hold'
+                                  ? 'warning'
+                                  : 'info'
+                            }
+                          />
+                          {typeof request.fitScore === 'number' ? (
+                            <Tag label={`${request.fitScore}% fit`} tone="success" />
+                          ) : null}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 10,
+                            fontSize: 16,
+                            fontWeight: 800,
+                            color: '#1E293B',
+                          }}
+                        >
+                          {request.student.name} for {request.job?.title ?? request.title}
+                        </div>
+                        <div style={{ marginTop: 6, fontSize: 13, color: '#64748B' }}>
+                          Recommended by {request.recommender.name}
+                          {request.recommender.designation
+                            ? ` · ${request.recommender.designation}`
+                            : ''}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          width: 42,
+                          height: 42,
+                          borderRadius: 14,
+                          background: '#F5F3FF',
+                          color: '#7C3AED',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <SendToBack size={18} />
+                      </div>
+                    </div>
+                    <p
+                      style={{
+                        margin: '10px 0 0',
+                        fontSize: 13,
+                        lineHeight: 1.7,
+                        color: '#475569',
+                      }}
+                    >
+                      {request.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="No recommendation requests"
+                description="Academic endorsements for your active roles will appear here automatically."
+              />
+            )}
+          </Panel>
         </DashboardSection>
 
         <DashboardSection

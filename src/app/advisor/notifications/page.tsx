@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { Bell, CalendarDays, Users } from 'lucide-react';
+import { Bell, CalendarDays, SendToBack, Users } from 'lucide-react';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import NotificationsPageClient from '@/components/notifications/NotificationsPageClient';
 import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
@@ -56,6 +56,7 @@ const navItems = [
 // Advisor-specific filter tabs — only what's relevant
 const ADVISOR_FILTER_TABS = [
   { value: 'all', label: 'All', icon: <Bell size={13} /> },
+  { value: 'recommendation_request', label: 'Requests', icon: <SendToBack size={13} /> },
   { value: 'application_received', label: 'Registrations', icon: <Users size={13} /> },
   { value: 'deadline_reminder', label: 'Calendar Alerts', icon: <CalendarDays size={13} /> },
 ];

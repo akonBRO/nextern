@@ -5,7 +5,6 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
-import ReputationHistory from '@/components/reviews/ReputationHistory';
 import {
   AlertCircle,
   CheckCircle2,
@@ -663,6 +662,46 @@ type UserData = {
   notificationPreferences?: Record<string, boolean>;
 };
 
+type StudentAcademicReview = {
+  id: string;
+  headline: string;
+  summary: string;
+  strengths: string[];
+  growthAreas: string[];
+  readinessLevel: 'priority_support' | 'developing' | 'ready';
+  profileScore?: number;
+  createdAt: string;
+  reviewer: {
+    name: string;
+    role: string;
+    designation?: string;
+    department?: string;
+    institution?: string;
+  };
+};
+
+type StudentJobRecommendation = {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  focusSkills: string[];
+  fitScore?: number;
+  resourceUrl?: string;
+  createdAt: string;
+  recommender: {
+    name: string;
+    role: string;
+    designation?: string;
+  };
+  job: {
+    id: string;
+    title: string;
+    companyName: string;
+    type: string;
+  } | null;
+};
+
 // Main page
 export default function StudentProfilePage() {
   const [user, setUser] = useState<UserData | null>(null);
@@ -674,6 +713,8 @@ export default function StudentProfilePage() {
   const [badges, setBadges] = useState<
     { badgeName: string; badgeIcon: string; awardedAt: string; badgeSlug: string }[]
   >([]);
+  const [academicReviews, setAcademicReviews] = useState<StudentAcademicReview[]>([]);
+  const [jobRecommendations, setJobRecommendations] = useState<StudentJobRecommendation[]>([]);
 
   // Resume upload state
   const { startUpload, isUploading } = useUploadThing('resumeUploader');
@@ -786,6 +827,14 @@ export default function StudentProfilePage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.badges) setBadges(data.badges);
+      })
+      .catch(console.error);
+
+    fetch('/api/student/academic-feedback')
+      .then((r) => r.json())
+      .then((data) => {
+        setAcademicReviews(data.reviews ?? []);
+        setJobRecommendations(data.recommendations ?? []);
       })
       .catch(console.error);
   }, []);
@@ -2221,6 +2270,500 @@ export default function StudentProfilePage() {
 
         {/* 9 — Google Calendar */}
         <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<FileText size={18} />} label="Advisor & Department Feedback" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.7 }}>
+            Reviews and recommendations from your advisor or department head are saved here so you
+            can track formal profile feedback and job-specific guidance in one place.
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+              gap: 18,
+            }}
+            className="student-feedback-grid"
+          >
+            <div
+              style={{
+                borderRadius: 16,
+                border: `1px solid ${C.border}`,
+                background: '#F8FAFC',
+                padding: 18,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    background: C.tealBg,
+                    border: `1px solid ${C.tealBorder}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: C.tealDark,
+                  }}
+                >
+                  <FileText size={16} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
+                    Profile Reviews
+                  </div>
+                  <div style={{ fontSize: 12, color: C.gray }}>
+                    Overall academic and readiness guidance
+                  </div>
+                </div>
+              </div>
+
+              {academicReviews.length === 0 ? (
+                <div
+                  style={{
+                    borderRadius: 12,
+                    border: `1px dashed ${C.border}`,
+                    background: C.white,
+                    padding: '18px 16px',
+                    color: C.light,
+                    fontSize: 13,
+                    lineHeight: 1.7,
+                  }}
+                >
+                  No academic reviews have been added yet.
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {academicReviews.map((review) => {
+                    const readinessPalette =
+                      review.readinessLevel === 'ready'
+                        ? { bg: C.successBg, border: C.successBorder, color: C.success }
+                        : review.readinessLevel === 'priority_support'
+                          ? { bg: C.dangerBg, border: C.dangerBorder, color: C.danger }
+                          : { bg: '#FFFBEB', border: '#FDE68A', color: C.warning };
+
+                    return (
+                      <div
+                        key={review.id}
+                        style={{
+                          borderRadius: 14,
+                          border: `1px solid ${C.border}`,
+                          background: C.white,
+                          padding: 16,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
+                              {review.headline}
+                            </div>
+                            <div style={{ fontSize: 12, color: C.gray, marginTop: 4 }}>
+                              {review.reviewer.name}
+                              {review.reviewer.designation
+                                ? ` · ${review.reviewer.designation}`
+                                : ''}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '6px 10px',
+                                borderRadius: 999,
+                                background: readinessPalette.bg,
+                                border: `1px solid ${readinessPalette.border}`,
+                                color: readinessPalette.color,
+                                fontSize: 11,
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              {review.readinessLevel.replace(/_/g, ' ')}
+                            </span>
+                            {typeof review.profileScore === 'number' ? (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '6px 10px',
+                                  borderRadius: 999,
+                                  background: C.blueBg,
+                                  border: `1px solid ${C.blueBorder}`,
+                                  color: C.blue,
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  textTransform: 'uppercase',
+                                }}
+                              >
+                                Profile {review.profileScore}%
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <p
+                          style={{
+                            margin: '12px 0 0',
+                            fontSize: 13,
+                            color: C.gray,
+                            lineHeight: 1.7,
+                          }}
+                        >
+                          {review.summary}
+                        </p>
+
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                            gap: 10,
+                            marginTop: 12,
+                          }}
+                          className="student-feedback-detail-grid"
+                        >
+                          <div
+                            style={{
+                              borderRadius: 12,
+                              border: `1px solid ${C.successBorder}`,
+                              background: C.successBg,
+                              padding: 12,
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 800,
+                                color: C.success,
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.8,
+                              }}
+                            >
+                              Strengths
+                            </div>
+                            <div
+                              style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}
+                            >
+                              {review.strengths.length > 0 ? (
+                                review.strengths.map((item) => (
+                                  <span
+                                    key={`${review.id}:${item}:strength`}
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      padding: '5px 9px',
+                                      borderRadius: 999,
+                                      background: C.white,
+                                      border: `1px solid ${C.successBorder}`,
+                                      color: C.success,
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {item}
+                                  </span>
+                                ))
+                              ) : (
+                                <span style={{ fontSize: 12, color: C.gray }}>
+                                  No strengths listed.
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div
+                            style={{
+                              borderRadius: 12,
+                              border: '1px solid #FDE68A',
+                              background: '#FFFBEB',
+                              padding: 12,
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 800,
+                                color: C.warning,
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.8,
+                              }}
+                            >
+                              Growth Areas
+                            </div>
+                            <div
+                              style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}
+                            >
+                              {review.growthAreas.length > 0 ? (
+                                review.growthAreas.map((item) => (
+                                  <span
+                                    key={`${review.id}:${item}:gap`}
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      padding: '5px 9px',
+                                      borderRadius: 999,
+                                      background: C.white,
+                                      border: '1px solid #FDE68A',
+                                      color: '#B45309',
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {item}
+                                  </span>
+                                ))
+                              ) : (
+                                <span style={{ fontSize: 12, color: C.gray }}>
+                                  No growth areas listed.
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: 11, color: C.light, marginTop: 12 }}>
+                          Added {new Date(review.createdAt).toLocaleDateString()}
+                          {review.reviewer.institution ? ` · ${review.reviewer.institution}` : ''}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div
+              style={{
+                borderRadius: 16,
+                border: `1px solid ${C.border}`,
+                background: '#F8FAFC',
+                padding: 18,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    background: C.blueBg,
+                    border: `1px solid ${C.blueBorder}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: C.blue,
+                  }}
+                >
+                  <Briefcase size={16} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
+                    Job Recommendations
+                  </div>
+                  <div style={{ fontSize: 12, color: C.gray }}>
+                    Roles your teachers think you should prioritize
+                  </div>
+                </div>
+              </div>
+
+              {jobRecommendations.length === 0 ? (
+                <div
+                  style={{
+                    borderRadius: 12,
+                    border: `1px dashed ${C.border}`,
+                    background: C.white,
+                    padding: '18px 16px',
+                    color: C.light,
+                    fontSize: 13,
+                    lineHeight: 1.7,
+                  }}
+                >
+                  No job recommendations have been added yet.
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {jobRecommendations.map((recommendation) => {
+                    const priorityPalette =
+                      recommendation.priority === 'high'
+                        ? { bg: C.dangerBg, border: C.dangerBorder, color: C.danger }
+                        : recommendation.priority === 'medium'
+                          ? { bg: '#FFFBEB', border: '#FDE68A', color: C.warning }
+                          : { bg: C.blueBg, border: C.blueBorder, color: C.blue };
+
+                    return (
+                      <div
+                        key={recommendation.id}
+                        style={{
+                          borderRadius: 14,
+                          border: `1px solid ${C.border}`,
+                          background: C.white,
+                          padding: 16,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
+                              {recommendation.title}
+                            </div>
+                            <div style={{ fontSize: 12, color: C.gray, marginTop: 4 }}>
+                              {recommendation.job
+                                ? `${recommendation.job.companyName} · ${recommendation.job.type.replace(/-/g, ' ')}`
+                                : recommendation.recommender.name}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '6px 10px',
+                                borderRadius: 999,
+                                background: priorityPalette.bg,
+                                border: `1px solid ${priorityPalette.border}`,
+                                color: priorityPalette.color,
+                                fontSize: 11,
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              {recommendation.priority}
+                            </span>
+                            {typeof recommendation.fitScore === 'number' ? (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '6px 10px',
+                                  borderRadius: 999,
+                                  background: C.successBg,
+                                  border: `1px solid ${C.successBorder}`,
+                                  color: C.success,
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  textTransform: 'uppercase',
+                                }}
+                              >
+                                Fit {recommendation.fitScore}%
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <p
+                          style={{
+                            margin: '12px 0 0',
+                            fontSize: 13,
+                            color: C.gray,
+                            lineHeight: 1.7,
+                          }}
+                        >
+                          {recommendation.description}
+                        </p>
+
+                        {recommendation.focusSkills.length > 0 ? (
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+                            {recommendation.focusSkills.map((skill) => (
+                              <span
+                                key={`${recommendation.id}:${skill}`}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '5px 9px',
+                                  borderRadius: 999,
+                                  background: C.blueBg,
+                                  border: `1px solid ${C.blueBorder}`,
+                                  color: C.blue,
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            flexWrap: 'wrap',
+                            marginTop: 12,
+                          }}
+                        >
+                          <div style={{ fontSize: 11, color: C.light }}>
+                            Recommended by {recommendation.recommender.name}
+                            {recommendation.recommender.designation
+                              ? ` · ${recommendation.recommender.designation}`
+                              : ''}
+                          </div>
+                          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                            {recommendation.job ? (
+                              <Link
+                                href={`/student/jobs/${recommendation.job.id}`}
+                                style={{
+                                  color: C.blue,
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  textDecoration: 'none',
+                                }}
+                              >
+                                View Job
+                              </Link>
+                            ) : null}
+                            {recommendation.resourceUrl ? (
+                              <a
+                                href={recommendation.resourceUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                  color: C.teal,
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  textDecoration: 'none',
+                                }}
+                              >
+                                Open Resource
+                              </a>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div
           id="calendar"
           style={{
             background: C.white,
@@ -2600,7 +3143,15 @@ export default function StudentProfilePage() {
         </div>
       )}
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 980px) {
+          .student-feedback-grid,
+          .student-feedback-detail-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
