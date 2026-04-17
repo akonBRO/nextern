@@ -12,7 +12,7 @@ import { User } from '@/models/User';
 import mongoose from 'mongoose';
 import Link from 'next/link';
 import DashboardShell from '@/components/dashboard/DashboardShell';
-import { getAdvisorNavItems } from '@/lib/academic-navigation';
+import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
 import {
   DashboardPage,
   DashboardSection,

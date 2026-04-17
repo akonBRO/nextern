@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
-import { getDepartmentNavItems } from '@/lib/academic-navigation';
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 import {
   DashboardPage,
   DashboardSection,

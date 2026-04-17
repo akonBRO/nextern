@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { Bell, CalendarDays, Users } from 'lucide-react';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import NotificationsPageClient from '@/components/notifications/NotificationsPageClient';
-import { getAdvisorNavItems } from '@/lib/academic-navigation';
+import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
 import { getAdvisorDashboardData } from '@/lib/role-dashboard';
 
 const navItems = [

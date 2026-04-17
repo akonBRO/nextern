@@ -4,7 +4,6 @@ import { connectDB } from '@/lib/db';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import { DashboardPage, DashboardSection, HeroCard } from '@/components/dashboard/DashboardContent';
 import { getBadgeDefinitions, type BadgeCatalogDefinition } from '@/lib/badge-definitions';
-import { getAdvisorNavItems } from '@/lib/academic-navigation';
 import { BadgeAward } from '@/models/BadgeAward';
 import { getEventCount } from '@/lib/badge-engine';
 import { Trophy } from 'lucide-react';
@@ -56,7 +55,7 @@ export default async function AdvisorBadgesPage() {
       role="advisor"
       roleLabel="Advisor workspace"
       homeHref="/advisor/dashboard"
-      navItems={advisorNavItems}
+      navItems={ADVISOR_NAV_ITEMS}
       user={{
         name: session.user.name ?? 'Advisor',
         email: session.user.email ?? '',
