@@ -8,6 +8,9 @@ import {
   sendEmail,
   applicationStatusEmailTemplate,
   deadlineReminderEmailTemplate,
+  eventRegistrationConfirmationEmailTemplate,
+  hostedEventReminderEmailTemplate,
+  registeredEventReminderEmailTemplate,
 } from '@/lib/email';
 
 type ApplicationStatusEmailType = Parameters<typeof applicationStatusEmailTemplate>[0]['status'];
@@ -229,26 +232,89 @@ const DEFAULT_NOTIFICATION_PREFERENCES: Record<string, boolean> = {
   event_reminders: true,
 };
 
+const DEFAULT_EMAIL_PREFERENCES: Record<string, boolean> = {
+  deadline_reminders: true,
+  event_registrations: true,
+  event_reminders: true,
+};
+
 function normalizeNotificationPreferences(
   prefs?: Record<string, boolean> | null
 ): Record<string, boolean> {
   return { ...DEFAULT_NOTIFICATION_PREFERENCES, ...(prefs ?? {}) };
 }
 
+function normalizeEmailPreferences(
+  prefs?: Record<string, boolean> | null
+): Record<string, boolean> {
+  return { ...DEFAULT_EMAIL_PREFERENCES, ...(prefs ?? {}) };
+}
+
 export async function notifyJobApplied(
   studentId: string,
   jobTitle: string,
   companyName: string,
-  applicationId: string
+  applicationId: string,
+  options?: {
+    isEventRegistration?: boolean;
+    eventDate?: Date;
+  }
 ) {
-  await createNotification({
+  const isEventRegistration = options?.isEventRegistration === true;
+  const eventDateLabel = options?.eventDate?.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  const notification = await createNotification({
     userId: studentId,
     type: 'status_update',
-    title: 'Application submitted',
-    body: `Your application for "${jobTitle}" at ${companyName} has been submitted successfully. We'll notify you of any updates.`,
+    title: isEventRegistration ? 'Event registration confirmed' : 'Application submitted',
+    body:
+      isEventRegistration && eventDateLabel
+        ? `Your registration for "${jobTitle}" at ${companyName} is confirmed for ${eventDateLabel}. We will remind you again before the event begins.`
+        : `Your application for "${jobTitle}" at ${companyName} has been submitted successfully. We'll notify you of any updates.`,
     link: '/student/applications',
-    meta: { applicationId, jobTitle, companyName, icon: 'CircleCheck' },
+    meta: {
+      applicationId,
+      jobTitle,
+      companyName,
+      icon: isEventRegistration ? 'CalendarDays' : 'CircleCheck',
+      ...(options?.eventDate ? { eventDate: options.eventDate.toISOString() } : {}),
+    },
+    preferenceKey: isEventRegistration ? 'event_registrations' : undefined,
   });
+
+  if (!isEventRegistration || !notification || !options?.eventDate) return;
+
+  const student = await User.findById(studentId)
+    .select('name email notificationPreferences')
+    .lean();
+  const prefs = normalizeNotificationPreferences(
+    (student as { notificationPreferences?: Record<string, boolean> } | null)
+      ?.notificationPreferences
+  );
+
+  if (prefs.event_registrations === false || !student?.email) return;
+
+  const { subject, html } = eventRegistrationConfirmationEmailTemplate({
+    studentName: (student as { name?: string | null } | null)?.name?.trim() || 'Student',
+    eventTitle: jobTitle,
+    organizationName: companyName,
+    eventDate: options.eventDate,
+  });
+
+  void sendEmail({ to: student.email, subject, html })
+    .then(() =>
+      Notification.findByIdAndUpdate(notification._id, {
+        $set: { isEmailSent: true },
+      }).catch(() => {})
+    )
+    .catch((err) => {
+      console.error('[EVENT REGISTRATION EMAIL ERROR]', err);
+    });
 }
 
 export async function notifyEmployerApplicationReceived(
@@ -269,6 +335,10 @@ export async function notifyEmployerApplicationReceived(
 
   const isAdvisorEvent =
     options?.isEventRegistration && (employerRole === 'advisor' || employerRole === 'dept_head');
+  const advisorEventLink =
+    employerRole === 'dept_head'
+      ? `/dept/events/${jobId}/applicants`
+      : `/advisor/events/${jobId}/applicants`;
 
   await createNotification({
     userId: employerId,
@@ -279,9 +349,7 @@ export async function notifyEmployerApplicationReceived(
     body: isAdvisorEvent
       ? `${studentName} registered for "${jobTitle}". Review the registrant from your event dashboard.`
       : `${studentName} has applied for "${jobTitle}" at ${companyName}. Review the applicant in your hiring pipeline.`,
-    link: isAdvisorEvent
-      ? `/advisor/events/${jobId}/applicants`
-      : `/employer/jobs/${jobId}/applicants`,
+    link: isAdvisorEvent ? advisorEventLink : `/employer/jobs/${jobId}/applicants`,
     meta: { jobId, applicationId, studentName, companyName, icon: 'Users' },
     preferenceKey: options?.isEventRegistration ? 'event_registrations' : 'application_received',
   });
@@ -449,4 +517,159 @@ export async function notifyInterviewScheduled(
       icon: 'CalendarCheck',
     },
   });
+}
+
+export async function notifyHostedEventReminder(params: {
+  ownerId: string;
+  ownerRole: 'advisor' | 'dept_head';
+  eventTitle: string;
+  organizationName: string;
+  jobId: string;
+  reminderDate: Date;
+  daysLeft: number;
+  kind: 'registration_deadline' | 'event_start';
+}) {
+  const { ownerId, ownerRole, eventTitle, organizationName, jobId, reminderDate, daysLeft, kind } =
+    params;
+
+  const owner = await User.findById(ownerId)
+    .select('name email notificationPreferences emailPreferences')
+    .lean();
+
+  const prefs = normalizeNotificationPreferences(
+    (owner as { notificationPreferences?: Record<string, boolean> } | null)?.notificationPreferences
+  );
+  const emailPrefs = normalizeEmailPreferences(
+    (owner as { emailPreferences?: Record<string, boolean> } | null)?.emailPreferences
+  );
+  const preferenceKey = kind === 'registration_deadline' ? 'deadline_reminders' : 'event_reminders';
+
+  if (prefs[preferenceKey] === false) return;
+
+  const link =
+    ownerRole === 'dept_head'
+      ? `/dept/events/${jobId}/registrants`
+      : `/advisor/events/${jobId}/registrants`;
+  const title =
+    kind === 'registration_deadline'
+      ? `Registration closes in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`
+      : `Event starts in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
+  const body =
+    kind === 'registration_deadline'
+      ? `Registration for "${eventTitle}" closes on ${reminderDate.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        })}. Review registrations and publish any final instructions.`
+      : `"${eventTitle}" begins on ${reminderDate.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        })}. Review your event checklist and confirm the session details.`;
+
+  const notification = await createNotification({
+    userId: ownerId,
+    type: 'deadline_reminder',
+    title,
+    body,
+    link,
+    meta: {
+      jobId,
+      eventTitle,
+      organizationName,
+      reminderKind: kind,
+      reminderDate: reminderDate.toISOString(),
+      daysLeft,
+      icon: 'CalendarDays',
+    },
+    expiresAt: reminderDate,
+    preferenceKey,
+  });
+
+  if (!notification || !owner?.email || emailPrefs[preferenceKey] === false) return;
+
+  const { subject, html } = hostedEventReminderEmailTemplate({
+    recipientName:
+      (owner as { name?: string | null } | null)?.name?.trim() ||
+      (ownerRole === 'dept_head' ? 'Department head' : 'Advisor'),
+    eventTitle,
+    organizationName,
+    eventDate: reminderDate,
+    daysLeft,
+    kind,
+  });
+
+  void sendEmail({ to: owner.email, subject, html })
+    .then(() =>
+      Notification.findByIdAndUpdate(notification._id, {
+        $set: { isEmailSent: true },
+      }).catch(() => {})
+    )
+    .catch((error) => {
+      console.error('[HOSTED EVENT REMINDER EMAIL ERROR]', error);
+    });
+}
+
+export async function notifyRegisteredEventReminder(params: {
+  studentId: string;
+  eventTitle: string;
+  organizationName: string;
+  jobId: string;
+  eventDate: Date;
+  daysLeft: number;
+}) {
+  const { studentId, eventTitle, organizationName, jobId, eventDate, daysLeft } = params;
+
+  const student = await User.findById(studentId)
+    .select('name email notificationPreferences')
+    .lean();
+
+  const prefs = normalizeNotificationPreferences(
+    (student as { notificationPreferences?: Record<string, boolean> } | null)
+      ?.notificationPreferences
+  );
+
+  if (prefs.event_reminders === false) return;
+
+  const notification = await createNotification({
+    userId: studentId,
+    type: 'deadline_reminder',
+    title: `Event starts in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
+    body: `Your registered event "${eventTitle}" begins on ${eventDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })}. Please be prepared for the session.`,
+    link: '/student/applications',
+    meta: {
+      jobId,
+      eventTitle,
+      organizationName,
+      reminderKind: 'registered_event_start',
+      eventDate: eventDate.toISOString(),
+      daysLeft,
+      icon: 'CalendarDays',
+    },
+    expiresAt: eventDate,
+  });
+
+  if (!notification || !student?.email) return;
+
+  const { subject, html } = registeredEventReminderEmailTemplate({
+    studentName: (student as { name?: string | null } | null)?.name?.trim() || 'Student',
+    eventTitle,
+    organizationName,
+    eventDate,
+    daysLeft,
+  });
+
+  void sendEmail({ to: student.email, subject, html })
+    .then(() => {
+      return Notification.findByIdAndUpdate(notification._id, {
+        $set: { isEmailSent: true },
+      }).catch(() => {});
+    })
+    .catch((err) => {
+      console.error('[REGISTERED EVENT EMAIL ERROR]', err);
+    });
 }

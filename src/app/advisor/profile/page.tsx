@@ -1,10 +1,22 @@
 'use client';
 // src/app/advisor/profile/page.tsx
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { AlertCircle, Bell, CheckCircle2, GraduationCap, User, Save, Linkedin } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  AlertCircle,
+  Bell,
+  Calendar,
+  CheckCircle2,
+  GraduationCap,
+  Mail,
+  User,
+  Save,
+  Linkedin,
+} from 'lucide-react';
 import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
+import CalendarConnectButton from '@/components/calendar/CalendarConnectButton';
 
 const C = {
   blue: '#2563EB',
@@ -115,6 +127,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export default function AdvisorProfilePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasTriggeredCalendarSync = useRef(false);
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [fetching, setFetching] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -132,6 +147,7 @@ export default function AdvisorProfilePage() {
     advisoryDepartment: '',
     linkedinUrl: '',
     notificationPreferences: {} as Record<string, boolean>,
+    emailPreferences: {} as Record<string, boolean>,
   });
 
   useEffect(() => {
@@ -151,11 +167,41 @@ export default function AdvisorProfilePage() {
           advisoryDepartment: u.advisoryDepartment ?? '',
           linkedinUrl: u.linkedinUrl ?? '',
           notificationPreferences: u.notificationPreferences ?? {},
+          emailPreferences: u.emailPreferences ?? {},
         });
       })
       .catch(() => setError('Failed to load'))
       .finally(() => setFetching(false));
   }, []);
+
+  useEffect(() => {
+    if (!Boolean(user?.googleCalendarConnected)) return;
+    if (searchParams.get('calendar') !== 'connected') return;
+    if (hasTriggeredCalendarSync.current) return;
+
+    hasTriggeredCalendarSync.current = true;
+    let isActive = true;
+
+    void (async () => {
+      try {
+        await fetch('/api/calendar/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resync: true }),
+        });
+      } catch {
+        // silent
+      } finally {
+        if (!isActive) return;
+        router.replace('/advisor/profile#calendar');
+        router.refresh();
+      }
+    })();
+
+    return () => {
+      isActive = false;
+    };
+  }, [router, searchParams, user]);
 
   function set(field: string, value: unknown) {
     setForm((p) => ({ ...p, [field]: value }));
@@ -180,6 +226,7 @@ export default function AdvisorProfilePage() {
           advisoryDepartment: form.advisoryDepartment || undefined,
           linkedinUrl: form.linkedinUrl || undefined,
           notificationPreferences: form.notificationPreferences,
+          emailPreferences: form.emailPreferences,
         }),
       });
       const data = await res.json();
@@ -344,6 +391,29 @@ export default function AdvisorProfilePage() {
 
         {/* Personal Information */}
         <div
+          id="calendar"
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Calendar size={18} />} label="Google Calendar" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16, lineHeight: 1.6 }}>
+            Connect your Google Calendar to keep hosted webinar and workshop schedules, registration
+            deadlines, and key advising events visible in one personal timeline.
+          </div>
+          <CalendarConnectButton
+            isConnected={Boolean(user?.googleCalendarConnected)}
+            callbackUrl="/advisor/profile?calendar=connected#calendar"
+            description="Sync hosted event dates and important advising reminders to your Google Calendar automatically."
+            connectedDescription="Hosted events and advising reminders sync automatically"
+          />
+        </div>
+
+        <div
           style={{
             background: C.white,
             borderRadius: 18,
@@ -506,19 +576,24 @@ export default function AdvisorProfilePage() {
           <div style={{ display: 'grid', gap: 10 }}>
             {[
               {
-                key: 'event_registration',
+                key: 'event_registrations',
                 label: 'Event registrations',
                 desc: 'When a student registers for your event.',
               },
               {
                 key: 'deadline_reminders',
-                label: 'Deadline reminders',
-                desc: 'When important advising or event deadlines approach.',
+                label: 'Registration deadline reminders',
+                desc: 'When one of your hosted events is approaching its registration deadline.',
               },
               {
-                key: 'department_report',
-                label: 'Department reports',
-                desc: 'When cohort analytics or advisor reports are ready.',
+                key: 'event_reminders',
+                label: 'Event start reminders',
+                desc: 'When one of your hosted webinars or workshops is about to begin.',
+              },
+              {
+                key: 'badge_earned',
+                label: 'Badge earned',
+                desc: 'When your advisor account earns a new platform badge.',
               },
             ].map((item) => {
               const isOn = form.notificationPreferences[item.key] !== false;
@@ -544,6 +619,91 @@ export default function AdvisorProfilePage() {
                     onClick={() =>
                       set('notificationPreferences', {
                         ...form.notificationPreferences,
+                        [item.key]: !isOn,
+                      })
+                    }
+                    style={{
+                      width: 44,
+                      height: 24,
+                      borderRadius: 999,
+                      border: 'none',
+                      background: isOn ? C.blue : C.border,
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background 0.2s',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: '50%',
+                        background: C.white,
+                        position: 'absolute',
+                        top: 3,
+                        left: isOn ? 23 : 3,
+                        transition: 'left 0.2s',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                      }}
+                    />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            border: `1px solid ${C.border}`,
+            padding: '24px 28px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          }}
+        >
+          <SectionHeader icon={<Mail size={18} />} label="Email Preferences" />
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
+            Decide which advisor email reminders should be delivered to your inbox. In-app
+            notifications remain controlled separately above.
+          </div>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {[
+              {
+                key: 'deadline_reminders',
+                label: 'Registration deadline emails',
+                desc: 'Email reminders before registration closes for one of your hosted events.',
+              },
+              {
+                key: 'event_reminders',
+                label: 'Event date emails',
+                desc: 'Email reminders before one of your hosted webinars or workshops begins.',
+              },
+            ].map((item) => {
+              const isOn = form.emailPreferences[item.key] !== false;
+              return (
+                <div
+                  key={item.key}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    background: '#FAFBFC',
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 12,
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{item.label}</div>
+                    <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      set('emailPreferences', {
+                        ...form.emailPreferences,
                         [item.key]: !isOn,
                       })
                     }

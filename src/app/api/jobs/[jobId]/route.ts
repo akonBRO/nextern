@@ -9,14 +9,21 @@ import { connectDB } from '@/lib/db';
 import { Job } from '@/models/Job';
 import { JobView } from '@/models/JobView';
 import { Application } from '@/models/Application';
+import { User } from '@/models/User';
 import { Assessment } from '@/models/Assessment';
 import { AssessmentAssignment } from '@/models/AssessmentAssignment';
 import { AssessmentSubmission } from '@/models/AssessmentSubmission';
 import { InterviewSession } from '@/models/InterviewSession';
 import { Message } from '@/models/Message';
 import { AdminJobUpdateSchema, UpdateJobSchema } from '@/lib/validations';
+import { removeCalendarEvent, syncOwnedEventToCalendar } from '@/lib/calendar';
 
 type Params = { params: Promise<{ jobId: string }> };
+
+async function getAcademicOwnerRole(userId: string) {
+  const owner = await User.findById(userId).select('role').lean();
+  return owner?.role === 'advisor' || owner?.role === 'dept_head' ? owner.role : null;
+}
 
 // ── GET ───────────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest, { params }: Params) {
@@ -105,6 +112,33 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     const updated = await Job.findByIdAndUpdate(jobId, { $set: updates }, { new: true });
+    if (!updated) {
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+    }
+
+    const ownerRole = await getAcademicOwnerRole(updated.employerId.toString());
+    const isAcademicEvent =
+      !!ownerRole && (updated.type === 'webinar' || updated.type === 'workshop');
+    const shouldKeepSynced =
+      isAcademicEvent && !!updated.startDate && updated.startDate > new Date() && updated.isActive;
+
+    if (updated.ownerGoogleCalendarEventId && !shouldKeepSynced) {
+      await removeCalendarEvent(updated.employerId.toString(), updated.ownerGoogleCalendarEventId);
+      updated.ownerGoogleCalendarEventId = undefined;
+      await updated.save();
+    } else if (shouldKeepSynced) {
+      await syncOwnedEventToCalendar(
+        updated.employerId.toString(),
+        updated._id.toString(),
+        updated.title,
+        updated.companyName,
+        updated.startDate as Date,
+        updated.type as 'webinar' | 'workshop',
+        updated.applicationDeadline,
+        updated.ownerGoogleCalendarEventId
+      );
+    }
+
     return NextResponse.json({ message: 'Job updated successfully', job: updated });
   } catch (error) {
     console.error('[UPDATE JOB ERROR]', error);
@@ -137,6 +171,15 @@ export async function DELETE(req: NextRequest, { params }: Params) {
 
     const relatedAssessments = await Assessment.find({ jobId }).select('_id').lean();
     const assessmentIds = relatedAssessments.map((assessment) => assessment._id);
+
+    const ownerRole = await getAcademicOwnerRole(job.employerId.toString());
+    if (
+      ownerRole &&
+      (job.type === 'webinar' || job.type === 'workshop') &&
+      job.ownerGoogleCalendarEventId
+    ) {
+      await removeCalendarEvent(job.employerId.toString(), job.ownerGoogleCalendarEventId);
+    }
 
     await Promise.all([
       AssessmentSubmission.deleteMany({

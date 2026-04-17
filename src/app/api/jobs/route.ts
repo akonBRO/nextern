@@ -9,6 +9,7 @@ import { Job } from '@/models/Job';
 import { User } from '@/models/User';
 import { CreateJobSchema } from '@/lib/validations';
 import { checkFeatureAccess, syncPremiumStatus } from '@/lib/premium';
+import { syncOwnedEventToCalendar } from '@/lib/calendar';
 
 // ── GET ───────────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
@@ -188,6 +189,23 @@ export async function POST(req: NextRequest) {
       companyName: displayName,
       companyLogo: poster.companyLogo ?? poster.image,
     });
+
+    if (
+      isAdvisorOrDept &&
+      (job.type === 'webinar' || job.type === 'workshop') &&
+      job.startDate &&
+      job.startDate > new Date()
+    ) {
+      await syncOwnedEventToCalendar(
+        session.user.id,
+        job._id.toString(),
+        job.title,
+        job.companyName,
+        job.startDate,
+        job.type,
+        job.applicationDeadline
+      );
+    }
 
     return NextResponse.json({ message: 'Job posted successfully', job }, { status: 201 });
   } catch (error) {

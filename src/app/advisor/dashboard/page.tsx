@@ -20,7 +20,10 @@ import {
   formatShortDate,
   formatStatusLabel,
 } from '@/components/dashboard/DashboardContent';
+import CalendarBoard from '@/components/calendar/CalendarBoard';
 import { getAdvisorDashboardData } from '@/lib/role-dashboard';
+import { getAdvisorCalendarEvents } from '@/lib/academic-calendar-events';
+import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
 import {
   CalendarClock,
   CalendarDays,
@@ -33,71 +36,19 @@ import {
   MessageSquare,
 } from 'lucide-react';
 
-const navItems = [
-  { label: 'Overview', href: '/advisor/dashboard', icon: 'dashboard' as const },
-  {
-    label: 'My Students',
-    icon: 'users' as const,
-    items: [
-      {
-        label: 'Attention queue',
-        href: '/advisor/dashboard#students',
-        description: 'Students that need immediate coaching or intervention.',
-        icon: 'users' as const,
-      },
-      {
-        label: 'Upcoming interviews',
-        href: '/advisor/dashboard#interviews',
-        description: 'Students with approaching interviews that may need support.',
-        icon: 'calendar' as const,
-      },
-      {
-        label: 'Skill gaps',
-        href: '/advisor/dashboard#skills',
-        description: 'Repeated hard-skill gaps across your advisee cohort.',
-        icon: 'target' as const,
-      },
-      {
-        label: 'Cohort Reputation',
-        href: '/advisor/dashboard#reputation',
-        description: 'Aggregated reviews and formal recommendations from employers.',
-        icon: 'star' as const,
-      },
-    ],
-  },
-  {
-    label: 'Events',
-    icon: 'calendar' as const,
-    items: [
-      {
-        label: 'Post Event',
-        href: '/advisor/events/new',
-        description: 'Publish a webinar or workshop for students.',
-        icon: 'calendar' as const,
-      },
-      {
-        label: 'My Events',
-        href: '/advisor/events',
-        description: 'View and manage all your posted events.',
-        icon: 'file' as const,
-      },
-    ],
-  },
-  { label: 'Badges', href: '/advisor/badges', icon: 'shield' as const },
-];
-
 async function getAdvisorExtras(userId: string) {
   await connectDB();
   const oid = new mongoose.Types.ObjectId(userId);
-  const [advisor, totalEvents] = await Promise.all([
+  const [advisor, totalEvents, calendarEvents] = await Promise.all([
     User.findById(oid)
       .select(
-        'name email image phone bio city institutionName advisoryDepartment designation linkedinUrl advisorStaffId'
+        'name email image phone bio city institutionName advisoryDepartment designation linkedinUrl advisorStaffId googleCalendarConnected'
       )
       .lean(),
     Job.countDocuments({ employerId: oid, type: { $in: ['webinar', 'workshop'] } }),
+    getAdvisorCalendarEvents(userId, 24),
   ]);
-  return { advisor, totalEvents };
+  return { advisor, totalEvents, calendarEvents };
 }
 
 export default async function AdvisorDashboard() {
@@ -112,7 +63,7 @@ export default async function AdvisorDashboard() {
     getAdvisorExtras(session.user.id),
   ]);
 
-  const { advisor, totalEvents } = extras;
+  const { advisor, totalEvents, calendarEvents } = extras;
 
   const quickStats = [
     { label: 'Advisees', value: String(data.stats.totalAdvisees), color: '#22D3EE' },
@@ -126,7 +77,7 @@ export default async function AdvisorDashboard() {
       role="advisor"
       roleLabel="Advisor dashboard"
       homeHref="/advisor/dashboard"
-      navItems={navItems}
+      navItems={ADVISOR_NAV_ITEMS}
       user={{ ...data.chromeUser, userId: session.user.id }}
     >
       <DashboardPage>
@@ -418,6 +369,23 @@ export default async function AdvisorDashboard() {
         </section>
 
         {/* ── Student attention queue ── */}
+        <DashboardSection
+          id="calendar"
+          title="Calendar"
+          description="Track only your own posted webinars and workshops, including registration deadlines and event dates."
+        >
+          <CalendarBoard
+            events={calendarEvents}
+            isCalendarConnected={advisor?.googleCalendarConnected ?? false}
+            boardTitle="Advising Calendar"
+            boardSubtitle="Monitor only your hosted sessions and registration cutoffs from one board."
+            fullCalendarHref="/advisor/calendar"
+            manageCalendarHref="/advisor/profile#calendar"
+            eventHrefTemplate="/advisor/events/:jobId/registrants"
+            emptyNextEventMessage="No hosted advisor events are coming up yet. Post a workshop or webinar to populate this planner."
+          />
+        </DashboardSection>
+
         <DashboardSection
           id="students"
           title="Student attention queue"

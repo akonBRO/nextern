@@ -7,57 +7,7 @@ import { getBadgeDefinitions, type BadgeCatalogDefinition } from '@/lib/badge-de
 import { BadgeAward } from '@/models/BadgeAward';
 import { getEventCount } from '@/lib/badge-engine';
 import { Trophy } from 'lucide-react';
-
-const advisorNavItems = [
-  {
-    label: 'Overview',
-    href: '/advisor/dashboard',
-    icon: 'dashboard' as const,
-  },
-  {
-    label: 'My Students',
-    icon: 'users' as const,
-    items: [
-      {
-        label: 'Attention queue',
-        href: '/advisor/dashboard#students',
-        description: 'Students that need immediate coaching or intervention.',
-        icon: 'users' as const,
-      },
-      {
-        label: 'Upcoming interviews',
-        href: '/advisor/dashboard#interviews',
-        description: 'Students with approaching interviews that may need support.',
-        icon: 'calendar' as const,
-      },
-      {
-        label: 'Skill gaps',
-        href: '/advisor/dashboard#skills',
-        description: 'Repeated hard-skill gaps across your advisee cohort.',
-        icon: 'target' as const,
-      },
-    ],
-  },
-  {
-    label: 'Events',
-    icon: 'calendar' as const,
-    items: [
-      {
-        label: 'Post Event',
-        href: '/advisor/events/new',
-        description: 'Publish a webinar or workshop for students.',
-        icon: 'calendar' as const,
-      },
-      {
-        label: 'My Events',
-        href: '/advisor/events',
-        description: 'View and manage all your posted events.',
-        icon: 'file' as const,
-      },
-    ],
-  },
-  { label: 'Badges', href: '/advisor/badges', icon: 'shield' as const },
-];
+import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
 
 export default async function AdvisorBadgesPage() {
   const session = await auth();
@@ -105,7 +55,7 @@ export default async function AdvisorBadgesPage() {
       role="advisor"
       roleLabel="Advisor workspace"
       homeHref="/advisor/dashboard"
-      navItems={advisorNavItems}
+      navItems={ADVISOR_NAV_ITEMS}
       user={{
         name: session.user.name ?? 'Advisor',
         email: session.user.email ?? '',

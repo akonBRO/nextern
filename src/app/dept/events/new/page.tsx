@@ -237,6 +237,7 @@ export default function NewDeptEventPage() {
     locationType: 'remote' as 'onsite' | 'remote' | 'hybrid',
     city: '',
     applicationDeadline: '',
+    startDate: '',
     targetUniversities: [] as string[],
     targetDepartments: [] as string[],
     targetYears: [] as number[],
@@ -259,6 +260,10 @@ export default function NewDeptEventPage() {
     if (!form.title.trim()) errs.title = 'Title is required';
     if (form.description.length < 20) errs.description = 'At least 20 characters required';
     if (!form.applicationDeadline) errs.applicationDeadline = 'Event deadline is required';
+    if (!form.startDate) errs.startDate = 'Event date is required';
+    if (form.applicationDeadline && form.startDate && form.startDate < form.applicationDeadline) {
+      errs.startDate = 'Event date must be on or after the registration deadline';
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -274,6 +279,7 @@ export default function NewDeptEventPage() {
         body: JSON.stringify({
           ...form,
           city: form.city || undefined,
+          startDate: form.startDate,
           academicSession: form.academicSession || undefined,
           isActive,
         }),
@@ -470,6 +476,21 @@ export default function NewDeptEventPage() {
                   }}
                 />
               </Field>
+              <Field label="Event Date" error={errors.startDate}>
+                <input
+                  type="date"
+                  value={form.startDate}
+                  onChange={(e) => set('startDate', e.target.value)}
+                  style={{
+                    ...inputBase,
+                    borderColor: errors.startDate ? C.dangerBorder : C.border,
+                  }}
+                />
+              </Field>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div />
               <Field label="Academic Session" required={false}>
                 <input
                   type="text"

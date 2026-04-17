@@ -9,6 +9,7 @@ import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 import { Application } from '@/models/Application';
 import { JobView } from '@/models/JobView';
+import { Job } from '@/models/Job';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export type CalendarEventInput = {
@@ -341,6 +342,64 @@ export async function syncEventRegistrationToCalendar(
     }
   } catch (err) {
     console.error('[CALENDAR] syncEventRegistrationToCalendar failed:', err);
+  }
+}
+
+/**
+ * Called when an advisor or department head posts or updates an event.
+ * Syncs the hosted event date to their personal Google Calendar.
+ */
+export async function syncOwnedEventToCalendar(
+  ownerId: string,
+  jobId: string,
+  eventTitle: string,
+  organizationName: string,
+  eventDate: Date,
+  eventType: 'webinar' | 'workshop',
+  registrationDeadline?: Date,
+  existingEventId?: string
+): Promise<void> {
+  try {
+    const cal = await getCalendarForUser(ownerId);
+    if (!cal) return;
+
+    const endTime = new Date(eventDate.getTime() + 90 * 60 * 1000);
+    const registrationLine =
+      registrationDeadline && registrationDeadline > new Date(0)
+        ? `Registration closes on ${registrationDeadline.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })}.\n\n`
+        : '';
+
+    const eventInput: CalendarEventInput = {
+      title: `${eventType === 'webinar' ? 'Webinar' : 'Workshop'}: ${eventTitle}`,
+      description:
+        `You are hosting "${eventTitle}" for ${organizationName} on Nextern.\n\n` +
+        registrationLine +
+        'Review registrants and event details from your dashboard.',
+      startDateTime: eventDate,
+      endDateTime: endTime,
+      isAllDay: false,
+      colorId: COLOR.event,
+    };
+
+    let eventId = existingEventId;
+
+    if (existingEventId) {
+      await updateCalendarEvent(cal, existingEventId, eventInput);
+    } else {
+      eventId = (await createCalendarEvent(cal, eventInput)) ?? undefined;
+    }
+
+    if (eventId) {
+      await Job.findByIdAndUpdate(jobId, {
+        ownerGoogleCalendarEventId: eventId,
+      });
+    }
+  } catch (err) {
+    console.error('[CALENDAR] syncOwnedEventToCalendar failed:', err);
   }
 }
 

@@ -49,6 +49,12 @@ interface INotificationPreferences {
   event_reminders: boolean;
 }
 
+interface IEmailPreferences {
+  deadline_reminders: boolean;
+  event_registrations: boolean;
+  event_reminders: boolean;
+}
+
 // ── Main interface ───────────────────────────────────────────
 export interface IUser extends Document {
   // ── Common fields (all roles) ────────────────────────────
@@ -92,6 +98,7 @@ export interface IUser extends Document {
   googleRefreshToken?: string;
   googleCalendarConnected?: boolean;
   notificationPreferences: INotificationPreferences;
+  emailPreferences: IEmailPreferences;
   freelanceAccountBalanceBDT: number;
   freelanceTotalEarningsBDT: number;
   freelanceTotalSpendingsBDT: number;
@@ -207,6 +214,11 @@ const UserSchema = new Schema<IUser>(
       event_registrations: { type: Boolean, default: true },
       waitlist_updates: { type: Boolean, default: true },
       student_messages: { type: Boolean, default: true },
+      event_reminders: { type: Boolean, default: true },
+    },
+    emailPreferences: {
+      deadline_reminders: { type: Boolean, default: true },
+      event_registrations: { type: Boolean, default: true },
       event_reminders: { type: Boolean, default: true },
     },
 

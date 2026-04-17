@@ -7,9 +7,18 @@ import { Calendar, CalendarCheck, Loader2, Unlink } from 'lucide-react';
 type Props = {
   isConnected: boolean;
   onConnect?: () => void;
+  callbackUrl?: string;
+  description?: string;
+  connectedDescription?: string;
 };
 
-export default function CalendarConnectButton({ isConnected, onConnect }: Props) {
+export default function CalendarConnectButton({
+  isConnected,
+  onConnect,
+  callbackUrl,
+  description = 'Auto-sync job deadlines, interviews, and event dates to your personal Google Calendar. Never miss an opportunity.',
+  connectedDescription = 'Deadlines and interviews sync automatically',
+}: Props) {
   const [loading, setLoading] = useState(false);
   const [connected, setConnected] = useState(isConnected);
   const [syncing, setSyncing] = useState(false);
@@ -19,7 +28,9 @@ export default function CalendarConnectButton({ isConnected, onConnect }: Props)
     setLoading(true);
     // Redirect to our dedicated calendar OAuth route which requests
     // the calendar scope with prompt=consent so we always get a refresh token.
-    window.location.href = '/api/calendar/connect';
+    window.location.href = callbackUrl
+      ? `/api/calendar/connect?callbackUrl=${encodeURIComponent(callbackUrl)}`
+      : '/api/calendar/connect';
   }
 
   async function handleResync() {
@@ -85,7 +96,7 @@ export default function CalendarConnectButton({ isConnected, onConnect }: Props)
               Google Calendar connected
             </div>
             <div style={{ fontSize: 12, color: '#16A34A', marginTop: 2 }}>
-              Deadlines and interviews sync automatically
+              {connectedDescription}
             </div>
           </div>
         </div>
@@ -171,8 +182,7 @@ export default function CalendarConnectButton({ isConnected, onConnect }: Props)
             Connect Google Calendar
           </div>
           <div style={{ fontSize: 12, color: '#64748B', marginTop: 2, maxWidth: 320 }}>
-            Auto-sync job deadlines, interviews, and event dates to your personal Google Calendar.
-            Never miss an opportunity.
+            {description}
           </div>
         </div>
       </div>

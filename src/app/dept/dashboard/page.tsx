@@ -18,7 +18,10 @@ import {
   formatCompactNumber,
   formatShortDate,
 } from '@/components/dashboard/DashboardContent';
+import CalendarBoard from '@/components/calendar/CalendarBoard';
 import { getDeptDashboardData } from '@/lib/role-dashboard';
+import { getDeptCalendarEvents } from '@/lib/academic-calendar-events';
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 import { BriefcaseBusiness, GraduationCap, LineChart, Sparkles, Target, Users } from 'lucide-react';
 import { User } from '@/models/User';
 import { Job } from '@/models/Job';
@@ -26,99 +29,19 @@ import { connectDB } from '@/lib/db';
 import mongoose from 'mongoose';
 import Link from 'next/link';
 
-const navItems = [
-  { label: 'Overview', href: '/dept/dashboard', icon: 'dashboard' as const },
-  {
-    label: 'Events',
-    icon: 'calendar' as const,
-    items: [
-      {
-        label: 'Post Event',
-        href: '/dept/events/new',
-        description: 'Publish a webinar or workshop for students.',
-        icon: 'calendar' as const,
-      },
-      {
-        label: 'My Events',
-        href: '/dept/events',
-        description: 'View and manage all your posted events.',
-        icon: 'file' as const,
-      },
-    ],
-  },
-  {
-    label: 'Cohort',
-    icon: 'users' as const,
-    items: [
-      {
-        label: 'Top students',
-        href: '/dept/dashboard#students',
-        description: 'Track the strongest students by opportunity score and profile readiness.',
-        icon: 'users' as const,
-      },
-      {
-        label: 'Pipeline',
-        href: '/dept/dashboard#pipeline',
-        description: 'See the aggregate hiring journey for your department cohort.',
-        icon: 'insights' as const,
-      },
-    ],
-  },
-  {
-    label: 'Analytics',
-    icon: 'insights' as const,
-    items: [
-      {
-        label: 'Skill heatmap',
-        href: '/dept/dashboard#heatmap',
-        description: 'Most common skills across the department cohort.',
-        icon: 'sparkles' as const,
-      },
-      {
-        label: 'Industry alignment',
-        href: '/dept/dashboard#alignment',
-        description: 'Student skills vs employer demand.',
-        icon: 'insights' as const,
-      },
-      {
-        label: 'Semester trend',
-        href: '/dept/dashboard#trend',
-        description: 'Semester-over-semester readiness trajectory.',
-        icon: 'target' as const,
-      },
-    ],
-  },
-  {
-    label: 'Opportunities',
-    icon: 'briefcase' as const,
-    items: [
-      {
-        label: 'Openings',
-        href: '/dept/dashboard#openings',
-        description: 'Active roles relevant to your university and department.',
-        icon: 'briefcase' as const,
-      },
-      {
-        label: 'Benchmarks',
-        href: '/dept/dashboard#benchmarks',
-        description: 'Department-level thresholds and readiness guardrails.',
-        icon: 'target' as const,
-      },
-    ],
-  },
-  { label: 'Badges', href: '/dept/badges', icon: 'shield' as const },
-];
-
 async function getDeptExtras(userId: string) {
   await connectDB();
   const oid = new mongoose.Types.ObjectId(userId);
-  const [deptHead, totalEvents] = await Promise.all([
+  const [deptHead, totalEvents, calendarEvents] = await Promise.all([
     User.findById(oid)
-      .select('name bio city linkedinUrl institutionName advisoryDepartment designation image')
+      .select(
+        'name bio city linkedinUrl institutionName advisoryDepartment designation image googleCalendarConnected'
+      )
       .lean(),
     Job.countDocuments({ employerId: oid, type: { $in: ['webinar', 'workshop'] } }),
+    getDeptCalendarEvents(userId, 24),
   ]);
-  return { deptHead, totalEvents };
+  return { deptHead, totalEvents, calendarEvents };
 }
 
 export default async function DeptDashboard() {
@@ -133,7 +56,7 @@ export default async function DeptDashboard() {
     getDeptExtras(session.user.id),
   ]);
 
-  const { deptHead, totalEvents } = extras;
+  const { deptHead, totalEvents, calendarEvents } = extras;
   const benchmark = data.department.benchmark;
   const { readinessDistribution, skillHeatmap, industryAlignment, semesterTrend } = data;
 
@@ -142,7 +65,7 @@ export default async function DeptDashboard() {
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
-      navItems={navItems}
+      navItems={DEPT_NAV_ITEMS}
       user={{ ...data.chromeUser, userId: session.user.id }}
     >
       <DashboardPage>
@@ -335,6 +258,23 @@ export default async function DeptDashboard() {
         </section>
 
         {/* ── Readiness Distribution ── */}
+        <DashboardSection
+          id="calendar"
+          title="Calendar"
+          description="Track only your own posted department events, including registration deadlines and event dates."
+        >
+          <CalendarBoard
+            events={calendarEvents}
+            isCalendarConnected={deptHead?.googleCalendarConnected ?? false}
+            boardTitle="Department Calendar"
+            boardSubtitle="Keep only your hosted department sessions and registration cutoffs on one board."
+            fullCalendarHref="/dept/calendar"
+            manageCalendarHref="/dept/profile#calendar"
+            eventHrefTemplate="/dept/events/:jobId/registrants"
+            emptyNextEventMessage="No hosted department events are coming up yet. Post a workshop or webinar to populate this planner."
+          />
+        </DashboardSection>
+
         <DashboardSection
           id="readiness"
           title="Readiness distribution"

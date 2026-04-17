@@ -300,6 +300,237 @@ export function deadlineReminderEmailTemplate(params: {
   };
 }
 
+export function hostedEventReminderEmailTemplate(params: {
+  recipientName: string;
+  eventTitle: string;
+  organizationName: string;
+  eventDate: Date;
+  daysLeft: number;
+  kind: 'registration_deadline' | 'event_start';
+}): { subject: string; html: string } {
+  const { recipientName, eventTitle, organizationName, eventDate, daysLeft, kind } = params;
+  const dateLabel = eventDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  const dayLabel = `${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
+  const headline =
+    kind === 'registration_deadline'
+      ? 'Registration deadline approaching'
+      : 'Event date approaching';
+  const subject =
+    kind === 'registration_deadline'
+      ? `Registration deadline reminder - ${eventTitle}`
+      : `Event reminder - ${eventTitle}`;
+  const body =
+    kind === 'registration_deadline'
+      ? `This is a reminder that registration for <strong>${eventTitle}</strong> is scheduled to close in ${dayLabel}.`
+      : `This is a reminder that your event <strong>${eventTitle}</strong> begins in ${dayLabel}.`;
+  const detailLabel = kind === 'registration_deadline' ? 'Deadline' : 'Event Date';
+
+  const content = `
+    <tr>
+      <td style="padding:40px 44px 16px;">
+        <p style="margin:0 0 10px;color:#475569;font-size:14px;">Dear ${recipientName},</p>
+        <h2 style="margin:0;color:#0F172A;font-size:30px;font-weight:800;letter-spacing:-0.02em;">
+          ${headline}
+        </h2>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 44px 20px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #D9E2EC;border-radius:14px;background:#F8FAFC;">
+          <tr>
+            <td style="padding:18px 20px;border-bottom:1px solid #E2E8F0;">
+              <p style="margin:0 0 6px;color:#64748B;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Event</p>
+              <p style="margin:0;color:#0F172A;font-size:15px;font-weight:600;">${eventTitle}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 20px;border-bottom:1px solid #E2E8F0;">
+              <p style="margin:0 0 6px;color:#64748B;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Organization</p>
+              <p style="margin:0;color:#0F172A;font-size:15px;font-weight:600;">${organizationName}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 20px;border-bottom:1px solid #E2E8F0;">
+              <p style="margin:0 0 6px;color:#64748B;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">${detailLabel}</p>
+              <p style="margin:0;color:#0F172A;font-size:15px;font-weight:600;">${dateLabel}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 20px;">
+              <p style="margin:0 0 6px;color:#64748B;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Time Remaining</p>
+              <p style="margin:0;color:#0F172A;font-size:15px;font-weight:600;">${dayLabel}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 44px 40px;">
+        <p style="margin:0 0 16px;color:#334155;font-size:15px;line-height:1.8;">
+          ${body}
+        </p>
+        <p style="margin:0;color:#64748B;font-size:14px;line-height:1.8;">
+          Please review your Nextern dashboard for registrant details and any final preparation steps.
+        </p>
+      </td>
+    </tr>
+  `;
+
+  return {
+    subject,
+    html: emailWrapper(content),
+  };
+}
+
+export function eventRegistrationConfirmationEmailTemplate(params: {
+  studentName: string;
+  eventTitle: string;
+  organizationName: string;
+  eventDate: Date;
+}): { subject: string; html: string } {
+  const { studentName, eventTitle, organizationName, eventDate } = params;
+  const dateLabel = eventDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  const content = `
+    <tr>
+      <td style="padding:40px 44px 16px;">
+        <p style="margin:0 0 10px;color:#475569;font-size:14px;">Dear ${studentName},</p>
+        <h2 style="margin:0;color:#0F172A;font-size:30px;font-weight:800;letter-spacing:-0.02em;">
+          Event registration confirmed
+        </h2>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 44px 20px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #D9E2EC;border-radius:14px;background:#F8FAFC;">
+          <tr>
+            <td style="padding:18px 20px;border-bottom:1px solid #E2E8F0;">
+              <p style="margin:0 0 6px;color:#64748B;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Event</p>
+              <p style="margin:0;color:#0F172A;font-size:15px;font-weight:600;">${eventTitle}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 20px;border-bottom:1px solid #E2E8F0;">
+              <p style="margin:0 0 6px;color:#64748B;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Organization</p>
+              <p style="margin:0;color:#0F172A;font-size:15px;font-weight:600;">${organizationName}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 20px;">
+              <p style="margin:0 0 6px;color:#64748B;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Event Date</p>
+              <p style="margin:0;color:#0F172A;font-size:15px;font-weight:600;">${dateLabel}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 44px 40px;">
+        <p style="margin:0 0 16px;color:#334155;font-size:15px;line-height:1.8;">
+          Your registration for <strong>${eventTitle}</strong> has been successfully recorded.
+        </p>
+        <p style="margin:0 0 16px;color:#334155;font-size:15px;line-height:1.8;">
+          The event is scheduled for <strong>${dateLabel}</strong>. Please keep this date reserved in your calendar.
+        </p>
+        <p style="margin:0;color:#64748B;font-size:14px;line-height:1.8;">
+          We will send you another reminder before the event date with any necessary updates.
+        </p>
+      </td>
+    </tr>
+  `;
+
+  return {
+    subject: `Registration confirmed - ${eventTitle}`,
+    html: emailWrapper(content),
+  };
+}
+
+export function registeredEventReminderEmailTemplate(params: {
+  studentName: string;
+  eventTitle: string;
+  organizationName: string;
+  eventDate: Date;
+  daysLeft: number;
+}): { subject: string; html: string } {
+  const { studentName, eventTitle, organizationName, eventDate, daysLeft } = params;
+  const dateLabel = eventDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  const dayLabel = `${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
+
+  const content = `
+    <tr>
+      <td style="padding:40px 44px 16px;">
+        <p style="margin:0 0 10px;color:#475569;font-size:14px;">Dear ${studentName},</p>
+        <h2 style="margin:0;color:#0F172A;font-size:30px;font-weight:800;letter-spacing:-0.02em;">
+          Registered event reminder
+        </h2>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 44px 20px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #D9E2EC;border-radius:14px;background:#F8FAFC;">
+          <tr>
+            <td style="padding:18px 20px;border-bottom:1px solid #E2E8F0;">
+              <p style="margin:0 0 6px;color:#64748B;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Event</p>
+              <p style="margin:0;color:#0F172A;font-size:15px;font-weight:600;">${eventTitle}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 20px;border-bottom:1px solid #E2E8F0;">
+              <p style="margin:0 0 6px;color:#64748B;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Organization</p>
+              <p style="margin:0;color:#0F172A;font-size:15px;font-weight:600;">${organizationName}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 20px;border-bottom:1px solid #E2E8F0;">
+              <p style="margin:0 0 6px;color:#64748B;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Event Date</p>
+              <p style="margin:0;color:#0F172A;font-size:15px;font-weight:600;">${dateLabel}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 20px;">
+              <p style="margin:0 0 6px;color:#64748B;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Time Remaining</p>
+              <p style="margin:0;color:#0F172A;font-size:15px;font-weight:600;">${dayLabel}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 44px 40px;">
+        <p style="margin:0 0 16px;color:#334155;font-size:15px;line-height:1.8;">
+          This is a reminder that the event <strong>${eventTitle}</strong>, for which you registered, begins in ${dayLabel}.
+        </p>
+        <p style="margin:0 0 16px;color:#334155;font-size:15px;line-height:1.8;">
+          Please review the event details and prepare accordingly so you do not miss the session.
+        </p>
+        <p style="margin:0;color:#64748B;font-size:14px;line-height:1.8;">
+          You can review your registered events from your Nextern account at ${getAppUrl()}/student/applications.
+        </p>
+      </td>
+    </tr>
+  `;
+
+  return {
+    subject: `Event reminder - ${eventTitle} starts in ${dayLabel}`,
+    html: emailWrapper(content),
+  };
+}
+
 export function otpEmailTemplate(otp: string, name: string): string {
   const content = `
     <tr>
