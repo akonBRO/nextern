@@ -2,6 +2,7 @@ import type { DashboardNavItem } from '@/components/dashboard/DashboardShell';
 
 export const ADVISOR_NAV_ITEMS: DashboardNavItem[] = [
   { label: 'Overview', href: '/advisor/dashboard', icon: 'dashboard' },
+  { label: 'Recommendations', href: '/advisor/recommendations', icon: 'target' },
   { label: 'Calendar', href: '/advisor/calendar', icon: 'calendar' },
   {
     label: 'My Students',

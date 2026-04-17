@@ -50,6 +50,7 @@ interface INotificationPreferences {
 }
 
 interface IEmailPreferences {
+  application_received: boolean;
   deadline_reminders: boolean;
   event_registrations: boolean;
   event_reminders: boolean;
@@ -219,6 +220,7 @@ const UserSchema = new Schema<IUser>(
       event_reminders: { type: Boolean, default: true },
     },
     emailPreferences: {
+      application_received: { type: Boolean, default: true },
       deadline_reminders: { type: Boolean, default: true },
       event_registrations: { type: Boolean, default: true },
       event_reminders: { type: Boolean, default: true },

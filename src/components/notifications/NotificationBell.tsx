@@ -23,6 +23,7 @@ import {
   AlertCircle,
   Zap,
   Users,
+  SendToBack,
 } from 'lucide-react';
 import Pusher from 'pusher-js';
 import { userChannel, PUSHER_EVENTS } from '@/lib/pusher';
@@ -44,6 +45,11 @@ function typeConfig(type: string): { icon: React.ReactNode; color: string; bg: s
   const map: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
     status_update: { icon: <Briefcase size={14} />, color: '#2563EB', bg: '#EFF6FF' },
     deadline_reminder: { icon: <CalendarDays size={14} />, color: '#D97706', bg: '#FFFBEB' },
+    recommendation_request: {
+      icon: <SendToBack size={14} />,
+      color: '#7C3AED',
+      bg: '#F5F3FF',
+    },
     badge_earned: { icon: <Award size={14} />, color: '#7C3AED', bg: '#EDE9FE' },
     application_received: { icon: <Users size={14} />, color: '#0D9488', bg: '#ECFDF5' },
     job_match: { icon: <Zap size={14} />, color: '#0D9488', bg: '#F0FDFA' },
