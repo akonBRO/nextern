@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Job } from '@/models/Job';
 import { JobView } from '@/models/JobView';
+import { removeCalendarEvent, syncSavedJobDeadlineToCalendar } from '@/lib/calendar';
 
 const SaveSchema = z.object({
   isSaved: z.boolean(),
@@ -35,7 +36,9 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     await connectDB();
 
-    const job = await Job.findById(jobId).select('_id').lean();
+    const job = await Job.findById(jobId)
+      .select('_id title companyName applicationDeadline isActive')
+      .lean();
     if (!job) return NextResponse.json({ error: 'Job not found.' }, { status: 404 });
 
     const now = new Date();
@@ -69,10 +72,40 @@ export async function POST(req: NextRequest, { params }: Params) {
           },
         };
 
-    await JobView.findOneAndUpdate({ studentId: session.user.id, jobId }, update, {
+    const jobView = await JobView.findOneAndUpdate({ studentId: session.user.id, jobId }, update, {
       upsert: true,
       new: true,
     });
+
+    if (parsed.data.isSaved) {
+      if (
+        job.isActive !== false &&
+        job.applicationDeadline &&
+        job.applicationDeadline > now &&
+        jobView &&
+        !jobView.googleCalendarEventId
+      ) {
+        await syncSavedJobDeadlineToCalendar(
+          session.user.id,
+          jobView._id.toString(),
+          job.title ?? 'Saved job',
+          job.companyName ?? 'Nextern',
+          job.applicationDeadline
+        ).catch((error) => {
+          console.error('[SAVE JOB CALENDAR SYNC ERROR]', error);
+        });
+      }
+    } else if (jobView?.googleCalendarEventId) {
+      await removeCalendarEvent(session.user.id, jobView.googleCalendarEventId).catch((error) => {
+        console.error('[REMOVE SAVED JOB CALENDAR EVENT ERROR]', error);
+      });
+
+      await JobView.findByIdAndUpdate(jobView._id, {
+        $unset: { googleCalendarEventId: '' },
+      }).catch((error) => {
+        console.error('[CLEAR SAVED JOB CALENDAR ID ERROR]', error);
+      });
+    }
 
     return NextResponse.json({
       isSaved: parsed.data.isSaved,

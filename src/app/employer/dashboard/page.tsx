@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
+import { getEmployerCalendarEvents } from '@/lib/employer-calendar-events';
 import {
   ActionLink,
   DashboardPage,
@@ -30,9 +31,11 @@ import {
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
+import CalendarBoard from '@/components/calendar/CalendarBoard';
 
 const navItems = [
   { label: 'Overview', href: '/employer/dashboard', icon: 'dashboard' as const },
+  { label: 'Calendar', href: '/employer/calendar', icon: 'calendar' as const },
   { label: 'Job Listings', href: '/employer/jobs', icon: 'briefcase' as const },
   {
     label: 'Hiring',
@@ -91,12 +94,13 @@ export default async function EmployerDashboard() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
-  const [data, usage] = await Promise.all([
+  const [data, usage, calendarEvents] = await Promise.all([
     getEmployerDashboardData({
       userId: session.user.id,
       email: session.user.email ?? undefined,
     }),
     getUsageSummary(session.user.id),
+    getEmployerCalendarEvents(session.user.id, 24).catch(() => []),
   ]);
 
   // Profile completeness score
@@ -401,6 +405,24 @@ export default async function EmployerDashboard() {
             />
           </div>
         </section>
+        <DashboardSection
+          id="calendar"
+          title="Hiring calendar"
+          description="Track interview schedules, job deadlines, and employer-hosted event dates with the same interactive monthly planner used in the student experience."
+        >
+          <CalendarBoard
+            events={calendarEvents}
+            isCalendarConnected={false}
+            mode="dashboard"
+            boardTitle="Hiring Calendar"
+            boardSubtitle="Browse month by month, track interviews, deadlines, and employer-hosted events."
+            fullCalendarHref="/employer/calendar"
+            manageCalendarHref={null}
+            showConnectionStatus={false}
+            eventHrefTemplate="/employer/jobs/:jobId/applicants"
+            emptyNextEventMessage="No upcoming hiring events yet. Post roles, publish events, or schedule interviews to fill this planner."
+          />
+        </DashboardSection>
 
         <DashboardSection
           id="ai-hiring"

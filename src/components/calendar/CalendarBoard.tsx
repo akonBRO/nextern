@@ -33,14 +33,48 @@ type Props = {
   events: UpcomingCalendarEvent[];
   isCalendarConnected: boolean;
   mode?: 'dashboard' | 'page';
+  boardTitle?: string;
+  boardSubtitle?: string;
+  fullCalendarHref?: string | null;
+  fullCalendarLabel?: string;
+  manageCalendarHref?: string | null;
+  connectedBadgeLabel?: string;
+  disconnectedBadgeLabel?: string;
+  showConnectionStatus?: boolean;
+  eventHrefTemplate?: string;
+  emptyNextEventMessage?: string;
 };
 
 type NormalizedEvent = UpcomingCalendarEvent & { dateObject: Date; dayKey: string };
 
 const EVENT_STYLES = {
-  interview: { accent: '#7C3AED', soft: '#F5F3FF', border: '#DDD6FE', label: 'Interview' },
-  event_registration: { accent: '#0D9488', soft: '#F0FDFA', border: '#99F6E4', label: 'Event' },
-  deadline: { accent: '#EA580C', soft: '#FFF7ED', border: '#FED7AA', label: 'Deadline' },
+  interview: {
+    accent: '#6366F1',
+    soft: '#EEF2FF',
+    border: '#C7D2FE',
+    text: '#3730A3',
+    dot: '#818CF8',
+    label: 'Interview',
+    pill: '#E0E7FF',
+  },
+  event_registration: {
+    accent: '#0891B2',
+    soft: '#ECFEFF',
+    border: '#A5F3FC',
+    text: '#0E7490',
+    dot: '#22D3EE',
+    label: 'Event',
+    pill: '#CFFAFE',
+  },
+  deadline: {
+    accent: '#F59E0B',
+    soft: '#FFFBEB',
+    border: '#FDE68A',
+    text: '#B45309',
+    dot: '#FBBF24',
+    label: 'Deadline',
+    pill: '#FEF3C7',
+  },
 } as const;
 
 const EVENT_STYLE_ENTRIES = Object.entries(EVENT_STYLES) as Array<
@@ -68,7 +102,21 @@ function formatEventTime(event: UpcomingCalendarEvent) {
   return event.type === 'deadline' ? format(date, 'MMM d') : format(date, 'MMM d, h:mm a');
 }
 
-export default function CalendarBoard({ events, isCalendarConnected, mode = 'dashboard' }: Props) {
+export default function CalendarBoard({
+  events,
+  isCalendarConnected,
+  mode = 'dashboard',
+  boardTitle = 'Calendar Planner',
+  boardSubtitle = 'Browse month by month, track interviews, deadlines, and registrations.',
+  fullCalendarHref = '/student/calendar',
+  fullCalendarLabel = 'Full calendar',
+  manageCalendarHref = '/student/profile#calendar',
+  connectedBadgeLabel = 'Google Calendar connected',
+  disconnectedBadgeLabel = 'Google Calendar not connected',
+  showConnectionStatus = true,
+  eventHrefTemplate = '/student/applications',
+  emptyNextEventMessage = 'No upcoming events yet. Apply to opportunities to fill this planner.',
+}: Props) {
   const isDashboard = mode === 'dashboard';
   const isCalendarPage = mode === 'page';
   const normalizedEvents = events
@@ -114,205 +162,85 @@ export default function CalendarBoard({ events, isCalendarConnected, mode = 'das
     setSelectedDate(getPreferredDay(nextMonth, normalizedEvents));
   }
 
+  function resolveEventHref(event: UpcomingCalendarEvent) {
+    if (event.href) return event.href;
+
+    const applicationId = event.applicationId ?? '';
+    let href = eventHrefTemplate.replace(':jobId', event.jobId);
+
+    if (href.includes(':applicationId')) {
+      href = applicationId
+        ? href.replace(':applicationId', applicationId)
+        : href.replace('/:applicationId', '').replace(':applicationId', '');
+    }
+
+    if (!applicationId && href === '/student/applications') {
+      return `/student/jobs/${event.jobId}`;
+    }
+
+    return href;
+  }
+
   return (
-    <div
-      style={{
-        borderRadius: mode === 'page' ? 28 : showCalendar ? 22 : 20,
-        overflow: 'hidden',
-        border: '1px solid #E7E5E4',
-        background: '#FFFFFF',
-        boxShadow: showCalendar
-          ? '0 18px 45px rgba(15,23,42,0.08)'
-          : '0 12px 28px rgba(15,23,42,0.05)',
-      }}
-    >
-      <div
-        style={{
-          padding:
-            mode === 'page' ? '22px 24px 18px' : showCalendar ? '16px 16px 14px' : '14px 14px 12px',
-          background: '#FFFBF7',
-          borderBottom: showCalendar ? '1px solid #F3E1D4' : 'none',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: 16,
-            flexWrap: 'wrap',
-          }}
-        >
-          <div style={{ maxWidth: 680 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: showCalendar ? 12 : 10 }}>
-              <div
-                style={{
-                  width: showCalendar ? 44 : 38,
-                  height: showCalendar ? 44 : 38,
-                  borderRadius: showCalendar ? 14 : 12,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#C2410C',
-                  background: '#FFF1E8',
-                  border: '1px solid #FED7AA',
-                }}
-              >
-                <Calendar size={showCalendar ? 20 : 18} />
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: mode === 'page' ? 24 : showCalendar ? 22 : 20,
-                    fontWeight: 900,
-                    color: '#0F172A',
-                    fontFamily: 'var(--font-display)',
-                    letterSpacing: '-0.03em',
-                  }}
-                >
-                  Calendar Planner
-                </div>
-                <div
-                  style={{
-                    marginTop: 4,
-                    fontSize: showCalendar ? 13 : 12,
-                    color: '#57534E',
-                    lineHeight: 1.55,
-                    maxWidth: showCalendar ? 640 : 560,
-                  }}
-                >
-                  Browse month by month, see deadlines on the correct day, and keep your
-                  applications and interviews in one place.
-                </div>
-              </div>
+    <div className="cb-root">
+      {/* ── Header ── */}
+      <div className={`cb-header ${showCalendar ? 'cb-header--open' : ''}`}>
+        <div className="cb-header-inner">
+          {/* Left: icon + title + badges */}
+          <div className="cb-header-left">
+            <div className={`cb-icon-wrap ${showCalendar ? 'cb-icon-wrap--lg' : ''}`}>
+              <Calendar size={showCalendar ? 20 : 17} />
             </div>
 
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                flexWrap: 'wrap',
-                marginTop: showCalendar ? 16 : 12,
-              }}
-            >
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  borderRadius: 999,
-                  padding: '6px 11px',
-                  background: isCalendarConnected ? '#ECFDF5' : '#FFF7ED',
-                  border: isCalendarConnected ? '1px solid #A7F3D0' : '1px solid #FED7AA',
-                  color: isCalendarConnected ? '#047857' : '#9A3412',
-                  fontSize: 12,
-                  fontWeight: 800,
-                }}
+            <div>
+              <p
+                className="cb-title"
+                style={{ fontSize: mode === 'page' ? 22 : showCalendar ? 20 : 17 }}
               >
-                {isCalendarConnected ? <CalendarCheck size={13} /> : <Sparkles size={13} />}
-                {isCalendarConnected
-                  ? 'Google Calendar connected'
-                  : 'Google Calendar not connected'}
-              </span>
+                {boardTitle}
+              </p>
+              <p className="cb-subtitle">{boardSubtitle}</p>
 
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  borderRadius: 999,
-                  padding: '6px 11px',
-                  background: '#FFFFFF',
-                  border: '1px solid #E7E5E4',
-                  color: '#44403C',
-                  fontSize: 12,
-                  fontWeight: 700,
-                }}
-              >
-                {normalizedEvents.length} event{normalizedEvents.length === 1 ? '' : 's'} loaded
-              </span>
+              <div className="cb-badges">
+                {showConnectionStatus && (
+                  <span
+                    className={`cb-badge ${isCalendarConnected ? 'cb-badge--green' : 'cb-badge--amber'}`}
+                  >
+                    {isCalendarConnected ? <CalendarCheck size={12} /> : <Sparkles size={12} />}
+                    {isCalendarConnected ? connectedBadgeLabel : disconnectedBadgeLabel}
+                  </span>
+                )}
+                <span className="cb-badge cb-badge--neutral">
+                  {normalizedEvents.length} event{normalizedEvents.length === 1 ? '' : 's'} loaded
+                </span>
+              </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-            <div
-              style={{
-                display: 'flex',
-                gap: 10,
-                flexWrap: 'wrap',
-                alignItems: 'center',
-                marginTop: 6,
-              }}
-            >
-              {!isCalendarConnected && (
-                <Link
-                  href="/student/profile#calendar"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 7,
-                    padding: showCalendar ? '10px 14px' : '8px 12px',
-                    borderRadius: 12,
-                    textDecoration: 'none',
-                    fontSize: 12,
-                    fontWeight: 800,
-                    color: '#7C2D12',
-                    background: '#FFF7ED',
-                    border: '1px solid #FED7AA',
-                  }}
-                >
-                  Connect Google Calendar <ArrowRight size={14} />
-                </Link>
-              )}
-
-              {mode === 'dashboard' && (
-                <Link
-                  href="/student/calendar"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 7,
-                    padding: showCalendar ? '10px 14px' : '8px 12px',
-                    borderRadius: 12,
-                    textDecoration: 'none',
-                    fontSize: 12,
-                    fontWeight: 800,
-                    color: '#44403C',
-                    background: '#FFFFFF',
-                    border: '1px solid #E7E5E4',
-                  }}
-                >
-                  Open full calendar <ExternalLink size={14} />
-                </Link>
-              )}
-            </div>
-
+          {/* Right: action buttons + toggle */}
+          <div className="cb-header-right">
+            {!isCalendarConnected && manageCalendarHref && (
+              <Link href={manageCalendarHref} className="cb-btn cb-btn--connect">
+                Connect Calendar <ArrowRight size={13} />
+              </Link>
+            )}
+            {mode === 'dashboard' && fullCalendarHref && (
+              <Link href={fullCalendarHref} className="cb-btn cb-btn--outline">
+                {fullCalendarLabel} <ExternalLink size={13} />
+              </Link>
+            )}
             {isDashboard && (
               <button
                 type="button"
-                onClick={() => setIsExpanded((value) => !value)}
+                onClick={() => setIsExpanded((v) => !v)}
                 aria-expanded={showCalendar}
                 aria-label={showCalendar ? 'Hide calendar' : 'Show calendar'}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 32,
-                  height: 32,
-                  borderRadius: 999,
-                  border: 'none',
-                  background: 'transparent',
-                  color: '#9A3412',
-                  cursor: 'pointer',
-                  alignSelf: 'flex-start',
-                  padding: 0,
-                }}
+                className="cb-toggle"
               >
                 {showCalendar ? (
-                  <ChevronUp size={24} strokeWidth={2.6} />
+                  <ChevronUp size={18} strokeWidth={2.5} />
                 ) : (
-                  <ChevronDown size={24} strokeWidth={2.6} />
+                  <ChevronDown size={18} strokeWidth={2.5} />
                 )}
               </button>
             )}
@@ -320,139 +248,67 @@ export default function CalendarBoard({ events, isCalendarConnected, mode = 'das
         </div>
       </div>
 
+      {/* ── Calendar Body ── */}
       {showCalendar && (
-        <div style={{ padding: mode === 'page' ? '24px 26px 26px' : '16px 16px 18px' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 14,
-              flexWrap: 'wrap',
-              marginBottom: 16,
-            }}
-          >
+        <div className={`cb-body ${mode === 'page' ? 'cb-body--page' : ''}`}>
+          {/* Month nav */}
+          <div className="cb-month-nav">
             <div>
-              <div
-                style={{
-                  fontSize: mode === 'page' ? 28 : 24,
-                  fontWeight: 900,
-                  color: '#0F172A',
-                  fontFamily: 'var(--font-display)',
-                  letterSpacing: '-0.04em',
-                }}
-              >
-                {format(visibleMonth, 'MMMM yyyy')}
-              </div>
-              <div style={{ marginTop: 4, fontSize: 13, color: '#64748B' }}>
+              <p className="cb-month-label">{format(visibleMonth, 'MMMM yyyy')}</p>
+              <p className="cb-month-sub">
                 {monthEvents.length > 0
-                  ? `${monthEvents.length} event${monthEvents.length === 1 ? '' : 's'} in view`
-                  : 'No events scheduled in this month yet'}
-              </div>
+                  ? `${monthEvents.length} event${monthEvents.length === 1 ? '' : 's'} this month`
+                  : 'No events this month'}
+              </p>
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div className="cb-nav-controls">
               <button
                 type="button"
+                className="cb-today-btn"
                 onClick={() => jumpToMonth(startOfMonth(new Date()))}
-                style={{
-                  borderRadius: 11,
-                  border: '1px solid #FED7AA',
-                  background: '#FFF7ED',
-                  color: '#9A3412',
-                  fontSize: 12,
-                  fontWeight: 800,
-                  padding: '9px 12px',
-                  cursor: 'pointer',
-                }}
               >
                 Today
               </button>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: 4,
-                  borderRadius: 14,
-                  border: '1px solid #FED7AA',
-                  background: '#FFFFFF',
-                }}
-              >
+              <div className="cb-arrow-group">
                 <button
                   type="button"
-                  onClick={() => jumpToMonth(addMonths(visibleMonth, -1))}
                   aria-label="Previous month"
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 10,
-                    border: 'none',
-                    background: '#FFF7ED',
-                    color: '#9A3412',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                  }}
+                  className="cb-arrow cb-arrow--prev"
+                  onClick={() => jumpToMonth(addMonths(visibleMonth, -1))}
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft size={15} />
                 </button>
                 <button
                   type="button"
-                  onClick={() => jumpToMonth(addMonths(visibleMonth, 1))}
                   aria-label="Next month"
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 10,
-                    border: 'none',
-                    background: '#C2410C',
-                    color: '#FFFFFF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                  }}
+                  className="cb-arrow cb-arrow--next"
+                  onClick={() => jumpToMonth(addMonths(visibleMonth, 1))}
                 >
-                  <ChevronRight size={16} />
+                  <ChevronRight size={15} />
                 </button>
               </div>
             </div>
           </div>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
-              gap: 8,
-              marginBottom: 8,
-            }}
-          >
+          {/* Weekday headers */}
+          <div className="cb-weekdays">
             {WEEKDAY_LABELS.map((label) => (
-              <div
-                key={label}
-                style={{
-                  padding: '8px 10px',
-                  fontSize: 12,
-                  fontWeight: 800,
-                  color: '#78716C',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                }}
-              >
+              <div key={label} className="cb-weekday">
                 {label}
               </div>
             ))}
           </div>
 
-          <div className="calendar-board-grid">
+          {/* Day grid */}
+          <div className="cb-grid">
             {visibleDays.map((day) => {
               const dayKey = format(day, 'yyyy-MM-dd');
               const dayEvents = eventsByDay[dayKey] ?? [];
               const isCurrentMonth = isSameMonth(day, visibleMonth);
               const isSelected = isSameDay(day, selectedDate);
+              const isTodayDay = isToday(day);
               const hiddenCount = Math.max(0, dayEvents.length - 2);
+
               return (
                 <button
                   key={dayKey}
@@ -461,404 +317,162 @@ export default function CalendarBoard({ events, isCalendarConnected, mode = 'das
                     setSelectedDate(day);
                     if (!isCurrentMonth) setVisibleMonth(startOfMonth(day));
                   }}
-                  className="calendar-day-cell"
-                  style={{
-                    textAlign: 'left',
-                    padding: 12,
-                    minHeight: 92,
-                    borderRadius: 18,
-                    border: isSelected ? '1.5px solid #F59E0B' : '1px solid #E7E5E4',
-                    background: isSelected ? '#FFF7ED' : '#FFFFFF',
-                    cursor: 'pointer',
-                    transition:
-                      'transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease',
-                    boxShadow: isSelected ? '0 14px 26px rgba(245,158,11,0.14)' : 'none',
-                    opacity: isCurrentMonth ? 1 : 0.5,
-                  }}
+                  className={[
+                    'cb-day',
+                    isSelected ? 'cb-day--selected' : '',
+                    isTodayDay ? 'cb-day--today' : '',
+                    !isCurrentMonth ? 'cb-day--other' : '',
+                  ].join(' ')}
                 >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 8,
-                      marginBottom: 10,
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: 10,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 13,
-                        fontWeight: 800,
-                        color: isToday(day) ? '#FFFFFF' : '#0F172A',
-                        background: isToday(day) ? '#F59E0B' : 'transparent',
-                      }}
-                    >
+                  <div className="cb-day-top">
+                    <span className={`cb-day-num ${isTodayDay ? 'cb-day-num--today' : ''}`}>
                       {format(day, 'd')}
                     </span>
                     {dayEvents.length > 0 && (
-                      <span
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 800,
-                          color: '#9A3412',
-                          background: '#FFF7ED',
-                          borderRadius: 999,
-                          padding: '4px 7px',
-                        }}
-                      >
-                        {dayEvents.length}
-                      </span>
+                      <span className="cb-day-count">{dayEvents.length}</span>
                     )}
                   </div>
 
-                  <div style={{ display: 'grid', gap: 6 }}>
+                  <div className="cb-day-events">
                     {dayEvents.slice(0, 2).map((event) => {
-                      const style = EVENT_STYLES[event.type];
+                      const s = EVENT_STYLES[event.type];
                       return (
                         <div
                           key={event.id}
-                          style={{
-                            borderRadius: 12,
-                            border: `1px solid ${style.border}`,
-                            background: style.soft,
-                            padding: '7px 8px',
-                          }}
+                          className="cb-event-chip"
+                          style={{ background: s.soft, borderColor: s.border }}
                         >
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 6,
-                              marginBottom: 3,
-                            }}
-                          >
-                            <span
-                              style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                background: style.accent,
-                                flexShrink: 0,
-                              }}
-                            />
-                            <span
-                              style={{
-                                fontSize: 10,
-                                fontWeight: 800,
-                                color: style.accent,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.06em',
-                              }}
-                            >
-                              {style.label}
-                            </span>
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 700,
-                              color: '#0F172A',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
+                          <span className="cb-event-dot" style={{ background: s.dot }} />
+                          <span className="cb-event-chip-label" style={{ color: s.text }}>
                             {event.title}
-                          </div>
+                          </span>
                         </div>
                       );
                     })}
-
-                    {hiddenCount > 0 && (
-                      <div
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 800,
-                          color: '#78716C',
-                          padding: '2px 4px',
-                        }}
-                      >
-                        +{hiddenCount} more
-                      </div>
-                    )}
+                    {hiddenCount > 0 && <span className="cb-day-more">+{hiddenCount} more</span>}
                   </div>
                 </button>
               );
             })}
           </div>
 
+          {/* Summary panels (page mode only) */}
           {isCalendarPage && (
-            <div className="calendar-board-summary">
-              <div
-                style={{
-                  borderRadius: 22,
-                  border: '1px solid #F3E1D4',
-                  background: '#FFFFFF',
-                  padding: 20,
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    flexWrap: 'wrap',
-                  }}
-                >
+            <div className="cb-summary">
+              {/* Selected day panel */}
+              <div className="cb-panel">
+                <div className="cb-panel-head">
                   <div>
-                    <div
-                      style={{
-                        fontSize: 18,
-                        fontWeight: 900,
-                        color: '#0F172A',
-                        fontFamily: 'var(--font-display)',
-                        letterSpacing: '-0.03em',
-                      }}
-                    >
-                      {format(selectedDate, 'EEEE, MMMM d')}
-                    </div>
-                    <div style={{ marginTop: 4, fontSize: 13, color: '#64748B' }}>
+                    <p className="cb-panel-title">{format(selectedDate, 'EEEE, MMMM d')}</p>
+                    <p className="cb-panel-sub">
                       {selectedEvents.length > 0
-                        ? `${selectedEvents.length} event${selectedEvents.length === 1 ? '' : 's'} on this day`
-                        : 'No events scheduled on the selected day'}
-                    </div>
+                        ? `${selectedEvents.length} event${selectedEvents.length === 1 ? '' : 's'}`
+                        : 'No events on this day'}
+                    </p>
                   </div>
-                  <div
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      borderRadius: 999,
-                      padding: '7px 11px',
-                      background: '#FFF7ED',
-                      border: '1px solid #FED7AA',
-                      color: '#9A3412',
-                      fontSize: 12,
-                      fontWeight: 800,
-                    }}
-                  >
-                    <Clock3 size={13} />
-                    {monthEvents.length} in {format(visibleMonth, 'MMMM')}
+                  <div className="cb-month-badge">
+                    <Clock3 size={12} />
+                    {monthEvents.length} in {format(visibleMonth, 'MMM')}
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gap: 12, marginTop: 18 }}>
+                <div className="cb-panel-events">
                   {selectedEvents.length > 0 ? (
                     selectedEvents.map((event) => {
-                      const style = EVENT_STYLES[event.type];
+                      const s = EVENT_STYLES[event.type];
                       return (
                         <Link
                           key={event.id}
-                          href="/student/applications"
-                          style={{
-                            display: 'block',
-                            textDecoration: 'none',
-                            borderRadius: 18,
-                            border: `1px solid ${style.border}`,
-                            background: style.soft,
-                            padding: 16,
-                          }}
+                          href={resolveEventHref(event)}
+                          className="cb-event-card"
+                          style={{ background: s.soft, borderColor: s.border }}
                         >
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              gap: 10,
-                            }}
-                          >
+                          <div className="cb-event-card-top">
                             <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                color: style.accent,
-                                fontSize: 11,
-                                fontWeight: 800,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.08em',
-                              }}
+                              className="cb-event-type-badge"
+                              style={{ background: s.pill, color: s.text }}
                             >
                               <span
                                 style={{
-                                  width: 9,
-                                  height: 9,
+                                  width: 7,
+                                  height: 7,
                                   borderRadius: '50%',
-                                  background: style.accent,
+                                  background: s.accent,
+                                  display: 'inline-block',
                                 }}
                               />
-                              {style.label}
+                              {s.label}
                             </span>
-                            <span style={{ fontSize: 11, color: '#64748B', fontWeight: 700 }}>
-                              {formatEventTime(event)}
-                            </span>
+                            <span className="cb-event-time">{formatEventTime(event)}</span>
                           </div>
-                          <div
-                            style={{
-                              marginTop: 10,
-                              fontSize: 16,
-                              color: '#0F172A',
-                              fontWeight: 800,
-                            }}
-                          >
-                            {event.title}
-                          </div>
-                          <div
-                            style={{
-                              marginTop: 5,
-                              fontSize: 13,
-                              color: '#475569',
-                              lineHeight: 1.6,
-                            }}
-                          >
-                            {event.companyName}
-                          </div>
+                          <p className="cb-event-title">{event.title}</p>
+                          <p className="cb-event-company">{event.companyName}</p>
                         </Link>
                       );
                     })
                   ) : (
-                    <div
-                      style={{
-                        borderRadius: 18,
-                        border: '1px dashed #E7E5E4',
-                        background: '#FFFBF7',
-                        padding: 18,
-                        color: '#57534E',
-                        fontSize: 14,
-                        lineHeight: 1.7,
-                      }}
-                    >
-                      Pick another day to inspect its events. If this month is empty, use the month
-                      arrows to move forward or backward.
+                    <div className="cb-empty-state">
+                      Pick another day to view events. Use the month arrows to navigate forward or
+                      backward.
                     </div>
                   )}
                 </div>
               </div>
 
-              <div
-                style={{
-                  borderRadius: 22,
-                  border: '1px solid #F3E1D4',
-                  background: '#FFFDFB',
-                  padding: 20,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 900,
-                    color: '#0F172A',
-                    fontFamily: 'var(--font-display)',
-                    letterSpacing: '-0.03em',
-                  }}
-                >
-                  Coming Up Next
-                </div>
-                <div style={{ marginTop: 4, fontSize: 13, color: '#64748B', lineHeight: 1.6 }}>
-                  A quick summary of the next important date in your application journey.
-                </div>
+              {/* Coming up next */}
+              <div className="cb-panel cb-panel--aside">
+                <p className="cb-panel-title">Coming up next</p>
+                <p className="cb-panel-sub" style={{ marginBottom: 16 }}>
+                  Your nearest upcoming event
+                </p>
 
-                <div style={{ marginTop: 18 }}>
-                  {nextUpcomingEvent ? (
-                    <div
-                      style={{
-                        borderRadius: 20,
-                        padding: 18,
-                        background: EVENT_STYLES[nextUpcomingEvent.type].soft,
-                        border: `1px solid ${EVENT_STYLES[nextUpcomingEvent.type].border}`,
-                      }}
+                {nextUpcomingEvent ? (
+                  <div
+                    className="cb-next-event"
+                    style={{
+                      background: EVENT_STYLES[nextUpcomingEvent.type].soft,
+                      borderColor: EVENT_STYLES[nextUpcomingEvent.type].border,
+                    }}
+                  >
+                    <span
+                      className="cb-next-type"
+                      style={{ color: EVENT_STYLES[nextUpcomingEvent.type].text }}
                     >
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: EVENT_STYLES[nextUpcomingEvent.type].accent,
-                          fontWeight: 800,
-                          letterSpacing: '0.08em',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        {EVENT_STYLES[nextUpcomingEvent.type].label}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: 10,
-                          fontSize: 20,
-                          fontWeight: 900,
-                          fontFamily: 'var(--font-display)',
-                          letterSpacing: '-0.03em',
-                          color: '#0F172A',
-                        }}
-                      >
-                        {nextUpcomingEvent.title}
-                      </div>
-                      <div style={{ marginTop: 8, fontSize: 14, color: '#475569' }}>
-                        {nextUpcomingEvent.companyName}
-                      </div>
-                      <div style={{ marginTop: 14, fontSize: 13, color: '#64748B' }}>
-                        {format(new Date(nextUpcomingEvent.date), 'EEEE, MMMM d, yyyy')}
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        borderRadius: 18,
-                        border: '1px dashed #E7E5E4',
-                        background: '#FFFFFF',
-                        padding: 18,
-                        color: '#57534E',
-                        fontSize: 14,
-                        lineHeight: 1.7,
-                      }}
-                    >
-                      You do not have any loaded calendar events yet. Apply to opportunities or
-                      register for events to fill this planner.
-                    </div>
-                  )}
-                </div>
+                      {EVENT_STYLES[nextUpcomingEvent.type].label}
+                    </span>
+                    <p className="cb-next-title">{nextUpcomingEvent.title}</p>
+                    <p className="cb-next-company">{nextUpcomingEvent.companyName}</p>
+                    <p className="cb-next-date">
+                      {format(new Date(nextUpcomingEvent.date), 'EEEE, MMMM d, yyyy')}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="cb-empty-state">{emptyNextEventMessage}</div>
+                )}
 
-                <div style={{ display: 'grid', gap: 10, marginTop: 18 }}>
+                <div className="cb-type-breakdown">
                   {countsByType.map(({ key, style, count }) => (
                     <div
                       key={key}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 10,
-                        borderRadius: 14,
-                        border: `1px solid ${style.border}`,
-                        background: style.soft,
-                        padding: '10px 12px',
-                      }}
+                      className="cb-type-row"
+                      style={{ background: style.soft, borderColor: style.border }}
                     >
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 8,
-                          fontSize: 13,
-                          fontWeight: 800,
-                          color: '#1E293B',
-                        }}
-                      >
+                      <span className="cb-type-row-label">
                         <span
                           style={{
-                            width: 10,
-                            height: 10,
+                            width: 9,
+                            height: 9,
                             borderRadius: '50%',
                             background: style.accent,
+                            display: 'inline-block',
+                            flexShrink: 0,
                           }}
                         />
-                        {style.label}
+                        <span style={{ color: style.text, fontWeight: 600, fontSize: 13 }}>
+                          {style.label}
+                        </span>
                       </span>
-                      <span style={{ fontSize: 12, fontWeight: 800, color: style.accent }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: style.accent }}>
                         {count}
                       </span>
                     </div>
@@ -871,38 +485,520 @@ export default function CalendarBoard({ events, isCalendarConnected, mode = 'das
       )}
 
       <style>{`
-        .calendar-board-grid {
-          display: grid;
-          grid-template-columns: repeat(7, minmax(0, 1fr));
+        /* ── Root ── */
+        .cb-root {
+          border-radius: 20px;
+          overflow: hidden;
+          border: 1px solid #E5E7EB;
+          background: #FFFFFF;
+          font-family: 'DM Sans', 'Inter', sans-serif;
+        }
+
+        /* ── Header ── */
+        .cb-header {
+          padding: 16px 20px 14px;
+          background: #FAFAFA;
+          border-bottom: 1px solid transparent;
+          transition: border-color 0.2s;
+        }
+        .cb-header--open {
+          border-bottom-color: #F3F4F6;
+          background: #FAFAFA;
+        }
+        .cb-header-inner {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+        .cb-header-left {
+          display: flex;
+          align-items: flex-start;
+          gap: 14px;
+        }
+        .cb-header-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          padding-top: 2px;
+        }
+
+        /* ── Icon ── */
+        .cb-icon-wrap {
+          width: 38px;
+          height: 38px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+          color: #4F46E5;
+          border: 1px solid #C7D2FE;
+          flex-shrink: 0;
+        }
+        .cb-icon-wrap--lg {
+          width: 44px;
+          height: 44px;
+          border-radius: 14px;
+        }
+
+        /* ── Title / subtitle ── */
+        .cb-title {
+          margin: 0;
+          font-weight: 700;
+          color: #111827;
+          letter-spacing: -0.025em;
+          line-height: 1.2;
+        }
+        .cb-subtitle {
+          margin: 3px 0 0;
+          font-size: 12px;
+          color: #6B7280;
+          line-height: 1.5;
+        }
+
+        /* ── Badges ── */
+        .cb-badges {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-top: 10px;
+        }
+        .cb-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          border-radius: 999px;
+          padding: 4px 10px;
+          font-size: 11.5px;
+          font-weight: 600;
+          border: 1px solid transparent;
+        }
+        .cb-badge--green {
+          background: #F0FDF4;
+          border-color: #BBF7D0;
+          color: #15803D;
+        }
+        .cb-badge--amber {
+          background: #FFFBEB;
+          border-color: #FDE68A;
+          color: #B45309;
+        }
+        .cb-badge--neutral {
+          background: #F9FAFB;
+          border-color: #E5E7EB;
+          color: #374151;
+        }
+
+        /* ── Buttons ── */
+        .cb-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 13px;
+          border-radius: 10px;
+          font-size: 12px;
+          font-weight: 600;
+          text-decoration: none;
+          transition: background 0.15s, box-shadow 0.15s;
+        }
+        .cb-btn--connect {
+          background: #EEF2FF;
+          border: 1px solid #C7D2FE;
+          color: #4338CA;
+        }
+        .cb-btn--connect:hover { background: #E0E7FF; }
+        .cb-btn--outline {
+          background: #FFFFFF;
+          border: 1px solid #E5E7EB;
+          color: #374151;
+        }
+        .cb-btn--outline:hover { background: #F9FAFB; }
+        .cb-toggle {
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+          border: 1px solid #E5E7EB;
+          background: #FFFFFF;
+          color: #4F46E5;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .cb-toggle:hover { background: #EEF2FF; }
+
+        /* ── Body ── */
+        .cb-body {
+          padding: 20px;
+        }
+        .cb-body--page {
+          padding: 24px 26px 28px;
+        }
+
+        /* ── Month nav ── */
+        .cb-month-nav {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-bottom: 18px;
+        }
+        .cb-month-label {
+          margin: 0;
+          font-size: 22px;
+          font-weight: 800;
+          color: #111827;
+          letter-spacing: -0.04em;
+        }
+        .cb-month-sub {
+          margin: 3px 0 0;
+          font-size: 12.5px;
+          color: #9CA3AF;
+        }
+        .cb-nav-controls {
+          display: flex;
+          align-items: center;
           gap: 8px;
         }
-        .calendar-day-cell:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+        .cb-today-btn {
+          padding: 8px 14px;
+          border-radius: 10px;
+          border: 1px solid #E5E7EB;
+          background: #FFFFFF;
+          color: #374151;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.15s;
         }
-        .calendar-board-summary {
+        .cb-today-btn:hover { background: #F3F4F6; }
+        .cb-arrow-group {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          border: 1px solid #E5E7EB;
+          border-radius: 12px;
+          padding: 3px;
+          background: #FFFFFF;
+        }
+        .cb-arrow {
+          width: 34px;
+          height: 34px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: none;
+          border-radius: 9px;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .cb-arrow--prev { background: #F3F4F6; color: #374151; }
+        .cb-arrow--prev:hover { background: #E5E7EB; }
+        .cb-arrow--next { background: #4F46E5; color: #FFFFFF; }
+        .cb-arrow--next:hover { background: #4338CA; }
+
+        /* ── Weekday row ── */
+        .cb-weekdays {
           display: grid;
-          grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.9fr);
+          grid-template-columns: repeat(7, minmax(0, 1fr));
+          gap: 6px;
+          margin-bottom: 6px;
+        }
+        .cb-weekday {
+          padding: 6px 4px;
+          font-size: 11px;
+          font-weight: 700;
+          color: #9CA3AF;
+          text-transform: uppercase;
+          letter-spacing: 0.07em;
+          text-align: center;
+        }
+
+        /* ── Grid ── */
+        .cb-grid {
+          display: grid;
+          grid-template-columns: repeat(7, minmax(0, 1fr));
+          gap: 6px;
+        }
+
+        /* ── Day cell ── */
+        .cb-day {
+          text-align: left;
+          padding: 10px;
+          min-height: 96px;
+          border-radius: 14px;
+          border: 1px solid #F3F4F6;
+          background: #FFFFFF;
+          cursor: pointer;
+          transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+        }
+        .cb-day:hover {
+          border-color: #C7D2FE;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 18px rgba(79, 70, 229, 0.08);
+        }
+        .cb-day--selected {
+          border-color: #818CF8 !important;
+          background: #F5F3FF !important;
+          box-shadow: 0 8px 24px rgba(79, 70, 229, 0.12) !important;
+        }
+        .cb-day--other {
+          opacity: 0.4;
+        }
+
+        /* ── Day number ── */
+        .cb-day-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+        .cb-day-num {
+          width: 26px;
+          height: 26px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          font-size: 12.5px;
+          font-weight: 700;
+          color: #374151;
+        }
+        .cb-day-num--today {
+          background: #4F46E5;
+          color: #FFFFFF;
+          border-radius: 8px;
+        }
+        .cb-day-count {
+          font-size: 10px;
+          font-weight: 700;
+          color: #6366F1;
+          background: #EEF2FF;
+          border-radius: 999px;
+          padding: 2px 6px;
+        }
+
+        /* ── Event chips ── */
+        .cb-day-events {
+          display: grid;
+          gap: 4px;
+        }
+        .cb-event-chip {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          border-radius: 7px;
+          border: 1px solid;
+          padding: 4px 6px;
+        }
+        .cb-event-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+        .cb-event-chip-label {
+          font-size: 10.5px;
+          font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .cb-day-more {
+          font-size: 10px;
+          font-weight: 700;
+          color: #9CA3AF;
+          padding-left: 2px;
+        }
+
+        /* ── Summary panels ── */
+        .cb-summary {
+          display: grid;
+          grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
           gap: 16px;
-          margin-top: 18px;
+          margin-top: 20px;
         }
         @media (max-width: 1100px) {
-          .calendar-board-summary {
-            grid-template-columns: 1fr;
-          }
+          .cb-summary { grid-template-columns: 1fr; }
         }
+
+        .cb-panel {
+          border-radius: 18px;
+          border: 1px solid #F3F4F6;
+          background: #FFFFFF;
+          padding: 20px;
+        }
+        .cb-panel--aside {
+          background: #FAFAFA;
+        }
+        .cb-panel-head {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-bottom: 16px;
+        }
+        .cb-panel-title {
+          margin: 0;
+          font-size: 17px;
+          font-weight: 700;
+          color: #111827;
+          letter-spacing: -0.025em;
+        }
+        .cb-panel-sub {
+          margin: 3px 0 0;
+          font-size: 12px;
+          color: #9CA3AF;
+        }
+        .cb-month-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 5px 10px;
+          border-radius: 999px;
+          border: 1px solid #E5E7EB;
+          background: #F9FAFB;
+          color: #6B7280;
+          font-size: 11.5px;
+          font-weight: 600;
+        }
+
+        /* ── Selected day event cards ── */
+        .cb-panel-events {
+          display: grid;
+          gap: 10px;
+        }
+        .cb-event-card {
+          display: block;
+          text-decoration: none;
+          border-radius: 14px;
+          border: 1px solid;
+          padding: 14px 16px;
+          transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .cb-event-card:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+        .cb-event-card-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          margin-bottom: 8px;
+        }
+        .cb-event-type-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 3px 9px;
+          border-radius: 999px;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+        .cb-event-time {
+          font-size: 11.5px;
+          color: #9CA3AF;
+          font-weight: 500;
+        }
+        .cb-event-title {
+          margin: 0;
+          font-size: 15px;
+          font-weight: 700;
+          color: #111827;
+        }
+        .cb-event-company {
+          margin: 4px 0 0;
+          font-size: 12.5px;
+          color: #6B7280;
+        }
+
+        /* ── Next event ── */
+        .cb-next-event {
+          border-radius: 14px;
+          border: 1px solid;
+          padding: 16px;
+          margin-bottom: 14px;
+        }
+        .cb-next-type {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+        }
+        .cb-next-title {
+          margin: 8px 0 0;
+          font-size: 17px;
+          font-weight: 800;
+          color: #111827;
+          letter-spacing: -0.025em;
+          line-height: 1.3;
+        }
+        .cb-next-company {
+          margin: 5px 0 0;
+          font-size: 13px;
+          color: #6B7280;
+        }
+        .cb-next-date {
+          margin: 10px 0 0;
+          font-size: 12px;
+          color: #9CA3AF;
+        }
+
+        /* ── Type breakdown rows ── */
+        .cb-type-breakdown {
+          display: grid;
+          gap: 8px;
+        }
+        .cb-type-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          border-radius: 11px;
+          border: 1px solid;
+          padding: 9px 12px;
+        }
+        .cb-type-row-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+        }
+
+        /* ── Empty state ── */
+        .cb-empty-state {
+          border-radius: 12px;
+          border: 1px dashed #E5E7EB;
+          background: #F9FAFB;
+          padding: 16px;
+          color: #9CA3AF;
+          font-size: 13px;
+          line-height: 1.65;
+        }
+
+        /* ── Responsive ── */
         @media (max-width: 860px) {
-          .calendar-board-grid {
+          .cb-grid {
             overflow-x: auto;
-            display: grid;
             grid-template-columns: repeat(7, minmax(108px, 1fr));
           }
         }
         @media (max-width: 640px) {
-          .calendar-day-cell {
-            min-height: 88px !important;
+          .cb-day {
+            min-height: 80px !important;
             padding: 8px !important;
           }
+          .cb-body { padding: 14px; }
         }
       `}</style>
     </div>

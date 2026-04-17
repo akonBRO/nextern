@@ -9,8 +9,10 @@ import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 import { Application } from '@/models/Application';
 import { Job } from '@/models/Job';
+import { JobView } from '@/models/JobView';
 import {
   syncJobDeadlineToCalendar,
+  syncSavedJobDeadlineToCalendar,
   syncInterviewToCalendar,
   syncEventRegistrationToCalendar,
 } from '@/lib/calendar';
@@ -51,6 +53,14 @@ export async function POST(req: NextRequest) {
         status: { $nin: ['rejected', 'withdrawn'] },
         googleCalendarEventId: { $exists: false },
       }).lean();
+      const activeApplicationJobIds = new Set(applications.map((app) => app.jobId.toString()));
+      const savedJobs = await JobView.find({
+        studentId: oid,
+        isSaved: true,
+        googleCalendarEventId: { $exists: false },
+      })
+        .populate('jobId', 'title companyName applicationDeadline isActive')
+        .lean();
 
       let synced = 0;
 
@@ -102,6 +112,29 @@ export async function POST(req: NextRequest) {
           );
           synced++;
         }
+      }
+
+      for (const savedJob of savedJobs) {
+        const job = savedJob.jobId as unknown as {
+          _id: mongoose.Types.ObjectId;
+          title: string;
+          companyName: string;
+          applicationDeadline?: Date;
+          isActive?: boolean;
+        } | null;
+
+        if (!job?.applicationDeadline || job.isActive === false) continue;
+        if (job.applicationDeadline <= now) continue;
+        if (activeApplicationJobIds.has(job._id.toString())) continue;
+
+        await syncSavedJobDeadlineToCalendar(
+          session.user.id,
+          savedJob._id.toString(),
+          job.title,
+          job.companyName,
+          job.applicationDeadline
+        );
+        synced++;
       }
 
       return NextResponse.json({

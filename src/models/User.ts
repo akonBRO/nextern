@@ -31,6 +31,7 @@ interface IVerifiedPortfolioItem {
 }
 
 interface INotificationPreferences {
+  application_received: boolean;
   application_under_review: boolean;
   application_shortlisted: boolean;
   application_assessment_sent: boolean;
@@ -191,6 +192,7 @@ const UserSchema = new Schema<IUser>(
 
     // ── Notification preferences ─────────────────────────
     notificationPreferences: {
+      application_received: { type: Boolean, default: true },
       application_under_review: { type: Boolean, default: true },
       application_shortlisted: { type: Boolean, default: true },
       application_assessment_sent: { type: Boolean, default: true },

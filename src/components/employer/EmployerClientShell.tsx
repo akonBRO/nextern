@@ -12,6 +12,7 @@ type EmployerShellUser = {
   isPremium?: boolean;
   unreadNotifications: number;
   unreadMessages: number;
+  userId?: string;
 };
 
 const fallbackUser: EmployerShellUser = {
@@ -55,6 +56,12 @@ export default function EmployerClientShell({ children }: { children: ReactNode 
             isPremium: Boolean(premiumData.isPremium),
             unreadNotifications: 0,
             unreadMessages: 0,
+            userId:
+              typeof profile._id === 'string'
+                ? profile._id
+                : typeof profile.id === 'string'
+                  ? profile.id
+                  : undefined,
           });
         }
       } catch {

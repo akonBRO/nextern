@@ -58,7 +58,9 @@ async function createCalendarEvent(
   input: CalendarEventInput
 ): Promise<string | null> {
   try {
-    const end = input.endDateTime ?? new Date(input.startDateTime.getTime() + 60 * 60 * 1000);
+    const end = input.isAllDay
+      ? (input.endDateTime ?? new Date(input.startDateTime.getTime() + 24 * 60 * 60 * 1000))
+      : (input.endDateTime ?? new Date(input.startDateTime.getTime() + 60 * 60 * 1000));
 
     const eventBody: calendar_v3.Schema$Event = input.isAllDay
       ? {
@@ -131,7 +133,9 @@ async function updateCalendarEvent(
     if (input.colorId) patch.colorId = input.colorId;
 
     if (input.startDateTime) {
-      const end = input.endDateTime ?? new Date(input.startDateTime.getTime() + 60 * 60 * 1000);
+      const end = input.isAllDay
+        ? (input.endDateTime ?? new Date(input.startDateTime.getTime() + 24 * 60 * 60 * 1000))
+        : (input.endDateTime ?? new Date(input.startDateTime.getTime() + 60 * 60 * 1000));
 
       if (input.isAllDay) {
         patch.start = { date: input.startDateTime.toISOString().split('T')[0] };

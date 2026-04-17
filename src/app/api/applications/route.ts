@@ -154,11 +154,6 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // Fire badge/event hook + notification only if status actually changed
-    if (newStatus !== previousStatus) {
-      await onApplicationStatusChanged(application.studentId.toString(), newStatus).catch(() => {});
-    }
-
     return NextResponse.json({ message: 'Status updated successfully', application: updated });
   } catch (error) {
     console.error('[UPDATE APPLICATION ERROR]', error);
