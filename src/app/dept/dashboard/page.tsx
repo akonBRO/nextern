@@ -5,6 +5,7 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
+import { getDepartmentNavItems } from '@/lib/academic-navigation';
 import {
   DashboardPage,
   DashboardSection,
@@ -28,6 +29,89 @@ import { Job } from '@/models/Job';
 import { connectDB } from '@/lib/db';
 import mongoose from 'mongoose';
 import Link from 'next/link';
+
+const navItems = [
+  { label: 'Overview', href: '/dept/dashboard', icon: 'dashboard' as const },
+  {
+    label: 'Events',
+    icon: 'calendar' as const,
+    items: [
+      {
+        label: 'Post Event',
+        href: '/dept/events/new',
+        description: 'Publish a webinar or workshop for students.',
+        icon: 'calendar' as const,
+      },
+      {
+        label: 'My Events',
+        href: '/dept/events',
+        description: 'View and manage all your posted events.',
+        icon: 'file' as const,
+      },
+    ],
+  },
+  {
+    label: 'Cohort',
+    icon: 'users' as const,
+    items: [
+      {
+        label: 'Top students',
+        href: '/dept/dashboard#students',
+        description: 'Track the strongest students by opportunity score and profile readiness.',
+        icon: 'users' as const,
+      },
+      {
+        label: 'Pipeline',
+        href: '/dept/dashboard#pipeline',
+        description: 'See the aggregate hiring journey for your department cohort.',
+        icon: 'insights' as const,
+      },
+    ],
+  },
+  {
+    label: 'Analytics',
+    icon: 'insights' as const,
+    items: [
+      {
+        label: 'Skill heatmap',
+        href: '/dept/dashboard#heatmap',
+        description: 'Most common skills across the department cohort.',
+        icon: 'sparkles' as const,
+      },
+      {
+        label: 'Industry alignment',
+        href: '/dept/dashboard#alignment',
+        description: 'Student skills vs employer demand.',
+        icon: 'insights' as const,
+      },
+      {
+        label: 'Semester trend',
+        href: '/dept/dashboard#trend',
+        description: 'Semester-over-semester readiness trajectory.',
+        icon: 'target' as const,
+      },
+    ],
+  },
+  {
+    label: 'Opportunities',
+    icon: 'briefcase' as const,
+    items: [
+      {
+        label: 'Openings',
+        href: '/dept/dashboard#openings',
+        description: 'Active roles relevant to your university and department.',
+        icon: 'briefcase' as const,
+      },
+      {
+        label: 'Benchmarks',
+        href: '/dept/dashboard#benchmarks',
+        description: 'Department-level thresholds and readiness guardrails.',
+        icon: 'target' as const,
+      },
+    ],
+  },
+  { label: 'Badges', href: '/dept/badges', icon: 'shield' as const },
+];
 
 async function getDeptExtras(userId: string) {
   await connectDB();
@@ -144,8 +228,8 @@ export default async function DeptDashboard() {
           actions={
             <>
               <ActionLink href="/dept/events/new" label="Post event" />
-              <ActionLink href="/dept/events" label="All Events" tone="ghost" />
-              <ActionLink href="#students" label="Top students" tone="ghost" />
+              <ActionLink href="/dept/students" label="Student Directory" tone="ghost" />
+              <ActionLink href="/dept/advisors" label="Manage Advisors" tone="ghost" />
             </>
           }
           aside={

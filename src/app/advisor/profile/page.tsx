@@ -49,40 +49,6 @@ const inputBase: React.CSSProperties = {
   background: C.white,
 };
 
-const BD_UNIS = [
-  'BRAC University',
-  'North South University (NSU)',
-  'AIUB',
-  'Independent University Bangladesh (IUB)',
-  'East West University (EWU)',
-  'Daffodil International University (DIU)',
-  'ULAB',
-  'United International University (UIU)',
-  'RUET',
-  'CUET',
-  'BUET',
-  'SUST',
-  'Dhaka University (DU)',
-  'IUT',
-];
-
-const BD_DEPTS = [
-  'CSE',
-  'EEE',
-  'BBA',
-  'MBA',
-  'ECE',
-  'Civil',
-  'Architecture',
-  'Pharmacy',
-  'Law',
-  'English',
-  'Economics',
-  'Finance',
-  'Marketing',
-  'Accounting',
-];
-
 function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <div
@@ -220,10 +186,8 @@ export default function AdvisorProfilePage() {
           phone: form.phone || undefined,
           bio: form.bio || undefined,
           city: form.city || undefined,
-          institutionName: form.institutionName || undefined,
           advisorStaffId: form.advisorStaffId || undefined,
           designation: form.designation || undefined,
-          advisoryDepartment: form.advisoryDepartment || undefined,
           linkedinUrl: form.linkedinUrl || undefined,
           notificationPreferences: form.notificationPreferences,
           emailPreferences: form.emailPreferences,
@@ -485,32 +449,20 @@ export default function AdvisorProfilePage() {
           <SectionHeader icon={<GraduationCap size={18} />} label="Academic Position" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <Field label="Institution / University">
-              <select
+              <input
+                type="text"
                 value={form.institutionName}
-                onChange={(e) => set('institutionName', e.target.value)}
-                style={{ ...inputBase, appearance: 'none' as const }}
-              >
-                <option value="">Select institution</option>
-                {BD_UNIS.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-              </select>
+                readOnly
+                style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
+              />
             </Field>
             <Field label={isDeptHead ? 'Department' : 'Advisory Department'}>
-              <select
+              <input
+                type="text"
                 value={form.advisoryDepartment}
-                onChange={(e) => set('advisoryDepartment', e.target.value)}
-                style={{ ...inputBase, appearance: 'none' as const }}
-              >
-                <option value="">Select department</option>
-                {BD_DEPTS.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+                readOnly
+                style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
+              />
             </Field>
             <Field label="Designation / Title">
               <input
@@ -572,6 +524,20 @@ export default function AdvisorProfilePage() {
           <SectionHeader icon={<Bell size={18} />} label="Notification Preferences" />
           <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
             Control which advisor notifications you receive. All options are enabled by default.
+          </div>
+          <div
+            style={{
+              background: '#F8FAFC',
+              border: `1px solid ${C.border}`,
+              borderRadius: 12,
+              padding: '12px 16px',
+              marginBottom: 18,
+              fontSize: 13,
+              color: C.gray,
+              lineHeight: 1.7,
+            }}
+          >
+            Your university and department scope are provisioned internally and remain locked here.
           </div>
           <div style={{ display: 'grid', gap: 10 }}>
             {[

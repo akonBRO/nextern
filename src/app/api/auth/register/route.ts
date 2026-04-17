@@ -38,6 +38,15 @@ export async function POST(req: NextRequest) {
 
     // ── Duplicate email check ─────────────────────────────────────────────
     const existing = await User.findOne({ email: normalizedEmail });
+    if (existing && ['advisor', 'dept_head'].includes(existing.role)) {
+      return NextResponse.json(
+        {
+          error:
+            'This email is reserved for an internally provisioned academic account. Please contact the administrator responsible for academic access.',
+        },
+        { status: 409 }
+      );
+    }
     if (existing?.isVerified) {
       return NextResponse.json(
         { error: 'An account with this email already exists.' },
@@ -74,13 +83,6 @@ export async function POST(req: NextRequest) {
       userPayload.industry = data.industry;
       userPayload.tradeLicenseNo = data.tradeLicenseNo;
       userPayload.headquartersCity = data.headquartersCity;
-    }
-
-    if (data.role === 'advisor' || data.role === 'dept_head') {
-      userPayload.institutionName = data.institutionName;
-      userPayload.advisorStaffId = data.advisorStaffId;
-      userPayload.designation = data.designation;
-      userPayload.advisoryDepartment = data.advisoryDepartment;
     }
 
     // ── Create user ───────────────────────────────────────────────────────
@@ -123,7 +125,7 @@ export async function POST(req: NextRequest) {
         role: user.role,
         emailSent,
         requiresEmailVerification: true,
-        requiresAdminApproval: data.role !== 'student',
+        requiresAdminApproval: data.role === 'employer',
       },
       { status: existing ? 200 : 201 }
     );

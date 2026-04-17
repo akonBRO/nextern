@@ -67,6 +67,7 @@ export interface IUser extends Document {
   isPremium: boolean;
   premiumExpiresAt?: Date;
   isVerified: boolean;
+  mustChangePassword?: boolean;
   createdAt: Date;
   updatedAt: Date;
 
@@ -141,6 +142,7 @@ const UserSchema = new Schema<IUser>(
     isPremium: { type: Boolean, default: false },
     premiumExpiresAt: { type: Date },
     isVerified: { type: Boolean, default: false },
+    mustChangePassword: { type: Boolean, default: false },
 
     // ── Student ──────────────────────────────────────────
     studentId: { type: String },

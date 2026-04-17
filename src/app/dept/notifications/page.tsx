@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Bell, CalendarDays, Users } from 'lucide-react';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import NotificationsPageClient from '@/components/notifications/NotificationsPageClient';
+
 import { getDeptDashboardData } from '@/lib/role-dashboard';
 import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 

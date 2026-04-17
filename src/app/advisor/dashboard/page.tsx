@@ -6,6 +6,7 @@ import { User } from '@/models/User';
 import mongoose from 'mongoose';
 import Link from 'next/link';
 import DashboardShell from '@/components/dashboard/DashboardShell';
+import { getAdvisorNavItems } from '@/lib/academic-navigation';
 import {
   ActionLink,
   DashboardPage,
@@ -35,6 +36,59 @@ import {
   Star,
   MessageSquare,
 } from 'lucide-react';
+
+const navItems = [
+  { label: 'Overview', href: '/advisor/dashboard', icon: 'dashboard' as const },
+  {
+    label: 'My Students',
+    icon: 'users' as const,
+    items: [
+      {
+        label: 'Attention queue',
+        href: '/advisor/dashboard#students',
+        description: 'Students that need immediate coaching or intervention.',
+        icon: 'users' as const,
+      },
+      {
+        label: 'Upcoming interviews',
+        href: '/advisor/dashboard#interviews',
+        description: 'Students with approaching interviews that may need support.',
+        icon: 'calendar' as const,
+      },
+      {
+        label: 'Skill gaps',
+        href: '/advisor/dashboard#skills',
+        description: 'Repeated hard-skill gaps across your advisee cohort.',
+        icon: 'target' as const,
+      },
+      {
+        label: 'Cohort Reputation',
+        href: '/advisor/dashboard#reputation',
+        description: 'Aggregated reviews and formal recommendations from employers.',
+        icon: 'star' as const,
+      },
+    ],
+  },
+  {
+    label: 'Events',
+    icon: 'calendar' as const,
+    items: [
+      {
+        label: 'Post Event',
+        href: '/advisor/events/new',
+        description: 'Publish a webinar or workshop for students.',
+        icon: 'calendar' as const,
+      },
+      {
+        label: 'My Events',
+        href: '/advisor/events',
+        description: 'View and manage all your posted events.',
+        icon: 'file' as const,
+      },
+    ],
+  },
+  { label: 'Badges', href: '/advisor/badges', icon: 'shield' as const },
+];
 
 async function getAdvisorExtras(userId: string) {
   await connectDB();
@@ -127,7 +181,7 @@ export default async function AdvisorDashboard() {
           actions={
             <>
               <ActionLink href="/advisor/events/new" label="Post Event" />
-              <ActionLink href="/advisor/events" label="My Events" tone="ghost" />
+              <ActionLink href="/advisor/students" label="Student Directory" tone="ghost" />
             </>
           }
           aside={
