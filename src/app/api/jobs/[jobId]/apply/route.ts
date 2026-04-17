@@ -9,11 +9,14 @@ import { Application } from '@/models/Application';
 import { User } from '@/models/User';
 import { ApplyJobSchema } from '@/lib/validations';
 import { onJobApplied } from '@/lib/events';
-import { notifyEmployerApplicationReceived } from '@/lib/notify';
 import { analyzeSkillGap } from '@/lib/gemini';
 import { checkFeatureAccess } from '@/lib/premium';
 import { FeatureUsage } from '@/models/FeatureUsage';
-import { syncJobDeadlineToCalendar, syncEventRegistrationToCalendar } from '@/lib/calendar';
+import {
+  removeCalendarEvent,
+  syncJobDeadlineToCalendar,
+  syncEventRegistrationToCalendar,
+} from '@/lib/calendar';
 
 type Params = { params: Promise<{ jobId: string }> };
 
@@ -107,7 +110,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     const appliedAt = new Date();
 
     // JOB METRICS + VIEW TRACKING (FROM FIRST VERSION)
-    await Promise.all([
+    const [, jobView] = await Promise.all([
       Job.findByIdAndUpdate(jobId, { $inc: { applicationCount: 1 } }),
 
       JobView.findOneAndUpdate(
@@ -124,21 +127,23 @@ export async function POST(req: NextRequest, { params }: Params) {
             firstViewedAt: appliedAt,
           },
         },
-        { upsert: true }
+        { upsert: true, new: true }
       ),
     ]);
 
-    await onJobApplied(session.user.id, jobId).catch(() => {});
+    if (jobView?.googleCalendarEventId) {
+      await removeCalendarEvent(session.user.id, jobView.googleCalendarEventId).catch((error) => {
+        console.error('[REMOVE SAVED CALENDAR EVENT ON APPLY ERROR]', error);
+      });
 
-    await notifyEmployerApplicationReceived(
-      job.employerId.toString(),
-      student?.name ?? 'A student',
-      job.title,
-      job.companyName,
-      jobId,
-      application._id.toString(),
-      { isEventRegistration: isEvent }
-    ).catch(() => {});
+      await JobView.findByIdAndUpdate(jobView._id, {
+        $unset: { googleCalendarEventId: '' },
+      }).catch((error) => {
+        console.error('[CLEAR SAVED CALENDAR EVENT ID ON APPLY ERROR]', error);
+      });
+    }
+
+    await onJobApplied(session.user.id, jobId).catch(() => {});
 
     // ── Calendar sync ────────────────────────────────────────────────────
     try {

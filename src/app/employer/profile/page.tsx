@@ -6,7 +6,16 @@ import Link from 'next/link';
 import EmployerClientShell from '@/components/employer/EmployerClientShell';
 import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
 import ReputationHistory from '@/components/reviews/ReputationHistory';
-import { AlertCircle, CheckCircle2, Building2, Globe, Phone, Save, Award } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Building2,
+  Globe,
+  Phone,
+  Save,
+  Award,
+  Bell,
+} from 'lucide-react';
 
 const C = {
   blue: '#2563EB',
@@ -132,6 +141,10 @@ export default function EmployerProfilePage() {
     companyDescription: '',
     headquartersCity: '',
     tradeLicenseNo: '',
+    notificationPreferences: {
+      application_received: true,
+      event_registrations: true,
+    } as Record<string, boolean>,
   });
 
   useEffect(() => {
@@ -150,6 +163,11 @@ export default function EmployerProfilePage() {
           companyDescription: u.companyDescription ?? '',
           headquartersCity: u.headquartersCity ?? '',
           tradeLicenseNo: u.tradeLicenseNo ?? '',
+          notificationPreferences: {
+            application_received: true,
+            event_registrations: true,
+            ...(u.notificationPreferences ?? {}),
+          },
         });
       })
       .catch(() => setError('Failed to load profile'))
@@ -184,6 +202,7 @@ export default function EmployerProfilePage() {
           companyWebsite: form.companyWebsite || undefined,
           companyDescription: form.companyDescription || undefined,
           headquartersCity: form.headquartersCity || undefined,
+          notificationPreferences: form.notificationPreferences,
         }),
       });
       const data = await res.json();
@@ -219,6 +238,16 @@ export default function EmployerProfilePage() {
     });
 
     setUser((prev) => (prev ? { ...prev, companyLogo: undefined } : prev));
+  }
+
+  function toggleNotificationPreference(key: string) {
+    setForm((prev) => ({
+      ...prev,
+      notificationPreferences: {
+        ...prev.notificationPreferences,
+        [key]: prev.notificationPreferences[key] === false,
+      },
+    }));
   }
 
   if (fetching)
@@ -621,6 +650,92 @@ export default function EmployerProfilePage() {
             ) : (
               <div style={{ fontSize: 13, color: C.light }}>Loading reputation data...</div>
             )}
+          </div>
+
+          {/* Section 5: Notification Preferences */}
+          <div
+            style={{
+              background: C.white,
+              borderRadius: 18,
+              border: `1px solid ${C.border}`,
+              padding: '24px 28px',
+              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+            }}
+          >
+            <SectionHeader icon={<Bell size={18} />} label="Notification Preferences" />
+            <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
+              Choose which real-time employer notifications you receive. Changes are saved when you
+              click <strong>Save Profile</strong>.
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                {
+                  key: 'application_received',
+                  label: 'Job Applications',
+                  desc: 'When a student applies to one of your job postings',
+                },
+                {
+                  key: 'event_registrations',
+                  label: 'Workshop & Webinar Registrations',
+                  desc: 'When a student registers for one of your events',
+                },
+              ].map((item) => {
+                const isOn = form.notificationPreferences[item.key] !== false;
+                return (
+                  <div
+                    key={item.key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      background: '#FAFBFC',
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 12,
+                      gap: 16,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                        {item.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggleNotificationPreference(item.key)}
+                      aria-pressed={isOn}
+                      style={{
+                        width: 44,
+                        height: 24,
+                        borderRadius: 999,
+                        border: 'none',
+                        background: isOn ? C.blue : C.border,
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background 0.2s',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: '50%',
+                          background: C.white,
+                          position: 'absolute',
+                          top: 3,
+                          left: isOn ? 23 : 3,
+                          transition: 'left 0.2s',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                        }}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Save */}

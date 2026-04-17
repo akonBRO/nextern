@@ -3,6 +3,7 @@ import type { DashboardNavItem } from '@/components/dashboard/DashboardShell';
 
 export const EMPLOYER_NAV_ITEMS: DashboardNavItem[] = [
   { label: 'Overview', href: '/employer/dashboard', icon: 'dashboard' },
+  { label: 'Calendar', href: '/employer/calendar', icon: 'calendar' },
   {
     label: 'Jobs',
     icon: 'briefcase',

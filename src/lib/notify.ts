@@ -4,6 +4,13 @@ import { connectDB } from '@/lib/db';
 import { Notification, type NotificationType } from '@/models/Notification';
 import { User } from '@/models/User';
 import { pusherServer, userChannel, PUSHER_EVENTS } from '@/lib/pusher';
+import {
+  sendEmail,
+  applicationStatusEmailTemplate,
+  deadlineReminderEmailTemplate,
+} from '@/lib/email';
+
+type ApplicationStatusEmailType = Parameters<typeof applicationStatusEmailTemplate>[0]['status'];
 
 export type CreateNotificationInput = {
   userId: string;
@@ -61,6 +68,15 @@ export async function createNotification(input: CreateNotificationInput) {
     return null;
   }
 }
+
+const EMAIL_STATUSES = new Set<ApplicationStatusEmailType>([
+  'under_review',
+  'shortlisted',
+  'assessment_sent',
+  'interview_scheduled',
+  'hired',
+  'rejected',
+] as const);
 
 // ── Application status changed ─────────────────────────────────────────────
 export async function notifyApplicationStatusChanged(
@@ -145,12 +161,18 @@ export async function notifyApplicationStatusChanged(
         : '/student/applications';
 
   // ── Check notification preference before sending ──
-  const student = await User.findById(studentId).select('notificationPreferences').lean();
+  const student = await User.findById(studentId)
+    .select('name email notificationPreferences')
+    .lean();
 
-  const prefs = (student as { notificationPreferences?: Record<string, boolean> } | null)
-    ?.notificationPreferences;
+  if (!student) return;
 
-  if (prefs?.[cfg.prefKey] === false) return; // student turned this off
+  const prefs = normalizeNotificationPreferences(
+    (student as { notificationPreferences?: Record<string, boolean> } | null)
+      ?.notificationPreferences
+  );
+
+  if (prefs[cfg.prefKey] === false) return; // student turned this off
 
   await createNotification({
     userId: studentId,
@@ -168,10 +190,28 @@ export async function notifyApplicationStatusChanged(
       interviewSessionId: extra?.interviewSessionId,
     },
   });
+
+  const emailStatus = EMAIL_STATUSES.has(newStatus as ApplicationStatusEmailType)
+    ? (newStatus as ApplicationStatusEmailType)
+    : null;
+
+  if (emailStatus && student.email) {
+    const { subject, html } = applicationStatusEmailTemplate({
+      studentName: student.name ?? 'Student',
+      jobTitle,
+      companyName,
+      status: emailStatus,
+    });
+
+    void sendEmail({ to: student.email, subject, html }).catch((err) => {
+      console.error('[STATUS EMAIL ERROR]', err);
+    });
+  }
 }
 
 // ── Job applied ────────────────────────────────────────────────────────────
 const DEFAULT_NOTIFICATION_PREFERENCES: Record<string, boolean> = {
+  application_received: true,
   application_under_review: true,
   application_shortlisted: true,
   application_assessment_sent: true,
@@ -221,7 +261,6 @@ export async function notifyEmployerApplicationReceived(
   options?: { isEventRegistration?: boolean }
 ) {
   let employerRole: string | undefined;
-  const employerPrefs: Record<string, boolean> = DEFAULT_NOTIFICATION_PREFERENCES;
 
   if (options?.isEventRegistration) {
     const employer = await User.findById(employerId).select('role').lean();
@@ -244,7 +283,7 @@ export async function notifyEmployerApplicationReceived(
       ? `/advisor/events/${jobId}/applicants`
       : `/employer/jobs/${jobId}/applicants`,
     meta: { jobId, applicationId, studentName, companyName, icon: 'Users' },
-    preferenceKey: options?.isEventRegistration ? 'event_registrations' : undefined,
+    preferenceKey: options?.isEventRegistration ? 'event_registrations' : 'application_received',
   });
 }
 
@@ -257,13 +296,17 @@ export async function notifyDeadlineReminder(
   deadline: Date,
   daysLeft: number
 ) {
-  // Check preference
-  const student = await User.findById(studentId).select('notificationPreferences').lean();
-  const prefs = (student as { notificationPreferences?: Record<string, boolean> } | null)
-    ?.notificationPreferences;
-  if (prefs?.deadline_reminders === false) return;
+  const student = await User.findById(studentId)
+    .select('name email notificationPreferences')
+    .lean();
+  const prefs = normalizeNotificationPreferences(
+    (student as { notificationPreferences?: Record<string, boolean> } | null)
+      ?.notificationPreferences
+  );
 
-  await createNotification({
+  if (prefs.deadline_reminders === false) return;
+
+  const notification = await createNotification({
     userId: studentId,
     type: 'deadline_reminder',
     title: `Deadline in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
@@ -283,6 +326,26 @@ export async function notifyDeadlineReminder(
     },
     expiresAt: deadline,
   });
+
+  if (!notification || !student?.email) return;
+
+  const { subject, html } = deadlineReminderEmailTemplate({
+    studentName: (student as { name?: string | null } | null)?.name?.trim() || 'Student',
+    jobTitle,
+    companyName,
+    deadline,
+    daysLeft,
+  });
+
+  void sendEmail({ to: student.email, subject, html })
+    .then(() => {
+      return Notification.findByIdAndUpdate(notification._id, {
+        $set: { isEmailSent: true },
+      }).catch(() => {});
+    })
+    .catch((err) => {
+      console.error('[DEADLINE EMAIL ERROR]', err);
+    });
 }
 
 // ── Badge earned ───────────────────────────────────────────────────────────

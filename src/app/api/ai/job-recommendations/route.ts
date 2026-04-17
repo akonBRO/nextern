@@ -14,7 +14,9 @@ import { Application } from '@/models/Application';
 import { FeatureUsage } from '@/models/FeatureUsage';
 import { Job } from '@/models/Job';
 import { JobView } from '@/models/JobView';
+import { Notification } from '@/models/Notification';
 import { User } from '@/models/User';
+import { notifyJobMatch } from '@/lib/notify';
 
 const FiltersSchema = z
   .object({
@@ -607,6 +609,47 @@ export async function POST(req: NextRequest) {
         filterCount: String(Object.keys(parsed.data.filters ?? {}).length),
       },
     });
+
+    const notificationCandidates = recommendedJobs
+      .filter((job) => typeof job.fitScore === 'number' && (job.fitScore ?? 0) >= 70)
+      .slice(0, 3);
+
+    if (notificationCandidates.length > 0) {
+      const recentCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const existingJobMatchNotifications = await Notification.find({
+        userId: session.user.id,
+        type: 'job_match',
+        createdAt: { $gte: recentCutoff },
+        'meta.jobId': { $in: notificationCandidates.map((job) => job._id) },
+      })
+        .select('meta.jobId')
+        .lean();
+
+      const notifiedJobIds = new Set(
+        existingJobMatchNotifications
+          .map((item) => {
+            const meta = item.meta as { jobId?: unknown } | undefined;
+            return typeof meta?.jobId === 'string' ? meta.jobId : null;
+          })
+          .filter((value): value is string => Boolean(value))
+      );
+
+      await Promise.all(
+        notificationCandidates
+          .filter((job) => !notifiedJobIds.has(job._id))
+          .map((job) =>
+            notifyJobMatch(
+              session.user.id,
+              job.title,
+              job.companyName,
+              job._id,
+              job.fitScore ?? 0
+            ).catch((error) => {
+              console.error('[JOB MATCH NOTIFICATION ERROR]', error);
+            })
+          )
+      );
+    }
 
     return NextResponse.json({
       jobs: recommendedJobs,
