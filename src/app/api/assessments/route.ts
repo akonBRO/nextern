@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
+import { dhakaDateTimeInputToISOString } from '@/lib/datetime';
 import { CreateAssessmentSchema } from '@/lib/validations';
 import {
   createAssessment,
@@ -148,7 +149,12 @@ export async function POST(req: NextRequest) {
       instructions: parsed.data.instructions || undefined,
       isTimedAutoSubmit: parsed.data.isTimedAutoSubmit,
       allowLateSubmission: parsed.data.allowLateSubmission,
-      dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null,
+      dueAt: parsed.data.dueAt
+        ? (() => {
+            const iso = dhakaDateTimeInputToISOString(parsed.data.dueAt);
+            return iso ? new Date(iso) : null;
+          })()
+        : null,
       reminderOffsetsMinutes: parsed.data.reminderOffsetsMinutes,
       applicationIds: parsed.data.applicationIds,
     });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
+import { dhakaDateTimeInputToISOString } from '@/lib/datetime';
 import { ScheduleInterviewSchema } from '@/lib/validations';
 import { scheduleInterviewSessions, PremiumAccessError } from '@/lib/hiring-suite';
 import { InterviewSession } from '@/models/InterviewSession';
@@ -59,13 +60,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const normalizedScheduledAt = dhakaDateTimeInputToISOString(parsed.data.scheduledAt);
+    if (!normalizedScheduledAt) {
+      return NextResponse.json({ error: 'Invalid interview date and time.' }, { status: 400 });
+    }
+
     const interviews = await scheduleInterviewSessions({
       employerId: session.user.id,
       applicationIds: parsed.data.applicationIds,
       title: parsed.data.title,
       description: parsed.data.description || undefined,
       mode: parsed.data.mode,
-      scheduledAt: new Date(parsed.data.scheduledAt),
+      scheduledAt: new Date(normalizedScheduledAt),
       durationMinutes: parsed.data.durationMinutes,
       panelists: parsed.data.panelists,
     });

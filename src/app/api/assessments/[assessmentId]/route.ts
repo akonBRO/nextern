@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
+import { dhakaDateTimeInputToISOString } from '@/lib/datetime';
 import {
   AssessmentActionSchema,
   GradeAssessmentSchema,
@@ -134,18 +135,22 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       }
 
       if (parsedAction.data.action === 'assign') {
+        const normalizedDueAt = dhakaDateTimeInputToISOString(parsedAction.data.dueAt);
         const assignments = await assignAssessmentToApplications({
           employerId: session.user.id,
           assessmentId,
           applicationIds: parsedAction.data.applicationIds,
-          dueAt: parsedAction.data.dueAt ? new Date(parsedAction.data.dueAt) : undefined,
+          dueAt: normalizedDueAt ? new Date(normalizedDueAt) : undefined,
         });
         return NextResponse.json({ assignments });
       }
 
       assessment.isActive = parsedAction.data.action === 'reactivate';
       if (parsedAction.data.dueAt) {
-        assessment.dueAt = new Date(parsedAction.data.dueAt);
+        const normalizedDueAt = dhakaDateTimeInputToISOString(parsedAction.data.dueAt);
+        if (normalizedDueAt) {
+          assessment.dueAt = new Date(normalizedDueAt);
+        }
       }
       await assessment.save();
 

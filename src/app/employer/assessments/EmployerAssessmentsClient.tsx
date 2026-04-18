@@ -9,7 +9,7 @@ import {
   type AssessmentQuestionType,
   type HiringAsset,
 } from '@/lib/hiring-suite-shared';
-import { formatDhakaDateTime } from '@/lib/datetime';
+import { dhakaDateTimeInputToISOString, formatDhakaDateTime } from '@/lib/datetime';
 import {
   CalendarClock,
   CheckCircle2,
@@ -407,7 +407,7 @@ export default function EmployerAssessmentsClient({
               allowLateSubmission,
               dueAt:
                 !isEditing && initialApplicationIds.length > 0 && dueAt
-                  ? new Date(dueAt).toISOString()
+                  ? (dhakaDateTimeInputToISOString(dueAt) ?? undefined)
                   : undefined,
               applicationIds:
                 !isEditing && initialApplicationIds.length ? initialApplicationIds : undefined,
@@ -553,7 +553,7 @@ export default function EmployerAssessmentsClient({
         body: JSON.stringify({
           action: 'assign',
           applicationIds: initialApplicationIds,
-          dueAt: dueAt ? new Date(dueAt).toISOString() : undefined,
+          dueAt: dhakaDateTimeInputToISOString(dueAt) ?? undefined,
         }),
       });
       const data = (await res.json()) as { error?: string };

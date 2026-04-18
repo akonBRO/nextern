@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { CalendarClock, ClipboardCheck, Crown, Loader2, Sparkles, Video } from 'lucide-react';
+import { dhakaDateTimeInputToISOString } from '@/lib/datetime';
 
 type SelectedApplication = {
   _id: string;
@@ -104,7 +105,7 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
         body: JSON.stringify({
           action: 'assign',
           applicationIds: selectedIds,
-          dueAt: assessmentDueAt || undefined,
+          dueAt: dhakaDateTimeInputToISOString(assessmentDueAt) ?? undefined,
         }),
       });
 
@@ -156,7 +157,7 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
           title: interviewTitle,
           description: interviewDescription || undefined,
           mode: interviewMode,
-          scheduledAt: new Date(scheduledAt).toISOString(),
+          scheduledAt: dhakaDateTimeInputToISOString(scheduledAt) ?? undefined,
           durationMinutes: Number(durationMinutes) || 45,
           panelists,
         }),
