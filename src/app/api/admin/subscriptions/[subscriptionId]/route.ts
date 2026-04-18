@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/db';
 import { requireAdminSession } from '@/lib/admin';
 import { AdminSubscriptionUpdateSchema } from '@/lib/validations';
 import { Subscription } from '@/models/Subscription';
+import { User } from '@/models/User';
 import { syncPremiumStatus } from '@/lib/premium';
 
 type Params = { params: Promise<{ subscriptionId: string }> };
@@ -57,6 +58,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
           : null;
 
     if (userId) {
+      await User.findByIdAndUpdate(userId, {
+        $set: { premiumOverride: null },
+      }).catch(console.error);
       await syncPremiumStatus(userId).catch(console.error);
     }
 

@@ -7,6 +7,9 @@ import { AssessmentSubmission } from '@/models/AssessmentSubmission';
 import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { User } from '@/models/User';
+import { syncAssessmentAssignmentState } from '@/lib/hiring-suite';
+import { formatDhakaDateTime } from '@/lib/datetime';
+import { isCodeExecutionConfigured } from '@/lib/judge0';
 import { syncPremiumStatus } from '@/lib/premium';
 import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
@@ -21,6 +24,7 @@ import StudentAssessmentClient from './StudentAssessmentClient';
 
 async function getAssessmentWorkspace(userId: string, assignmentId: string) {
   await connectDB();
+  await syncAssessmentAssignmentState(assignmentId);
 
   const [student, assignment, unreadNotifications, unreadMessages] = await Promise.all([
     User.findById(userId).select('name email image university department').lean(),
@@ -49,17 +53,6 @@ async function getAssessmentWorkspace(userId: string, assignmentId: string) {
   };
 }
 
-function formatDateTime(value?: Date | string | null) {
-  if (!value) return 'No deadline';
-  return new Intl.DateTimeFormat('en-BD', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(value));
-}
-
 export default async function StudentAssessmentDetailPage({
   params,
 }: {
@@ -77,6 +70,7 @@ export default async function StudentAssessmentDetailPage({
   if (!data) redirect('/student/assessments');
 
   const job = data.assignment.jobId as { title: string; companyName: string } | null;
+  const codingExecutionEnabled = isCodeExecutionConfigured();
 
   return (
     <DashboardShell
@@ -122,7 +116,7 @@ export default async function StudentAssessmentDetailPage({
                   { label: 'Company', value: job?.companyName ?? 'Employer' },
                   {
                     label: 'Due',
-                    value: formatDateTime(data.assignment.dueAt ?? data.assessment.dueAt),
+                    value: formatDhakaDateTime(data.assignment.dueAt ?? data.assessment.dueAt),
                   },
                   { label: 'Duration', value: `${data.assessment.durationMinutes} min` },
                 ].map((item) => (
@@ -149,6 +143,7 @@ export default async function StudentAssessmentDetailPage({
               assignment={JSON.parse(JSON.stringify(data.assignment))}
               assessment={JSON.parse(JSON.stringify(data.assessment))}
               submission={JSON.parse(JSON.stringify(data.submission))}
+              codingExecutionEnabled={codingExecutionEnabled}
             />
           ) : (
             <Panel

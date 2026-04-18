@@ -8,6 +8,7 @@ import { Job } from '@/models/Job';
 import { Assessment } from '@/models/Assessment';
 import { AssessmentAssignment } from '@/models/AssessmentAssignment';
 import { EMPLOYER_NAV_ITEMS } from '@/lib/employer-navigation';
+import { syncAssessmentAssignmentStates } from '@/lib/hiring-suite';
 import { syncPremiumStatus } from '@/lib/premium';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
@@ -27,6 +28,20 @@ async function getAssessmentPageData(userId: string, jobId?: string) {
 
   const query: Record<string, unknown> = { employerId: userId };
   if (jobId) query.jobId = jobId;
+
+  const pendingAssignmentIds = await AssessmentAssignment.find({
+    employerId: userId,
+    ...(jobId ? { jobId } : {}),
+    status: { $in: ['assigned', 'started'] },
+  })
+    .select('_id')
+    .lean();
+
+  if (pendingAssignmentIds.length > 0) {
+    await syncAssessmentAssignmentStates(
+      pendingAssignmentIds.map((assignment) => assignment._id.toString())
+    );
+  }
 
   const [employer, jobs, assessments, unreadNotifications, unreadMessages] = await Promise.all([
     User.findById(userId).select('name email image companyName').lean(),

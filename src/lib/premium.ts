@@ -78,7 +78,9 @@ export async function syncPremiumStatus(userId: string): Promise<PremiumStatus> 
   await connectDB();
 
   const now = new Date();
-  const user = await User.findById(userId).select('role isPremium premiumExpiresAt').lean();
+  const user = await User.findById(userId)
+    .select('role isPremium premiumExpiresAt premiumOverride')
+    .lean();
 
   if (!user) {
     throw new Error('User not found');
@@ -93,8 +95,15 @@ export async function syncPremiumStatus(userId: string): Promise<PremiumStatus> 
     .select('plan endDate')
     .lean();
 
-  const shouldBePremium = !!activeSubscription;
-  const premiumExpiresAt = activeSubscription?.endDate ?? null;
+  const override = user.premiumOverride ?? null;
+  const shouldBePremium =
+    override === 'premium' ? true : override === 'free' ? false : !!activeSubscription;
+  const premiumExpiresAt =
+    override === 'free'
+      ? null
+      : override === 'premium'
+        ? (user.premiumExpiresAt ?? activeSubscription?.endDate ?? null)
+        : (activeSubscription?.endDate ?? null);
 
   if (
     user.isPremium !== shouldBePremium ||
@@ -110,7 +119,10 @@ export async function syncPremiumStatus(userId: string): Promise<PremiumStatus> 
 
   return {
     isPremium: shouldBePremium,
-    planId: activeSubscription?.plan ?? (shouldBePremium ? inferredPlan : null),
+    planId:
+      override === 'free'
+        ? null
+        : (activeSubscription?.plan ?? (shouldBePremium ? inferredPlan : null)),
     premiumExpiresAt: premiumExpiresAt ? premiumExpiresAt.toISOString() : null,
   };
 }

@@ -191,6 +191,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       updates.premiumExpiresAt = null;
     }
 
+    if ('isPremium' in data) {
+      updates.premiumOverride = data.isPremium ? 'premium' : 'free';
+    }
+
     const effectiveRole = (data.role ?? existingUser.role) as string;
     if (
       'verificationStatus' in data &&
@@ -204,6 +208,24 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       { $set: updates },
       { new: true, runValidators: true }
     ).select('-password');
+
+    if (data.isPremium === false) {
+      const now = new Date();
+      await Subscription.updateMany(
+        {
+          userId,
+          status: { $in: ['active', 'cancelled'] },
+          endDate: { $gt: now },
+        },
+        {
+          $set: {
+            status: 'cancelled',
+            endDate: now,
+            autoRenew: false,
+          },
+        }
+      );
+    }
 
     if (data.verificationStatus === 'approved') {
       await onProfileVerified(userId).catch(console.error);

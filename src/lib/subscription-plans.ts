@@ -52,6 +52,8 @@ export const PLANS: Record<PlanId, SubscriptionPlan> = {
       'Priority listing — appear at top of student feeds',
       'Advanced pipeline analytics & reporting',
       'Unlimited assessment creation',
+      'Edit and manage your reusable assessment library before dispatch',
+      'AI-assisted grading for short answers and case studies',
       'Video interview recording with Agora',
       'Direct messaging with all applicants',
       'Employer analytics dashboard',

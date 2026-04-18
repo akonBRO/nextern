@@ -448,7 +448,7 @@ const AssessmentQuestionSchema = z.object({
   maxWords: z.number().int().min(10).max(5000).optional(),
 });
 
-export const CreateAssessmentSchema = z.object({
+const AssessmentDefinitionBaseSchema = z.object({
   jobId: z.string().length(24),
   title: z.string().min(3).max(160),
   type: z.enum(['mcq', 'short_answer', 'coding', 'case_study', 'mixed']),
@@ -462,6 +462,30 @@ export const CreateAssessmentSchema = z.object({
   reminderOffsetsMinutes: z.array(z.number().int().min(15).max(10080)).max(5).optional(),
   questions: z.array(AssessmentQuestionSchema).min(1).max(30),
   applicationIds: z.array(z.string().length(24)).max(100).optional().default([]),
+});
+
+export const CreateAssessmentSchema = AssessmentDefinitionBaseSchema.superRefine((data, ctx) => {
+  if (data.passingMarks > data.totalMarks) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['passingMarks'],
+      message: 'Passing marks cannot be greater than total marks.',
+    });
+  }
+});
+
+export const UpdateAssessmentSchema = AssessmentDefinitionBaseSchema.omit({
+  dueAt: true,
+  reminderOffsetsMinutes: true,
+  applicationIds: true,
+}).superRefine((data, ctx) => {
+  if (data.passingMarks > data.totalMarks) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['passingMarks'],
+      message: 'Passing marks cannot be greater than total marks.',
+    });
+  }
 });
 
 export const AssessmentActionSchema = z.object({

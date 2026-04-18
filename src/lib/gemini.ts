@@ -280,6 +280,94 @@ async function askGeminiJSONWithConfig<T>(
   }
 }
 
+const ASSESSMENT_EVALUATION_SCHEMA: ResponseSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    score: { type: SchemaType.INTEGER },
+    reasoning: { type: SchemaType.STRING },
+    manualReviewRecommended: { type: SchemaType.BOOLEAN },
+  },
+  required: ['score', 'reasoning', 'manualReviewRecommended'],
+};
+
+export interface AssessmentAIEvaluationResult {
+  score: number;
+  reasoning: string;
+  manualReviewRecommended: boolean;
+}
+
+export function hasAssessmentEvaluationGeminiConfig() {
+  return Boolean(process.env.GEMINI_ASSESSMENT_EVALUATION_API_KEY?.trim());
+}
+
+export async function evaluateAssessmentAnswerWithGemini(params: {
+  type: 'short_answer' | 'case_study';
+  prompt: string;
+  answer: string;
+  maxMarks: number;
+  acceptedAnswers?: string[];
+  rubric?: string;
+  maxWords?: number;
+}): Promise<AssessmentAIEvaluationResult> {
+  const acceptedAnswers =
+    params.acceptedAnswers
+      ?.map((value) => value.trim())
+      .filter(Boolean)
+      .slice(0, 8) ?? [];
+  const rubric = params.rubric?.trim() ?? '';
+  const answer = params.answer.trim();
+  const prompt = params.prompt.trim();
+
+  if (!answer) {
+    return {
+      score: 0,
+      reasoning: 'No answer was provided.',
+      manualReviewRecommended: false,
+    };
+  }
+
+  const evaluationPrompt = `
+You are evaluating an employer assessment submission.
+Return ONLY valid JSON that follows the provided schema.
+
+QUESTION TYPE: ${params.type === 'case_study' ? 'Case study' : 'Short answer'}
+MAX MARKS: ${params.maxMarks}
+PROMPT:
+${prompt}
+
+${acceptedAnswers.length > 0 ? `ACCEPTED ANSWERS:\n${acceptedAnswers.map((item, index) => `${index + 1}. ${item}`).join('\n')}\n` : 'ACCEPTED ANSWERS: None provided.\n'}
+${rubric ? `RUBRIC:\n${rubric}\n` : 'RUBRIC: None provided.\n'}
+${typeof params.maxWords === 'number' ? `MAX WORDS: ${params.maxWords}\n` : ''}
+
+CANDIDATE ANSWER:
+${answer}
+
+Scoring rules:
+- Give an integer score from 0 to ${params.maxMarks}.
+- Use accepted answers when provided for short answers.
+- Use the rubric when provided for case studies.
+- If accepted answers or rubric are missing, evaluate using the prompt and answer quality only.
+- Set manualReviewRecommended to true only if the answer cannot be judged confidently from the text alone.
+- Keep reasoning concise and specific.
+`;
+
+  const result = await askGeminiJSONWithConfig<AssessmentAIEvaluationResult>(
+    evaluationPrompt,
+    {
+      responseSchema: ASSESSMENT_EVALUATION_SCHEMA,
+      temperature: 0.1,
+    },
+    process.env.GEMINI_ASSESSMENT_EVALUATION_API_KEY,
+    'GEMINI_ASSESSMENT_EVALUATION_API_KEY'
+  );
+
+  return {
+    score: clamp(Math.round(Number(result.score) || 0), 0, params.maxMarks),
+    reasoning: normalizeText(result.reasoning) || 'AI evaluation completed.',
+    manualReviewRecommended: Boolean(result.manualReviewRecommended),
+  };
+}
+
 export interface SkillGapResult {
   fitScore: number;
   hardGaps: string[];

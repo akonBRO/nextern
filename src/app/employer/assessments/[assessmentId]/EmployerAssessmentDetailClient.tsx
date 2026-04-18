@@ -1,7 +1,8 @@
 'use client';
-
 import { useMemo, useState } from 'react';
 import { formatAssessmentAssignmentStatus } from '@/lib/hiring-suite-shared';
+import ApplicantActions from '@/app/employer/jobs/[jobId]/applicants/ApplicantActions';
+import { formatDhakaDateTime } from '@/lib/datetime';
 import { CheckCircle2, Loader2, Save } from 'lucide-react';
 
 type AssessmentData = {
@@ -31,6 +32,7 @@ type AssignmentData = {
     department: string;
   } | null;
   application?: {
+    _id: string;
     status: string;
     fitScore?: number | null;
   } | null;
@@ -75,17 +77,6 @@ const fieldStyle = {
   outline: 'none',
 } as const;
 
-function formatDateTime(value?: string | null) {
-  if (!value) return 'Not submitted';
-  return new Intl.DateTimeFormat('en-BD', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(value));
-}
-
 export default function EmployerAssessmentDetailClient({ assessment, assignments }: Props) {
   const [gradingState, setGradingState] = useState<
     Record<string, Record<number, { marksAwarded: number; evaluationNotes: string }>>
@@ -101,13 +92,13 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
   );
 
   async function saveManualGrade(assignmentId: string) {
-    const adjustments = Object.entries(gradingState[assignmentId] ?? {})
-      .map(([questionIndex, value]) => ({
+    const adjustments = Object.entries(gradingState[assignmentId] ?? {}).map(
+      ([questionIndex, value]) => ({
         questionIndex: Number(questionIndex),
         marksAwarded: Number(value.marksAwarded) || 0,
         evaluationNotes: value.evaluationNotes,
-      }))
-      .filter((item) => item.marksAwarded > 0 || item.evaluationNotes);
+      })
+    );
 
     setGradingId(assignmentId);
     setNotice('');
@@ -243,15 +234,42 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
             </div>
 
             <div style={{ fontSize: 12, color: '#64748B' }}>
-              Submitted: {formatDateTime(assignment.submission?.submittedAt)}
+              Submitted: {formatDhakaDateTime(assignment.submission?.submittedAt, 'Not submitted')}
             </div>
+
+            {assignment.application?._id ? (
+              <div
+                style={{
+                  borderRadius: 14,
+                  border: '1px solid #E2E8F0',
+                  background: '#F8FAFC',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ display: 'grid', gap: 4 }}>
+                  <div style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>
+                    Candidate decision
+                  </div>
+                  <div style={{ fontSize: 13, color: '#0F172A', fontWeight: 800 }}>
+                    Update the pipeline status directly while you review this submission.
+                  </div>
+                </div>
+                <ApplicantActions
+                  appId={assignment.application._id}
+                  currentStatus={assignment.application.status}
+                />
+              </div>
+            ) : null}
 
             {(assignment.submission?.answers ?? []).map((answer) => {
               const question = assessment.questions.find(
                 (item) => item.index === answer.questionIndex
               );
-              const requiresManual =
-                question && ['short_answer', 'case_study'].includes(question.type);
               const currentGrade =
                 gradingState[assignment._id]?.[answer.questionIndex] ??
                 ({
@@ -294,6 +312,28 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                       Similarity flag: {answer.plagiarismScore}%
                     </div>
                   ) : null}
+                  {typeof answer.objectiveMarksAwarded === 'number' ? (
+                    <div style={{ fontSize: 12, color: '#64748B' }}>
+                      Auto score: {answer.objectiveMarksAwarded}
+                      {question ? ` / ${question.marks}` : ''}
+                    </div>
+                  ) : null}
+                  {answer.evaluationNotes ? (
+                    <div
+                      style={{
+                        borderRadius: 12,
+                        border: '1px solid #E2E8F0',
+                        background: '#F8FAFC',
+                        padding: '10px 12px',
+                        fontSize: 12,
+                        color: '#475569',
+                        lineHeight: 1.7,
+                        whiteSpace: 'pre-wrap',
+                      }}
+                    >
+                      {answer.evaluationNotes}
+                    </div>
+                  ) : null}
                   {(answer.uploadedFiles ?? []).length > 0 ? (
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {answer.uploadedFiles?.map((file) => (
@@ -321,56 +361,50 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                       ))}
                     </div>
                   ) : null}
-                  {requiresManual ? (
-                    <div className="manual-grade-grid">
-                      <input
-                        type="number"
-                        min={0}
-                        max={question?.marks ?? 100}
-                        value={currentGrade.marksAwarded}
-                        onChange={(event) =>
-                          setGradingState((current) => ({
-                            ...current,
-                            [assignment._id]: {
-                              ...(current[assignment._id] ?? {}),
-                              [answer.questionIndex]: {
-                                ...currentGrade,
-                                marksAwarded: Number(event.target.value) || 0,
-                              },
+                  <div className="manual-grade-grid">
+                    <input
+                      type="number"
+                      min={0}
+                      max={question?.marks ?? 100}
+                      value={currentGrade.marksAwarded}
+                      onChange={(event) =>
+                        setGradingState((current) => ({
+                          ...current,
+                          [assignment._id]: {
+                            ...(current[assignment._id] ?? {}),
+                            [answer.questionIndex]: {
+                              ...currentGrade,
+                              marksAwarded: Number(event.target.value) || 0,
                             },
-                          }))
-                        }
-                        style={fieldStyle}
-                        placeholder="Manual marks"
-                      />
-                      <input
-                        value={currentGrade.evaluationNotes}
-                        onChange={(event) =>
-                          setGradingState((current) => ({
-                            ...current,
-                            [assignment._id]: {
-                              ...(current[assignment._id] ?? {}),
-                              [answer.questionIndex]: {
-                                ...currentGrade,
-                                evaluationNotes: event.target.value,
-                              },
+                          },
+                        }))
+                      }
+                      style={fieldStyle}
+                      placeholder="Additional manual marks"
+                    />
+                    <input
+                      value={currentGrade.evaluationNotes}
+                      onChange={(event) =>
+                        setGradingState((current) => ({
+                          ...current,
+                          [assignment._id]: {
+                            ...(current[assignment._id] ?? {}),
+                            [answer.questionIndex]: {
+                              ...currentGrade,
+                              evaluationNotes: event.target.value,
                             },
-                          }))
-                        }
-                        style={fieldStyle}
-                        placeholder="Evaluator note"
-                      />
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: 12, color: '#64748B' }}>
-                      Auto score: {answer.objectiveMarksAwarded ?? 0}
-                    </div>
-                  )}
+                          },
+                        }))
+                      }
+                      style={fieldStyle}
+                      placeholder="Evaluator note"
+                    />
+                  </div>
                 </div>
               );
             })}
 
-            {assignment.needsManualReview ? (
+            {assignment.submission ? (
               <button
                 type="button"
                 onClick={() => saveManualGrade(assignment._id)}
@@ -395,7 +429,7 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                 ) : (
                   <Save size={14} />
                 )}
-                {gradingId === assignment._id ? 'Saving...' : 'Save manual grading'}
+                {gradingId === assignment._id ? 'Saving...' : 'Save grading and notes'}
               </button>
             ) : (
               <div
@@ -403,13 +437,13 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 8,
-                  color: '#065F46',
+                  color: '#64748B',
                   fontSize: 12,
                   fontWeight: 800,
                 }}
               >
                 <CheckCircle2 size={14} />
-                Manual grading complete
+                Waiting for submission
               </div>
             )}
           </div>

@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { CreateAssessmentSchema } from '@/lib/validations';
-import { createAssessment, PremiumAccessError } from '@/lib/hiring-suite';
+import {
+  createAssessment,
+  PremiumAccessError,
+  syncAssessmentAssignmentStates,
+} from '@/lib/hiring-suite';
 import { Assessment } from '@/models/Assessment';
 import { AssessmentAssignment } from '@/models/AssessmentAssignment';
 
@@ -19,6 +23,20 @@ export async function GET(req: NextRequest) {
     if (session.user.role === 'employer') {
       const query: Record<string, unknown> = { employerId: session.user.id };
       if (jobId) query.jobId = jobId;
+
+      const pendingAssignmentIds = await AssessmentAssignment.find({
+        employerId: session.user.id,
+        ...(jobId ? { jobId } : {}),
+        status: { $in: ['assigned', 'started'] },
+      })
+        .select('_id')
+        .lean();
+
+      if (pendingAssignmentIds.length > 0) {
+        await syncAssessmentAssignmentStates(
+          pendingAssignmentIds.map((assignment) => assignment._id.toString())
+        );
+      }
 
       const assessments = await Assessment.find(query).sort({ createdAt: -1 }).lean();
       const assessmentIds = assessments.map((item) => item._id);
@@ -66,6 +84,19 @@ export async function GET(req: NextRequest) {
     }
 
     if (session.user.role === 'student') {
+      const pendingAssignmentIds = await AssessmentAssignment.find({
+        studentId: session.user.id,
+        status: { $in: ['assigned', 'started'] },
+      })
+        .select('_id')
+        .lean();
+
+      if (pendingAssignmentIds.length > 0) {
+        await syncAssessmentAssignmentStates(
+          pendingAssignmentIds.map((assignment) => assignment._id.toString())
+        );
+      }
+
       const assignments = await AssessmentAssignment.find({ studentId: session.user.id })
         .populate('assessmentId', 'title durationMinutes dueAt')
         .populate('jobId', 'title companyName')

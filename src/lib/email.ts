@@ -3,6 +3,7 @@
 
 import nodemailer from 'nodemailer';
 import { getLoginUrl } from '@/lib/app-url';
+import { formatDhakaDateTime } from '@/lib/datetime';
 
 interface SendEmailParams {
   to: string;
@@ -507,6 +508,138 @@ export function applicationStatusEmailTemplate(params: {
   );
 
   return { subject: cfg.subject, html };
+}
+
+export function assessmentAssignedEmailTemplate(params: {
+  studentName: string;
+  jobTitle: string;
+  companyName: string;
+  assessmentTitle: string;
+  totalMarks?: number | null;
+  durationMinutes?: number | null;
+  dueAt?: Date | string | null;
+  assessmentUrl: string;
+}): { subject: string; html: string } {
+  const {
+    studentName,
+    jobTitle,
+    companyName,
+    assessmentTitle,
+    totalMarks,
+    durationMinutes,
+    dueAt,
+    assessmentUrl,
+  } = params;
+
+  const dueLabel = formatDhakaDateTime(dueAt, 'No deadline set');
+
+  const html = emailWrapper(
+    `
+    <tr>
+      <td style="padding:36px 40px 0;">
+        <span style="display:inline-block;
+                     background:#EFF6FF;
+                     color:#1D4ED8;
+                     font-size:10px;font-weight:700;
+                     letter-spacing:1.4px;text-transform:uppercase;
+                     padding:5px 13px;border-radius:6px;
+                     border:1px solid #93C5FD;">
+          Assessment Assigned
+        </span>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:14px 40px 0;">
+        <p style="margin:0 0 6px;color:#64748B;font-size:13px;font-weight:500;">
+          Dear ${studentName},
+        </p>
+        <h1 style="margin:0;color:#0F172A;font-size:26px;font-weight:800;
+                   letter-spacing:-0.4px;line-height:1.25;">
+          Your assessment is ready
+        </h1>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:12px 40px 0;">
+        <p style="margin:0;color:#374151;font-size:14px;line-height:1.85;">
+          ${companyName} has assigned you an assessment for <strong>${jobTitle}</strong>.
+          Please review the instructions carefully and complete it before the due time.
+        </p>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:20px 40px 0;">
+        <div style="height:1px;background:#E2E8F0;"></div>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:20px 40px 0;">
+        ${infoTable([
+          { label: 'Assessment', value: assessmentTitle },
+          { label: 'Position', value: jobTitle },
+          { label: 'Organisation', value: companyName },
+          { label: 'Due date and time', value: dueLabel },
+          { label: 'Total marks', value: `${totalMarks ?? 'N/A'}` },
+          {
+            label: 'Duration',
+            value:
+              typeof durationMinutes === 'number' ? `${durationMinutes} minutes` : 'Not specified',
+          },
+        ])}
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:0 40px 0;">
+        <p style="margin:0 0 14px;color:#374151;font-size:14px;line-height:1.85;">
+          This assessment is part of the hiring evaluation for this role. If the test has a fixed
+          duration, the timer will start when you begin and will continue counting even if you leave
+          the page and return later.
+        </p>
+        <p style="margin:0;color:#374151;font-size:14px;line-height:1.85;">
+          Make sure you start only when you are ready, and keep enough uninterrupted time to finish
+          the attempt before the deadline and timer limit.
+        </p>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:0 40px 0;">
+        ${calloutBox(
+          `Action required: open your Nextern assessment workspace and submit your answers before ${dueLabel}.`,
+          '#EFF6FF',
+          '#3B82F6',
+          '#1E3A8A'
+        )}
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:0 40px 0;">
+        <p style="margin:0;color:#64748B;font-size:13px;line-height:1.8;">
+          You can open the assessment directly from your Nextern dashboard and review any employer
+          instructions there.
+        </p>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:4px 40px 40px;">
+        ${ctaButton('Open My Assessment', assessmentUrl, '#2563EB')}
+      </td>
+    </tr>
+  `,
+    '#3B82F6'
+  );
+
+  return {
+    subject: `Assessment assigned — ${jobTitle} at ${companyName}`,
+    html,
+  };
 }
 
 // ── Deadline reminder ──────────────────────────────────────────────────────
