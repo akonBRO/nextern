@@ -350,7 +350,7 @@ export default async function DeptDashboard() {
           <CalendarBoard
             events={calendarEvents}
             isCalendarConnected={deptHead?.googleCalendarConnected ?? false}
-            boardTitle="Department Calendar"
+            boardTitle="Calendar"
             boardSubtitle="Keep only your hosted department sessions and registration cutoffs on one board."
             fullCalendarHref="/dept/calendar"
             manageCalendarHref="/dept/profile#calendar"
