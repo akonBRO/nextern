@@ -9,6 +9,7 @@ import ApplicantActions from './ApplicantActions';
 import HiringSuiteBatchActions from './HiringSuiteBatchActions';
 import { formatDhakaDateTime } from '@/lib/datetime';
 import {
+  CalendarClock,
   ChevronDown,
   ChevronUp,
   Users,
@@ -48,6 +49,13 @@ type AppData = {
     submittedAt?: string | null;
     score?: number | null;
     passed?: boolean | null;
+  } | null;
+  interview?: {
+    sessionId: string;
+    scheduledAt?: string | null;
+    completedAt?: string | null;
+    status?: string | null;
+    score?: number | null;
   } | null;
 };
 
@@ -427,6 +435,8 @@ function ApplicantCard({
   const statusCfg = STATUS_CFG[app.status] ?? STATUS_CFG['applied'];
   const hasAssessment = Boolean(app.assessment?.assignmentId || app.assessment?.assessmentId);
   const assessmentSubmitted = Boolean(app.assessment?.submittedAt);
+  const hasInterview = Boolean(app.interview?.sessionId);
+  const interviewCompleted = app.interview?.status === 'completed';
   const initials = app.student.name
     .split(' ')
     .map((w) => w[0])
@@ -605,6 +615,59 @@ function ApplicantCard({
             </div>
           </div>
         ) : null}
+        {hasInterview ? (
+          <div
+            style={{
+              marginTop: 10,
+              borderRadius: 14,
+              border: `1px solid ${interviewCompleted ? '#A7F3D0' : '#DDD6FE'}`,
+              background: interviewCompleted ? '#ECFDF5' : '#F5F3FF',
+              padding: '10px 12px',
+              display: 'grid',
+              gap: 4,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+                flexWrap: 'wrap',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: interviewCompleted ? '#065F46' : '#6D28D9',
+                }}
+              >
+                {interviewCompleted ? 'Interview completed' : 'Interview scheduled'}
+              </span>
+              {typeof app.interview?.score === 'number' ? (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: interviewCompleted ? '#065F46' : '#6D28D9',
+                  }}
+                >
+                  Score {app.interview.score}
+                </span>
+              ) : null}
+            </div>
+            <div style={{ fontSize: 11, color: '#475569', lineHeight: 1.5 }}>
+              {interviewCompleted
+                ? app.interview?.completedAt
+                  ? `Completed ${formatMetaDate(app.interview.completedAt)}`
+                  : 'Completed from the interview workspace.'
+                : app.interview?.scheduledAt
+                  ? `Scheduled ${formatMetaDate(app.interview.scheduledAt)}`
+                  : 'Scheduled from the hiring suite.'}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* Fit score ring */}
@@ -702,6 +765,28 @@ function ApplicantCard({
           >
             <Sparkles size={11} />
             {assessmentSubmitted ? 'Review assessment' : 'Open assessment'}
+          </Link>
+        ) : null}
+        {app.interview?.sessionId ? (
+          <Link
+            href={`/employer/interviews/${app.interview.sessionId}`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 5,
+              background: interviewCompleted ? '#ECFDF5' : '#F5F3FF',
+              color: interviewCompleted ? '#065F46' : '#6D28D9',
+              padding: '7px 13px',
+              borderRadius: 9,
+              fontSize: 11,
+              fontWeight: 700,
+              textDecoration: 'none',
+              border: `1px solid ${interviewCompleted ? '#A7F3D0' : '#DDD6FE'}`,
+            }}
+          >
+            <CalendarClock size={11} />
+            {interviewCompleted ? 'Review interview' : 'Open interview'}
           </Link>
         ) : null}
         <ApplicantActions

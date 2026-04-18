@@ -8,6 +8,7 @@ import { connectDB } from '@/lib/db';
 import { Job } from '@/models/Job';
 import { Application } from '@/models/Application';
 import { AssessmentAssignment } from '@/models/AssessmentAssignment';
+import { InterviewSession } from '@/models/InterviewSession';
 import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { User } from '@/models/User';
@@ -52,7 +53,7 @@ async function getApplicantsData(jobId: string, employerId: string) {
     );
   }
 
-  const [employer, job, rawApplications, unreadNotifs, unreadMsgs] = await Promise.all([
+  const [employer, job, rawApplications, interviews, unreadNotifs, unreadMsgs] = await Promise.all([
     User.findById(oid).select('name email image companyName').lean(),
     Job.findOne({ _id: jid, employerId: oid }).lean(),
     Application.find({ jobId: jid, employerId: oid, isEventRegistration: false })
@@ -61,6 +62,9 @@ async function getApplicantsData(jobId: string, employerId: string) {
         'name email university department cgpa skills opportunityScore resumeUrl generatedResumeUrl image yearOfStudy'
       )
       .sort({ fitScore: -1, appliedAt: -1 })
+      .lean(),
+    InterviewSession.find({ employerId: oid, jobId: jid })
+      .select('applicationId status scheduledAt completedAt')
       .lean(),
     Notification.countDocuments({ userId: oid, isRead: false }),
     Message.countDocuments({ receiverId: oid, isRead: false }),
@@ -145,6 +149,7 @@ async function getApplicantsData(jobId: string, employerId: string) {
     employer,
     job,
     applications,
+    interviews,
     stats,
     universityStats,
     chrome: { unreadNotifications: unreadNotifs, unreadMessages: unreadMsgs },
@@ -163,10 +168,14 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
   ]);
   if (!data) redirect('/employer/jobs');
 
-  const { employer, job, applications, stats, universityStats, chrome } = data;
+  const { employer, job, applications, interviews, stats, universityStats, chrome } = data;
+  const interviewByApplicationId = new Map(
+    interviews.map((interview) => [interview.applicationId.toString(), interview])
+  );
 
   // Serialize applications for client component
   const serializedApps = applications.map((app) => {
+    const linkedInterview = interviewByApplicationId.get(app._id.toString());
     const student = app.studentId as {
       _id: mongoose.Types.ObjectId;
       name?: string;
@@ -206,6 +215,20 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
               submittedAt: app.assessmentSubmittedAt?.toISOString() ?? null,
               score: app.assessmentScore ?? null,
               passed: typeof app.assessmentPassed === 'boolean' ? app.assessmentPassed : null,
+            }
+          : null,
+      interview:
+        app.interviewSessionId || linkedInterview
+          ? {
+              sessionId:
+                app.interviewSessionId?.toString() ?? linkedInterview?._id.toString() ?? '',
+              scheduledAt:
+                linkedInterview?.scheduledAt?.toISOString() ??
+                app.interviewScheduledAt?.toISOString() ??
+                null,
+              completedAt: linkedInterview?.completedAt?.toISOString() ?? null,
+              status: linkedInterview?.status ?? (app.interviewSessionId ? 'scheduled' : null),
+              score: app.interviewScore ?? null,
             }
           : null,
     };

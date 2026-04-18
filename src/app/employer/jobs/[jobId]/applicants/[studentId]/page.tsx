@@ -1524,7 +1524,8 @@ export default async function EmployerApplicantDetailPage({
               )}
 
               {/* Assessment */}
-              {(application.assessmentScore !== undefined ||
+              {(application.assessmentAssignmentId ||
+                application.assessmentScore !== undefined ||
                 application.assessmentPassed !== undefined) && (
                 <div
                   style={{
@@ -1562,6 +1563,24 @@ export default async function EmployerApplicantDetailPage({
                       Assessment Results
                     </h2>
                   </div>
+                  {application.assessmentAssignmentId ? (
+                    <div style={{ marginBottom: 16 }}>
+                      <Link
+                        href={`/employer/assessments/${application.assessmentId?.toString() ?? ''}`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 7,
+                          color: '#0369A1',
+                          fontSize: 13,
+                          fontWeight: 800,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        <ClipboardList size={14} /> Open assessment review
+                      </Link>
+                    </div>
+                  ) : null}
                   <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
                     {application.assessmentScore !== undefined && (
                       <div
@@ -1621,7 +1640,7 @@ export default async function EmployerApplicantDetailPage({
               )}
 
               {/* Interview */}
-              {application.interviewScheduledAt && (
+              {(application.interviewScheduledAt || application.interviewSessionId) && (
                 <div
                   style={{
                     background: '#fff',
@@ -1661,17 +1680,38 @@ export default async function EmployerApplicantDetailPage({
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <Clock size={14} color="#7C3AED" />
                     <span style={{ fontSize: 14, color: '#5B21B6', fontWeight: 600 }}>
-                      Scheduled for{' '}
-                      {new Date(application.interviewScheduledAt).toLocaleString('en-BD', {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {application.interviewScheduledAt
+                        ? `Scheduled for ${new Date(
+                            application.interviewScheduledAt
+                          ).toLocaleString('en-BD', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}`
+                        : 'Interview has been assigned from the hiring suite.'}
                     </span>
                   </div>
+                  {application.interviewSessionId ? (
+                    <div style={{ marginTop: 14 }}>
+                      <Link
+                        href={`/employer/interviews/${application.interviewSessionId.toString()}`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 7,
+                          color: '#6D28D9',
+                          fontSize: 13,
+                          fontWeight: 800,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        <Calendar size={14} /> Open interview workspace
+                      </Link>
+                    </div>
+                  ) : null}
                 </div>
               )}
 

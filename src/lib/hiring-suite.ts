@@ -45,6 +45,16 @@ export class PremiumAccessError extends Error {
   }
 }
 
+export class InterviewAccessError extends Error {
+  status: number;
+
+  constructor(message: string, status = 400) {
+    super(message);
+    this.name = 'InterviewAccessError';
+    this.status = status;
+  }
+}
+
 function asObjectId(value: string | mongoose.Types.ObjectId) {
   return typeof value === 'string' ? new mongoose.Types.ObjectId(value) : value;
 }
@@ -1380,6 +1390,18 @@ export async function issueInterviewJoinToken(input: {
     (input.role === 'employer' && interview.employerId.toString() !== input.userId)
   ) {
     throw new Error('You do not have access to this interview.');
+  }
+
+  if (interview.status === 'completed') {
+    throw new InterviewAccessError(
+      'This interview has already been completed. The room is closed for both participants.'
+    );
+  }
+
+  if (interview.status === 'cancelled') {
+    throw new InterviewAccessError(
+      'This interview has been cancelled, so the room is unavailable.'
+    );
   }
 
   if (input.role === 'student') {

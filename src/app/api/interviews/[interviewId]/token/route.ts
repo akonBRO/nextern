@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { issueInterviewJoinToken, PremiumAccessError } from '@/lib/hiring-suite';
+import {
+  issueInterviewJoinToken,
+  InterviewAccessError,
+  PremiumAccessError,
+} from '@/lib/hiring-suite';
 
 type Params = { params: Promise<{ interviewId: string }> };
 
@@ -24,7 +28,12 @@ export async function POST(_req: NextRequest, { params }: Params) {
     console.error('[INTERVIEW TOKEN ERROR]', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to issue Agora token.' },
-      { status: error instanceof PremiumAccessError ? error.status : 500 }
+      {
+        status:
+          error instanceof PremiumAccessError || error instanceof InterviewAccessError
+            ? error.status
+            : 500,
+      }
     );
   }
 }

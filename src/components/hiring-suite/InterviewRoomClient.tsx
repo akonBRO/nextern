@@ -8,6 +8,7 @@ import type {
   ILocalVideoTrack,
   IMicrophoneAudioTrack,
 } from 'agora-rtc-sdk-ng';
+import { formatDhakaDateTime } from '@/lib/datetime';
 import { useUploadThing } from '@/lib/uploadthing';
 import { formatInterviewRecommendation } from '@/lib/hiring-suite-shared';
 import {
@@ -58,13 +59,7 @@ type Props = {
 };
 
 function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat('en-BD', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(value));
+  return formatDhakaDateTime(value, 'Not scheduled');
 }
 
 const fieldStyle = {
@@ -109,12 +104,28 @@ export default function InterviewRoomClient({ role, interview }: Props) {
   const remoteUserMapRef = useRef<Map<string, IAgoraRTCRemoteUser>>(new Map());
   const localVideoRef = useRef<HTMLDivElement>(null);
   const { startUpload, isUploading } = useUploadThing('interviewRecordingUploader');
+  const isRoomClosed =
+    currentInterview.status === 'completed' || currentInterview.status === 'cancelled';
+  const roomClosedMessage =
+    currentInterview.status === 'completed'
+      ? 'This interview has been marked as completed. The room can no longer be joined.'
+      : currentInterview.status === 'cancelled'
+        ? 'This interview has been cancelled. The room is no longer available.'
+        : '';
 
   useEffect(() => {
     return () => {
       leaveRoom().catch(() => {});
     };
   }, []);
+
+  useEffect(() => {
+    if (!joined || !isRoomClosed) return;
+
+    leaveRoom()
+      .then(() => setNotice(roomClosedMessage || 'This interview room is now closed.'))
+      .catch(() => {});
+  }, [isRoomClosed, joined, roomClosedMessage]);
 
   async function updateInterview(payload: Record<string, unknown>) {
     const res = await fetch(`/api/interviews/${currentInterview._id}`, {
@@ -133,6 +144,12 @@ export default function InterviewRoomClient({ role, interview }: Props) {
   }
 
   async function joinRoom() {
+    if (isRoomClosed) {
+      setError(roomClosedMessage);
+      setNotice('');
+      return;
+    }
+
     setJoining(true);
     setError('');
     setNotice('');
@@ -338,6 +355,23 @@ export default function InterviewRoomClient({ role, interview }: Props) {
         </div>
       ) : null}
 
+      {isRoomClosed ? (
+        <div
+          style={{
+            borderRadius: 16,
+            padding: '12px 14px',
+            background: currentInterview.status === 'completed' ? '#F8FAFC' : '#FEF2F2',
+            color: currentInterview.status === 'completed' ? '#334155' : '#991B1B',
+            border: `1px solid ${currentInterview.status === 'completed' ? '#CBD5E1' : '#FECACA'}`,
+            fontSize: 13,
+            fontWeight: 700,
+            lineHeight: 1.7,
+          }}
+        >
+          {roomClosedMessage}
+        </div>
+      ) : null}
+
       <div className="interview-room-grid">
         <div
           style={{
@@ -364,27 +398,51 @@ export default function InterviewRoomClient({ role, interview }: Props) {
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {!joined ? (
-                <button
-                  type="button"
-                  onClick={joinRoom}
-                  disabled={joining}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: 12,
-                    padding: '10px 14px',
-                    fontSize: 12,
-                    fontWeight: 800,
-                    cursor: joining ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  {joining ? <Loader2 size={14} className="spin" /> : <Video size={14} />}
-                  {joining ? 'Joining...' : 'Join room'}
-                </button>
+                isRoomClosed ? (
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      background: currentInterview.status === 'completed' ? '#F8FAFC' : '#FEF2F2',
+                      color: currentInterview.status === 'completed' ? '#334155' : '#991B1B',
+                      border: `1px solid ${
+                        currentInterview.status === 'completed' ? '#CBD5E1' : '#FECACA'
+                      }`,
+                      borderRadius: 12,
+                      padding: '10px 14px',
+                      fontSize: 12,
+                      fontWeight: 800,
+                    }}
+                  >
+                    <CheckCircle2 size={14} />
+                    {currentInterview.status === 'completed'
+                      ? 'Interview completed'
+                      : 'Interview cancelled'}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={joinRoom}
+                    disabled={joining}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: 12,
+                      padding: '10px 14px',
+                      fontSize: 12,
+                      fontWeight: 800,
+                      cursor: joining ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {joining ? <Loader2 size={14} className="spin" /> : <Video size={14} />}
+                    {joining ? 'Joining...' : 'Join room'}
+                  </button>
+                )
               ) : (
                 <>
                   <button
@@ -559,7 +617,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
               {currentInterview.description || 'No extra description was added for this session.'}
             </div>
             <div style={{ display: 'grid', gap: 6, fontSize: 12, color: '#475569' }}>
-              <span>Status: {currentInterview.status}</span>
+              <span>Status: {currentInterview.status.replace('_', ' ')}</span>
               <span>Mode: {currentInterview.mode === 'panel' ? 'Panel' : 'One-on-one'}</span>
               <span>Recording consent: {currentInterview.consentStatus}</span>
               <span>Recording status: {currentInterview.recordingStatus}</span>
@@ -897,11 +955,28 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                       padding: '10px 14px',
                       fontSize: 12,
                       fontWeight: 800,
-                      cursor: 'pointer',
+                      cursor:
+                        currentInterview.status === 'completed' ||
+                        currentInterview.status === 'cancelled'
+                          ? 'not-allowed'
+                          : 'pointer',
+                      opacity:
+                        currentInterview.status === 'completed' ||
+                        currentInterview.status === 'cancelled'
+                          ? 0.6
+                          : 1,
                     }}
+                    disabled={
+                      currentInterview.status === 'completed' ||
+                      currentInterview.status === 'cancelled'
+                    }
                   >
                     <CheckCircle2 size={14} />
-                    Mark completed
+                    {currentInterview.status === 'completed'
+                      ? 'Completed'
+                      : currentInterview.status === 'cancelled'
+                        ? 'Interview cancelled'
+                        : 'Mark completed'}
                   </button>
                 </div>
                 {currentInterview.recordingAsset ? (
