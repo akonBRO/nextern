@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { CodeExecutionConfigError, CodeExecutionUpstreamError } from '@/lib/judge0';
 import { AssessmentRunSchema } from '@/lib/validations';
 import { PremiumAccessError, runAssessmentCodingQuestion } from '@/lib/hiring-suite';
 
@@ -35,7 +36,14 @@ export async function POST(req: NextRequest, { params }: Params) {
     console.error('[ASSESSMENT RUN ERROR]', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to run code.' },
-      { status: error instanceof PremiumAccessError ? error.status : 500 }
+      {
+        status:
+          error instanceof PremiumAccessError ||
+          error instanceof CodeExecutionConfigError ||
+          error instanceof CodeExecutionUpstreamError
+            ? error.status
+            : 500,
+      }
     );
   }
 }

@@ -9,6 +9,7 @@ import {
   type AssessmentQuestionType,
   type HiringAsset,
 } from '@/lib/hiring-suite-shared';
+import { formatDhakaDateTime } from '@/lib/datetime';
 import {
   CalendarClock,
   CheckCircle2,
@@ -16,6 +17,7 @@ import {
   Crown,
   FileText,
   Loader2,
+  PencilLine,
   Plus,
   Sparkles,
   Trash2,
@@ -64,6 +66,17 @@ type BuilderQuestion = AssessmentQuestionDraft & {
   acceptedAnswersText: string;
 };
 
+type AssessmentDetailData = {
+  _id: string;
+  jobId?: string | { _id?: string } | null;
+  title: string;
+  instructions?: string | null;
+  durationMinutes: number;
+  passingMarks: number;
+  allowLateSubmission?: boolean;
+  questions: AssessmentQuestionDraft[];
+};
+
 type ValidationIssue = {
   path?: string;
   message?: string;
@@ -89,6 +102,45 @@ function createQuestion(type: AssessmentQuestionType, index: number): BuilderQue
   };
 }
 
+function resolveAssessmentJobId(value: AssessmentDetailData['jobId']) {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object' && typeof value._id === 'string') return value._id;
+  return '';
+}
+
+function toBuilderQuestion(question: AssessmentQuestionDraft, index: number): BuilderQuestion {
+  const type = question.type;
+  const normalizedOptions = type === 'mcq' ? [...(question.options ?? [])] : [];
+  while (normalizedOptions.length < 4) {
+    normalizedOptions.push('');
+  }
+
+  return {
+    ...createQuestion(type, index),
+    ...question,
+    index,
+    options: type === 'mcq' ? normalizedOptions : [],
+    correctOptionIndex: type === 'mcq' ? (question.correctOptionIndex ?? 0) : undefined,
+    acceptedAnswers: type === 'short_answer' ? (question.acceptedAnswers ?? []) : undefined,
+    acceptedAnswersText: type === 'short_answer' ? (question.acceptedAnswers ?? []).join('\n') : '',
+    enablePlagiarismCheck:
+      type === 'short_answer' || type === 'case_study'
+        ? Boolean(question.enablePlagiarismCheck)
+        : undefined,
+    language: type === 'coding' ? (question.language ?? 'javascript') : undefined,
+    starterCode: type === 'coding' ? (question.starterCode ?? '') : undefined,
+    testCases:
+      type === 'coding'
+        ? question.testCases?.length
+          ? question.testCases
+          : [{ input: '', expectedOutput: '', isSample: true }]
+        : undefined,
+    rubric: type === 'case_study' ? (question.rubric ?? '') : undefined,
+    attachments: question.attachments ?? [],
+    maxWords: type === 'case_study' ? (question.maxWords ?? 300) : undefined,
+  };
+}
+
 function deriveAssessmentType(questions: BuilderQuestion[]) {
   const types = Array.from(new Set(questions.map((question) => question.type)));
   return types.length === 1 ? types[0] : 'mixed';
@@ -99,17 +151,6 @@ function formatAssessmentType(value: string) {
     .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
-}
-
-function formatDateTime(value?: string | null) {
-  if (!value) return 'No deadline';
-  return new Intl.DateTimeFormat('en-BD', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(value));
 }
 
 function formatValidationPath(path?: string) {
@@ -179,12 +220,16 @@ export default function EmployerAssessmentsClient({
   const [passingMarks, setPassingMarks] = useState('30');
   const [dueAt, setDueAt] = useState('');
   const [allowLateSubmission, setAllowLateSubmission] = useState(false);
-  const [isTimedAutoSubmit, setIsTimedAutoSubmit] = useState(true);
+  const isTimedAutoSubmit = true;
   const [questions, setQuestions] = useState<BuilderQuestion[]>([createQuestion('mcq', 1)]);
   const [notice, setNotice] = useState<{ tone: 'error' | 'success'; text: string } | null>(null);
+  const [editingAssessmentId, setEditingAssessmentId] = useState('');
   const [assigningId, setAssigningId] = useState('');
+  const [loadingAssessmentId, setLoadingAssessmentId] = useState('');
+  const [deletingAssessmentId, setDeletingAssessmentId] = useState('');
   const [isPending, startTransition] = useTransition();
   const { startUpload, isUploading } = useUploadThing('assessmentAttachmentUploader');
+  const requiresDispatchDueAt = initialApplicationIds.length > 0 && !editingAssessmentId;
   const totalMarks = useMemo(
     () => questions.reduce((sum, question) => sum + Math.max(1, Number(question.marks) || 0), 0),
     [questions]
@@ -202,6 +247,38 @@ export default function EmployerAssessmentsClient({
 
   function addQuestion(type: AssessmentQuestionType) {
     setQuestions((current) => [...current, createQuestion(type, current.length + 1)]);
+  }
+
+  function resetBuilder(nextJobId?: string) {
+    if (typeof nextJobId === 'string') {
+      setSelectedJobId(nextJobId);
+    }
+    setEditingAssessmentId('');
+    setTitle('');
+    setInstructions('');
+    setDurationMinutes('45');
+    setPassingMarks('30');
+    setAllowLateSubmission(false);
+    setQuestions([createQuestion('mcq', 1)]);
+  }
+
+  function hydrateBuilder(assessment: AssessmentDetailData) {
+    const assessmentJobId = resolveAssessmentJobId(assessment.jobId);
+    if (assessmentJobId) {
+      setSelectedJobId(assessmentJobId);
+    }
+    setEditingAssessmentId(assessment._id);
+    setTitle(assessment.title ?? '');
+    setInstructions(assessment.instructions ?? '');
+    setDurationMinutes(String(assessment.durationMinutes ?? 45));
+    setPassingMarks(String(assessment.passingMarks ?? 0));
+    setAllowLateSubmission(Boolean(assessment.allowLateSubmission));
+    setQuestions(
+      assessment.questions.length > 0
+        ? assessment.questions.map((question, index) => toBuilderQuestion(question, index + 1))
+        : [createQuestion('mcq', 1)]
+    );
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function removeQuestion(index: number) {
@@ -232,6 +309,9 @@ export default function EmployerAssessmentsClient({
   function validateBuilder() {
     if (!selectedJobId) return 'Choose a job before creating an assessment.';
     if (title.trim().length < 3) return 'Assessment title must be at least 3 characters.';
+    if (requiresDispatchDueAt && !dueAt) {
+      return 'Set the assessment due date and time from the dispatch panel before sending it.';
+    }
     if (!questions.length) return 'Add at least one question.';
 
     const invalidQuestion = questions.find((question) => {
@@ -298,7 +378,7 @@ export default function EmployerAssessmentsClient({
     });
   }
 
-  function handleCreateAssessment() {
+  function handleSaveAssessment() {
     const validationError = validateBuilder();
     if (validationError) {
       setNotice({ tone: 'error', text: validationError });
@@ -308,24 +388,32 @@ export default function EmployerAssessmentsClient({
     startTransition(async () => {
       setNotice(null);
       try {
-        const res = await fetch('/api/assessments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jobId: selectedJobId,
-            title: title.trim(),
-            type: deriveAssessmentType(questions),
-            questions: buildPayloadQuestions(),
-            totalMarks,
-            passingMarks: Math.max(1, Number(passingMarks) || 0),
-            durationMinutes: Math.max(10, Number(durationMinutes) || 45),
-            instructions: instructions.trim() || undefined,
-            isTimedAutoSubmit,
-            allowLateSubmission,
-            dueAt: dueAt ? new Date(dueAt).toISOString() : undefined,
-            applicationIds: initialApplicationIds.length ? initialApplicationIds : undefined,
-          }),
-        });
+        const isEditing = Boolean(editingAssessmentId);
+        const res = await fetch(
+          isEditing ? `/api/assessments/${editingAssessmentId}` : '/api/assessments',
+          {
+            method: isEditing ? 'PATCH' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jobId: selectedJobId,
+              title: title.trim(),
+              type: deriveAssessmentType(questions),
+              questions: buildPayloadQuestions(),
+              totalMarks,
+              passingMarks: Math.max(1, Number(passingMarks) || 0),
+              durationMinutes: Math.max(10, Number(durationMinutes) || 45),
+              instructions: instructions.trim() || undefined,
+              isTimedAutoSubmit,
+              allowLateSubmission,
+              dueAt:
+                !isEditing && initialApplicationIds.length > 0 && dueAt
+                  ? new Date(dueAt).toISOString()
+                  : undefined,
+              applicationIds:
+                !isEditing && initialApplicationIds.length ? initialApplicationIds : undefined,
+            }),
+          }
+        );
         const data = (await res.json()) as {
           error?: string;
           details?: Record<string, string[] | undefined>;
@@ -342,22 +430,119 @@ export default function EmployerAssessmentsClient({
 
         setNotice({
           tone: 'success',
-          text: initialApplicationIds.length
-            ? `Assessment created and sent to ${initialApplicationIds.length} selected candidate${initialApplicationIds.length > 1 ? 's' : ''}.`
-            : 'Assessment created successfully.',
+          text: isEditing
+            ? 'Assessment updated successfully.'
+            : initialApplicationIds.length
+              ? `Assessment created and sent to ${initialApplicationIds.length} selected candidate${initialApplicationIds.length > 1 ? 's' : ''}.`
+              : 'Assessment created successfully.',
         });
         window.setTimeout(() => window.location.reload(), 900);
       } catch {
         setNotice({
           tone: 'error',
-          text: 'Network error while creating the assessment. Please try again.',
+          text: `Network error while ${editingAssessmentId ? 'saving' : 'creating'} the assessment. Please try again.`,
         });
       }
     });
   }
 
+  async function handleEditAssessment(assessment: AssessmentListItem) {
+    if ((assessment.summary?.assigned ?? 0) > 0) {
+      setNotice({
+        tone: 'error',
+        text: 'This assessment has already been assigned, so it is locked. Create a new version if you need changes.',
+      });
+      return;
+    }
+
+    setLoadingAssessmentId(assessment._id);
+    setNotice(null);
+
+    try {
+      const res = await fetch(`/api/assessments/${assessment._id}`);
+      const data = (await res.json()) as { error?: string; assessment?: AssessmentDetailData };
+
+      if (!res.ok || !data.assessment) {
+        setNotice({
+          tone: 'error',
+          text: data.error ?? 'Unable to load this assessment for editing.',
+        });
+        return;
+      }
+
+      hydrateBuilder(data.assessment);
+      setNotice({
+        tone: 'success',
+        text: 'Draft assessment loaded into the builder. Save your changes when ready.',
+      });
+    } catch {
+      setNotice({
+        tone: 'error',
+        text: 'Network error while loading the assessment.',
+      });
+    } finally {
+      setLoadingAssessmentId('');
+    }
+  }
+
+  async function handleDeleteAssessment(assessment: AssessmentListItem) {
+    if ((assessment.summary?.assigned ?? 0) > 0) {
+      setNotice({
+        tone: 'error',
+        text: 'This assessment has already been assigned, so it cannot be deleted. Create a new version instead.',
+      });
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete "${assessment.title}"? This draft assessment will be removed permanently.`
+    );
+    if (!confirmed) return;
+
+    setDeletingAssessmentId(assessment._id);
+    setNotice(null);
+
+    try {
+      const res = await fetch(`/api/assessments/${assessment._id}`, {
+        method: 'DELETE',
+      });
+      const data = (await res.json()) as { error?: string };
+
+      if (!res.ok) {
+        setNotice({
+          tone: 'error',
+          text: data.error ?? 'Unable to delete this assessment.',
+        });
+        return;
+      }
+
+      setNotice({
+        tone: 'success',
+        text: 'Assessment deleted successfully.',
+      });
+      if (editingAssessmentId === assessment._id) {
+        resetBuilder(selectedJobId);
+      }
+      window.setTimeout(() => window.location.reload(), 700);
+    } catch {
+      setNotice({
+        tone: 'error',
+        text: 'Network error while deleting the assessment.',
+      });
+    } finally {
+      setDeletingAssessmentId('');
+    }
+  }
+
   async function handleAssignExisting(assessmentId: string) {
     if (!initialApplicationIds.length) return;
+    if (!dueAt) {
+      setNotice({
+        tone: 'error',
+        text: 'Set the assessment due date and time from the dispatch panel before sending it.',
+      });
+      return;
+    }
     setAssigningId(assessmentId);
     setNotice(null);
 
@@ -505,6 +690,25 @@ export default function EmployerAssessmentsClient({
             </div>
           ) : null}
 
+          {editingAssessmentId ? (
+            <div
+              style={{
+                borderRadius: 16,
+                padding: '12px 14px',
+                background: '#EFF6FF',
+                color: '#1D4ED8',
+                border: '1px solid #BFDBFE',
+                fontSize: 13,
+                fontWeight: 700,
+                lineHeight: 1.6,
+              }}
+            >
+              You are editing a draft assessment. Saving here updates the reusable library version
+              only. Candidate due dates are still controlled from the dispatch panel when you send
+              it.
+            </div>
+          ) : null}
+
           <div className="assessment-meta-grid">
             <label style={{ display: 'grid', gap: 7 }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: '#334155' }}>Job</span>
@@ -558,16 +762,6 @@ export default function EmployerAssessmentsClient({
               />
             </label>
 
-            <label style={{ display: 'grid', gap: 7 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#334155' }}>Due date</span>
-              <input
-                type="datetime-local"
-                value={dueAt}
-                onChange={(event) => setDueAt(event.target.value)}
-                style={fieldStyle}
-              />
-            </label>
-
             <div
               style={{
                 borderRadius: 16,
@@ -605,40 +799,44 @@ export default function EmployerAssessmentsClient({
           </label>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-            {[
-              {
-                checked: isTimedAutoSubmit,
-                label: 'Auto-submit when time ends',
-                onChange: () => setIsTimedAutoSubmit((value) => !value),
-              },
-              {
-                checked: allowLateSubmission,
-                label: 'Allow late submissions',
-                onChange: () => setAllowLateSubmission((value) => !value),
-              },
-            ].map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={item.onChange}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  borderRadius: 999,
-                  border: `1px solid ${item.checked ? '#BFDBFE' : '#E2E8F0'}`,
-                  background: item.checked ? '#EFF6FF' : '#FFFFFF',
-                  color: item.checked ? '#2563EB' : '#475569',
-                  padding: '9px 12px',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                <CheckCircle2 size={14} />
-                {item.label}
-              </button>
-            ))}
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                borderRadius: 999,
+                border: '1px solid #BFDBFE',
+                background: '#EFF6FF',
+                color: '#2563EB',
+                padding: '9px 12px',
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              <CheckCircle2 size={14} />
+              Timer auto-submits when time ends
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setAllowLateSubmission((value) => !value)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                borderRadius: 999,
+                border: `1px solid ${allowLateSubmission ? '#BFDBFE' : '#E2E8F0'}`,
+                background: allowLateSubmission ? '#EFF6FF' : '#FFFFFF',
+                color: allowLateSubmission ? '#2563EB' : '#475569',
+                padding: '9px 12px',
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              <CheckCircle2 size={14} />
+              Allow late submissions
+            </button>
           </div>
 
           <div className="assessment-question-toolbar">
@@ -1164,30 +1362,59 @@ export default function EmployerAssessmentsClient({
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button
               type="button"
-              onClick={handleCreateAssessment}
-              disabled={!isPremium || isPending}
+              onClick={handleSaveAssessment}
+              disabled={!isPremium || isPending || (requiresDispatchDueAt && !dueAt)}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
                 background:
-                  !isPremium || isPending ? '#CBD5E1' : 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+                  !isPremium || isPending || (requiresDispatchDueAt && !dueAt)
+                    ? '#CBD5E1'
+                    : 'linear-gradient(135deg, #2563EB, #1D4ED8)',
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: 15,
                 padding: '12px 16px',
                 fontSize: 13,
                 fontWeight: 800,
-                cursor: !isPremium || isPending ? 'not-allowed' : 'pointer',
+                cursor:
+                  !isPremium || isPending || (requiresDispatchDueAt && !dueAt)
+                    ? 'not-allowed'
+                    : 'pointer',
               }}
             >
               {isPending ? <Loader2 size={15} className="spin" /> : <Sparkles size={15} />}
               {isPending
                 ? 'Saving...'
-                : initialApplicationIds.length
-                  ? 'Create and send assessment'
-                  : 'Create assessment'}
+                : editingAssessmentId
+                  ? 'Save changes'
+                  : initialApplicationIds.length
+                    ? 'Create and send assessment'
+                    : 'Create assessment'}
             </button>
+            {editingAssessmentId ? (
+              <button
+                type="button"
+                onClick={() => resetBuilder(selectedJobId)}
+                disabled={isPending}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  background: '#FFFFFF',
+                  color: '#475569',
+                  border: '1px solid #D9E2EC',
+                  borderRadius: 15,
+                  padding: '12px 16px',
+                  fontSize: 13,
+                  fontWeight: 800,
+                  cursor: isPending ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Cancel edit
+              </button>
+            ) : null}
             {!isPremium ? (
               <Link
                 href="/employer/premium"
@@ -1241,6 +1468,48 @@ export default function EmployerAssessmentsClient({
             the grading workspace when manual review is needed.
           </div>
 
+          {initialApplicationIds.length > 0 ? (
+            <div
+              style={{
+                marginTop: 16,
+                borderRadius: 18,
+                border: '1px solid #BFDBFE',
+                background: '#F8FBFF',
+                padding: '16px 16px 14px',
+                display: 'grid',
+                gap: 10,
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: '#1D4ED8',
+                  }}
+                >
+                  Assessment dispatch
+                </div>
+                <div style={{ marginTop: 4, fontSize: 12, color: '#475569', lineHeight: 1.6 }}>
+                  Set the due date and time here. This dispatch deadline is used when you create and
+                  send a new assessment or reuse one from the library below.
+                </div>
+              </div>
+
+              <label style={{ display: 'grid', gap: 7 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#334155' }}>
+                  Due date and time
+                </span>
+                <input
+                  type="datetime-local"
+                  value={dueAt}
+                  onChange={(event) => setDueAt(event.target.value)}
+                  style={fieldStyle}
+                />
+              </label>
+            </div>
+          ) : null}
+
           <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
             {filteredAssessments.length === 0 ? (
               <div
@@ -1258,155 +1527,242 @@ export default function EmployerAssessmentsClient({
                 it will appear here with assignment progress and average results.
               </div>
             ) : (
-              filteredAssessments.map((assessment) => (
-                <div
-                  key={assessment._id}
-                  style={{
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
-                    background: '#FFFFFF',
-                    padding: 16,
-                    display: 'grid',
-                    gap: 12,
-                  }}
-                >
+              filteredAssessments.map((assessment) => {
+                const canManageDraft = (assessment.summary?.assigned ?? 0) === 0;
+                const isEditingThisAssessment = editingAssessmentId === assessment._id;
+
+                return (
                   <div
+                    key={assessment._id}
                     style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      justifyContent: 'space-between',
-                      gap: 10,
+                      borderRadius: 20,
+                      border: '1px solid #E2E8F0',
+                      background: '#FFFFFF',
+                      padding: 16,
+                      display: 'grid',
+                      gap: 12,
                     }}
                   >
-                    <div style={{ minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 15,
-                          fontWeight: 800,
-                          color: '#0F172A',
-                          fontFamily: 'var(--font-display)',
-                        }}
-                      >
-                        {assessment.title}
-                      </div>
-                      <div style={{ marginTop: 5, fontSize: 12, color: '#64748B' }}>
-                        {assessment.job?.title ?? 'Role not available'} •{' '}
-                        {formatAssessmentType(assessment.type)}
-                      </div>
-                    </div>
-                    <span
+                    <div
                       style={{
-                        borderRadius: 999,
-                        padding: '5px 9px',
-                        background: assessment.isActive ? '#ECFDF5' : '#F8FAFC',
-                        color: assessment.isActive ? '#065F46' : '#64748B',
-                        border: `1px solid ${assessment.isActive ? '#A7F3D0' : '#E2E8F0'}`,
-                        fontSize: 11,
-                        fontWeight: 800,
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: 10,
                       }}
                     >
-                      {assessment.isActive ? 'Active' : 'Archived'}
-                    </span>
-                  </div>
-
-                  <div className="assessment-stats-grid">
-                    {[
-                      { label: 'Assigned', value: assessment.summary?.assigned ?? 0 },
-                      { label: 'Submitted', value: assessment.summary?.submitted ?? 0 },
-                      { label: 'Graded', value: assessment.summary?.graded ?? 0 },
-                      { label: 'Avg score', value: assessment.summary?.averageScore ?? '—' },
-                    ].map((stat) => (
-                      <div
-                        key={stat.label}
-                        style={{
-                          borderRadius: 14,
-                          background: '#F8FAFC',
-                          border: '1px solid #E2E8F0',
-                          padding: '10px 12px',
-                        }}
-                      >
+                      <div style={{ minWidth: 0 }}>
                         <div
                           style={{
-                            fontSize: 22,
-                            lineHeight: 1,
-                            fontWeight: 900,
-                            color: '#2563EB',
+                            fontSize: 15,
+                            fontWeight: 800,
+                            color: '#0F172A',
                             fontFamily: 'var(--font-display)',
                           }}
                         >
-                          {stat.value}
+                          {assessment.title}
                         </div>
-                        <div
-                          style={{ marginTop: 4, fontSize: 11, color: '#64748B', fontWeight: 700 }}
-                        >
-                          {stat.label}
+                        <div style={{ marginTop: 5, fontSize: 12, color: '#64748B' }}>
+                          {assessment.job?.title ?? 'Role not available'} •{' '}
+                          {formatAssessmentType(assessment.type)}
                         </div>
                       </div>
-                    ))}
-                  </div>
+                      <span
+                        style={{
+                          borderRadius: 999,
+                          padding: '5px 9px',
+                          background: assessment.isActive ? '#ECFDF5' : '#F8FAFC',
+                          color: assessment.isActive ? '#065F46' : '#64748B',
+                          border: `1px solid ${assessment.isActive ? '#A7F3D0' : '#E2E8F0'}`,
+                          fontSize: 11,
+                          fontWeight: 800,
+                        }}
+                      >
+                        {assessment.isActive ? 'Active' : 'Archived'}
+                      </span>
+                    </div>
 
-                  <div style={{ display: 'grid', gap: 5, fontSize: 12, color: '#64748B' }}>
-                    <span>
-                      <CalendarClock
-                        size={13}
-                        style={{ verticalAlign: 'text-bottom', marginRight: 6 }}
-                      />
-                      Due: {formatDateTime(assessment.dueAt)}
-                    </span>
-                    <span>
-                      {assessment.totalMarks} marks • Pass at {assessment.passingMarks} •{' '}
-                      {assessment.durationMinutes} min
-                    </span>
-                  </div>
+                    <div className="assessment-stats-grid">
+                      {[
+                        { label: 'Assigned', value: assessment.summary?.assigned ?? 0 },
+                        { label: 'Submitted', value: assessment.summary?.submitted ?? 0 },
+                        { label: 'Graded', value: assessment.summary?.graded ?? 0 },
+                        { label: 'Avg score', value: assessment.summary?.averageScore ?? '—' },
+                      ].map((stat) => (
+                        <div
+                          key={stat.label}
+                          style={{
+                            borderRadius: 14,
+                            background: '#F8FAFC',
+                            border: '1px solid #E2E8F0',
+                            padding: '10px 12px',
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 22,
+                              lineHeight: 1,
+                              fontWeight: 900,
+                              color: '#2563EB',
+                              fontFamily: 'var(--font-display)',
+                            }}
+                          >
+                            {stat.value}
+                          </div>
+                          <div
+                            style={{
+                              marginTop: 4,
+                              fontSize: 11,
+                              color: '#64748B',
+                              fontWeight: 700,
+                            }}
+                          >
+                            {stat.label}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
 
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <Link
-                      href={`/employer/assessments/${assessment._id}`}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 7,
-                        background: '#0F172A',
-                        color: '#FFFFFF',
-                        borderRadius: 12,
-                        padding: '10px 12px',
-                        fontSize: 12,
-                        fontWeight: 800,
-                        textDecoration: 'none',
-                      }}
-                    >
-                      Open detail
-                    </Link>
-                    {initialApplicationIds.length > 0 ? (
-                      <button
-                        type="button"
-                        onClick={() => handleAssignExisting(assessment._id)}
-                        disabled={assigningId === assessment._id}
+                    <div style={{ display: 'grid', gap: 5, fontSize: 12, color: '#64748B' }}>
+                      <span>
+                        <CalendarClock
+                          size={13}
+                          style={{ verticalAlign: 'text-bottom', marginRight: 6 }}
+                        />
+                        Due: {formatDhakaDateTime(assessment.dueAt, 'Set during dispatch')}
+                      </span>
+                      <span>
+                        {assessment.totalMarks} marks • Pass at {assessment.passingMarks} •{' '}
+                        {assessment.durationMinutes} min
+                      </span>
+                    </div>
+
+                    {!canManageDraft ? (
+                      <div
+                        style={{
+                          borderRadius: 12,
+                          border: '1px solid #E2E8F0',
+                          background: '#F8FAFC',
+                          padding: '10px 12px',
+                          fontSize: 12,
+                          color: '#64748B',
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        This assessment is locked because it has already been assigned. Create a new
+                        version if you need changes.
+                      </div>
+                    ) : null}
+
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <Link
+                        href={`/employer/assessments/${assessment._id}`}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 7,
-                          background: '#EFF6FF',
-                          color: '#2563EB',
+                          background: '#0F172A',
+                          color: '#FFFFFF',
+                          borderRadius: 12,
+                          padding: '10px 12px',
+                          fontSize: 12,
+                          fontWeight: 800,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        Open detail
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleEditAssessment(assessment)}
+                        disabled={!canManageDraft || loadingAssessmentId === assessment._id}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 7,
+                          background: isEditingThisAssessment ? '#DBEAFE' : '#FFFFFF',
+                          color: '#1D4ED8',
                           border: '1px solid #BFDBFE',
                           borderRadius: 12,
                           padding: '10px 12px',
                           fontSize: 12,
                           fontWeight: 800,
-                          cursor: assigningId === assessment._id ? 'not-allowed' : 'pointer',
+                          cursor:
+                            !canManageDraft || loadingAssessmentId === assessment._id
+                              ? 'not-allowed'
+                              : 'pointer',
+                          opacity: canManageDraft ? 1 : 0.6,
                         }}
                       >
-                        {assigningId === assessment._id ? (
+                        {loadingAssessmentId === assessment._id ? (
                           <Loader2 size={14} className="spin" />
                         ) : (
-                          <Sparkles size={14} />
+                          <PencilLine size={14} />
                         )}
-                        Use for selected
+                        {isEditingThisAssessment ? 'Editing' : 'Edit'}
                       </button>
-                    ) : null}
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteAssessment(assessment)}
+                        disabled={!canManageDraft || deletingAssessmentId === assessment._id}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 7,
+                          background: '#FEF2F2',
+                          color: '#B91C1C',
+                          border: '1px solid #FECACA',
+                          borderRadius: 12,
+                          padding: '10px 12px',
+                          fontSize: 12,
+                          fontWeight: 800,
+                          cursor:
+                            !canManageDraft || deletingAssessmentId === assessment._id
+                              ? 'not-allowed'
+                              : 'pointer',
+                          opacity: canManageDraft ? 1 : 0.6,
+                        }}
+                      >
+                        {deletingAssessmentId === assessment._id ? (
+                          <Loader2 size={14} className="spin" />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
+                        Delete
+                      </button>
+                      {initialApplicationIds.length > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => handleAssignExisting(assessment._id)}
+                          disabled={assigningId === assessment._id || !dueAt}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 7,
+                            background: '#EFF6FF',
+                            color: '#2563EB',
+                            border: '1px solid #BFDBFE',
+                            borderRadius: 12,
+                            padding: '10px 12px',
+                            fontSize: 12,
+                            fontWeight: 800,
+                            cursor:
+                              assigningId === assessment._id || !dueAt ? 'not-allowed' : 'pointer',
+                            opacity: dueAt ? 1 : 0.6,
+                          }}
+                        >
+                          {assigningId === assessment._id ? (
+                            <Loader2 size={14} className="spin" />
+                          ) : (
+                            <Sparkles size={14} />
+                          )}
+                          Use for selected
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -1432,7 +1788,6 @@ export default function EmployerAssessmentsClient({
             minmax(0, 1.3fr)
             minmax(110px, 0.72fr)
             minmax(110px, 0.72fr)
-            minmax(170px, 1fr)
             minmax(96px, 0.6fr);
           gap: 14px;
           align-items: end;

@@ -2,17 +2,20 @@
 
 import { connectDB } from '@/lib/db';
 import { Notification, type NotificationType } from '@/models/Notification';
+import { AssessmentAssignment } from '@/models/AssessmentAssignment';
 import { User } from '@/models/User';
 import { pusherServer, userChannel, PUSHER_EVENTS } from '@/lib/pusher';
 import {
   sendEmail,
   applicationStatusEmailTemplate,
+  assessmentAssignedEmailTemplate,
   deadlineReminderEmailTemplate,
   employerApplicationNotificationEmailTemplate,
   eventRegistrationConfirmationEmailTemplate,
   hostedEventReminderEmailTemplate,
   registeredEventReminderEmailTemplate,
 } from '@/lib/email';
+import { formatDhakaDateTime } from '@/lib/datetime';
 
 type ApplicationStatusEmailType = Parameters<typeof applicationStatusEmailTemplate>[0]['status'];
 
@@ -164,6 +167,41 @@ export async function notifyApplicationStatusChanged(
         ? `/student/interviews/${extra.interviewSessionId}`
         : '/student/applications';
 
+  type AssessmentEmailDetails = {
+    dueAt?: Date | null;
+    assessmentId?:
+      | {
+          title?: string | null;
+          totalMarks?: number | null;
+          durationMinutes?: number | null;
+        }
+      | string
+      | null;
+  } | null;
+
+  const assessmentDetails =
+    newStatus === 'assessment_sent' && extra?.assessmentAssignmentId
+      ? ((await AssessmentAssignment.findById(extra.assessmentAssignmentId)
+          .populate('assessmentId', 'title totalMarks durationMinutes')
+          .select('dueAt assessmentId')
+          .lean()) as AssessmentEmailDetails)
+      : null;
+
+  const assessmentRecord =
+    assessmentDetails?.assessmentId && typeof assessmentDetails.assessmentId === 'object'
+      ? assessmentDetails.assessmentId
+      : null;
+
+  const dueLabel =
+    newStatus === 'assessment_sent'
+      ? formatDhakaDateTime(assessmentDetails?.dueAt, 'No deadline set')
+      : null;
+
+  const notificationBody =
+    newStatus === 'assessment_sent' && dueLabel
+      ? `${companyName} has sent you an assessment for "${jobTitle}". Due: ${dueLabel}. Check your application tracker and complete it before the deadline.`
+      : cfg.body;
+
   // ── Check notification preference before sending ──
   const student = await User.findById(studentId)
     .select('name email notificationPreferences')
@@ -182,7 +220,7 @@ export async function notifyApplicationStatusChanged(
     userId: studentId,
     type: cfg.type,
     title: cfg.title,
-    body: cfg.body,
+    body: notificationBody,
     link,
     meta: {
       applicationId,
@@ -200,12 +238,25 @@ export async function notifyApplicationStatusChanged(
     : null;
 
   if (emailStatus && student.email) {
-    const { subject, html } = applicationStatusEmailTemplate({
-      studentName: student.name ?? 'Student',
-      jobTitle,
-      companyName,
-      status: emailStatus,
-    });
+    const appUrl = (process.env.NEXTAUTH_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+    const { subject, html } =
+      emailStatus === 'assessment_sent'
+        ? assessmentAssignedEmailTemplate({
+            studentName: student.name ?? 'Student',
+            jobTitle,
+            companyName,
+            assessmentTitle: assessmentRecord?.title?.trim() || `${jobTitle} assessment`,
+            totalMarks: assessmentRecord?.totalMarks ?? null,
+            durationMinutes: assessmentRecord?.durationMinutes ?? null,
+            dueAt: assessmentDetails?.dueAt ?? null,
+            assessmentUrl: `${appUrl}${link}`,
+          })
+        : applicationStatusEmailTemplate({
+            studentName: student.name ?? 'Student',
+            jobTitle,
+            companyName,
+            status: emailStatus,
+          });
 
     void sendEmail({ to: student.email, subject, html }).catch((err) => {
       console.error('[STATUS EMAIL ERROR]', err);

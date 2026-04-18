@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
+import { AssessmentSubmitSchema } from '@/lib/validations';
+import {
+  PremiumAccessError,
+  saveAssessmentDraft,
+  syncAssessmentAssignmentState,
+} from '@/lib/hiring-suite';
 import { AssessmentAssignment } from '@/models/AssessmentAssignment';
 import { Assessment } from '@/models/Assessment';
 import { AssessmentSubmission } from '@/models/AssessmentSubmission';
@@ -16,6 +22,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
     const { assignmentId } = await params;
     await connectDB();
+    await syncAssessmentAssignmentState(assignmentId);
 
     const assignment = await AssessmentAssignment.findById(assignmentId)
       .populate('jobId', 'title companyName')
@@ -77,5 +84,38 @@ export async function GET(_req: NextRequest, { params }: Params) {
   } catch (error) {
     console.error('[ASSESSMENT ASSIGNMENT GET ERROR]', error);
     return NextResponse.json({ error: 'Failed to fetch assessment assignment.' }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest, { params }: Params) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id || session.user.role !== 'student') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const body = await req.json();
+    const parsed = AssessmentSubmitSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
+    const { assignmentId } = await params;
+    const submission = await saveAssessmentDraft({
+      assignmentId,
+      studentId: session.user.id,
+      answers: parsed.data.answers,
+    });
+
+    return NextResponse.json({ submission });
+  } catch (error) {
+    console.error('[ASSESSMENT ASSIGNMENT PATCH ERROR]', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to save assessment draft.' },
+      { status: error instanceof PremiumAccessError ? error.status : 500 }
+    );
   }
 }

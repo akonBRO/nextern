@@ -7,10 +7,12 @@ import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
 import { Job } from '@/models/Job';
 import { Application } from '@/models/Application';
+import { AssessmentAssignment } from '@/models/AssessmentAssignment';
 import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { User } from '@/models/User';
 import { getUsageSummary } from '@/lib/premium';
+import { syncAssessmentAssignmentStates } from '@/lib/hiring-suite';
 import mongoose from 'mongoose';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
@@ -35,6 +37,20 @@ async function getApplicantsData(jobId: string, employerId: string) {
   await connectDB();
   const oid = new mongoose.Types.ObjectId(employerId);
   const jid = new mongoose.Types.ObjectId(jobId);
+
+  const pendingAssignmentIds = await AssessmentAssignment.find({
+    employerId: oid,
+    jobId: jid,
+    status: { $in: ['assigned', 'started'] },
+  })
+    .select('_id')
+    .lean();
+
+  if (pendingAssignmentIds.length > 0) {
+    await syncAssessmentAssignmentStates(
+      pendingAssignmentIds.map((assignment) => assignment._id.toString())
+    );
+  }
 
   const [employer, job, rawApplications, unreadNotifs, unreadMsgs] = await Promise.all([
     User.findById(oid).select('name email image companyName').lean(),
@@ -181,6 +197,17 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
         skills: student?.skills ?? [],
         yearOfStudy: student?.yearOfStudy,
       },
+      assessment:
+        app.assessmentAssignmentId || app.assessmentId
+          ? {
+              assessmentId: app.assessmentId?.toString() ?? '',
+              assignmentId: app.assessmentAssignmentId?.toString() ?? '',
+              dueAt: app.assessmentDueAt?.toISOString() ?? null,
+              submittedAt: app.assessmentSubmittedAt?.toISOString() ?? null,
+              score: app.assessmentScore ?? null,
+              passed: typeof app.assessmentPassed === 'boolean' ? app.assessmentPassed : null,
+            }
+          : null,
     };
   });
 

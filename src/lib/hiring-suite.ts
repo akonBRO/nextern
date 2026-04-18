@@ -3,12 +3,16 @@ import 'server-only';
 import mongoose from 'mongoose';
 import { RtcRole, RtcTokenBuilder } from 'agora-token';
 import { connectDB } from '@/lib/db';
+import {
+  evaluateAssessmentAnswerWithGemini,
+  hasAssessmentEvaluationGeminiConfig,
+} from '@/lib/gemini';
 import { createNotification } from '@/lib/notify';
 import { onApplicationStatusChanged } from '@/lib/events';
-import { executeJudge0 } from '@/lib/judge0';
+import { CodeExecutionConfigError, CodeExecutionUpstreamError, executeJudge0 } from '@/lib/judge0';
 import { syncInterviewToCalendar } from '@/lib/calendar';
-import { Assessment } from '@/models/Assessment';
-import { AssessmentAssignment } from '@/models/AssessmentAssignment';
+import { Assessment, type IAssessment } from '@/models/Assessment';
+import { AssessmentAssignment, type IAssessmentAssignment } from '@/models/AssessmentAssignment';
 import { AssessmentSubmission, type IAssessmentSubmission } from '@/models/AssessmentSubmission';
 import { Application } from '@/models/Application';
 import { InterviewSession } from '@/models/InterviewSession';
@@ -19,12 +23,17 @@ import {
   averageInterviewScore,
   type AssessmentAnswerPayload,
   type AssessmentQuestionDraft,
+  type HiringAsset,
   type InterviewRecommendation,
 } from '@/lib/hiring-suite-shared';
 
 const ACTIVE_APPLICATION_STATUSES = ['under_review', 'shortlisted', 'assessment_sent'] as const;
 type SubmissionAnswer = IAssessmentSubmission['answers'][number];
 type AssessmentTestCase = NonNullable<AssessmentQuestionDraft['testCases']>[number];
+type AssessmentDraftAnswer = Pick<
+  SubmissionAnswer,
+  'questionIndex' | 'answerText' | 'selectedOptionIndex' | 'code' | 'uploadedFiles'
+>;
 
 export class PremiumAccessError extends Error {
   status: number;
@@ -107,6 +116,7 @@ async function getPremiumEligibleUserIds(userIds: string[]) {
     User.find({
       _id: { $in: uniqueUserIds.map((value) => asObjectId(value)) },
       isPremium: true,
+      premiumOverride: { $ne: 'free' },
       $or: [{ premiumExpiresAt: { $gt: now } }, { premiumExpiresAt: null }],
     })
       .select('_id')
@@ -257,40 +267,240 @@ function scoreShortAnswer(question: AssessmentQuestionDraft, answerText?: string
   };
 }
 
+async function scoreOpenEndedQuestion(
+  question: AssessmentQuestionDraft,
+  answerText?: string,
+  uploadedFiles: HiringAsset[] = []
+) {
+  const trimmedAnswer = cleanText(answerText);
+
+  if (!trimmedAnswer && uploadedFiles.length === 0) {
+    return {
+      score: 0,
+      needsManualReview: false,
+      evaluationNotes: 'No answer was submitted.',
+    };
+  }
+
+  if (uploadedFiles.length > 0) {
+    return {
+      score: 0,
+      needsManualReview: true,
+      evaluationNotes:
+        'Supporting files were attached, so this response was saved for manual review.',
+    };
+  }
+
+  const fallbackShortAnswerScore = () => {
+    const shortResult = scoreShortAnswer(question, trimmedAnswer);
+    return {
+      score: shortResult.score,
+      needsManualReview: shortResult.needsManualReview,
+      evaluationNotes: shortResult.needsManualReview
+        ? 'Automatic AI evaluation is unavailable, so this answer was saved for manual review.'
+        : 'Fallback scoring matched the response against the accepted answers list.',
+    };
+  };
+
+  if (!hasAssessmentEvaluationGeminiConfig()) {
+    return question.type === 'short_answer'
+      ? fallbackShortAnswerScore()
+      : {
+          score: 0,
+          needsManualReview: true,
+          evaluationNotes:
+            'Automatic AI evaluation is not configured yet, so this response was saved for manual review.',
+        };
+  }
+
+  try {
+    const aiResult = await evaluateAssessmentAnswerWithGemini({
+      type: question.type as 'short_answer' | 'case_study',
+      prompt: question.questionText,
+      answer: trimmedAnswer,
+      maxMarks: question.marks,
+      acceptedAnswers: question.acceptedAnswers,
+      rubric: question.rubric,
+      maxWords: question.maxWords,
+    });
+
+    return {
+      score: aiResult.score,
+      needsManualReview: aiResult.manualReviewRecommended,
+      evaluationNotes: `AI evaluation: ${aiResult.reasoning}`,
+    };
+  } catch (error) {
+    console.warn('[ASSESSMENT OPEN-ENDED AI FALLBACK]', error);
+    return question.type === 'short_answer'
+      ? fallbackShortAnswerScore()
+      : {
+          score: 0,
+          needsManualReview: true,
+          evaluationNotes:
+            'AI evaluation was unavailable for this response, so it was saved for manual review.',
+        };
+  }
+}
+
 async function scoreCodingQuestion(question: AssessmentQuestionDraft, code?: string) {
   if (!question.language) {
     throw new Error('Coding question is missing a configured language.');
   }
 
   if (!code || !cleanText(code)) {
-    return { score: 0, runs: [] as Awaited<ReturnType<typeof executeJudge0>>[] };
+    return {
+      score: 0,
+      runs: [] as Awaited<ReturnType<typeof executeJudge0>>[],
+      needsManualReview: false,
+      executionUnavailableMessage: '',
+    };
   }
 
   const testCases = question.testCases ?? [];
   if (!testCases.length) {
-    return { score: 0, runs: [] as Awaited<ReturnType<typeof executeJudge0>>[] };
+    return {
+      score: 0,
+      runs: [] as Awaited<ReturnType<typeof executeJudge0>>[],
+      needsManualReview: true,
+      executionUnavailableMessage:
+        'No automated test cases were configured for this coding question.',
+    };
   }
 
   const runs = [];
   let passed = 0;
 
-  for (const testCase of testCases) {
-    const execution = await executeJudge0({
-      language: question.language,
-      sourceCode: code,
-      stdin: testCase.input,
-      expectedOutput: testCase.expectedOutput,
-    });
-    if (execution.passed) {
-      passed += 1;
+  try {
+    for (const testCase of testCases) {
+      const execution = await executeJudge0({
+        language: question.language,
+        sourceCode: code,
+        stdin: testCase.input,
+        expectedOutput: testCase.expectedOutput,
+      });
+      if (execution.passed) {
+        passed += 1;
+      }
+      runs.push(execution);
     }
-    runs.push(execution);
+  } catch (error) {
+    if (error instanceof CodeExecutionConfigError || error instanceof CodeExecutionUpstreamError) {
+      return {
+        score: 0,
+        runs: [] as Awaited<ReturnType<typeof executeJudge0>>[],
+        needsManualReview: true,
+        executionUnavailableMessage:
+          'Automatic code execution is unavailable right now, so this answer was saved for manual review.',
+      };
+    }
+
+    throw error;
   }
 
   return {
     score: Math.round((passed / testCases.length) * question.marks),
     runs,
+    needsManualReview: false,
+    executionUnavailableMessage: '',
   };
+}
+
+function toDraftAnswers(answers: AssessmentAnswerPayload[]): AssessmentDraftAnswer[] {
+  return answers.map((answer) => ({
+    questionIndex: answer.questionIndex,
+    answerText: cleanText(answer.answerText),
+    selectedOptionIndex: answer.selectedOptionIndex,
+    code: cleanText(answer.code),
+    uploadedFiles: answer.uploadedFiles ?? [],
+  }));
+}
+
+function toAnswerPayload(answers: SubmissionAnswer[] = []): AssessmentAnswerPayload[] {
+  return answers.map((answer) => ({
+    questionIndex: answer.questionIndex,
+    answerText: cleanText(answer.answerText),
+    selectedOptionIndex: answer.selectedOptionIndex,
+    code: cleanText(answer.code),
+    uploadedFiles: answer.uploadedFiles ?? [],
+  }));
+}
+
+function getSubmissionStartedAt(
+  assignment: Pick<IAssessmentAssignment, 'startedAt'>,
+  submission?: Pick<IAssessmentSubmission, 'startedAt'> | null
+) {
+  return submission?.startedAt ?? assignment.startedAt ?? null;
+}
+
+function getTimerEndsAt(
+  assessment: Pick<IAssessment, 'durationMinutes'>,
+  assignment: Pick<IAssessmentAssignment, 'startedAt'>,
+  submission?: Pick<IAssessmentSubmission, 'startedAt'> | null
+) {
+  const startedAt = getSubmissionStartedAt(assignment, submission);
+  if (!startedAt || assessment.durationMinutes <= 0) {
+    return null;
+  }
+
+  return new Date(startedAt.getTime() + assessment.durationMinutes * 60 * 1000);
+}
+
+async function ensureSubmissionDocument(
+  assignment: Pick<
+    IAssessmentAssignment,
+    '_id' | 'assessmentId' | 'employerId' | 'studentId' | 'applicationId'
+  >,
+  startedAt: Date
+) {
+  const existing = await AssessmentSubmission.findOne({ assignmentId: assignment._id });
+  if (existing) {
+    return existing;
+  }
+
+  return AssessmentSubmission.create({
+    assessmentId: assignment.assessmentId,
+    assignmentId: assignment._id,
+    employerId: assignment.employerId,
+    studentId: assignment.studentId,
+    applicationId: assignment.applicationId,
+    startedAt,
+    answers: [],
+  });
+}
+
+async function notifyEmployerAssessmentSubmission(input: {
+  assignment: Pick<
+    IAssessmentAssignment,
+    '_id' | 'assessmentId' | 'applicationId' | 'jobId' | 'employerId' | 'studentId'
+  >;
+  assessment: Pick<IAssessment, '_id' | 'title'>;
+  autoSubmitted: boolean;
+}) {
+  const [student, job] = await Promise.all([
+    User.findById(input.assignment.studentId).select('name').lean(),
+    Job.findById(input.assignment.jobId).select('title').lean(),
+  ]);
+
+  const studentName = student?.name ?? 'A candidate';
+  const roleTitle = job?.title ?? 'this role';
+  const submittedLabel = input.autoSubmitted ? 'was auto-submitted' : 'was submitted';
+
+  await createNotification({
+    userId: input.assignment.employerId.toString(),
+    type: 'status_update',
+    title: `Assessment submitted — ${studentName}`,
+    body: `${studentName}'s assessment for "${roleTitle}" ${submittedLabel}. Review it from the grading workspace.`,
+    link: `/employer/assessments/${input.assessment._id.toString()}`,
+    meta: {
+      assessmentId: input.assessment._id.toString(),
+      assignmentId: input.assignment._id.toString(),
+      applicationId: input.assignment.applicationId.toString(),
+      studentId: input.assignment.studentId.toString(),
+      studentName,
+      assessmentTitle: input.assessment.title,
+      autoSubmitted: input.autoSubmitted,
+    },
+  });
 }
 
 async function computePlagiarismForSubmission(
@@ -332,6 +542,275 @@ async function computePlagiarismForSubmission(
   });
 }
 
+async function finalizeAssessmentSubmission(input: {
+  assignment: IAssessmentAssignment;
+  assessment: IAssessment;
+  submission: IAssessmentSubmission;
+  answers: AssessmentAnswerPayload[];
+  autoSubmit?: boolean;
+  submittedAt?: Date;
+}) {
+  const wasAlreadySubmitted = Boolean(input.submission.submittedAt || input.assignment.submittedAt);
+  if (wasAlreadySubmitted) {
+    const totalScore = input.submission.totalScore ?? input.assignment.totalScore ?? 0;
+    const isPassed = input.submission.isPassed ?? input.assignment.isPassed ?? false;
+    const needsManualReview = input.assignment.needsManualReview;
+    return {
+      submissionId: input.submission._id.toString(),
+      totalScore,
+      needsManualReview,
+      isPassed,
+      submittedAt: input.submission.submittedAt?.toISOString() ?? null,
+    };
+  }
+
+  const startedAt = input.submission.startedAt ?? input.assignment.startedAt ?? new Date();
+  input.submission.startedAt = startedAt;
+
+  const answerMap = new Map(input.answers.map((answer) => [answer.questionIndex, answer]));
+  const evaluatedAnswers: Array<(typeof input.submission.answers)[number]> = [];
+  let objectiveScore = 0;
+  const manualScore = 0;
+  let needsManualReview = false;
+
+  for (const question of input.assessment.questions as unknown as AssessmentQuestionDraft[]) {
+    const rawAnswer = answerMap.get(question.index);
+
+    if (question.type === 'mcq') {
+      const score = scoreMcq(question, rawAnswer?.selectedOptionIndex);
+      objectiveScore += score;
+      evaluatedAnswers.push({
+        questionIndex: question.index,
+        selectedOptionIndex: rawAnswer?.selectedOptionIndex,
+        answerText:
+          typeof rawAnswer?.selectedOptionIndex === 'number'
+            ? (question.options?.[rawAnswer.selectedOptionIndex] ?? '')
+            : '',
+        objectiveMarksAwarded: score,
+        marksAwarded: score,
+      });
+      continue;
+    }
+
+    if (question.type === 'short_answer') {
+      const shortResult = await scoreOpenEndedQuestion(
+        question,
+        rawAnswer?.answerText,
+        rawAnswer?.uploadedFiles ?? []
+      );
+      objectiveScore += shortResult.score;
+      needsManualReview ||= shortResult.needsManualReview;
+      evaluatedAnswers.push({
+        questionIndex: question.index,
+        answerText: cleanText(rawAnswer?.answerText),
+        uploadedFiles: rawAnswer?.uploadedFiles ?? [],
+        objectiveMarksAwarded: shortResult.score,
+        marksAwarded: shortResult.score,
+        evaluationNotes: shortResult.evaluationNotes,
+      });
+      continue;
+    }
+
+    if (question.type === 'coding') {
+      const codingResult = await scoreCodingQuestion(question, rawAnswer?.code);
+      objectiveScore += codingResult.score;
+      needsManualReview ||= codingResult.needsManualReview;
+      const finalRun = codingResult.runs.at(-1);
+      evaluatedAnswers.push({
+        questionIndex: question.index,
+        code: cleanText(rawAnswer?.code),
+        answerText: cleanText(rawAnswer?.code),
+        objectiveMarksAwarded: codingResult.score,
+        marksAwarded: codingResult.score,
+        executionStatus:
+          finalRun?.status ??
+          (codingResult.needsManualReview ? 'Manual review required' : 'Not executed'),
+        executionOutput: finalRun?.stdout ?? '',
+        executionError:
+          codingResult.executionUnavailableMessage ||
+          finalRun?.stderr ||
+          finalRun?.compileOutput ||
+          finalRun?.message ||
+          '',
+        judge0SubmissionToken: finalRun?.token,
+      });
+      continue;
+    }
+
+    if (question.type === 'case_study') {
+      const caseStudyResult = await scoreOpenEndedQuestion(
+        question,
+        rawAnswer?.answerText,
+        rawAnswer?.uploadedFiles ?? []
+      );
+      objectiveScore += caseStudyResult.score;
+      needsManualReview ||= caseStudyResult.needsManualReview;
+      evaluatedAnswers.push({
+        questionIndex: question.index,
+        answerText: cleanText(rawAnswer?.answerText),
+        uploadedFiles: rawAnswer?.uploadedFiles ?? [],
+        objectiveMarksAwarded: caseStudyResult.score,
+        marksAwarded: caseStudyResult.score,
+        evaluationNotes: caseStudyResult.evaluationNotes,
+      });
+      continue;
+    }
+  }
+
+  input.submission.answers = evaluatedAnswers;
+  input.submission.objectiveScore = objectiveScore;
+  input.submission.manualScore = manualScore;
+  input.submission.totalScore = objectiveScore + manualScore;
+  input.submission.isPassed =
+    !needsManualReview && input.submission.totalScore >= input.assessment.passingMarks;
+  input.submission.submittedAt = input.submittedAt ?? new Date();
+  input.submission.isAutoSubmitted = Boolean(input.autoSubmit);
+  input.submission.timeTakenSeconds = Math.max(
+    1,
+    Math.round((input.submission.submittedAt.getTime() - startedAt.getTime()) / 1000)
+  );
+
+  const plagiarism = await computePlagiarismForSubmission(
+    input.assessment._id,
+    input.submission._id,
+    input.submission.answers
+  );
+  input.submission.answers = input.submission.answers.map((answer: SubmissionAnswer) => {
+    const match = plagiarism.find((item) => item.questionIndex === answer.questionIndex);
+    if (!match) return answer;
+    return {
+      ...answer,
+      plagiarismScore: match.plagiarismScore,
+      plagiarismMatches: match.plagiarismMatches,
+    };
+  });
+
+  await input.submission.save();
+
+  input.assignment.status = needsManualReview ? 'submitted' : 'graded';
+  input.assignment.startedAt = startedAt;
+  input.assignment.submittedAt = input.submission.submittedAt;
+  input.assignment.gradedAt = needsManualReview ? undefined : new Date();
+  input.assignment.objectiveScore = objectiveScore;
+  input.assignment.manualScore = manualScore;
+  input.assignment.totalScore = input.submission.totalScore;
+  input.assignment.isPassed = input.submission.isPassed;
+  input.assignment.needsManualReview = needsManualReview;
+  await input.assignment.save();
+
+  await Application.findByIdAndUpdate(input.assignment.applicationId, {
+    assessmentScore: input.submission.totalScore,
+    assessmentPassed: input.submission.isPassed,
+    assessmentSubmittedAt: input.submission.submittedAt,
+  });
+
+  await notifyEmployerAssessmentSubmission({
+    assignment: input.assignment,
+    assessment: input.assessment,
+    autoSubmitted: Boolean(input.autoSubmit),
+  }).catch(console.error);
+
+  return {
+    submissionId: input.submission._id.toString(),
+    totalScore: input.submission.totalScore ?? 0,
+    needsManualReview,
+    isPassed: input.submission.isPassed ?? false,
+    submittedAt: input.submission.submittedAt?.toISOString() ?? null,
+  };
+}
+
+async function syncAssessmentAssignmentStateByDocuments(input: {
+  assignment: IAssessmentAssignment;
+  assessment: IAssessment;
+  submission: IAssessmentSubmission | null;
+}) {
+  const now = new Date();
+  const { assessment } = input;
+  let { assignment, submission } = input;
+
+  if (!submission?.submittedAt && !getSubmissionStartedAt(assignment, submission)) {
+    if (
+      assignment.status === 'assigned' &&
+      assignment.dueAt &&
+      !assessment.allowLateSubmission &&
+      assignment.dueAt < now
+    ) {
+      assignment.status = 'expired';
+      await assignment.save();
+    }
+
+    return { assignment, assessment, submission };
+  }
+
+  const endsAt = getTimerEndsAt(assessment, assignment, submission);
+  if (endsAt && endsAt <= now && !submission?.submittedAt) {
+    const finalSubmission =
+      submission ??
+      (await ensureSubmissionDocument(
+        assignment,
+        getSubmissionStartedAt(assignment, submission) ?? endsAt
+      ));
+    submission = finalSubmission;
+
+    await finalizeAssessmentSubmission({
+      assignment,
+      assessment,
+      submission: finalSubmission,
+      answers: toAnswerPayload(finalSubmission.answers),
+      autoSubmit: true,
+      submittedAt: endsAt,
+    });
+
+    const [nextAssignment, nextSubmission] = await Promise.all([
+      AssessmentAssignment.findById(assignment._id),
+      AssessmentSubmission.findOne({ assignmentId: assignment._id }),
+    ]);
+
+    if (nextAssignment) {
+      assignment = nextAssignment;
+    }
+    if (nextSubmission) {
+      submission = nextSubmission;
+    }
+  }
+
+  return { assignment, assessment, submission };
+}
+
+export async function syncAssessmentAssignmentState(assignmentId: string) {
+  await connectDB();
+
+  const assignment = await AssessmentAssignment.findById(assignmentId);
+  if (!assignment) {
+    return null;
+  }
+
+  const [assessment, submission] = await Promise.all([
+    Assessment.findById(assignment.assessmentId),
+    AssessmentSubmission.findOne({ assignmentId: assignment._id }),
+  ]);
+
+  if (!assessment) {
+    return { assignment, assessment: null, submission };
+  }
+
+  return syncAssessmentAssignmentStateByDocuments({
+    assignment,
+    assessment,
+    submission,
+  });
+}
+
+export async function syncAssessmentAssignmentStates(assignmentIds: string[]) {
+  await connectDB();
+
+  const uniqueAssignmentIds = Array.from(new Set(assignmentIds.filter(Boolean)));
+  const results = await Promise.all(
+    uniqueAssignmentIds.map((assignmentId) => syncAssessmentAssignmentState(assignmentId))
+  );
+  return results.filter(Boolean);
+}
+
 export async function createAssessment(input: {
   employerId: string;
   jobId: string;
@@ -368,12 +847,11 @@ export async function createAssessment(input: {
     passingMarks: input.passingMarks,
     durationMinutes: input.durationMinutes,
     instructions: cleanText(input.instructions) || undefined,
-    dueAt: input.dueAt ?? undefined,
     reminderOffsetsMinutes:
       input.reminderOffsetsMinutes && input.reminderOffsetsMinutes.length > 0
         ? input.reminderOffsetsMinutes
         : [1440, 60],
-    isTimedAutoSubmit: input.isTimedAutoSubmit ?? true,
+    isTimedAutoSubmit: true,
     allowLateSubmission: input.allowLateSubmission ?? false,
   });
 
@@ -477,7 +955,6 @@ export async function assignAssessmentToApplications(input: {
     $addToSet: {
       assignedApplicationIds: { $each: applications.map((application) => application._id) },
     },
-    ...(assignmentDueAt ? { $set: { dueAt: assignmentDueAt } } : {}),
   });
 
   return createdAssignments;
@@ -494,38 +971,51 @@ export async function startAssessmentAssignment(assignmentId: string, studentId:
     throw new Error('Assessment assignment not found.');
   }
 
-  const assessment = await Assessment.findById(assignment.assessmentId).lean();
+  const [assessment, existingSubmission] = await Promise.all([
+    Assessment.findById(assignment.assessmentId),
+    AssessmentSubmission.findOne({ assignmentId: assignment._id }),
+  ]);
   if (!assessment || !assessment.isActive) {
     throw new Error('This assessment is no longer active.');
   }
 
   await assertStudentPremiumAccess(studentId, 'assessment');
 
-  if (assignment.dueAt && !assessment.allowLateSubmission && assignment.dueAt < new Date()) {
-    assignment.status = 'expired';
-    await assignment.save();
+  const synced = await syncAssessmentAssignmentStateByDocuments({
+    assignment,
+    assessment,
+    submission: existingSubmission,
+  });
+  const activeAssignment = synced.assignment;
+  if (activeAssignment.submittedAt || synced.submission?.submittedAt) {
+    return synced.submission;
+  }
+
+  if (activeAssignment.status === 'expired') {
     throw new Error('The assessment deadline has already passed.');
   }
 
-  let submission = await AssessmentSubmission.findOne({ assignmentId: assignment._id });
-  if (!submission) {
-    submission = await AssessmentSubmission.create({
-      assessmentId: assignment.assessmentId,
-      assignmentId: assignment._id,
-      employerId: assignment.employerId,
-      studentId: assignment.studentId,
-      applicationId: assignment.applicationId,
-      startedAt: new Date(),
-      answers: [],
-    });
+  if (
+    !synced.submission &&
+    activeAssignment.dueAt &&
+    !assessment.allowLateSubmission &&
+    activeAssignment.dueAt < new Date()
+  ) {
+    activeAssignment.status = 'expired';
+    await activeAssignment.save();
+    throw new Error('The assessment deadline has already passed.');
   }
 
-  if (assignment.status === 'assigned') {
-    assignment.status = 'started';
-    assignment.startedAt = submission.startedAt;
+  const startedAt = getSubmissionStartedAt(activeAssignment, synced.submission) ?? new Date();
+  const submission =
+    synced.submission ?? (await ensureSubmissionDocument(activeAssignment, startedAt));
+
+  if (activeAssignment.status === 'assigned') {
+    activeAssignment.status = 'started';
+    activeAssignment.startedAt = startedAt;
   }
-  assignment.lastOpenedAt = new Date();
-  await assignment.save();
+  activeAssignment.lastOpenedAt = new Date();
+  await activeAssignment.save();
 
   return submission;
 }
@@ -542,16 +1032,36 @@ export async function runAssessmentCodingQuestion(input: {
   const assignment = await AssessmentAssignment.findOne({
     _id: input.assignmentId,
     studentId: input.studentId,
-  }).lean();
+  });
   if (!assignment) {
     throw new Error('Assessment assignment not found.');
   }
 
   await assertStudentPremiumAccess(input.studentId, 'assessment');
 
-  const assessment = await Assessment.findById(assignment.assessmentId).lean();
+  const [assessment, submission] = await Promise.all([
+    Assessment.findById(assignment.assessmentId),
+    AssessmentSubmission.findOne({ assignmentId: assignment._id }),
+  ]);
   if (!assessment) {
     throw new Error('Assessment not found.');
+  }
+
+  const synced = await syncAssessmentAssignmentStateByDocuments({
+    assignment,
+    assessment,
+    submission,
+  });
+  if (synced.assignment.submittedAt || synced.submission?.submittedAt) {
+    throw new Error('This assessment has already been submitted.');
+  }
+
+  if (synced.assignment.status === 'expired') {
+    throw new Error('The assessment deadline has already passed.');
+  }
+
+  if (!getSubmissionStartedAt(synced.assignment, synced.submission)) {
+    throw new Error('Start the assessment before running code.');
   }
 
   const question = (assessment.questions as unknown as AssessmentQuestionDraft[]).find(
@@ -590,148 +1100,109 @@ export async function submitAssessmentAssignment(input: {
 
   await assertStudentPremiumAccess(input.studentId, 'assessment');
 
-  const assessment = await Assessment.findById(assignment.assessmentId).lean();
+  const [assessment, existingSubmission] = await Promise.all([
+    Assessment.findById(assignment.assessmentId),
+    AssessmentSubmission.findOne({ assignmentId: assignment._id }),
+  ]);
   if (!assessment) {
     throw new Error('Assessment not found.');
   }
 
-  if (!assessment.allowLateSubmission && assignment.dueAt && assignment.dueAt < new Date()) {
-    assignment.status = 'expired';
-    await assignment.save();
+  const synced = await syncAssessmentAssignmentStateByDocuments({
+    assignment,
+    assessment,
+    submission: existingSubmission,
+  });
+
+  if (synced.submission?.submittedAt || synced.assignment.submittedAt) {
+    return {
+      submissionId: synced.submission?._id.toString() ?? '',
+      totalScore: synced.submission?.totalScore ?? synced.assignment.totalScore ?? 0,
+      needsManualReview: synced.assignment.needsManualReview,
+      isPassed: synced.submission?.isPassed ?? synced.assignment.isPassed ?? false,
+    };
+  }
+
+  const startedAt = getSubmissionStartedAt(synced.assignment, synced.submission);
+  if (!startedAt) {
+    if (
+      synced.assignment.dueAt &&
+      !assessment.allowLateSubmission &&
+      synced.assignment.dueAt < new Date()
+    ) {
+      synced.assignment.status = 'expired';
+      await synced.assignment.save();
+      throw new Error('The assessment deadline has already passed.');
+    }
+
+    throw new Error('Start the assessment before submitting it.');
+  }
+
+  const submission =
+    synced.submission ?? (await ensureSubmissionDocument(synced.assignment, startedAt));
+  submission.answers = toDraftAnswers(input.answers) as typeof submission.answers;
+
+  const timerEndedAt = getTimerEndsAt(assessment, synced.assignment, submission);
+  return finalizeAssessmentSubmission({
+    assignment: synced.assignment,
+    assessment,
+    submission,
+    answers: input.answers,
+    autoSubmit: Boolean(input.autoSubmit || (timerEndedAt && timerEndedAt <= new Date())),
+    submittedAt: timerEndedAt && timerEndedAt <= new Date() ? timerEndedAt : undefined,
+  });
+}
+
+export async function saveAssessmentDraft(input: {
+  assignmentId: string;
+  studentId: string;
+  answers: AssessmentAnswerPayload[];
+}) {
+  await connectDB();
+
+  const assignment = await AssessmentAssignment.findOne({
+    _id: input.assignmentId,
+    studentId: input.studentId,
+  });
+  if (!assignment) {
+    throw new Error('Assessment assignment not found.');
+  }
+
+  await assertStudentPremiumAccess(input.studentId, 'assessment');
+
+  const [assessment, existingSubmission] = await Promise.all([
+    Assessment.findById(assignment.assessmentId),
+    AssessmentSubmission.findOne({ assignmentId: assignment._id }),
+  ]);
+  if (!assessment || !assessment.isActive) {
+    throw new Error('This assessment is no longer active.');
+  }
+
+  const synced = await syncAssessmentAssignmentStateByDocuments({
+    assignment,
+    assessment,
+    submission: existingSubmission,
+  });
+  if (synced.assignment.submittedAt || synced.submission?.submittedAt) {
+    return synced.submission;
+  }
+
+  if (synced.assignment.status === 'expired') {
     throw new Error('The assessment deadline has already passed.');
   }
 
-  let submission = await AssessmentSubmission.findOne({ assignmentId: assignment._id });
-  if (!submission) {
-    submission = await AssessmentSubmission.create({
-      assessmentId: assignment.assessmentId,
-      assignmentId: assignment._id,
-      employerId: assignment.employerId,
-      studentId: assignment.studentId,
-      applicationId: assignment.applicationId,
-      startedAt: new Date(),
-      answers: [],
-    });
+  const startedAt = getSubmissionStartedAt(synced.assignment, synced.submission);
+  if (!startedAt) {
+    throw new Error('Start the assessment before saving draft answers.');
   }
 
-  const answerMap = new Map(input.answers.map((answer) => [answer.questionIndex, answer]));
-  const evaluatedAnswers: Array<(typeof submission.answers)[number]> = [];
-  let objectiveScore = 0;
-  const manualScore = 0;
-  let needsManualReview = false;
+  const submission =
+    synced.submission ?? (await ensureSubmissionDocument(synced.assignment, startedAt));
+  submission.answers = toDraftAnswers(input.answers) as typeof submission.answers;
+  synced.assignment.lastOpenedAt = new Date();
 
-  for (const question of assessment.questions as unknown as AssessmentQuestionDraft[]) {
-    const rawAnswer = answerMap.get(question.index);
-
-    if (question.type === 'mcq') {
-      const score = scoreMcq(question, rawAnswer?.selectedOptionIndex);
-      objectiveScore += score;
-      evaluatedAnswers.push({
-        questionIndex: question.index,
-        selectedOptionIndex: rawAnswer?.selectedOptionIndex,
-        answerText:
-          typeof rawAnswer?.selectedOptionIndex === 'number'
-            ? (question.options?.[rawAnswer.selectedOptionIndex] ?? '')
-            : '',
-        objectiveMarksAwarded: score,
-        marksAwarded: score,
-      });
-      continue;
-    }
-
-    if (question.type === 'short_answer') {
-      const shortResult = scoreShortAnswer(question, rawAnswer?.answerText);
-      objectiveScore += shortResult.score;
-      needsManualReview ||= shortResult.needsManualReview;
-      evaluatedAnswers.push({
-        questionIndex: question.index,
-        answerText: cleanText(rawAnswer?.answerText),
-        objectiveMarksAwarded: shortResult.score,
-        marksAwarded: shortResult.score,
-      });
-      continue;
-    }
-
-    if (question.type === 'coding') {
-      const codingResult = await scoreCodingQuestion(question, rawAnswer?.code);
-      objectiveScore += codingResult.score;
-      const finalRun = codingResult.runs.at(-1);
-      evaluatedAnswers.push({
-        questionIndex: question.index,
-        code: cleanText(rawAnswer?.code),
-        answerText: cleanText(rawAnswer?.code),
-        objectiveMarksAwarded: codingResult.score,
-        marksAwarded: codingResult.score,
-        executionStatus: finalRun?.status ?? 'Not executed',
-        executionOutput: finalRun?.stdout ?? '',
-        executionError: finalRun?.stderr || finalRun?.compileOutput || finalRun?.message || '',
-        judge0SubmissionToken: finalRun?.token,
-      });
-      continue;
-    }
-
-    needsManualReview = true;
-    evaluatedAnswers.push({
-      questionIndex: question.index,
-      answerText: cleanText(rawAnswer?.answerText),
-      uploadedFiles: rawAnswer?.uploadedFiles ?? [],
-      objectiveMarksAwarded: 0,
-      marksAwarded: 0,
-    });
-  }
-
-  submission.answers = evaluatedAnswers;
-  submission.objectiveScore = objectiveScore;
-  submission.manualScore = manualScore;
-  submission.totalScore = objectiveScore + manualScore;
-  submission.isPassed = !needsManualReview && submission.totalScore >= assessment.passingMarks;
-  submission.submittedAt = new Date();
-  submission.isAutoSubmitted = Boolean(input.autoSubmit);
-  submission.timeTakenSeconds = Math.max(
-    1,
-    Math.round((submission.submittedAt.getTime() - submission.startedAt.getTime()) / 1000)
-  );
-
-  const plagiarism = await computePlagiarismForSubmission(
-    assessment._id,
-    submission._id,
-    submission.answers
-  );
-  submission.answers = submission.answers.map((answer: SubmissionAnswer) => {
-    const match = plagiarism.find((item) => item.questionIndex === answer.questionIndex);
-    if (!match) return answer;
-    return {
-      ...answer,
-      plagiarismScore: match.plagiarismScore,
-      plagiarismMatches: match.plagiarismMatches,
-    };
-  });
-
-  await submission.save();
-
-  assignment.status = needsManualReview ? 'submitted' : 'graded';
-  assignment.startedAt = submission.startedAt;
-  assignment.submittedAt = submission.submittedAt;
-  assignment.gradedAt = needsManualReview ? undefined : new Date();
-  assignment.objectiveScore = objectiveScore;
-  assignment.manualScore = manualScore;
-  assignment.totalScore = submission.totalScore;
-  assignment.isPassed = submission.isPassed;
-  assignment.needsManualReview = needsManualReview;
-  await assignment.save();
-
-  await Application.findByIdAndUpdate(assignment.applicationId, {
-    assessmentScore: submission.totalScore,
-    assessmentPassed: submission.isPassed,
-    assessmentSubmittedAt: submission.submittedAt,
-  });
-
-  return {
-    submissionId: submission._id.toString(),
-    totalScore: submission.totalScore ?? 0,
-    needsManualReview,
-    isPassed: submission.isPassed ?? false,
-  };
+  await Promise.all([submission.save(), synced.assignment.save()]);
+  return submission;
 }
 
 export async function gradeAssessmentAssignment(input: {
@@ -761,17 +1232,39 @@ export async function gradeAssessmentAssignment(input: {
     throw new Error('Assessment submission not found.');
   }
 
+  const questionMap = new Map(
+    (assessment.questions as unknown as AssessmentQuestionDraft[]).map((question) => [
+      question.index,
+      question,
+    ])
+  );
+
   let manualScore = 0;
   submission.answers = submission.answers.map((answer: SubmissionAnswer) => {
     const adjustment = input.manualAdjustments.find(
       (item) => item.questionIndex === answer.questionIndex
     );
-    if (!adjustment) return answer;
-    manualScore += adjustment.marksAwarded;
+    const question = questionMap.get(answer.questionIndex);
+    const maxManualMarks = Math.max(
+      0,
+      (question?.marks ?? 0) - (answer.objectiveMarksAwarded ?? 0)
+    );
+    const rawManualMarks = adjustment ? adjustment.marksAwarded : (answer.manualMarksAwarded ?? 0);
+    const manualMarksAwarded = Math.min(maxManualMarks, Math.max(0, rawManualMarks));
+    manualScore += manualMarksAwarded;
+
+    if (!adjustment) {
+      return {
+        ...answer,
+        manualMarksAwarded,
+        marksAwarded: (answer.objectiveMarksAwarded ?? 0) + manualMarksAwarded,
+      };
+    }
+
     return {
       ...answer,
-      manualMarksAwarded: adjustment.marksAwarded,
-      marksAwarded: (answer.objectiveMarksAwarded ?? 0) + adjustment.marksAwarded,
+      manualMarksAwarded,
+      marksAwarded: (answer.objectiveMarksAwarded ?? 0) + manualMarksAwarded,
       evaluationNotes: cleanText(adjustment.evaluationNotes),
     };
   });

@@ -52,6 +52,7 @@ export async function activateSubscriptionFromPayment(params: {
     await User.findByIdAndUpdate(params.userId, {
       isPremium: true,
       premiumExpiresAt: existingSubscription.endDate,
+      premiumOverride: null,
     });
 
     return existingSubscription;
@@ -83,6 +84,7 @@ export async function activateSubscriptionFromPayment(params: {
   await User.findByIdAndUpdate(params.userId, {
     isPremium: true,
     premiumExpiresAt: endDate,
+    premiumOverride: null,
   });
 
   return subscription;

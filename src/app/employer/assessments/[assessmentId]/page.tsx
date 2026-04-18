@@ -8,6 +8,8 @@ import { Notification } from '@/models/Notification';
 import { Message } from '@/models/Message';
 import { User } from '@/models/User';
 import { EMPLOYER_NAV_ITEMS } from '@/lib/employer-navigation';
+import { syncAssessmentAssignmentStates } from '@/lib/hiring-suite';
+import { formatDhakaDateTime } from '@/lib/datetime';
 import { syncPremiumStatus } from '@/lib/premium';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import {
@@ -21,6 +23,20 @@ import EmployerAssessmentDetailClient from './EmployerAssessmentDetailClient';
 
 async function getAssessmentDetailWorkspace(userId: string, assessmentId: string) {
   await connectDB();
+
+  const pendingAssignmentIds = await AssessmentAssignment.find({
+    assessmentId,
+    employerId: userId,
+    status: { $in: ['assigned', 'started'] },
+  })
+    .select('_id')
+    .lean();
+
+  if (pendingAssignmentIds.length > 0) {
+    await syncAssessmentAssignmentStates(
+      pendingAssignmentIds.map((assignment) => assignment._id.toString())
+    );
+  }
 
   const [employer, assessment, unreadNotifications, unreadMessages] = await Promise.all([
     User.findById(userId).select('name email image companyName').lean(),
@@ -65,6 +81,7 @@ async function getAssessmentDetailWorkspace(userId: string, assessmentId: string
       : null,
     application: assignment.applicationId
       ? {
+          _id: (assignment.applicationId as { _id: string })._id.toString(),
           status: (assignment.applicationId as { status?: string }).status ?? '',
           fitScore: (assignment.applicationId as { fitScore?: number }).fitScore ?? null,
         }
@@ -78,17 +95,6 @@ async function getAssessmentDetailWorkspace(userId: string, assessmentId: string
     assignments: serializedAssignments,
     chrome: { unreadNotifications, unreadMessages },
   };
-}
-
-function formatDateTime(value?: Date | string | null) {
-  if (!value) return 'No deadline';
-  return new Intl.DateTimeFormat('en-BD', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(value));
 }
 
 export default async function EmployerAssessmentDetailPage({
@@ -108,6 +114,15 @@ export default async function EmployerAssessmentDetailPage({
   if (!data) redirect('/employer/assessments');
 
   const job = data.assessment.jobId as { title: string; companyName: string } | null;
+  const uniqueDueTimes = Array.from(
+    new Set(data.assignments.map((assignment) => assignment.dueAt).filter(Boolean))
+  );
+  const dueLabel =
+    uniqueDueTimes.length === 1
+      ? formatDhakaDateTime(uniqueDueTimes[0])
+      : uniqueDueTimes.length > 1
+        ? 'Varies by candidate'
+        : formatDhakaDateTime(data.assessment.dueAt, 'Set during dispatch');
 
   return (
     <DashboardShell
@@ -149,7 +164,7 @@ export default async function EmployerAssessmentDetailPage({
                 {[
                   { label: 'Role', value: job?.title ?? 'Role' },
                   { label: 'Company', value: job?.companyName ?? 'Employer' },
-                  { label: 'Due', value: formatDateTime(data.assessment.dueAt) },
+                  { label: 'Due', value: dueLabel },
                   {
                     label: 'Pass mark',
                     value: `${data.assessment.passingMarks} / ${data.assessment.totalMarks}`,

@@ -7,6 +7,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import ApplicantActions from './ApplicantActions';
 import HiringSuiteBatchActions from './HiringSuiteBatchActions';
+import { formatDhakaDateTime } from '@/lib/datetime';
 import {
   ChevronDown,
   ChevronUp,
@@ -40,6 +41,14 @@ type AppData = {
   resumeUrlSnapshot: string;
   generatedResumeUrlSnapshot: string;
   student: StudentData;
+  assessment?: {
+    assessmentId: string;
+    assignmentId: string;
+    dueAt?: string | null;
+    submittedAt?: string | null;
+    score?: number | null;
+    passed?: boolean | null;
+  } | null;
 };
 
 type UniversityStat = {
@@ -113,6 +122,10 @@ const PIPELINE_ORDER = [
   'hired',
   'rejected',
 ];
+
+function formatMetaDate(value?: string | null) {
+  return formatDhakaDateTime(value, '');
+}
 
 // ── University row with expandable pipeline ────────────────────────────────
 function UniversityRow({
@@ -412,6 +425,8 @@ function ApplicantCard({
   const fitScore = app.fitScore ?? 0;
   const fitColor = fitScore >= 70 ? '#10B981' : fitScore >= 40 ? '#F59E0B' : '#EF4444';
   const statusCfg = STATUS_CFG[app.status] ?? STATUS_CFG['applied'];
+  const hasAssessment = Boolean(app.assessment?.assignmentId || app.assessment?.assessmentId);
+  const assessmentSubmitted = Boolean(app.assessment?.submittedAt);
   const initials = app.student.name
     .split(' ')
     .map((w) => w[0])
@@ -536,6 +551,60 @@ function ApplicantCard({
               })
             : '—'}
         </div>
+        {hasAssessment ? (
+          <div
+            style={{
+              marginTop: 10,
+              borderRadius: 14,
+              border: `1px solid ${assessmentSubmitted ? '#A7F3D0' : '#BFDBFE'}`,
+              background: assessmentSubmitted ? '#ECFDF5' : '#EFF6FF',
+              padding: '10px 12px',
+              display: 'grid',
+              gap: 4,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+                flexWrap: 'wrap',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: assessmentSubmitted ? '#065F46' : '#1D4ED8',
+                }}
+              >
+                {assessmentSubmitted ? 'Assessment submitted' : 'Assessment not submitted yet'}
+              </span>
+              {typeof app.assessment?.score === 'number' ? (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: assessmentSubmitted ? '#065F46' : '#1D4ED8',
+                  }}
+                >
+                  Score {app.assessment.score}
+                </span>
+              ) : null}
+            </div>
+            <div style={{ fontSize: 11, color: '#475569', lineHeight: 1.5 }}>
+              {assessmentSubmitted
+                ? `Submitted ${formatMetaDate(app.assessment?.submittedAt)}`
+                : app.assessment?.dueAt
+                  ? `Due ${formatMetaDate(app.assessment.dueAt)}`
+                  : 'Assigned from the hiring suite.'}
+              {typeof app.assessment?.passed === 'boolean'
+                ? ` Â· ${app.assessment.passed ? 'Passed' : 'Pending review'}`
+                : ''}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* Fit score ring */}
@@ -613,6 +682,28 @@ function ApplicantCard({
         >
           <MessageCircle size={11} /> Message
         </Link>
+        {app.assessment?.assessmentId ? (
+          <Link
+            href={`/employer/assessments/${app.assessment.assessmentId}`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 5,
+              background: assessmentSubmitted ? '#ECFDF5' : '#EFF6FF',
+              color: assessmentSubmitted ? '#065F46' : '#1D4ED8',
+              padding: '7px 13px',
+              borderRadius: 9,
+              fontSize: 11,
+              fontWeight: 700,
+              textDecoration: 'none',
+              border: `1px solid ${assessmentSubmitted ? '#A7F3D0' : '#BFDBFE'}`,
+            }}
+          >
+            <Sparkles size={11} />
+            {assessmentSubmitted ? 'Review assessment' : 'Open assessment'}
+          </Link>
+        ) : null}
         <ApplicantActions
           appId={app._id}
           currentStatus={app.status}

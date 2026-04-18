@@ -67,6 +67,7 @@ export interface IUser extends Document {
   phone?: string;
   isPremium: boolean;
   premiumExpiresAt?: Date;
+  premiumOverride?: 'free' | 'premium' | null;
   isVerified: boolean;
   mustChangePassword?: boolean;
   createdAt: Date;
@@ -142,6 +143,7 @@ const UserSchema = new Schema<IUser>(
     phone: { type: String, match: /^\+8801[3-9]\d{8}$/ },
     isPremium: { type: Boolean, default: false },
     premiumExpiresAt: { type: Date },
+    premiumOverride: { type: String, enum: ['free', 'premium'], default: null },
     isVerified: { type: Boolean, default: false },
     mustChangePassword: { type: Boolean, default: false },
 

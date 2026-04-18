@@ -1,6 +1,7 @@
 import 'server-only';
 
 type Judge0Language = 'javascript' | 'typescript' | 'python' | 'java' | 'cpp';
+type ExecutionProvider = 'judge0' | 'piston';
 
 type Judge0LanguageRecord = {
   id: number;
@@ -57,10 +58,34 @@ export type Judge0ExecutionResult = {
   passed: boolean;
 };
 
+export class CodeExecutionConfigError extends Error {
+  status: number;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'CodeExecutionConfigError';
+    this.status = 503;
+  }
+}
+
+export class CodeExecutionUpstreamError extends Error {
+  status: number;
+  provider: ExecutionProvider;
+  upstreamStatus: number;
+
+  constructor(provider: ExecutionProvider, upstreamStatus: number, message: string) {
+    super(message);
+    this.name = 'CodeExecutionUpstreamError';
+    this.status = 502;
+    this.provider = provider;
+    this.upstreamStatus = upstreamStatus;
+  }
+}
+
 const LANGUAGE_MATCHERS: Record<Judge0Language, RegExp[]> = {
   javascript: [/javascript/i, /node\.js/i],
   typescript: [/typescript/i],
-  python: [/python\s*3/i, /^python$/i],
+  python: [/python/i, /\b3(?:\.\d+)?\b/i],
   java: [/^java\b/i],
   cpp: [/c\+\+/i],
 };
@@ -90,14 +115,41 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function getCodeExecutionConfigMessage() {
+  return 'Live code execution is not configured. Set JUDGE0_API_BASE_URL or PISTON_API_BASE_URL in .env.local and restart the server.';
+}
+
+export function getConfiguredExecutionProvider(): ExecutionProvider | null {
+  if (process.env.JUDGE0_API_BASE_URL?.trim()) {
+    return 'judge0';
+  }
+
+  if (process.env.PISTON_API_BASE_URL?.trim()) {
+    return 'piston';
+  }
+
+  return null;
+}
+
+export function isCodeExecutionConfigured() {
+  return getConfiguredExecutionProvider() !== null;
+}
+
 function getExecutionProvider() {
-  return process.env.JUDGE0_API_BASE_URL?.trim() ? 'judge0' : 'piston';
+  const provider = getConfiguredExecutionProvider();
+  if (!provider) {
+    throw new CodeExecutionConfigError(
+      `${getCodeExecutionConfigMessage()} The previous public Piston fallback is disabled because that endpoint now requires whitelist authorization.`
+    );
+  }
+
+  return provider;
 }
 
 function getJudge0BaseUrl() {
   const value = process.env.JUDGE0_API_BASE_URL?.trim();
   if (!value) {
-    throw new Error('JUDGE0_API_BASE_URL is not configured.');
+    throw new CodeExecutionConfigError(getCodeExecutionConfigMessage());
   }
   return value.replace(/\/+$/, '');
 }
@@ -132,7 +184,10 @@ function getJudge0Headers() {
 }
 
 function getPistonBaseUrl() {
-  const value = process.env.PISTON_API_BASE_URL?.trim() || 'https://emkc.org/api/v2/piston';
+  const value = process.env.PISTON_API_BASE_URL?.trim();
+  if (!value) {
+    throw new CodeExecutionConfigError(getCodeExecutionConfigMessage());
+  }
   return value.replace(/\/+$/, '');
 }
 
@@ -173,14 +228,25 @@ async function judge0Fetch<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`Judge0 request failed (${response.status}): ${text.slice(0, 300)}`);
+    if (response.status === 401 || response.status === 403) {
+      throw new CodeExecutionUpstreamError(
+        'judge0',
+        response.status,
+        `Configured Judge0 endpoint rejected the request (${response.status}). Check JUDGE0_API_BASE_URL, JUDGE0_API_KEY, and any JUDGE0_EXTRA_HEADERS_JSON auth settings.`
+      );
+    }
+
+    throw new CodeExecutionUpstreamError(
+      'judge0',
+      response.status,
+      `Judge0 request failed (${response.status}): ${text.slice(0, 300)}`
+    );
   }
 
   return (await response.json()) as T;
 }
 
 async function pistonFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const usingDefaultPublicBase = !process.env.PISTON_API_BASE_URL?.trim();
   const response = await fetch(`${getPistonBaseUrl()}${path}`, {
     ...init,
     headers: {
@@ -192,11 +258,19 @@ async function pistonFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const text = await response.text();
-    const guidance =
-      usingDefaultPublicBase && (response.status === 401 || response.status === 403)
-        ? ' Configure PISTON_API_BASE_URL to a self-hosted or authorized Piston endpoint.'
-        : '';
-    throw new Error(`Piston request failed (${response.status}): ${text.slice(0, 300)}${guidance}`);
+    if (response.status === 401 || response.status === 403) {
+      throw new CodeExecutionUpstreamError(
+        'piston',
+        response.status,
+        `Configured Piston endpoint rejected the request (${response.status}). Check PISTON_API_BASE_URL and any PISTON_EXTRA_HEADERS_JSON auth settings. Response: ${text.slice(0, 300)}`
+      );
+    }
+
+    throw new CodeExecutionUpstreamError(
+      'piston',
+      response.status,
+      `Piston request failed (${response.status}): ${text.slice(0, 300)}`
+    );
   }
 
   return (await response.json()) as T;

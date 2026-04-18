@@ -19,9 +19,24 @@ import {
 import { ClipboardCheck, Clock3, FileText, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { formatAssessmentAssignmentStatus } from '@/lib/hiring-suite-shared';
+import { syncAssessmentAssignmentStates } from '@/lib/hiring-suite';
+import { formatDhakaDateTime } from '@/lib/datetime';
 
 async function getStudentAssessmentData(userId: string) {
   await connectDB();
+
+  const pendingAssignmentIds = await AssessmentAssignment.find({
+    studentId: userId,
+    status: { $in: ['assigned', 'started'] },
+  })
+    .select('_id')
+    .lean();
+
+  if (pendingAssignmentIds.length > 0) {
+    await syncAssessmentAssignmentStates(
+      pendingAssignmentIds.map((assignment) => assignment._id.toString())
+    );
+  }
 
   const [student, assignments, unreadNotifications, unreadMessages] = await Promise.all([
     User.findById(userId).select('name email image university department').lean(),
@@ -47,7 +62,6 @@ async function getStudentAssessmentData(userId: string) {
       status: assignment.status,
       dueAt: assignment.dueAt?.toISOString() ?? assessment?.dueAt?.toISOString() ?? null,
       totalScore: assignment.totalScore ?? null,
-      isPassed: assignment.isPassed ?? null,
       needsManualReview: assignment.needsManualReview,
       submittedAt: assignment.submittedAt?.toISOString() ?? null,
       assessment: assessment
@@ -75,7 +89,7 @@ async function getStudentAssessmentData(userId: string) {
     submitted: serializedAssignments.filter((assignment) =>
       ['submitted', 'graded'].includes(assignment.status)
     ).length,
-    passed: serializedAssignments.filter((assignment) => assignment.isPassed).length,
+    graded: serializedAssignments.filter((assignment) => assignment.status === 'graded').length,
   };
 
   return {
@@ -84,17 +98,6 @@ async function getStudentAssessmentData(userId: string) {
     stats,
     chrome: { unreadNotifications, unreadMessages },
   };
-}
-
-function formatDateTime(value?: string | null) {
-  if (!value) return 'No deadline';
-  return new Intl.DateTimeFormat('en-BD', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(value));
 }
 
 export default async function StudentAssessmentsPage() {
@@ -146,7 +149,7 @@ export default async function StudentAssessmentsPage() {
                   { label: 'Total', value: data.stats.total, color: '#F8FAFC' },
                   { label: 'Pending', value: data.stats.pending, color: '#22D3EE' },
                   { label: 'Submitted', value: data.stats.submitted, color: '#F59E0B' },
-                  { label: 'Passed', value: data.stats.passed, color: '#10B981' },
+                  { label: 'Results ready', value: data.stats.graded, color: '#10B981' },
                 ].map((stat) => (
                   <div
                     key={stat.label}
@@ -201,8 +204,8 @@ export default async function StudentAssessmentsPage() {
               accent="#F59E0B"
             />
             <StatCard
-              label="Passed"
-              value={formatCompactNumber(data.stats.passed)}
+              label="Results ready"
+              value={formatCompactNumber(data.stats.graded)}
               Icon={Trophy}
               accent="#10B981"
             />
@@ -293,10 +296,10 @@ export default async function StudentAssessmentsPage() {
                       color: '#64748B',
                     }}
                   >
-                    <span>Due: {formatDateTime(assignment.dueAt)}</span>
+                    <span>Due: {formatDhakaDateTime(assignment.dueAt)}</span>
                     <span>{assignment.assessment?.durationMinutes ?? '—'} min</span>
                     {assignment.submittedAt ? (
-                      <span>Submitted: {formatDateTime(assignment.submittedAt)}</span>
+                      <span>Submitted: {formatDhakaDateTime(assignment.submittedAt)}</span>
                     ) : null}
                     {typeof assignment.totalScore === 'number' ? (
                       <span>Score: {assignment.totalScore}</span>
