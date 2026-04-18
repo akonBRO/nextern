@@ -431,7 +431,7 @@ export default async function AdvisorDashboard() {
           <CalendarBoard
             events={calendarEvents}
             isCalendarConnected={advisor?.googleCalendarConnected ?? false}
-            boardTitle="Advising Calendar"
+            boardTitle="Calendar"
             boardSubtitle="Monitor only your hosted sessions and registration cutoffs from one board."
             fullCalendarHref="/advisor/calendar"
             manageCalendarHref="/advisor/profile#calendar"
