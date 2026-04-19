@@ -34,6 +34,21 @@ const initialForm: FormState = {
   fitScore: '',
 };
 
+type ApiResponse = {
+  error?: string;
+  message?: string;
+  details?: Record<string, string[] | undefined>;
+};
+
+function getApiErrorMessage(data: ApiResponse | null | undefined, fallback: string) {
+  const detail = Object.values(data?.details ?? {})
+    .flat()
+    .find((message): message is string => typeof message === 'string' && message.trim().length > 0);
+
+  if (detail) return detail;
+  return data?.error ?? fallback;
+}
+
 function badgeTone(priority: 'high' | 'medium' | 'low') {
   if (priority === 'high') return { bg: '#FEF2F2', border: '#FECACA', color: '#B91C1C' };
   if (priority === 'medium') return { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' };
@@ -122,9 +137,9 @@ export default function TeacherRecommendationComposer({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        const data = (await res.json()) as { error?: string; message?: string };
+        const data = (await res.json()) as ApiResponse;
         if (!res.ok) {
-          setError(data.error ?? 'Failed to save recommendation.');
+          setError(getApiErrorMessage(data, 'Failed to save recommendation.'));
           return;
         }
 
@@ -148,9 +163,9 @@ export default function TeacherRecommendationComposer({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'archived' }),
       });
-      const data = (await res.json()) as { error?: string; message?: string };
+      const data = (await res.json()) as ApiResponse;
       if (!res.ok) {
-        setError(data.error ?? 'Failed to archive recommendation.');
+        setError(getApiErrorMessage(data, 'Failed to archive recommendation.'));
         return;
       }
 
@@ -216,6 +231,7 @@ export default function TeacherRecommendationComposer({
             <select
               value={form.linkedJobId}
               onChange={(event) => handleJobChange(event.target.value)}
+              required
               style={inputStyle()}
             >
               <option value="">Choose a job from the platform</option>
@@ -264,6 +280,9 @@ export default function TeacherRecommendationComposer({
                 value={form.title}
                 onChange={(event) => update('title', event.target.value)}
                 placeholder="Example: Strong fit for the next internship round"
+                required
+                minLength={3}
+                maxLength={160}
                 style={inputStyle()}
               />
             </Field>
@@ -288,6 +307,9 @@ export default function TeacherRecommendationComposer({
               onChange={(event) => update('description', event.target.value)}
               placeholder="Explain why this student should be considered, what signals stand out, and what outcome you expect."
               rows={5}
+              required
+              minLength={12}
+              maxLength={2400}
               style={{ ...inputStyle(), resize: 'vertical', minHeight: 136 }}
             />
           </Field>
@@ -315,6 +337,7 @@ export default function TeacherRecommendationComposer({
                 value={form.fitScore}
                 onChange={(event) => update('fitScore', event.target.value)}
                 placeholder={linkedJob ? String(linkedJob.fitScore) : 'Optional'}
+                inputMode="numeric"
                 style={inputStyle()}
               />
             </Field>

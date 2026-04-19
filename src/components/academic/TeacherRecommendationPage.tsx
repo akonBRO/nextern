@@ -1,12 +1,24 @@
-// src/components/academic/TeacherRecommendationPage.tsx
-// Layout and visual polish only — all logic, components, and props unchanged
+'use client';
 
+import type { CSSProperties, ReactNode } from 'react';
+import { useDeferredValue, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ChevronDown, LayoutGrid, ShieldAlert, TrendingUp, Users } from 'lucide-react';
+import {
+  ArrowRight,
+  BookOpen,
+  CheckCircle2,
+  ChevronDown,
+  LayoutGrid,
+  Search,
+  ShieldAlert,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Users,
+} from 'lucide-react';
 import DashboardShell, { type DashboardNavItem } from '@/components/dashboard/DashboardShell';
 import TeacherAcademicReviewComposer from '@/components/academic/TeacherAcademicReviewComposer';
 import TeacherRecommendationComposer from '@/components/academic/TeacherRecommendationComposer';
-import TeacherStudentDashboardLauncher from '@/components/academic/TeacherStudentDashboardLauncher';
 import {
   ActionLink,
   DashboardPage,
@@ -19,7 +31,10 @@ import {
   Tag,
   formatStatusLabel,
 } from '@/components/dashboard/DashboardContent';
-import type { TeacherRecommendationWorkspaceData } from '@/lib/opportunity-recommendations';
+import type {
+  TeacherRecommendationWorkspaceData,
+  WorkspaceLearningAction,
+} from '@/lib/opportunity-recommendations';
 
 type Props = {
   role: 'advisor' | 'dept_head';
@@ -47,6 +62,110 @@ export default function TeacherRecommendationPage({
   data,
 }: Props) {
   const selectedStudent = data.selectedStudent;
+  const hasStudent = Boolean(selectedStudent);
+  const savedReviewCount = data.academicReviews.length;
+  const savedRecommendationCount = data.manualRecommendations.length;
+  const coachingPlaybook = [...data.suggestedAcademicPaths, ...data.learningActions].slice(0, 6);
+  const [opportunityQuery, setOpportunityQuery] = useState('');
+  const [opportunityCategory, setOpportunityCategory] = useState<'all' | string>('all');
+  const [opportunityPriority, setOpportunityPriority] = useState<'all' | 'high' | 'medium' | 'low'>(
+    'all'
+  );
+  const [studentQuery, setStudentQuery] = useState('');
+  const deferredOpportunityQuery = useDeferredValue(opportunityQuery.trim().toLowerCase());
+  const deferredStudentQuery = useDeferredValue(studentQuery.trim().toLowerCase());
+
+  const opportunityCategories = getUniqueValues(
+    data.automatedRecommendations.map((recommendation) =>
+      recommendation.category.replace(/_/g, ' ')
+    )
+  );
+  const opportunitySearchCues = getOpportunitySearchCues(data.automatedRecommendations).slice(0, 8);
+  const filteredRecommendations = data.automatedRecommendations.filter((recommendation) => {
+    const normalizedCategory = recommendation.category.replace(/_/g, ' ');
+    const matchesCategory =
+      opportunityCategory === 'all' || normalizedCategory === opportunityCategory;
+    const matchesPriority =
+      opportunityPriority === 'all' || recommendation.priority === opportunityPriority;
+    const haystack = [
+      recommendation.title,
+      recommendation.organizationName,
+      recommendation.category,
+      normalizedCategory,
+      recommendation.rationale,
+      recommendation.dateLabel,
+      ...recommendation.matchedSignals,
+      ...recommendation.missingSignals,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    const matchesQuery = !deferredOpportunityQuery || haystack.includes(deferredOpportunityQuery);
+
+    return matchesCategory && matchesPriority && matchesQuery;
+  });
+  const visibleRecommendations = filteredRecommendations.slice(
+    0,
+    deferredOpportunityQuery ? 24 : 12
+  );
+  const filteredStudents = data.students.filter((student) => {
+    const haystack = [
+      student.name,
+      student.email,
+      student.department,
+      student.currentSemester,
+      student.studentId,
+      typeof student.cgpa === 'number' ? `cgpa ${student.cgpa.toFixed(2)}` : '',
+      typeof student.cgpa === 'number' ? student.cgpa.toFixed(2) : '',
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+
+    return !deferredStudentQuery || haystack.includes(deferredStudentQuery);
+  });
+  const visibleStudentOptions = filteredStudents
+    .filter((student) => student.id !== data.selectedStudentId)
+    .slice(0, 8);
+
+  const workflowSteps = [
+    {
+      title: 'Select student',
+      description: hasStudent
+        ? `${selectedStudent?.name ?? 'Selected student'} is loaded into the workspace.`
+        : 'Choose a student from the scoped list to unlock the workspace.',
+      meta: `${data.cohortSummary.totalStudents} in scope`,
+      Icon: Users,
+      tone: 'info' as const,
+      active: hasStudent,
+    },
+    {
+      title: 'Review signals',
+      description: hasStudent
+        ? `${data.automatedRecommendations.length} matches and ${
+            selectedStudent?.applicationHighlights.length ?? 0
+          } tracked applications are ready to review.`
+        : 'Readiness, gaps, and application context appear after selection.',
+      meta: hasStudent
+        ? `${selectedStudent?.topSkillGaps.length ?? 0} gap${
+            (selectedStudent?.topSkillGaps.length ?? 0) === 1 ? '' : 's'
+          } flagged`
+        : 'Awaiting context',
+      Icon: Target,
+      tone: 'warning' as const,
+      active: hasStudent,
+    },
+    {
+      title: 'Take action',
+      description: hasStudent
+        ? 'Save academic reviews and job recommendations in one place.'
+        : 'The action workspace opens once a student is selected.',
+      meta: `${savedReviewCount} reviews, ${savedRecommendationCount} recommendations`,
+      Icon: Sparkles,
+      tone: 'success' as const,
+      active: hasStudent,
+    },
+  ];
 
   return (
     <DashboardShell
@@ -57,15 +176,14 @@ export default function TeacherRecommendationPage({
       user={data.chromeUser}
     >
       <DashboardPage>
-        {/* ── Hero ── */}
         <HeroCard
-          eyebrow="Unified opportunity recommendations"
+          eyebrow="Teacher guidance workspace"
           title={
             selectedStudent
-              ? `${selectedStudent.name} — guidance workspace`
+              ? `${selectedStudent.name} guidance workspace`
               : role === 'advisor'
-                ? 'Advisor opportunity workspace'
-                : 'Department opportunity workspace'
+                ? 'Advisor recommendation workspace'
+                : 'Department recommendation workspace'
           }
           subtitle={
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -77,9 +195,12 @@ export default function TeacherRecommendationPage({
               {selectedStudent?.currentSemester ? (
                 <Tag label={selectedStudent.currentSemester} tone="success" />
               ) : null}
+              {selectedStudent?.yearOfStudy ? (
+                <Tag label={`Year ${selectedStudent.yearOfStudy}`} tone="warning" />
+              ) : null}
             </div>
           }
-          description="Blend automated matching, skill-gap signals, and teacher judgment into one professional workspace. Prioritize opportunities, recommend learning actions, and keep advising decisions grounded in readiness data."
+          description="Move through a clean advising flow: pick a student, review readiness evidence, then record formal academic guidance and job recommendations with full context on one page."
           actions={
             <>
               <ActionLink href={directoryHref} label="Open student directory" />
@@ -89,8 +210,8 @@ export default function TeacherRecommendationPage({
           aside={
             selectedStudent ? (
               <Panel
-                title="Selected student"
-                description="Live readiness context for this session."
+                title="Current focus"
+                description="High-signal context for the active student."
                 style={{
                   background: 'rgba(255,255,255,0.12)',
                   border: '1px solid rgba(255,255,255,0.16)',
@@ -99,63 +220,85 @@ export default function TeacherRecommendationPage({
                 <div style={{ display: 'grid', gap: 14 }}>
                   <div>
                     <div
-                      style={{ color: '#FFFFFF', fontSize: 20, fontWeight: 900, lineHeight: 1.2 }}
+                      style={{ color: '#FFFFFF', fontSize: 20, fontWeight: 900, lineHeight: 1.15 }}
                     >
                       {selectedStudent.name}
                     </div>
-                    <div style={{ color: '#94A3B8', fontSize: 12, marginTop: 4 }}>
+                    <div style={{ color: '#CBD5E1', fontSize: 12, marginTop: 4 }}>
                       {selectedStudent.email}
                     </div>
                   </div>
+
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {selectedStudent.department ? (
                       <Pill label={selectedStudent.department} tone="infoOnDark" />
                     ) : null}
-                    {selectedStudent.yearOfStudy ? (
-                      <Pill label={`Year ${selectedStudent.yearOfStudy}`} tone="successOnDark" />
-                    ) : null}
                     {selectedStudent.studentId ? (
                       <Pill label={`ID ${selectedStudent.studentId}`} tone="neutralOnDark" />
                     ) : null}
+                    <Pill
+                      label={`${data.automatedRecommendations.length} opportunity match${
+                        data.automatedRecommendations.length === 1 ? '' : 'es'
+                      }`}
+                      tone="successOnDark"
+                    />
                   </div>
-                  <div
-                    style={{
-                      borderTop: '1px solid rgba(255,255,255,0.1)',
-                      paddingTop: 14,
-                      display: 'grid',
-                      gap: 10,
-                    }}
-                  >
-                    <ProgressBar
-                      value={selectedStudent.opportunityScore}
+
+                  <div className="teacher-hero-metrics" style={{ display: 'grid', gap: 10 }}>
+                    <HeroMetric
                       label="Opportunity score"
+                      value={`${selectedStudent.opportunityScore}%`}
                     />
-                    <ProgressBar
-                      value={selectedStudent.profileCompleteness}
-                      label="Profile completeness"
-                      tone="success"
+                    <HeroMetric
+                      label="Profile complete"
+                      value={`${selectedStudent.profileCompleteness}%`}
                     />
+                    <HeroMetric label="Saved reviews" value={String(savedReviewCount)} />
                   </div>
                 </div>
               </Panel>
             ) : (
               <Panel
-                title="No student selected"
-                description="Choose a student to open the recommendation workspace."
+                title="Start with a selection"
+                description="This page becomes far more useful after a student is chosen."
                 style={{
                   background: 'rgba(255,255,255,0.12)',
                   border: '1px solid rgba(255,255,255,0.16)',
                 }}
               >
                 <div style={{ color: '#D6E4FF', fontSize: 14, lineHeight: 1.7 }}>
-                  The workspace populates once a scoped student is selected from the list below.
+                  Choose a student from the focus list below to load readiness signals, saved
+                  guidance, and recommendation actions.
                 </div>
               </Panel>
             )
           }
         />
 
-        {/* ── Cohort stats bar ── */}
+        <section style={{ marginTop: 18 }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gap: 14,
+            }}
+            className="teacher-workflow-grid"
+          >
+            {workflowSteps.map((step, index) => (
+              <WorkflowStepCard
+                key={step.title}
+                step={index + 1}
+                title={step.title}
+                description={step.description}
+                meta={step.meta}
+                Icon={step.Icon}
+                tone={step.tone}
+                active={step.active}
+              />
+            ))}
+          </div>
+        </section>
+
         <section style={{ marginTop: 22 }}>
           <div
             style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}
@@ -189,9 +332,9 @@ export default function TeacherRecommendationPage({
               value={
                 typeof data.cohortSummary.averageProfileCompleteness === 'number'
                   ? `${Math.round(data.cohortSummary.averageProfileCompleteness)}%`
-                  : '—'
+                  : '-'
               }
-              hint="Across scope"
+              hint="Across current scope"
               Icon={LayoutGrid}
               accent="#22C55E"
               showIcon={false}
@@ -199,12 +342,15 @@ export default function TeacherRecommendationPage({
           </div>
         </section>
 
-        {/* ── Focus management ── */}
         <DashboardSection
-          title="Focus management"
-          description="Select a student, review their readiness signals, and decide where intervention matters most."
+          title="Select and assess"
+          description="Start with the right student, then review the most important readiness signals before you recommend next steps."
+          action={
+            selectedStudent ? (
+              <Pill label={`Working on ${selectedStudent.name}`} tone="info" />
+            ) : undefined
+          }
         >
-          {/* Student list + readiness — side by side */}
           <div
             style={{
               display: 'grid',
@@ -214,419 +360,119 @@ export default function TeacherRecommendationPage({
             }}
             className="teacher-focus-grid"
           >
-            {/* ── Left: student picker ── */}
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: 20,
-                border: '1px solid #E2E8F0',
-                overflow: 'hidden',
-                boxShadow: '0 2px 10px rgba(15,23,42,0.05)',
-              }}
+            <SurfaceCard
+              title={data.pickerLabel}
+              description="Choose a student to load their full guidance workspace."
+              bodyPadding="0"
             >
-              {/* Picker header */}
               <div
                 style={{
-                  padding: '16px 18px',
+                  padding: '14px 18px',
                   borderBottom: '1px solid #F1F5F9',
-                  background: '#FAFBFC',
+                  display: 'grid',
+                  gap: 12,
                 }}
               >
-                <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
-                  {data.pickerLabel}
-                </div>
-                <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                  Select a student to load their workspace
-                </div>
-              </div>
-
-              {/* Dashboard launcher */}
-              <div style={{ padding: '14px 18px', borderBottom: '1px solid #F1F5F9' }}>
-                <TeacherStudentDashboardLauncher
-                  students={data.students.map((s) => ({
-                    id: s.id,
-                    name: s.name,
-                    opportunityScore: s.opportunityScore,
-                  }))}
-                  defaultStudentId={data.selectedStudentId}
-                  dashboardBasePath={dashboardBasePath}
-                />
-              </div>
-
-              {/* Student rows */}
-              <div
-                style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}
-              >
-                {data.students.slice(0, 6).map((student) => {
-                  const isSelected = student.id === data.selectedStudentId;
-                  return (
-                    <Link
-                      key={student.id}
-                      href={`${pagePath}?studentId=${student.id}`}
+                <label style={{ display: 'grid', gap: 8 }}>
+                  <span style={subHeadingStyle}>Search students</span>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      borderRadius: 14,
+                      border: '1px solid #CBD5E1',
+                      background: '#FFFFFF',
+                      padding: '0 14px',
+                    }}
+                  >
+                    <Search size={16} color="#64748B" />
+                    <input
+                      value={studentQuery}
+                      onChange={(event) => setStudentQuery(event.target.value)}
+                      placeholder="Search by name, department, or CGPA"
                       style={{
-                        textDecoration: 'none',
-                        borderRadius: 14,
-                        border: isSelected ? '1.5px solid #93C5FD' : '1px solid #E2E8F0',
-                        background: isSelected ? '#EFF6FF' : '#FFFFFF',
-                        padding: '12px 14px',
-                        display: 'block',
-                        transition: 'all 0.12s',
+                        width: '100%',
+                        border: 'none',
+                        outline: 'none',
+                        padding: '12px 0',
+                        fontSize: 14,
+                        color: '#0F172A',
+                        background: 'transparent',
                       }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: 8,
-                        }}
-                      >
-                        <div style={{ minWidth: 0 }}>
-                          <div
-                            style={{
-                              color: '#0F172A',
-                              fontSize: 14,
-                              fontWeight: 700,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {student.name}
-                          </div>
-                          <div style={{ color: '#94A3B8', fontSize: 11, marginTop: 2 }}>
-                            {student.email}
-                          </div>
-                        </div>
-                        <Pill
-                          label={`${student.opportunityScore}%`}
-                          tone={
-                            student.attentionLevel === 'high'
-                              ? 'warning'
-                              : student.attentionLevel === 'medium'
-                                ? 'neutral'
-                                : 'success'
-                          }
-                        />
-                      </div>
-                      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 8 }}>
-                        {student.department ? <MiniChip label={student.department} /> : null}
-                        {student.currentSemester ? (
-                          <MiniChip label={student.currentSemester} />
-                        ) : null}
-                        {typeof student.cgpa === 'number' ? (
-                          <MiniChip label={`CGPA ${student.cgpa.toFixed(2)}`} />
-                        ) : null}
-                      </div>
-                    </Link>
-                  );
-                })}
+                    />
+                  </div>
+                </label>
               </div>
-            </div>
 
-            {/* ── Right: readiness detail ── */}
-            {selectedStudent ? (
-              <div
+              <details
                 style={{
-                  background: '#fff',
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
-                  overflow: 'hidden',
-                  boxShadow: '0 2px 10px rgba(15,23,42,0.05)',
+                  background: '#FCFDFE',
                 }}
               >
-                {/* Card header */}
-                <div
+                <summary
                   style={{
-                    padding: '16px 22px',
-                    borderBottom: '1px solid #F1F5F9',
-                    background: '#FAFBFC',
+                    listStyle: 'none',
+                    cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    gap: 12,
+                    gap: 14,
+                    padding: '14px 18px',
                   }}
                 >
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
-                      Student readiness summary
+                      Workspace selection
                     </div>
-                    <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                      Condensed context before deciding what to recommend
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {selectedStudent.department ? (
-                      <MiniChip label={selectedStudent.department} />
-                    ) : null}
-                    {selectedStudent.yearOfStudy ? (
-                      <MiniChip label={`Year ${selectedStudent.yearOfStudy}`} />
-                    ) : null}
-                  </div>
-                </div>
-
-                <div style={{ padding: '20px 22px' }}>
-                  <div
-                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}
-                    className="teacher-readiness-grid"
-                  >
-                    {/* Metrics column */}
-                    <div style={{ display: 'grid', gap: 12 }}>
-                      <ProgressBar
-                        value={selectedStudent.opportunityScore}
-                        label="Opportunity score"
-                      />
-                      <ProgressBar
-                        value={selectedStudent.profileCompleteness}
-                        label="Profile completeness"
-                        tone="success"
-                      />
-                      {selectedStudent.cgpa ? (
-                        <MetricLine label="CGPA" value={selectedStudent.cgpa.toFixed(2)} />
-                      ) : null}
-                      {selectedStudent.department ? (
-                        <MetricLine label="Department" value={selectedStudent.department} />
-                      ) : null}
-                    </div>
-
-                    {/* Skills column */}
-                    <div style={{ display: 'grid', gap: 16, alignContent: 'start' }}>
-                      <div>
-                        <div style={subHeadingStyle}>Top skill gaps</div>
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-                          {selectedStudent.topSkillGaps.length > 0 ? (
-                            selectedStudent.topSkillGaps.map((gap) => (
-                              <MiniChip key={gap} label={gap} tone="warning" />
-                            ))
-                          ) : (
-                            <MiniText text="No hard gaps recorded yet." />
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <div style={subHeadingStyle}>Current strengths</div>
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-                          {selectedStudent.skills.slice(0, 8).map((skill) => (
-                            <MiniChip key={skill} label={skill} tone="success" />
-                          ))}
-                          {selectedStudent.skills.length === 0 ? (
-                            <MiniText text="No skills saved on this profile yet." />
-                          ) : null}
-                        </div>
-                      </div>
+                    <div style={{ marginTop: 4, fontSize: 12, lineHeight: 1.6, color: '#64748B' }}>
+                      {filteredStudents.length === 0
+                        ? 'No students match the current search.'
+                        : `Search, review, and switch between ${filteredStudents.length} matching student${
+                            filteredStudents.length === 1 ? '' : 's'
+                          } here.`}
                     </div>
                   </div>
-                </div>
-              </div>
-            ) : (
-              <div
-                style={{
-                  background: '#FAFBFC',
-                  borderRadius: 20,
-                  border: '1.5px dashed #E2E8F0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 280,
-                }}
-              >
-                <EmptyState
-                  title="No student context yet"
-                  description="Select a student from the list to load readiness signals, skill gaps, and strengths."
-                />
-              </div>
-            )}
-          </div>
-        </DashboardSection>
-
-        {/* ── Opportunity matches ── */}
-        <DashboardSection
-          title="Opportunity matches"
-          description="Automated fits, readiness gaps, and application context aligned to the selected student's profile."
-        >
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 0.85fr)',
-              gap: 16,
-              alignItems: 'start',
-            }}
-            className="teacher-opportunity-grid"
-          >
-            {/* ── Automated matches ── */}
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: 20,
-                border: '1px solid #E2E8F0',
-                overflow: 'hidden',
-                boxShadow: '0 2px 10px rgba(15,23,42,0.05)',
-              }}
-            >
-              <div
-                style={{
-                  padding: '16px 20px',
-                  borderBottom: '1px solid #F1F5F9',
-                  background: '#FAFBFC',
-                }}
-              >
-                <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
-                  Automated opportunity matches
-                </div>
-                <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                  Unified recommendations across jobs, internships, and events
-                </div>
-              </div>
-
-              <div
-                style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}
-              >
-                {data.automatedRecommendations.length === 0 ? (
-                  <EmptyState
-                    title="No automated opportunities yet"
-                    description="There are no scoped opportunities ready to recommend for the selected student."
-                  />
-                ) : (
-                  data.automatedRecommendations.map((rec) => (
-                    <div
-                      key={rec.id}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <MiniChip
+                      label={`${Math.min(visibleStudentOptions.length, 8)} shown`}
+                      tone={filteredStudents.length > 0 ? 'success' : 'neutral'}
+                    />
+                    <span
                       style={{
-                        borderRadius: 16,
-                        border: '1px solid #E2E8F0',
-                        background: '#FFFFFF',
-                        padding: '16px 18px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 34,
+                        height: 34,
+                        borderRadius: 12,
+                        border: '1px solid #DBEAFE',
+                        background: '#EFF6FF',
+                        color: '#2563EB',
                       }}
                     >
-                      {/* Rec header */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          justifyContent: 'space-between',
-                          gap: 12,
-                          flexWrap: 'wrap',
-                          marginBottom: 12,
-                        }}
-                      >
-                        <div>
-                          <div
-                            style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}
-                          >
-                            <Pill label={rec.category.replace(/_/g, ' ')} tone="info" />
-                            <Pill label={`${rec.fitScore}% fit`} tone="success" />
-                            <Pill label={rec.priority} tone="warning" />
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 16,
-                              fontWeight: 800,
-                              color: '#0F172A',
-                              fontFamily: 'var(--font-display)',
-                            }}
-                          >
-                            {rec.title}
-                          </div>
-                          <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
-                            {rec.organizationName}
-                            {rec.dateLabel ? ` · ${rec.dateLabel}` : ''}
-                          </div>
-                        </div>
-                        {rec.href ? (
-                          <Link
-                            href={rec.href}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 6,
-                              textDecoration: 'none',
-                              borderRadius: 10,
-                              border: '1px solid #BFDBFE',
-                              background: '#EFF6FF',
-                              color: '#1D4ED8',
-                              padding: '8px 12px',
-                              fontSize: 12,
-                              fontWeight: 700,
-                              flexShrink: 0,
-                            }}
-                          >
-                            View <ArrowRight size={13} />
-                          </Link>
-                        ) : null}
-                      </div>
+                      <ChevronDown size={16} />
+                    </span>
+                  </div>
+                </summary>
 
-                      {/* Rationale */}
-                      <p
-                        style={{
-                          margin: '0 0 12px',
-                          fontSize: 13,
-                          lineHeight: 1.7,
-                          color: '#475569',
-                        }}
-                      >
-                        {rec.rationale}
-                      </p>
-
-                      {/* Signal cards */}
-                      <div
-                        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}
-                        className="teacher-signal-grid"
-                      >
-                        <SignalCard
-                          title="Matched signals"
-                          tone="success"
-                          items={rec.matchedSignals}
-                          emptyText="No explicit matched signals captured."
-                        />
-                        <SignalCard
-                          title="Gap signals"
-                          tone="warning"
-                          items={rec.missingSignals}
-                          emptyText="No blocking gaps identified."
-                        />
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* ── Application intelligence ── */}
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: 20,
-                border: '1px solid #E2E8F0',
-                overflow: 'hidden',
-                boxShadow: '0 2px 10px rgba(15,23,42,0.05)',
-              }}
-            >
-              <div
-                style={{
-                  padding: '16px 20px',
-                  borderBottom: '1px solid #F1F5F9',
-                  background: '#FAFBFC',
-                }}
-              >
-                <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
-                  Application intelligence
-                </div>
-                <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                  Tracked applications and fit analysis in the system
-                </div>
-              </div>
-
-              <div
-                style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}
-              >
-                {selectedStudent?.applicationHighlights.length ? (
-                  selectedStudent.applicationHighlights.map((item) => (
+                <div
+                  style={{
+                    padding: '12px 12px 14px',
+                    display: 'grid',
+                    gap: 12,
+                    maxHeight: 520,
+                    overflowY: 'auto',
+                  }}
+                >
+                  {selectedStudent ? (
                     <div
-                      key={item.id}
                       style={{
-                        borderRadius: 14,
-                        border: '1px solid #E2E8F0',
-                        background: '#FFFFFF',
-                        padding: '13px 15px',
+                        borderRadius: 18,
+                        border: '1.5px solid #93C5FD',
+                        background: 'linear-gradient(135deg, #EFF6FF, #F8FBFF)',
+                        padding: '14px',
+                        boxShadow: '0 10px 24px rgba(37,99,235,0.08)',
                       }}
                     >
                       <div
@@ -635,53 +481,854 @@ export default function TeacherRecommendationPage({
                           alignItems: 'flex-start',
                           justifyContent: 'space-between',
                           gap: 10,
-                          flexWrap: 'wrap',
-                          marginBottom: item.summary ? 8 : 0,
                         }}
                       >
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
-                            {item.title}
+                        <div style={{ minWidth: 0 }}>
+                          <div
+                            style={{
+                              color: '#0F172A',
+                              fontSize: 15,
+                              fontWeight: 800,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {selectedStudent.name}
                           </div>
-                          <div style={{ fontSize: 12, color: '#64748B', marginTop: 3 }}>
-                            {item.companyName}
+                          <div
+                            style={{
+                              color: '#94A3B8',
+                              fontSize: 11,
+                              marginTop: 4,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {selectedStudent.email}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                          <Pill label={formatStatusLabel(item.status)} tone="neutral" />
-                          {typeof item.fitScore === 'number' ? (
-                            <Pill label={`${item.fitScore}% fit`} tone="success" />
-                          ) : null}
+                        <Pill
+                          label={`${selectedStudent.opportunityScore}%`}
+                          tone={
+                            data.students.find((student) => student.id === selectedStudent.id)
+                              ?.attentionLevel === 'high'
+                              ? 'warning'
+                              : data.students.find((student) => student.id === selectedStudent.id)
+                                    ?.attentionLevel === 'medium'
+                                ? 'neutral'
+                                : 'success'
+                          }
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 10 }}>
+                        {selectedStudent.department ? (
+                          <MiniChip label={selectedStudent.department} />
+                        ) : null}
+                        {selectedStudent.currentSemester ? (
+                          <MiniChip label={selectedStudent.currentSemester} />
+                        ) : null}
+                        {typeof selectedStudent.cgpa === 'number' ? (
+                          <MiniChip label={`CGPA ${selectedStudent.cgpa.toFixed(2)}`} />
+                        ) : null}
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'minmax(0, 1fr) auto',
+                          gap: 10,
+                          marginTop: 12,
+                        }}
+                        className="teacher-student-actions"
+                      >
+                        <Link
+                          href={`${dashboardBasePath}/${selectedStudent.id}/dashboard`}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: 14,
+                            border: 'none',
+                            background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+                            color: '#FFFFFF',
+                            padding: '12px 16px',
+                            fontSize: 14,
+                            fontWeight: 800,
+                            textDecoration: 'none',
+                          }}
+                        >
+                          Open student dashboard
+                        </Link>
+                        <Link
+                          href={directoryHref}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: 14,
+                            border: '1px solid #BFDBFE',
+                            background: '#FFFFFF',
+                            color: '#1D4ED8',
+                            padding: '12px 14px',
+                            fontSize: 13,
+                            fontWeight: 800,
+                            textDecoration: 'none',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          Open directory
+                        </Link>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {visibleStudentOptions.length > 0 ? (
+                    visibleStudentOptions.map((student) => {
+                      const isSelected = student.id === data.selectedStudentId;
+                      return (
+                        <Link
+                          key={student.id}
+                          href={`${pagePath}?studentId=${student.id}`}
+                          style={{
+                            textDecoration: 'none',
+                            borderRadius: 16,
+                            border: isSelected ? '1.5px solid #93C5FD' : '1px solid #E2E8F0',
+                            background: isSelected
+                              ? 'linear-gradient(135deg, #EFF6FF, #F8FBFF)'
+                              : '#FFFFFF',
+                            padding: '13px 14px',
+                            display: 'block',
+                            transition: 'all 0.12s ease',
+                            boxShadow: isSelected ? '0 10px 24px rgba(37,99,235,0.08)' : 'none',
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              justifyContent: 'space-between',
+                              gap: 10,
+                            }}
+                          >
+                            <div style={{ minWidth: 0 }}>
+                              <div
+                                style={{
+                                  color: '#0F172A',
+                                  fontSize: 14,
+                                  fontWeight: 800,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {student.name}
+                              </div>
+                              <div
+                                style={{
+                                  color: '#94A3B8',
+                                  fontSize: 11,
+                                  marginTop: 3,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {student.email}
+                              </div>
+                            </div>
+                            <Pill
+                              label={`${student.opportunityScore}%`}
+                              tone={
+                                student.attentionLevel === 'high'
+                                  ? 'warning'
+                                  : student.attentionLevel === 'medium'
+                                    ? 'neutral'
+                                    : 'success'
+                              }
+                            />
+                          </div>
+
+                          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 10 }}>
+                            {student.department ? <MiniChip label={student.department} /> : null}
+                            {student.currentSemester ? (
+                              <MiniChip label={student.currentSemester} />
+                            ) : null}
+                            {typeof student.cgpa === 'number' ? (
+                              <MiniChip label={`CGPA ${student.cgpa.toFixed(2)}`} />
+                            ) : null}
+                          </div>
+                        </Link>
+                      );
+                    })
+                  ) : data.students.length > 0 ? (
+                    <div style={{ padding: '18px 10px' }}>
+                      <EmptyState
+                        title={selectedStudent ? 'No other students found' : 'No students found'}
+                        description={
+                          selectedStudent
+                            ? 'Try a different student name, department, or CGPA search to switch focus.'
+                            : 'Try a different student name, department, or CGPA search.'
+                        }
+                      />
+                    </div>
+                  ) : (
+                    <div style={{ padding: '24px 12px' }}>
+                      <EmptyState
+                        title="No students in scope"
+                        description="Students will appear here after they match your institution and department scope."
+                      />
+                    </div>
+                  )}
+                </div>
+              </details>
+            </SurfaceCard>
+
+            {selectedStudent ? (
+              <div style={{ display: 'grid', gap: 16 }}>
+                <SurfaceCard
+                  title="Student snapshot"
+                  description="A concise profile summary for faster recommendation decisions."
+                  action={
+                    <Link
+                      href={`${dashboardBasePath}/${selectedStudent.id}/dashboard`}
+                      style={secondaryLinkStyle}
+                    >
+                      Open dashboard <ArrowRight size={14} />
+                    </Link>
+                  }
+                >
+                  <div style={{ display: 'grid', gap: 18 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: 14,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <div>
+                        <div
+                          style={{
+                            fontSize: 22,
+                            fontWeight: 900,
+                            color: '#0F172A',
+                            fontFamily: 'var(--font-display)',
+                            letterSpacing: '-0.03em',
+                          }}
+                        >
+                          {selectedStudent.name}
+                        </div>
+                        <div style={{ marginTop: 5, fontSize: 13, color: '#64748B' }}>
+                          {selectedStudent.email}
                         </div>
                       </div>
-                      {item.summary ? (
-                        <p style={{ margin: 0, fontSize: 12, lineHeight: 1.65, color: '#64748B' }}>
-                          {item.summary}
-                        </p>
-                      ) : null}
+
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {selectedStudent.department ? (
+                          <MiniChip label={selectedStudent.department} tone="success" />
+                        ) : null}
+                        {selectedStudent.yearOfStudy ? (
+                          <MiniChip label={`Year ${selectedStudent.yearOfStudy}`} />
+                        ) : null}
+                        {selectedStudent.studentId ? (
+                          <MiniChip label={`ID ${selectedStudent.studentId}`} />
+                        ) : null}
+                      </div>
                     </div>
-                  ))
-                ) : (
-                  <EmptyState
-                    title="No application intelligence yet"
-                    description="Fit summaries and status context appear once the student has tracked opportunities."
-                  />
-                )}
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                        gap: 12,
+                      }}
+                      className="teacher-metric-strip"
+                    >
+                      <SnapshotMetric
+                        label="Opportunity"
+                        value={`${selectedStudent.opportunityScore}%`}
+                        tone="info"
+                      />
+                      <SnapshotMetric
+                        label="Profile"
+                        value={`${selectedStudent.profileCompleteness}%`}
+                        tone="success"
+                      />
+                      <SnapshotMetric
+                        label="CGPA"
+                        value={
+                          typeof selectedStudent.cgpa === 'number'
+                            ? selectedStudent.cgpa.toFixed(2)
+                            : 'Not set'
+                        }
+                        tone="neutral"
+                      />
+                      <SnapshotMetric
+                        label="Guidance saved"
+                        value={`${savedReviewCount + savedRecommendationCount}`}
+                        tone="warning"
+                      />
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 0.8fr)',
+                        gap: 16,
+                      }}
+                      className="teacher-readiness-grid"
+                    >
+                      <div style={{ display: 'grid', gap: 12 }}>
+                        <ProgressBar
+                          value={selectedStudent.opportunityScore}
+                          label="Opportunity score"
+                        />
+                        <ProgressBar
+                          value={selectedStudent.profileCompleteness}
+                          label="Profile completeness"
+                          tone="success"
+                        />
+                        {selectedStudent.department ? (
+                          <MetricLine label="Department" value={selectedStudent.department} />
+                        ) : null}
+                        {selectedStudent.currentSemester ? (
+                          <MetricLine
+                            label="Current semester"
+                            value={selectedStudent.currentSemester}
+                          />
+                        ) : null}
+                      </div>
+
+                      <div
+                        style={{
+                          borderRadius: 18,
+                          border: '1px solid #E2E8F0',
+                          background:
+                            'linear-gradient(180deg, rgba(248,250,252,0.9), rgba(255,255,255,1))',
+                          padding: 16,
+                        }}
+                      >
+                        <div style={subHeadingStyle}>Recommendation posture</div>
+                        <p
+                          style={{
+                            margin: '10px 0 0',
+                            fontSize: 14,
+                            lineHeight: 1.7,
+                            color: '#475569',
+                          }}
+                        >
+                          {selectedStudent.opportunityScore >= 75
+                            ? 'This student is positioned for active placement conversations. Focus on specific opportunities and stronger employer-facing justification.'
+                            : selectedStudent.opportunityScore >= 50
+                              ? 'This student is developing well. Balance targeted opportunity matching with practical growth steps to improve readiness.'
+                              : 'This student needs higher-touch support. Use the evidence below to prioritize the most important gaps before pushing high-stakes recommendations.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </SurfaceCard>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(0, 0.82fr) minmax(0, 1.18fr)',
+                    gap: 16,
+                  }}
+                  className="teacher-snapshot-grid"
+                >
+                  <div style={{ display: 'grid', gap: 16 }}>
+                    <SurfaceCard
+                      title="Current strengths"
+                      description="Profile assets worth reinforcing in recommendations."
+                      bodyPadding="18px"
+                    >
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {selectedStudent.skills.length > 0 ? (
+                          selectedStudent.skills
+                            .slice(0, 8)
+                            .map((skill) => <MiniChip key={skill} label={skill} tone="success" />)
+                        ) : (
+                          <MiniText text="No skills saved on this profile yet." />
+                        )}
+                      </div>
+                    </SurfaceCard>
+
+                    <SurfaceCard
+                      title="Top skill gaps"
+                      description="Signals currently holding this student back."
+                      bodyPadding="18px"
+                    >
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {selectedStudent.topSkillGaps.length > 0 ? (
+                          selectedStudent.topSkillGaps.map((gap) => (
+                            <MiniChip key={gap} label={gap} tone="warning" />
+                          ))
+                        ) : (
+                          <MiniText text="No hard gaps recorded yet." />
+                        )}
+                      </div>
+                    </SurfaceCard>
+                  </div>
+
+                  <SurfaceCard
+                    title="Recommended coaching direction"
+                    description="High-value themes derived from the workspace data."
+                    bodyPadding="20px"
+                  >
+                    <div style={{ display: 'grid', gap: 12 }}>
+                      {coachingPlaybook.length > 0 ? (
+                        coachingPlaybook
+                          .slice(0, 3)
+                          .map((item) => (
+                            <CoachingPlayCard key={`${item.category}:${item.title}`} item={item} />
+                          ))
+                      ) : (
+                        <MiniText text="Coaching cues will appear as student signals accumulate." />
+                      )}
+                    </div>
+                  </SurfaceCard>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div
+                style={{
+                  background: '#FAFBFC',
+                  borderRadius: 24,
+                  border: '1.5px dashed #D9E2EC',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: 360,
+                }}
+              >
+                <EmptyState
+                  title="No student context yet"
+                  description="Select a student from the list to load readiness signals, saved guidance, and recommended next steps."
+                />
+              </div>
+            )}
           </div>
         </DashboardSection>
 
-        {/* ── Teacher review and recommendation ── */}
         <DashboardSection
-          title="Teacher review and recommendation"
-          description="Save structured academic reviews and job-specific recommendations directly into the student guidance record."
+          title="Opportunity search"
+          description="Search the recommendation pool by company, position, skills, and other fit cues without expanding a long scrolling feed."
+          action={
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Pill
+                label={`${filteredRecommendations.length} result${filteredRecommendations.length === 1 ? '' : 's'}`}
+                tone="success"
+              />
+              <Pill
+                label={`${data.automatedRecommendations.length} total matches`}
+                tone="neutral"
+              />
+            </div>
+          }
+        >
+          <SurfaceCard
+            title="Search recommendation pool"
+            description="Filter by company, role title, category, skills, rationale, and other recommendation signals."
+          >
+            <div style={{ display: 'grid', gap: 16 }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1.4fr) minmax(180px, 0.4fr) minmax(180px, 0.4fr)',
+                  gap: 12,
+                }}
+                className="teacher-search-grid"
+              >
+                <label style={{ display: 'grid', gap: 8 }}>
+                  <span style={subHeadingStyle}>Search opportunities</span>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      borderRadius: 16,
+                      border: '1px solid #CBD5E1',
+                      background: '#FFFFFF',
+                      padding: '0 14px',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.7)',
+                    }}
+                  >
+                    <Search size={17} color="#64748B" />
+                    <input
+                      value={opportunityQuery}
+                      onChange={(event) => setOpportunityQuery(event.target.value)}
+                      placeholder="Search by company, position, skill, rationale, deadline, or fit cue"
+                      style={{
+                        width: '100%',
+                        border: 'none',
+                        outline: 'none',
+                        padding: '13px 0',
+                        fontSize: 14,
+                        color: '#0F172A',
+                        background: 'transparent',
+                      }}
+                    />
+                  </div>
+                </label>
+
+                <label style={{ display: 'grid', gap: 8 }}>
+                  <span style={subHeadingStyle}>Category</span>
+                  <select
+                    value={opportunityCategory}
+                    onChange={(event) => setOpportunityCategory(event.target.value)}
+                    style={searchSelectStyle}
+                  >
+                    <option value="all">All categories</option>
+                    {opportunityCategories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label style={{ display: 'grid', gap: 8 }}>
+                  <span style={subHeadingStyle}>Priority</span>
+                  <select
+                    value={opportunityPriority}
+                    onChange={(event) =>
+                      setOpportunityPriority(
+                        event.target.value as 'all' | 'high' | 'medium' | 'low'
+                      )
+                    }
+                    style={searchSelectStyle}
+                  >
+                    <option value="all">All priorities</option>
+                    <option value="high">High priority</option>
+                    <option value="medium">Medium priority</option>
+                    <option value="low">Low priority</option>
+                  </select>
+                </label>
+              </div>
+
+              {opportunitySearchCues.length > 0 ? (
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <div style={subHeadingStyle}>Quick search cues</div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {opportunitySearchCues.map((cue) => (
+                      <button
+                        key={cue}
+                        type="button"
+                        onClick={() => setOpportunityQuery(cue)}
+                        style={{
+                          borderRadius: 999,
+                          border: '1px solid #DBEAFE',
+                          background: '#EFF6FF',
+                          color: '#1D4ED8',
+                          padding: '7px 12px',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {cue}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  flexWrap: 'wrap',
+                  padding: '14px 16px',
+                  borderRadius: 16,
+                  border: '1px solid #E2E8F0',
+                  background: 'linear-gradient(180deg, #FBFDFF, #F8FAFC)',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
+                    Search results ready
+                  </div>
+                  <div style={{ marginTop: 4, fontSize: 12, lineHeight: 1.6, color: '#64748B' }}>
+                    {filteredRecommendations.length === 0
+                      ? 'No opportunities match the current search and filters.'
+                      : `${filteredRecommendations.length} opportunities match the current search.`}
+                  </div>
+                </div>
+                {(opportunityQuery ||
+                  opportunityCategory !== 'all' ||
+                  opportunityPriority !== 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpportunityQuery('');
+                      setOpportunityCategory('all');
+                      setOpportunityPriority('all');
+                    }}
+                    style={{
+                      borderRadius: 12,
+                      border: '1px solid #CBD5E1',
+                      background: '#FFFFFF',
+                      color: '#334155',
+                      padding: '9px 12px',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+
+              <details
+                style={{
+                  borderRadius: 18,
+                  border: '1px solid #D9E2EC',
+                  background: '#FFFFFF',
+                  overflow: 'hidden',
+                  boxShadow: '0 10px 24px rgba(15,23,42,0.04)',
+                }}
+              >
+                <summary
+                  style={{
+                    listStyle: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 16,
+                    padding: '16px 18px',
+                    background: 'linear-gradient(180deg, #FCFDFF, #F8FAFC)',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
+                      Job view list
+                    </div>
+                    <div style={{ marginTop: 4, fontSize: 12, lineHeight: 1.6, color: '#64748B' }}>
+                      Expand only when you want to browse the matching opportunities.
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <MiniChip
+                      label={`${visibleRecommendations.length} shown`}
+                      tone={visibleRecommendations.length > 0 ? 'success' : 'neutral'}
+                    />
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 36,
+                        height: 36,
+                        borderRadius: 12,
+                        border: '1px solid #DBEAFE',
+                        background: '#EFF6FF',
+                        color: '#2563EB',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <ChevronDown size={16} />
+                    </span>
+                  </div>
+                </summary>
+
+                <div
+                  style={{
+                    borderTop: '1px solid #E2E8F0',
+                    padding: '16px 16px 18px',
+                    background: '#F8FAFC',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'grid',
+                      gap: 12,
+                      maxHeight: 820,
+                      overflowY: 'auto',
+                      paddingRight: 4,
+                    }}
+                  >
+                    {visibleRecommendations.length > 0 ? (
+                      visibleRecommendations.map((rec) => (
+                        <div
+                          key={rec.id}
+                          style={{
+                            borderRadius: 18,
+                            border: '1px solid #E2E8F0',
+                            background: '#FFFFFF',
+                            padding: '16px 18px',
+                            boxShadow: '0 10px 24px rgba(15,23,42,0.04)',
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              justifyContent: 'space-between',
+                              gap: 12,
+                              flexWrap: 'wrap',
+                              marginBottom: 12,
+                            }}
+                          >
+                            <div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  gap: 6,
+                                  flexWrap: 'wrap',
+                                  marginBottom: 8,
+                                }}
+                              >
+                                <Pill label={rec.category.replace(/_/g, ' ')} tone="info" />
+                                <Pill label={`${rec.fitScore}% fit`} tone="success" />
+                                <Pill label={rec.priority} tone="warning" />
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 17,
+                                  fontWeight: 800,
+                                  color: '#0F172A',
+                                  fontFamily: 'var(--font-display)',
+                                }}
+                              >
+                                {rec.title}
+                              </div>
+                              <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
+                                {rec.organizationName}
+                                {rec.dateLabel ? ` - ${rec.dateLabel}` : ''}
+                              </div>
+                            </div>
+
+                            {rec.href ? (
+                              <Link href={rec.href} style={secondaryLinkStyle}>
+                                View match <ArrowRight size={14} />
+                              </Link>
+                            ) : null}
+                          </div>
+
+                          <p
+                            style={{
+                              margin: '0 0 14px',
+                              fontSize: 13,
+                              lineHeight: 1.7,
+                              color: '#475569',
+                            }}
+                          >
+                            {rec.rationale}
+                          </p>
+
+                          <div
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: '1fr 1fr',
+                              gap: 10,
+                            }}
+                            className="teacher-signal-grid"
+                          >
+                            <SignalCard
+                              title="Matched signals"
+                              tone="success"
+                              items={rec.matchedSignals}
+                              emptyText="No explicit matched signals captured."
+                            />
+                            <SignalCard
+                              title="Gap signals"
+                              tone="warning"
+                              items={rec.missingSignals}
+                              emptyText="No blocking gaps identified."
+                            />
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <EmptyState
+                        title="No matching opportunities"
+                        description="Try a different company name, position title, category, skill, or priority filter."
+                      />
+                    )}
+                  </div>
+
+                  {filteredRecommendations.length > visibleRecommendations.length ? (
+                    <div
+                      style={{
+                        marginTop: 12,
+                        borderRadius: 14,
+                        border: '1px solid #E2E8F0',
+                        background: '#FFFFFF',
+                        padding: '12px 14px',
+                        fontSize: 12,
+                        lineHeight: 1.6,
+                        color: '#64748B',
+                      }}
+                    >
+                      Refine the search to narrow further.{' '}
+                      {filteredRecommendations.length - visibleRecommendations.length} more
+                      opportunities are available beyond the visible set.
+                    </div>
+                  ) : null}
+                </div>
+              </details>
+            </div>
+          </SurfaceCard>
+        </DashboardSection>
+
+        <DashboardSection
+          title="Guidance actions"
+          description="Capture formal profile feedback and job-specific recommendations in a dedicated action area."
+          action={
+            selectedStudent ? (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Pill label={`${savedReviewCount} academic reviews`} tone="info" />
+                <Pill label={`${savedRecommendationCount} job recommendations`} tone="warning" />
+              </div>
+            ) : undefined
+          }
         >
           {selectedStudent ? (
-            <div style={{ display: 'grid', gap: 14 }}>
+            <div style={{ display: 'grid', gap: 16 }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gap: 14,
+                }}
+                className="teacher-action-highlights"
+              >
+                <ActionHighlightCard
+                  title="Academic review"
+                  description="Save structured strengths, growth areas, and readiness comments."
+                  meta={`${savedReviewCount} saved`}
+                  Icon={BookOpen}
+                  tone="info"
+                />
+                <ActionHighlightCard
+                  title="Job recommendation"
+                  description="Recommend a platform job with fit context and rationale."
+                  meta={`${savedRecommendationCount} saved`}
+                  Icon={Sparkles}
+                  tone="success"
+                />
+                <ActionHighlightCard
+                  title="Student dashboard preview"
+                  description="Open the student-facing dashboard to verify how guidance appears."
+                  meta="Preview available"
+                  Icon={CheckCircle2}
+                  tone="warning"
+                />
+              </div>
+
               <CollapsibleWorkspaceCard
                 title="Academic review"
-                description="Capture an overall profile assessment — strengths, growth areas, and readiness."
+                description="Capture an overall profile assessment with clear strengths, growth areas, and readiness context."
+                badge={`${savedReviewCount} saved`}
+                open
               >
                 <TeacherAcademicReviewComposer
                   studentId={selectedStudent.id}
@@ -693,6 +1340,7 @@ export default function TeacherRecommendationPage({
               <CollapsibleWorkspaceCard
                 title="Job recommendation"
                 description="Recommend the student for a specific internship, part-time, or full-time role from the platform."
+                badge={`${savedRecommendationCount} saved`}
               >
                 <TeacherRecommendationComposer
                   studentId={selectedStudent.id}
@@ -706,8 +1354,8 @@ export default function TeacherRecommendationPage({
             <div
               style={{
                 background: '#FAFBFC',
-                borderRadius: 20,
-                border: '1.5px dashed #E2E8F0',
+                borderRadius: 24,
+                border: '1.5px dashed #D9E2EC',
                 padding: '48px 24px',
               }}
             >
@@ -719,11 +1367,10 @@ export default function TeacherRecommendationPage({
           )}
         </DashboardSection>
 
-        {/* ── Cohort coaching signals ── */}
         {role === 'advisor' && (
           <DashboardSection
             title="Cohort coaching signals"
-            description="Use recurring patterns across your cohort to shape coaching priorities."
+            description="Use recurring patterns across your advisees to guide where coaching time matters most."
           >
             <div
               style={{
@@ -734,70 +1381,26 @@ export default function TeacherRecommendationPage({
               }}
               className="teacher-opportunity-grid"
             >
-              {/* Repeated skill gaps */}
-              <div
-                style={{
-                  background: '#fff',
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
-                  overflow: 'hidden',
-                  boxShadow: '0 2px 10px rgba(15,23,42,0.05)',
-                }}
+              <SurfaceCard
+                title="Repeated skill gaps"
+                description="Most common hard-skill gaps across advisee activity."
               >
-                <div
-                  style={{
-                    padding: '16px 20px',
-                    borderBottom: '1px solid #F1F5F9',
-                    background: '#FAFBFC',
-                  }}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
-                    Repeated skill gaps
-                  </div>
-                  <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                    Most common hard gaps across advisee activity
-                  </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {data.advisorInsights?.topSkillGaps?.length ? (
+                    data.advisorInsights.topSkillGaps.map((gap) => (
+                      <MiniChip key={gap} label={gap} tone="warning" />
+                    ))
+                  ) : (
+                    <MiniText text="No repeated hard-skill gaps have surfaced yet." />
+                  )}
                 </div>
-                <div style={{ padding: '16px 18px' }}>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {data.advisorInsights?.topSkillGaps?.length ? (
-                      data.advisorInsights.topSkillGaps.map((gap) => (
-                        <MiniChip key={gap} label={gap} tone="warning" />
-                      ))
-                    ) : (
-                      <MiniText text="No repeated hard-skill gaps have surfaced yet." />
-                    )}
-                  </div>
-                </div>
-              </div>
+              </SurfaceCard>
 
-              {/* Recent advising actions */}
-              <div
-                style={{
-                  background: '#fff',
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
-                  overflow: 'hidden',
-                  boxShadow: '0 2px 10px rgba(15,23,42,0.05)',
-                }}
+              <SurfaceCard
+                title="Recent advising actions"
+                description="Most recent manual interventions saved for students in your scope."
               >
-                <div
-                  style={{
-                    padding: '16px 20px',
-                    borderBottom: '1px solid #F1F5F9',
-                    background: '#FAFBFC',
-                  }}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
-                    Recent advising actions
-                  </div>
-                  <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                    Most recent interventions saved for students in your scope
-                  </div>
-                </div>
-                <div
-                  style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}
-                >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {data.advisorInsights?.recentActions?.length ? (
                     data.advisorInsights.recentActions.slice(0, 6).map((action) => (
                       <div
@@ -835,49 +1438,29 @@ export default function TeacherRecommendationPage({
                   ) : (
                     <EmptyState
                       title="No advising actions yet"
-                      description="Saved manual recommendations and plan changes will appear here."
+                      description="Saved recommendations and plan changes will appear here."
                     />
                   )}
                 </div>
-              </div>
+              </SurfaceCard>
             </div>
           </DashboardSection>
         )}
 
-        {/* ── Dept head insights ── */}
         {role === 'dept_head' && (
           <DashboardSection
             title="Department readiness insights"
-            description="Connect recommendation work with department-wide readiness and industry-alignment trends."
+            description="Connect individual recommendations with department-wide readiness and industry alignment."
           >
             <div
               style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}
               className="teacher-opportunity-insights"
             >
-              <div
-                style={{
-                  background: '#fff',
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
-                  overflow: 'hidden',
-                  boxShadow: '0 2px 10px rgba(15,23,42,0.05)',
-                }}
+              <SurfaceCard
+                title="Readiness distribution"
+                description="Department-level readiness segmentation."
               >
-                <div
-                  style={{
-                    padding: '16px 20px',
-                    borderBottom: '1px solid #F1F5F9',
-                    background: '#FAFBFC',
-                  }}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
-                    Readiness distribution
-                  </div>
-                  <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                    Department-level segmentation
-                  </div>
-                </div>
-                <div style={{ padding: '16px 18px', display: 'grid', gap: 10 }}>
+                <div style={{ display: 'grid', gap: 10 }}>
                   <InsightMetric
                     label="Ready"
                     value={`${data.departmentInsights?.readinessDistribution.ready.pct ?? 0}%`}
@@ -894,101 +1477,67 @@ export default function TeacherRecommendationPage({
                     tone="danger"
                   />
                 </div>
-              </div>
+              </SurfaceCard>
 
-              <div
-                style={{
-                  background: '#fff',
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
-                  overflow: 'hidden',
-                  boxShadow: '0 2px 10px rgba(15,23,42,0.05)',
-                }}
+              <SurfaceCard
+                title="Industry alignment"
+                description="Skills currently demanded by relevant openings."
               >
-                <div
-                  style={{
-                    padding: '16px 20px',
-                    borderBottom: '1px solid #F1F5F9',
-                    background: '#FAFBFC',
-                  }}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
-                    Industry alignment
-                  </div>
-                  <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                    Skills demanded by relevant openings
-                  </div>
-                </div>
-                <div
-                  style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}
-                >
-                  {data.departmentInsights?.industryAlignment.slice(0, 6).map((item) => (
-                    <div
-                      key={item.skill}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 10,
-                        borderRadius: 12,
-                        border: '1px solid #E2E8F0',
-                        padding: '10px 12px',
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
-                          {item.skill}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {data.departmentInsights?.industryAlignment?.length ? (
+                    data.departmentInsights.industryAlignment.slice(0, 6).map((item) => (
+                      <div
+                        key={item.skill}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 10,
+                          borderRadius: 12,
+                          border: '1px solid #E2E8F0',
+                          padding: '10px 12px',
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
+                            {item.skill}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
+                            Demand {item.demandPct}% - Supply {item.supplyPct}%
+                          </div>
                         </div>
-                        <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
-                          Demand {item.demandPct}% · Supply {item.supplyPct}%
-                        </div>
+                        <Pill
+                          label={item.gap ? 'Gap' : 'Balanced'}
+                          tone={item.gap ? 'warning' : 'success'}
+                        />
                       </div>
-                      <Pill
-                        label={item.gap ? 'Gap' : 'Balanced'}
-                        tone={item.gap ? 'warning' : 'success'}
-                      />
-                    </div>
-                  )) ?? <MiniText text="No alignment data available yet." />}
+                    ))
+                  ) : (
+                    <MiniText text="No alignment data available yet." />
+                  )}
                 </div>
-              </div>
+              </SurfaceCard>
 
-              <div
-                style={{
-                  background: '#fff',
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
-                  overflow: 'hidden',
-                  boxShadow: '0 2px 10px rgba(15,23,42,0.05)',
-                }}
+              <SurfaceCard
+                title="Skill heatmap"
+                description="Most represented skills across the cohort."
               >
-                <div
-                  style={{
-                    padding: '16px 20px',
-                    borderBottom: '1px solid #F1F5F9',
-                    background: '#FAFBFC',
-                  }}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
-                    Skill heatmap
-                  </div>
-                  <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                    Most represented skills across the cohort
-                  </div>
-                </div>
-                <div style={{ padding: '14px 16px' }}>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {data.departmentInsights?.skillHeatmap
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {data.departmentInsights?.skillHeatmap?.length ? (
+                    data.departmentInsights.skillHeatmap
                       .slice(0, 10)
                       .map((item) => (
                         <MiniChip
                           key={item.skill}
-                          label={`${item.skill} · ${item.pct}%`}
+                          label={`${item.skill} - ${item.pct}%`}
                           tone="success"
                         />
-                      )) ?? <MiniText text="No skill heatmap available yet." />}
-                  </div>
+                      ))
+                  ) : (
+                    <MiniText text="No skill heatmap available yet." />
+                  )}
                 </div>
-              </div>
+              </SurfaceCard>
             </div>
           </DashboardSection>
         )}
@@ -998,15 +1547,31 @@ export default function TeacherRecommendationPage({
             .teacher-opportunity-grid,
             .teacher-opportunity-insights,
             .teacher-focus-grid,
-            .teacher-signal-grid { grid-template-columns: 1fr !important; }
+            .teacher-signal-grid,
+            .teacher-workflow-grid,
+            .teacher-snapshot-grid,
+            .teacher-action-highlights,
+            .teacher-search-grid {
+              grid-template-columns: 1fr !important;
+            }
           }
-          @media (max-width: 900px) {
+
+          @media (max-width: 980px) {
             .teacher-stats-grid,
-            .teacher-readiness-grid { grid-template-columns: 1fr 1fr !important; }
+            .teacher-metric-strip,
+            .teacher-readiness-grid {
+              grid-template-columns: 1fr 1fr !important;
+            }
           }
-          @media (max-width: 600px) {
+
+          @media (max-width: 720px) {
             .teacher-stats-grid,
-            .teacher-readiness-grid { grid-template-columns: 1fr !important; }
+            .teacher-metric-strip,
+            .teacher-readiness-grid,
+            .teacher-hero-metrics,
+            .teacher-student-actions {
+              grid-template-columns: 1fr !important;
+            }
           }
         `}</style>
       </DashboardPage>
@@ -1014,24 +1579,351 @@ export default function TeacherRecommendationPage({
   );
 }
 
-// ── Sub-components — all logic identical, styling cleaned up ────────────────
+function WorkflowStepCard({
+  step,
+  title,
+  description,
+  meta,
+  Icon,
+  tone,
+  active,
+}: {
+  step: number;
+  title: string;
+  description: string;
+  meta: string;
+  Icon: typeof Users;
+  tone: 'info' | 'warning' | 'success';
+  active: boolean;
+}) {
+  const palette =
+    tone === 'success'
+      ? { bg: '#ECFDF5', border: '#A7F3D0', color: '#166534' }
+      : tone === 'warning'
+        ? { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' }
+        : { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' };
+
+  return (
+    <div
+      style={{
+        borderRadius: 22,
+        border: active ? `1px solid ${palette.border}` : '1px solid #E2E8F0',
+        background: active
+          ? `linear-gradient(180deg, ${palette.bg}, #FFFFFF)`
+          : 'linear-gradient(180deg, #FFFFFF, #F8FAFC)',
+        padding: 18,
+        boxShadow: active ? '0 16px 28px rgba(15,23,42,0.06)' : '0 8px 18px rgba(15,23,42,0.04)',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}
+      >
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 44,
+            height: 44,
+            borderRadius: 14,
+            background: palette.bg,
+            border: `1px solid ${palette.border}`,
+            color: palette.color,
+          }}
+        >
+          <Icon size={20} />
+        </div>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 800,
+            color: active ? palette.color : '#94A3B8',
+            textTransform: 'uppercase',
+            letterSpacing: 0.8,
+          }}
+        >
+          Step {step}
+        </span>
+      </div>
+
+      <div style={{ marginTop: 14, fontSize: 17, fontWeight: 800, color: '#0F172A' }}>{title}</div>
+      <p style={{ margin: '8px 0 0', fontSize: 13, lineHeight: 1.7, color: '#64748B' }}>
+        {description}
+      </p>
+      <div style={{ marginTop: 14 }}>
+        <MiniChip
+          label={meta}
+          tone={tone === 'warning' ? 'warning' : tone === 'success' ? 'success' : 'neutral'}
+        />
+      </div>
+    </div>
+  );
+}
+
+function SurfaceCard({
+  title,
+  description,
+  action,
+  children,
+  footer,
+  bodyPadding = '18px 20px',
+}: {
+  title: string;
+  description: string;
+  action?: ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
+  bodyPadding?: string;
+}) {
+  return (
+    <div
+      style={{
+        background: '#FFFFFF',
+        borderRadius: 22,
+        border: '1px solid #E2E8F0',
+        overflow: 'hidden',
+        boxShadow: '0 16px 30px rgba(15,23,42,0.05)',
+      }}
+    >
+      <div
+        style={{
+          padding: '16px 20px',
+          borderBottom: '1px solid #F1F5F9',
+          background: 'linear-gradient(180deg, #FBFDFF, #F8FAFC)',
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 14,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{title}</div>
+          <div style={{ fontSize: 12, color: '#64748B', marginTop: 3, lineHeight: 1.6 }}>
+            {description}
+          </div>
+        </div>
+        {action ? <div>{action}</div> : null}
+      </div>
+      <div style={{ padding: bodyPadding }}>{children}</div>
+      {footer}
+    </div>
+  );
+}
+
+function HeroMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 10,
+        padding: '10px 12px',
+        borderRadius: 14,
+        border: '1px solid rgba(255,255,255,0.12)',
+        background: 'rgba(255,255,255,0.08)',
+      }}
+    >
+      <span style={{ fontSize: 12, color: '#CBD5E1', fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: 14, color: '#FFFFFF', fontWeight: 800 }}>{value}</span>
+    </div>
+  );
+}
+
+function SnapshotMetric({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: 'info' | 'success' | 'warning' | 'neutral';
+}) {
+  const palette =
+    tone === 'info'
+      ? { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' }
+      : tone === 'success'
+        ? { bg: '#ECFDF5', border: '#A7F3D0', color: '#166534' }
+        : tone === 'warning'
+          ? { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' }
+          : { bg: '#F8FAFC', border: '#E2E8F0', color: '#334155' };
+
+  return (
+    <div
+      style={{
+        borderRadius: 16,
+        border: `1px solid ${palette.border}`,
+        background: palette.bg,
+        padding: '14px 15px',
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 800,
+          color: '#64748B',
+          textTransform: 'uppercase',
+          letterSpacing: 0.8,
+        }}
+      >
+        {label}
+      </div>
+      <div style={{ marginTop: 8, fontSize: 20, fontWeight: 900, color: palette.color }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function ActionHighlightCard({
+  title,
+  description,
+  meta,
+  Icon,
+  tone,
+}: {
+  title: string;
+  description: string;
+  meta: string;
+  Icon: typeof BookOpen;
+  tone: 'info' | 'success' | 'warning';
+}) {
+  const palette =
+    tone === 'success'
+      ? { bg: '#ECFDF5', border: '#A7F3D0', color: '#166534' }
+      : tone === 'warning'
+        ? { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' }
+        : { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' };
+
+  return (
+    <div
+      style={{
+        borderRadius: 18,
+        border: '1px solid #E2E8F0',
+        background: '#FFFFFF',
+        padding: 18,
+        boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
+      }}
+    >
+      <div
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: 14,
+          background: palette.bg,
+          border: `1px solid ${palette.border}`,
+          color: palette.color,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Icon size={18} />
+      </div>
+      <div style={{ marginTop: 14, fontSize: 16, fontWeight: 800, color: '#0F172A' }}>{title}</div>
+      <p style={{ margin: '8px 0 0', fontSize: 13, lineHeight: 1.7, color: '#64748B' }}>
+        {description}
+      </p>
+      <div style={{ marginTop: 12 }}>
+        <MiniChip
+          label={meta}
+          tone={tone === 'warning' ? 'warning' : tone === 'success' ? 'success' : 'neutral'}
+        />
+      </div>
+    </div>
+  );
+}
+
+function CoachingPlayCard({
+  item,
+  compact = false,
+}: {
+  item: WorkspaceLearningAction;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        borderRadius: 16,
+        border: '1px solid #E2E8F0',
+        background: '#FFFFFF',
+        padding: compact ? '12px 13px' : '14px 15px',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 10,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <Pill label={item.category.replace(/_/g, ' ')} tone="info" />
+          <Pill
+            label={item.priority}
+            tone={
+              item.priority === 'high'
+                ? 'warning'
+                : item.priority === 'medium'
+                  ? 'neutral'
+                  : 'success'
+            }
+          />
+        </div>
+      </div>
+      <div style={{ marginTop: 10, fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
+        {item.title}
+      </div>
+      <p
+        style={{
+          margin: '8px 0 0',
+          fontSize: 12,
+          lineHeight: 1.7,
+          color: '#64748B',
+        }}
+      >
+        {item.description}
+      </p>
+      {item.focus.length > 0 ? (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+          {item.focus.map((focus) => (
+            <MiniChip key={`${item.title}:${focus}`} label={focus} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 function CollapsibleWorkspaceCard({
   title,
   description,
+  badge,
   children,
+  open = false,
 }: {
   title: string;
   description: string;
-  children: React.ReactNode;
+  badge?: string;
+  children: ReactNode;
+  open?: boolean;
 }) {
   return (
     <details
+      open={open}
       style={{
-        borderRadius: 20,
+        borderRadius: 22,
         border: '1px solid #E2E8F0',
         background: '#FFFFFF',
-        boxShadow: '0 2px 10px rgba(15,23,42,0.05)',
+        boxShadow: '0 16px 30px rgba(15,23,42,0.05)',
         overflow: 'hidden',
       }}
     >
@@ -1044,13 +1936,15 @@ function CollapsibleWorkspaceCard({
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 16,
-          background: '#FAFBFC',
-          borderBottom: '1px solid transparent',
+          background: 'linear-gradient(180deg, #FBFDFF, #F8FAFC)',
         }}
       >
         <div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>{title}</div>
-          <div style={{ fontSize: 12, color: '#64748B', marginTop: 3, lineHeight: 1.55 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A' }}>{title}</div>
+            {badge ? <MiniChip label={badge} tone="success" /> : null}
+          </div>
+          <div style={{ fontSize: 12, color: '#64748B', marginTop: 4, lineHeight: 1.55 }}>
             {description}
           </div>
         </div>
@@ -1059,9 +1953,9 @@ function CollapsibleWorkspaceCard({
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 34,
-            height: 34,
-            borderRadius: 10,
+            width: 36,
+            height: 36,
+            borderRadius: 12,
             border: '1px solid #DBEAFE',
             background: '#EFF6FF',
             color: '#2563EB',
@@ -1097,10 +1991,10 @@ function SignalCard({
   return (
     <div
       style={{
-        borderRadius: 14,
+        borderRadius: 16,
         border: `1px solid ${palette.border}`,
         background: palette.bg,
-        padding: '12px 14px',
+        padding: '13px 14px',
       }}
     >
       <div
@@ -1282,10 +2176,53 @@ function MiniText({ text }: { text: string }) {
   return <div style={{ fontSize: 12, lineHeight: 1.7, color: '#94A3B8' }}>{text}</div>;
 }
 
-const subHeadingStyle: React.CSSProperties = {
+function getUniqueValues(values: string[]) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function getOpportunitySearchCues(
+  data: TeacherRecommendationWorkspaceData['automatedRecommendations']
+) {
+  const cues = [
+    ...data.map((recommendation) => recommendation.organizationName),
+    ...data.map((recommendation) => recommendation.title),
+    ...data.flatMap((recommendation) => recommendation.matchedSignals.slice(0, 2)),
+    ...data.flatMap((recommendation) => recommendation.missingSignals.slice(0, 1)),
+  ];
+
+  return getUniqueValues(cues).slice(0, 16);
+}
+
+const subHeadingStyle: CSSProperties = {
   fontSize: 11,
   fontWeight: 700,
   color: '#94A3B8',
   textTransform: 'uppercase',
   letterSpacing: 0.8,
+};
+
+const secondaryLinkStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  textDecoration: 'none',
+  borderRadius: 12,
+  border: '1px solid #BFDBFE',
+  background: '#EFF6FF',
+  color: '#1D4ED8',
+  padding: '8px 12px',
+  fontSize: 12,
+  fontWeight: 700,
+};
+
+const searchSelectStyle: CSSProperties = {
+  width: '100%',
+  boxSizing: 'border-box',
+  borderRadius: 16,
+  border: '1px solid #CBD5E1',
+  padding: '13px 14px',
+  fontSize: 14,
+  color: '#0F172A',
+  background: '#FFFFFF',
+  outline: 'none',
 };

@@ -2,6 +2,7 @@
 
 import type { DashboardData } from '@/lib/student-dashboard';
 import type { UpcomingCalendarEvent } from '@/lib/calendar-events';
+import type { StudentAcademicReviewSummary } from '@/lib/academic-feedback';
 import DashboardShell, { type DashboardNavItem } from '@/components/dashboard/DashboardShell';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
@@ -63,6 +64,7 @@ interface DashboardClientProps {
   userId: string;
   calendarEvents: UpcomingCalendarEvent[];
   isCalendarConnected: boolean;
+  initialAcademicReviews?: StudentAcademicReviewSummary[];
   previewShell?: {
     role: 'advisor' | 'departmentHead';
     roleLabel: string;
@@ -82,35 +84,20 @@ interface DashboardClientProps {
   };
 }
 
-type StudentDashboardReview = {
-  id: string;
-  headline: string;
-  summary: string;
-  strengths: string[];
-  growthAreas: string[];
-  readinessLevel: 'priority_support' | 'developing' | 'ready';
-  profileScore?: number;
-  createdAt: string;
-  reviewer: {
-    name: string;
-    role: string;
-    designation?: string;
-    department?: string;
-    institution?: string;
-  };
-};
-
 export default function DashboardClient({
   data,
   userId,
   calendarEvents,
   isCalendarConnected,
+  initialAcademicReviews,
   previewShell,
 }: DashboardClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const hasTriggeredCalendarSync = useRef(false);
-  const [academicReviews, setAcademicReviews] = useState<StudentDashboardReview[]>([]);
+  const [academicReviews, setAcademicReviews] = useState<StudentAcademicReviewSummary[]>(
+    initialAcademicReviews ?? []
+  );
   const profileSubtitle = [data.profile.university, data.profile.department]
     .filter(Boolean)
     .join(' | ');
@@ -160,12 +147,14 @@ export default function DashboardClient({
   }, [isCalendarConnected, router, searchParams]);
 
   useEffect(() => {
+    if (previewShell || initialAcademicReviews) return;
+
     let isActive = true;
 
     void (async () => {
       try {
         const res = await fetch('/api/student/academic-feedback');
-        const feedback = (await res.json()) as { reviews?: StudentDashboardReview[] };
+        const feedback = (await res.json()) as { reviews?: StudentAcademicReviewSummary[] };
         if (!isActive) return;
         setAcademicReviews(feedback.reviews ?? []);
       } catch (error) {
@@ -176,7 +165,7 @@ export default function DashboardClient({
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [initialAcademicReviews, previewShell]);
 
   return (
     <DashboardShell

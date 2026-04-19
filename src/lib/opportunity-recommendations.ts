@@ -468,8 +468,9 @@ export async function getTeacherRecommendationWorkspaceData(params: {
   const advisorDashboard = isAdvisorView ? (dashboardData as AdvisorDashboardData) : null;
   const departmentDashboard = isAdvisorView ? null : (dashboardData as DepartmentDashboardData);
 
-  const selectedStudent =
-    students.find((student) => student._id.toString() === params.studentId) ?? students[0] ?? null;
+  const selectedStudent = params.studentId
+    ? (students.find((student) => student._id.toString() === params.studentId) ?? null)
+    : null;
 
   const selectedStudentId = selectedStudent?._id.toString();
 
