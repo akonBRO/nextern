@@ -1,8 +1,9 @@
 'use client';
+// src/components/employer/EmployerRecommendationRequestsClient.tsx
 
 import { useMemo, useState, useTransition, type ComponentType } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, PauseCircle, SendToBack, ShieldCheck, XCircle } from 'lucide-react';
+import { CheckCircle2, Mail, PauseCircle, SendToBack, ShieldCheck, XCircle } from 'lucide-react';
 import type { EmployerRecommendationRequestItem } from '@/lib/employer-recommendation-requests';
 
 type Props = {
@@ -112,7 +113,6 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
         setActionError(data.error ?? 'Failed to update request.');
         return;
       }
-
       startTransition(() => {
         router.refresh();
       });
@@ -125,7 +125,8 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
 
   return (
     <div style={{ display: 'grid', gap: 18 }}>
-      {!compact ? (
+      {/* ── Stats row ── */}
+      {!compact && (
         <div
           style={{
             display: 'grid',
@@ -144,9 +145,10 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
           <StatPill label="On Hold" value={summary.hold} Icon={PauseCircle} accent="#EA580C" />
           <StatPill label="Rejected" value={summary.rejected} Icon={XCircle} accent="#DC2626" />
         </div>
-      ) : null}
+      )}
 
-      {actionError ? (
+      {/* ── Error banner ── */}
+      {actionError && (
         <div
           style={{
             borderRadius: 16,
@@ -160,8 +162,9 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
         >
           {actionError}
         </div>
-      ) : null}
+      )}
 
+      {/* ── Empty state ── */}
       {requests.length === 0 ? (
         <div
           style={{
@@ -200,6 +203,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
           {requests.map((request) => {
             const tone = statusTone(request.requestStatus);
             const isBusy = pendingId === request.id;
+
             return (
               <div
                 key={request.id}
@@ -213,6 +217,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                   gap: 16,
                 }}
               >
+                {/* ── Top bar: status + title + meta ── */}
                 <div
                   style={{
                     display: 'flex',
@@ -223,6 +228,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                   }}
                 >
                   <div style={{ display: 'grid', gap: 10 }}>
+                    {/* Badges */}
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <span
                         style={{
@@ -241,10 +247,12 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                         {formatStatus(request.requestStatus)}
                       </span>
                       <MiniTag label={request.priority} tone="warning" />
-                      {typeof request.fitScore === 'number' ? (
+                      {typeof request.fitScore === 'number' && (
                         <MiniTag label={`${request.fitScore}% fit`} tone="success" />
-                      ) : null}
+                      )}
                     </div>
+
+                    {/* Title */}
                     <div
                       style={{
                         fontSize: 22,
@@ -255,6 +263,8 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                     >
                       {request.student.name} for {request.job?.title ?? request.title}
                     </div>
+
+                    {/* Recommender line */}
                     <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
                       Requested by {request.recommender.name}
                       {request.recommender.designation
@@ -266,6 +276,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                     </div>
                   </div>
 
+                  {/* Right meta column */}
                   <div style={{ minWidth: 240, display: 'grid', gap: 8 }}>
                     <MetaLine
                       label="Student scope"
@@ -290,6 +301,82 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                   </div>
                 </div>
 
+                {/* ── Student contact strip ── */}
+                {request.student.email && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 10,
+                      borderRadius: 14,
+                      border: '1px solid #BFDBFE',
+                      background: '#EFF6FF',
+                      padding: '11px 14px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {/* Avatar initials */}
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: '50%',
+                          background: '#2563EB',
+                          color: '#FFFFFF',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 12,
+                          fontWeight: 800,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {request.student.name
+                          .split(' ')
+                          .slice(0, 2)
+                          .map((n) => n[0])
+                          .join('')
+                          .toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#1E40AF' }}>
+                          {request.student.name}
+                        </div>
+                        <div style={{ fontSize: 12, color: '#3B82F6' }}>
+                          {[request.student.university, request.student.department]
+                            .filter(Boolean)
+                            .join(' · ') || 'Student'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <a
+                      href={`mailto:${request.student.email}`}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 7,
+                        borderRadius: 10,
+                        border: '1px solid #93C5FD',
+                        background: '#FFFFFF',
+                        color: '#1D4ED8',
+                        padding: '8px 14px',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                        flexShrink: 0,
+                        transition: 'background 0.15s',
+                      }}
+                    >
+                      <Mail size={13} />
+                      {request.student.email}
+                    </a>
+                  </div>
+                )}
+
+                {/* ── Detail grid: description + decision panel ── */}
                 <div
                   style={{
                     display: 'grid',
@@ -298,6 +385,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                   }}
                   className="employer-recommendation-detail-grid"
                 >
+                  {/* Left — recommendation body */}
                   <div style={{ display: 'grid', gap: 14 }}>
                     <div
                       style={{
@@ -326,15 +414,17 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                     </div>
 
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {request.focusSkills.map((skill) => (
-                        <MiniTag key={`${request.id}:${skill}`} label={skill} tone="neutral" />
-                      ))}
-                      {request.focusSkills.length === 0 ? (
+                      {request.focusSkills.length > 0 ? (
+                        request.focusSkills.map((skill) => (
+                          <MiniTag key={`${request.id}:${skill}`} label={skill} tone="neutral" />
+                        ))
+                      ) : (
                         <MiniTag label="No explicit focus skills attached" tone="neutral" />
-                      ) : null}
+                      )}
                     </div>
                   </div>
 
+                  {/* Right — decision panel */}
                   <div
                     style={{
                       borderRadius: 18,
@@ -350,11 +440,8 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                     </div>
                     <textarea
                       value={responseNote[request.id] ?? request.employerResponseNote ?? ''}
-                      onChange={(event) =>
-                        setResponseNote((current) => ({
-                          ...current,
-                          [request.id]: event.target.value,
-                        }))
+                      onChange={(e) =>
+                        setResponseNote((curr) => ({ ...curr, [request.id]: e.target.value }))
                       }
                       rows={4}
                       placeholder="Optional note for the advisor or department head"
@@ -368,6 +455,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                         fontSize: 13,
                         color: '#0F172A',
                         background: '#FFFFFF',
+                        fontFamily: 'inherit',
                       }}
                     />
 
@@ -427,6 +515,8 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
   );
 }
 
+// ── Sub-components ─────────────────────────────────────────────────────────
+
 function ActionButton({
   label,
   accent,
@@ -454,7 +544,7 @@ function ActionButton({
         cursor: disabled ? 'wait' : 'pointer',
       }}
     >
-      {disabled ? 'Saving...' : label}
+      {disabled ? 'Saving…' : label}
     </button>
   );
 }

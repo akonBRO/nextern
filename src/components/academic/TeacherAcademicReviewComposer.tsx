@@ -28,6 +28,21 @@ const initialForm: FormState = {
   profileScore: '',
 };
 
+type ApiResponse = {
+  error?: string;
+  message?: string;
+  details?: Record<string, string[] | undefined>;
+};
+
+function getApiErrorMessage(data: ApiResponse | null | undefined, fallback: string) {
+  const detail = Object.values(data?.details ?? {})
+    .flat()
+    .find((message): message is string => typeof message === 'string' && message.trim().length > 0);
+
+  if (detail) return detail;
+  return data?.error ?? fallback;
+}
+
 function readinessTone(level: WorkspaceAcademicReview['readinessLevel']) {
   if (level === 'ready') return { bg: '#ECFDF5', border: '#A7F3D0', color: '#166534' };
   if (level === 'priority_support') {
@@ -84,9 +99,9 @@ export default function TeacherAcademicReviewComposer({ studentId, role, reviews
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        const data = (await res.json()) as { error?: string; message?: string };
+        const data = (await res.json()) as ApiResponse;
         if (!res.ok) {
-          setError(data.error ?? 'Failed to save academic review.');
+          setError(getApiErrorMessage(data, 'Failed to save academic review.'));
           return;
         }
 
@@ -110,9 +125,9 @@ export default function TeacherAcademicReviewComposer({ studentId, role, reviews
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'archived' }),
       });
-      const data = (await res.json()) as { error?: string; message?: string };
+      const data = (await res.json()) as ApiResponse;
       if (!res.ok) {
-        setError(data.error ?? 'Failed to archive academic review.');
+        setError(getApiErrorMessage(data, 'Failed to archive academic review.'));
         return;
       }
 
@@ -185,6 +200,9 @@ export default function TeacherAcademicReviewComposer({ studentId, role, reviews
                 value={form.headline}
                 onChange={(event) => update('headline', event.target.value)}
                 placeholder="Example: Strong technical potential with interview gaps"
+                required
+                minLength={3}
+                maxLength={160}
                 style={inputStyle()}
               />
             </Field>
@@ -209,6 +227,9 @@ export default function TeacherAcademicReviewComposer({ studentId, role, reviews
               onChange={(event) => update('summary', event.target.value)}
               placeholder="Summarize the student's overall profile, present standing, and what matters most right now."
               rows={5}
+              required
+              minLength={20}
+              maxLength={2400}
               style={{ ...inputStyle(), resize: 'vertical', minHeight: 136 }}
             />
           </Field>
@@ -246,6 +267,7 @@ export default function TeacherAcademicReviewComposer({ studentId, role, reviews
               value={form.profileScore}
               onChange={(event) => update('profileScore', event.target.value)}
               placeholder="Optional"
+              inputMode="numeric"
               style={inputStyle()}
             />
           </Field>

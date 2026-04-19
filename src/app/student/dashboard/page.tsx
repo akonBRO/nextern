@@ -2,6 +2,7 @@
 
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { getStudentAcademicFeedback } from '@/lib/academic-feedback';
 import { getStudentDashboardData } from '@/lib/student-dashboard';
 import { getUpcomingCalendarEvents } from '@/lib/calendar-events';
 import { connectDB } from '@/lib/db';
@@ -67,15 +68,18 @@ export default async function StudentDashboardPage() {
   // ── Fetch calendar data server-side ──────────────────────────────────────
   let calendarEvents: Awaited<ReturnType<typeof getUpcomingCalendarEvents>> = [];
   let isCalendarConnected = false;
+  let academicReviews: Awaited<ReturnType<typeof getStudentAcademicFeedback>>['reviews'] = [];
 
   try {
     await connectDB();
-    const [events, calUser] = await Promise.all([
+    const [events, calUser, feedback] = await Promise.all([
       getUpcomingCalendarEvents(session.user.id, 24),
       User.findById(session.user.id).select('googleCalendarConnected').lean(),
+      getStudentAcademicFeedback(session.user.id),
     ]);
     calendarEvents = events;
     isCalendarConnected = calUser?.googleCalendarConnected ?? false;
+    academicReviews = feedback.reviews;
   } catch (err) {
     console.error('[CALENDAR WIDGET ERROR]', err);
     // non-blocking — dashboard still renders without calendar
@@ -87,6 +91,7 @@ export default async function StudentDashboardPage() {
       userId={session.user.id}
       calendarEvents={calendarEvents}
       isCalendarConnected={isCalendarConnected}
+      initialAcademicReviews={academicReviews}
     />
   );
 }
