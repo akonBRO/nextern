@@ -119,7 +119,11 @@ export async function PATCH(req: NextRequest) {
 
     // ── Calendar sync on status change ────────────────────────────────────
     if (newStatus !== previousStatus) {
-      await onApplicationStatusChanged(application.studentId.toString(), newStatus).catch(() => {});
+      await onApplicationStatusChanged(
+        application.studentId.toString(),
+        application.employerId.toString(),
+        newStatus
+      ).catch(() => {});
 
       // Handle calendar events based on new status
       try {
