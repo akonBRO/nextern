@@ -354,7 +354,7 @@ export default function TeacherRecommendationPage({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '320px minmax(0, 1fr)',
+              gridTemplateColumns: '400px minmax(0, 1fr)',
               gap: 16,
               alignItems: 'start',
             }}
@@ -1826,8 +1826,27 @@ function ActionHighlightCard({
       >
         <Icon size={18} />
       </div>
-      <div style={{ marginTop: 14, fontSize: 16, fontWeight: 800, color: '#0F172A' }}>{title}</div>
-      <p style={{ margin: '8px 0 0', fontSize: 13, lineHeight: 1.7, color: '#64748B' }}>
+      <div
+        style={{
+          marginTop: 14,
+          fontSize: 17,
+          fontWeight: 900,
+          color: '#0F172A',
+          letterSpacing: '-0.01em',
+        }}
+      >
+        {title}
+      </div>
+      <p
+        style={{
+          margin: '8px 0 0',
+          fontSize: 13,
+          color: '#475569',
+          marginTop: 5,
+          lineHeight: 1.6,
+          fontWeight: 500,
+        }}
+      >
         {description}
       </p>
       <div style={{ marginTop: 12 }}>
@@ -1921,9 +1940,9 @@ function CollapsibleWorkspaceCard({
       open={open}
       style={{
         borderRadius: 22,
-        border: '1px solid #E2E8F0',
+        border: '1.5px solid #BFDBFE', // blue border instead of grey
         background: '#FFFFFF',
-        boxShadow: '0 16px 30px rgba(15,23,42,0.05)',
+        boxShadow: '0 20px 40px rgba(37,99,235,0.10), 0 4px 12px rgba(15,23,42,0.06)', // stronger blue-tinted shadow
         overflow: 'hidden',
       }}
     >
@@ -1931,20 +1950,21 @@ function CollapsibleWorkspaceCard({
         style={{
           listStyle: 'none',
           cursor: 'pointer',
-          padding: '18px 22px',
+          padding: '20px 24px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 16,
-          background: 'linear-gradient(180deg, #FBFDFF, #F8FAFC)',
+          background: 'linear-gradient(135deg, #EFF6FF, #F8FBFF)',
+          borderBottom: '1px solid #DBEAFE',
         }}
       >
         <div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A' }}>{title}</div>
+            <div style={{ fontSize: 24, fontWeight: 600, color: '#0F172A' }}>{title}</div>
             {badge ? <MiniChip label={badge} tone="success" /> : null}
           </div>
-          <div style={{ fontSize: 12, color: '#64748B', marginTop: 4, lineHeight: 1.55 }}>
+          <div style={{ fontSize: 14, color: '#64748B', marginTop: 4, lineHeight: 1.55 }}>
             {description}
           </div>
         </div>
@@ -1953,13 +1973,14 @@ function CollapsibleWorkspaceCard({
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 36,
-            height: 36,
+            width: 38,
+            height: 38,
             borderRadius: 12,
-            border: '1px solid #DBEAFE',
-            background: '#EFF6FF',
-            color: '#2563EB',
+            border: '1.5px solid #93C5FD',
+            background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+            color: '#FFFFFF',
             flexShrink: 0,
+            boxShadow: '0 4px 10px rgba(37,99,235,0.25)',
           }}
         >
           <ChevronDown size={16} />

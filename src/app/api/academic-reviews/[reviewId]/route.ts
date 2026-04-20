@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
-import { UpdateAcademicReviewSchema } from '@/lib/validations';
+import { AcademicReviewSchema } from '@/lib/validations';
+import { canTeacherAccessStudent, resolveTeacherScope } from '@/lib/opportunity-recommendations';
 import { AcademicReview } from '@/models/AcademicReview';
 
 type Params = Promise<{ reviewId: string }>;
@@ -17,7 +18,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Params }) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const parsed = UpdateAcademicReviewSchema.safeParse(body);
+    const parsed = AcademicReviewSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
@@ -25,25 +26,83 @@ export async function PATCH(req: NextRequest, { params }: { params: Params }) {
       );
     }
 
+    const scope = await resolveTeacherScope(session.user.id, session.user.role);
+    const hasAccess = await canTeacherAccessStudent(scope, parsed.data.studentId);
+    if (!hasAccess) {
+      return NextResponse.json(
+        { error: 'Student is outside your scoped cohort.' },
+        { status: 403 }
+      );
+    }
+
     const { reviewId } = await params;
     await connectDB();
 
-    const updated = await AcademicReview.findOneAndUpdate(
-      { _id: reviewId, reviewerId: session.user.id },
-      { $set: { status: parsed.data.status } },
-      { new: true }
-    ).lean();
+    const existing = await AcademicReview.findOne({
+      _id: reviewId,
+      reviewerId: session.user.id,
+    }).select('studentId');
 
-    if (!updated) {
+    if (!existing) {
       return NextResponse.json({ error: 'Academic review not found.' }, { status: 404 });
     }
 
+    if (existing.studentId.toString() !== parsed.data.studentId) {
+      return NextResponse.json(
+        { error: 'Academic reviews cannot be moved to a different student.' },
+        { status: 400 }
+      );
+    }
+
+    existing.headline = parsed.data.headline;
+    existing.summary = parsed.data.summary;
+    existing.strengths = parsed.data.strengths;
+    existing.growthAreas = parsed.data.growthAreas;
+    existing.readinessLevel = parsed.data.readinessLevel;
+    existing.profileScore = parsed.data.profileScore;
+    existing.university = scope.institutionName ?? '';
+    existing.department = scope.advisoryDepartment ?? '';
+    existing.status = 'active';
+    await existing.save();
+
     return NextResponse.json({
       message: 'Academic review updated successfully.',
-      review: { id: updated._id.toString(), status: updated.status },
+      review: { id: existing._id.toString(), headline: existing.headline },
     });
   } catch (error) {
     console.error('[ACADEMIC REVIEW UPDATE ERROR]', error);
     return NextResponse.json({ error: 'Failed to update academic review.' }, { status: 500 });
+  }
+}
+
+export async function DELETE(_req: NextRequest, { params }: { params: Params }) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (session.user.role !== 'advisor' && session.user.role !== 'dept_head') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const { reviewId } = await params;
+    await connectDB();
+
+    const deleted = await AcademicReview.findOneAndDelete({
+      _id: reviewId,
+      reviewerId: session.user.id,
+    }).lean();
+
+    if (!deleted) {
+      return NextResponse.json({ error: 'Academic review not found.' }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      message: 'Academic review deleted successfully.',
+      review: { id: deleted._id.toString() },
+    });
+  } catch (error) {
+    console.error('[ACADEMIC REVIEW DELETE ERROR]', error);
+    return NextResponse.json({ error: 'Failed to delete academic review.' }, { status: 500 });
   }
 }
