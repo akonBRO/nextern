@@ -38,10 +38,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Params }) {
     const { reviewId } = await params;
     await connectDB();
 
-    const existing = await AcademicReview.findOne({
-      _id: reviewId,
-      reviewerId: session.user.id,
-    }).select('studentId');
+    // dept_head can edit any review in their scope; advisor only their own
+    const ownershipFilter =
+      session.user.role === 'dept_head'
+        ? { _id: reviewId }
+        : { _id: reviewId, reviewerId: session.user.id };
+
+    const existing = await AcademicReview.findOne(ownershipFilter).select('studentId');
 
     if (!existing) {
       return NextResponse.json({ error: 'Academic review not found.' }, { status: 404 });
@@ -88,10 +91,13 @@ export async function DELETE(_req: NextRequest, { params }: { params: Params }) 
     const { reviewId } = await params;
     await connectDB();
 
-    const deleted = await AcademicReview.findOneAndDelete({
-      _id: reviewId,
-      reviewerId: session.user.id,
-    }).lean();
+    // dept_head can delete any review in their scope; advisor only their own
+    const ownershipFilter =
+      session.user.role === 'dept_head'
+        ? { _id: reviewId }
+        : { _id: reviewId, reviewerId: session.user.id };
+
+    const deleted = await AcademicReview.findOneAndDelete(ownershipFilter).lean();
 
     if (!deleted) {
       return NextResponse.json({ error: 'Academic review not found.' }, { status: 404 });

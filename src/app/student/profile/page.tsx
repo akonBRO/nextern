@@ -2351,58 +2351,106 @@ export default function StudentProfilePage() {
                           : { bg: '#FFFBEB', border: '#FDE68A', color: C.warning };
 
                     return (
-                      <div
+                      <details
                         key={review.id}
                         style={{
                           borderRadius: 14,
                           border: `1px solid ${C.border}`,
                           background: C.white,
-                          padding: 16,
+                          overflow: 'hidden',
                         }}
                       >
-                        <div
+                        <summary
                           style={{
+                            listStyle: 'none',
+                            cursor: 'pointer',
+                            padding: '13px 16px',
                             display: 'flex',
-                            alignItems: 'flex-start',
+                            alignItems: 'center',
                             justifyContent: 'space-between',
                             gap: 12,
-                            flexWrap: 'wrap',
+                            background: C.white,
+                            userSelect: 'none',
                           }}
                         >
-                          <div>
-                            <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
+                          <div style={{ minWidth: 0 }}>
+                            <div
+                              style={{
+                                fontSize: 14,
+                                fontWeight: 800,
+                                color: C.text,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
                               {review.headline}
                             </div>
-                            <div style={{ fontSize: 12, color: C.gray, marginTop: 4 }}>
+                            <div style={{ fontSize: 11, color: C.gray, marginTop: 3 }}>
                               {review.reviewer.name}
-                              {review.reviewer.designation
-                                ? ` · ${review.reviewer.designation}`
-                                : ''}
+                              {review.reviewer.designation ? ` · ${review.reviewer.designation}` : ''}
                             </div>
                           </div>
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                             <span
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                padding: '6px 10px',
+                                padding: '4px 8px',
                                 borderRadius: 999,
                                 background: readinessPalette.bg,
                                 border: `1px solid ${readinessPalette.border}`,
                                 color: readinessPalette.color,
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: 800,
                                 textTransform: 'uppercase',
+                                whiteSpace: 'nowrap',
                               }}
                             >
                               {review.readinessLevel.replace(/_/g, ' ')}
                             </span>
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: 28,
+                                height: 28,
+                                borderRadius: 8,
+                                border: `1px solid ${C.border}`,
+                                background: '#F8FAFC',
+                                color: C.gray,
+                                flexShrink: 0,
+                              }}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                                <path
+                                  d="M4 6L8 10L12 6"
+                                  stroke="currentColor"
+                                  strokeWidth="1.8"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </span>
+                          </div>
+                        </summary>
+
+                        {/* Expanded content */}
+                        <div
+                          style={{
+                            padding: '0 16px 16px',
+                            borderTop: `1px solid ${C.border}`,
+                            background: '#FAFBFC',
+                          }}
+                        >
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingTop: 14 }}>
                             {typeof review.profileScore === 'number' ? (
                               <span
                                 style={{
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  padding: '6px 10px',
+                                  padding: '5px 10px',
                                   borderRadius: 999,
                                   background: C.blueBg,
                                   border: `1px solid ${C.blueBorder}`,
@@ -2416,132 +2464,124 @@ export default function StudentProfilePage() {
                               </span>
                             ) : null}
                           </div>
-                        </div>
 
-                        <p
-                          style={{
-                            margin: '12px 0 0',
-                            fontSize: 13,
-                            color: C.gray,
-                            lineHeight: 1.7,
-                          }}
-                        >
-                          {review.summary}
-                        </p>
-
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                            gap: 10,
-                            marginTop: 12,
-                          }}
-                          className="student-feedback-detail-grid"
-                        >
-                          <div
+                          <p
                             style={{
-                              borderRadius: 12,
-                              border: `1px solid ${C.successBorder}`,
-                              background: C.successBg,
-                              padding: 12,
+                              margin: '12px 0 0',
+                              fontSize: 13,
+                              color: C.gray,
+                              lineHeight: 1.7,
                             }}
                           >
-                            <div
-                              style={{
-                                fontSize: 11,
-                                fontWeight: 800,
-                                color: C.success,
-                                textTransform: 'uppercase',
-                                letterSpacing: 0.8,
-                              }}
-                            >
-                              Strengths
-                            </div>
-                            <div
-                              style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}
-                            >
-                              {review.strengths.length > 0 ? (
-                                review.strengths.map((item) => (
-                                  <span
-                                    key={`${review.id}:${item}:strength`}
-                                    style={{
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      padding: '5px 9px',
-                                      borderRadius: 999,
-                                      background: C.white,
-                                      border: `1px solid ${C.successBorder}`,
-                                      color: C.success,
-                                      fontSize: 11,
-                                      fontWeight: 700,
-                                    }}
-                                  >
-                                    {item}
-                                  </span>
-                                ))
-                              ) : (
-                                <span style={{ fontSize: 12, color: C.gray }}>
-                                  No strengths listed.
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                            {review.summary}
+                          </p>
 
                           <div
                             style={{
-                              borderRadius: 12,
-                              border: '1px solid #FDE68A',
-                              background: '#FFFBEB',
-                              padding: 12,
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                              gap: 10,
+                              marginTop: 12,
                             }}
+                            className="student-feedback-detail-grid"
                           >
                             <div
                               style={{
-                                fontSize: 11,
-                                fontWeight: 800,
-                                color: C.warning,
-                                textTransform: 'uppercase',
-                                letterSpacing: 0.8,
+                                borderRadius: 12,
+                                border: `1px solid ${C.successBorder}`,
+                                background: C.successBg,
+                                padding: 12,
                               }}
                             >
-                              Growth Areas
+                              <div
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  color: C.success,
+                                  textTransform: 'uppercase',
+                                  letterSpacing: 0.8,
+                                }}
+                              >
+                                Strengths
+                              </div>
+                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                                {review.strengths.length > 0 ? (
+                                  review.strengths.map((item) => (
+                                    <span
+                                      key={`${review.id}:${item}:strength`}
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        padding: '5px 9px',
+                                        borderRadius: 999,
+                                        background: C.white,
+                                        border: `1px solid ${C.successBorder}`,
+                                        color: C.success,
+                                        fontSize: 11,
+                                        fontWeight: 700,
+                                      }}
+                                    >
+                                      {item}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span style={{ fontSize: 12, color: C.gray }}>No strengths listed.</span>
+                                )}
+                              </div>
                             </div>
+
                             <div
-                              style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}
+                              style={{
+                                borderRadius: 12,
+                                border: '1px solid #FDE68A',
+                                background: '#FFFBEB',
+                                padding: 12,
+                              }}
                             >
-                              {review.growthAreas.length > 0 ? (
-                                review.growthAreas.map((item) => (
-                                  <span
-                                    key={`${review.id}:${item}:gap`}
-                                    style={{
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      padding: '5px 9px',
-                                      borderRadius: 999,
-                                      background: C.white,
-                                      border: '1px solid #FDE68A',
-                                      color: '#B45309',
-                                      fontSize: 11,
-                                      fontWeight: 700,
-                                    }}
-                                  >
-                                    {item}
-                                  </span>
-                                ))
-                              ) : (
-                                <span style={{ fontSize: 12, color: C.gray }}>
-                                  No growth areas listed.
-                                </span>
-                              )}
+                              <div
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  color: C.warning,
+                                  textTransform: 'uppercase',
+                                  letterSpacing: 0.8,
+                                }}
+                              >
+                                Growth Areas
+                              </div>
+                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                                {review.growthAreas.length > 0 ? (
+                                  review.growthAreas.map((item) => (
+                                    <span
+                                      key={`${review.id}:${item}:gap`}
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        padding: '5px 9px',
+                                        borderRadius: 999,
+                                        background: C.white,
+                                        border: '1px solid #FDE68A',
+                                        color: '#B45309',
+                                        fontSize: 11,
+                                        fontWeight: 700,
+                                      }}
+                                    >
+                                      {item}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span style={{ fontSize: 12, color: C.gray }}>No growth areas listed.</span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        <div style={{ fontSize: 11, color: C.light, marginTop: 12 }}>
-                          Added {new Date(review.createdAt).toLocaleDateString()}
-                          {review.reviewer.institution ? ` · ${review.reviewer.institution}` : ''}
+                          <div style={{ fontSize: 11, color: C.light, marginTop: 12 }}>
+                            Added {new Date(review.createdAt).toLocaleDateString()}
+                            {review.reviewer.institution ? ` · ${review.reviewer.institution}` : ''}
+                          </div>
                         </div>
-                      </div>
+                      </details>
                     );
                   })}
                 </div>
@@ -2606,58 +2646,110 @@ export default function StudentProfilePage() {
                           ? { bg: '#FFFBEB', border: '#FDE68A', color: C.warning }
                           : { bg: C.blueBg, border: C.blueBorder, color: C.blue };
 
+                    const jobSubtitle = recommendation.job
+                      ? `${recommendation.job.companyName} · ${recommendation.job.type.replace(/-/g, ' ')}`
+                      : recommendation.recommender.name;
+
                     return (
-                      <div
+                      <details
                         key={recommendation.id}
                         style={{
                           borderRadius: 14,
                           border: `1px solid ${C.border}`,
                           background: C.white,
-                          padding: 16,
+                          overflow: 'hidden',
                         }}
                       >
-                        <div
+                        <summary
                           style={{
+                            listStyle: 'none',
+                            cursor: 'pointer',
+                            padding: '13px 16px',
                             display: 'flex',
-                            alignItems: 'flex-start',
+                            alignItems: 'center',
                             justifyContent: 'space-between',
                             gap: 12,
-                            flexWrap: 'wrap',
+                            background: C.white,
+                            userSelect: 'none',
                           }}
                         >
-                          <div>
-                            <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
+                          <div style={{ minWidth: 0 }}>
+                            <div
+                              style={{
+                                fontSize: 14,
+                                fontWeight: 800,
+                                color: C.text,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
                               {recommendation.title}
                             </div>
-                            <div style={{ fontSize: 12, color: C.gray, marginTop: 4 }}>
-                              {recommendation.job
-                                ? `${recommendation.job.companyName} · ${recommendation.job.type.replace(/-/g, ' ')}`
-                                : recommendation.recommender.name}
+                            <div style={{ fontSize: 11, color: C.gray, marginTop: 3 }}>
+                              {jobSubtitle}
                             </div>
                           </div>
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                             <span
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                padding: '6px 10px',
+                                padding: '4px 8px',
                                 borderRadius: 999,
                                 background: priorityPalette.bg,
                                 border: `1px solid ${priorityPalette.border}`,
                                 color: priorityPalette.color,
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: 800,
                                 textTransform: 'uppercase',
+                                whiteSpace: 'nowrap',
                               }}
                             >
                               {recommendation.priority}
                             </span>
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: 28,
+                                height: 28,
+                                borderRadius: 8,
+                                border: `1px solid ${C.border}`,
+                                background: '#F8FAFC',
+                                color: C.gray,
+                                flexShrink: 0,
+                              }}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                                <path
+                                  d="M4 6L8 10L12 6"
+                                  stroke="currentColor"
+                                  strokeWidth="1.8"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </span>
+                          </div>
+                        </summary>
+
+                        {/* Expanded content */}
+                        <div
+                          style={{
+                            padding: '0 16px 16px',
+                            borderTop: `1px solid ${C.border}`,
+                            background: '#FAFBFC',
+                          }}
+                        >
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingTop: 14 }}>
                             {typeof recommendation.fitScore === 'number' ? (
                               <span
                                 style={{
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  padding: '6px 10px',
+                                  padding: '5px 10px',
                                   borderRadius: 999,
                                   background: C.successBg,
                                   border: `1px solid ${C.successBorder}`,
@@ -2667,94 +2759,86 @@ export default function StudentProfilePage() {
                                   textTransform: 'uppercase',
                                 }}
                               >
-                                Fit {recommendation.fitScore}%
+                                {`Fit ${recommendation.fitScore}%`}
                               </span>
                             ) : null}
                           </div>
-                        </div>
 
-                        <p
-                          style={{
-                            margin: '12px 0 0',
-                            fontSize: 13,
-                            color: C.gray,
-                            lineHeight: 1.7,
-                          }}
-                        >
-                          {recommendation.description}
-                        </p>
+                          <p
+                            style={{
+                              margin: '12px 0 0',
+                              fontSize: 13,
+                              color: C.gray,
+                              lineHeight: 1.7,
+                            }}
+                          >
+                            {recommendation.description}
+                          </p>
 
-                        {recommendation.focusSkills.length > 0 ? (
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
-                            {recommendation.focusSkills.map((skill) => (
-                              <span
-                                key={`${recommendation.id}:${skill}`}
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  padding: '5px 9px',
-                                  borderRadius: 999,
-                                  background: C.blueBg,
-                                  border: `1px solid ${C.blueBorder}`,
-                                  color: C.blue,
-                                  fontSize: 11,
-                                  fontWeight: 700,
-                                }}
-                              >
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
+                          {recommendation.focusSkills.length > 0 ? (
+                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+                              {recommendation.focusSkills.map((skill) => (
+                                <span
+                                  key={`${recommendation.id}:${skill}`}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    padding: '5px 9px',
+                                    borderRadius: 999,
+                                    background: C.blueBg,
+                                    border: `1px solid ${C.blueBorder}`,
+                                    color: C.blue,
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
+                          ) : null}
 
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 12,
-                            flexWrap: 'wrap',
-                            marginTop: 12,
-                          }}
-                        >
-                          <div style={{ fontSize: 11, color: C.light }}>
-                            Recommended by {recommendation.recommender.name}
-                            {recommendation.recommender.designation
+                          <div style={{ fontSize: 11, color: C.light, marginTop: 12 }}>
+                            {`Recommended by ${recommendation.recommender.name}${recommendation.recommender.designation
                               ? ` · ${recommendation.recommender.designation}`
-                              : ''}
+                              : ''
+                              }`}
                           </div>
-                          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                            {recommendation.job ? (
-                              <Link
-                                href={`/student/jobs/${recommendation.job.id}`}
-                                style={{
-                                  color: C.blue,
-                                  fontSize: 12,
-                                  fontWeight: 700,
-                                  textDecoration: 'none',
-                                }}
-                              >
-                                View Job
-                              </Link>
-                            ) : null}
-                            {recommendation.resourceUrl ? (
-                              <a
-                                href={recommendation.resourceUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{
-                                  color: C.teal,
-                                  fontSize: 12,
-                                  fontWeight: 700,
-                                  textDecoration: 'none',
-                                }}
-                              >
-                                Open Resource
-                              </a>
-                            ) : null}
-                          </div>
+
+                          {recommendation.job || recommendation.resourceUrl ? (
+                            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
+                              {recommendation.job ? (
+                                <Link
+                                  href={`/student/jobs/${recommendation.job.id}`}
+                                  style={{
+                                    color: C.blue,
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    textDecoration: 'none',
+                                  }}
+                                >
+                                  View Job
+                                </Link>
+                              ) : null}
+                              {recommendation.resourceUrl ? (
+                                <a
+                                  href={recommendation.resourceUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  style={{
+                                    color: C.teal,
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    textDecoration: 'none',
+                                  }}
+                                >
+                                  Open Resource
+                                </a>
+                              ) : null}
+                            </div>
+                          ) : null}
                         </div>
-                      </div>
+                      </details>
                     );
                   })}
                 </div>

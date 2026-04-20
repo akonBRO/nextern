@@ -476,42 +476,54 @@ export async function getTeacherRecommendationWorkspaceData(params: {
 
   const [applications, openJobs, manualRecommendations, academicReviews] = selectedStudentId
     ? await Promise.all([
-        Application.find({ studentId: selectedStudentId })
-          .select(
-            'jobId status fitScore hardGaps softGaps metRequirements suggestedPath fitSummary isEventRegistration appliedAt'
-          )
-          .sort({ updatedAt: -1 })
-          .lean() as Promise<ApplicationDoc[]>,
-        Job.find({
-          isActive: true,
-          $or: [{ applicationDeadline: { $gte: new Date() } }, { startDate: { $gte: new Date() } }],
-        })
-          .select(
-            'title companyName type locationType city applicationDeadline startDate requiredSkills requiredCourses preferredCertifications targetUniversities targetDepartments targetYears minimumCGPA description'
-          )
-          .sort({ applicationDeadline: 1, createdAt: -1 })
-          .limit(120)
-          .lean() as Promise<JobDoc[]>,
-        OpportunityRecommendation.find({ studentId: selectedStudentId, status: 'active' })
-          .populate('linkedJobId', 'title companyName type')
-          .sort({ createdAt: -1 })
-          .lean(),
-        AcademicReview.find({ studentId: selectedStudentId, status: 'active' })
-          .sort({ createdAt: -1 })
-          .lean(),
-      ])
+      Application.find({ studentId: selectedStudentId })
+        .select(
+          'jobId status fitScore hardGaps softGaps metRequirements suggestedPath fitSummary isEventRegistration appliedAt'
+        )
+        .sort({ updatedAt: -1 })
+        .lean() as Promise<ApplicationDoc[]>,
+      Job.find({
+        isActive: true,
+        $or: [{ applicationDeadline: { $gte: new Date() } }, { startDate: { $gte: new Date() } }],
+      })
+        .select(
+          'title companyName type locationType city applicationDeadline startDate requiredSkills requiredCourses preferredCertifications targetUniversities targetDepartments targetYears minimumCGPA description'
+        )
+        .sort({ applicationDeadline: 1, createdAt: -1 })
+        .limit(120)
+        .lean() as Promise<JobDoc[]>,
+      OpportunityRecommendation.find({
+        studentId: selectedStudentId,
+        status: 'active',
+        recommenderId: params.role === 'dept_head'
+          ? { $exists: true }          // dept_head sees ALL recommendations
+          : new mongoose.Types.ObjectId(params.viewerId), // advisor sees only their own
+      })
+        .populate('linkedJobId', 'title companyName type')
+        .sort({ createdAt: -1 })
+        .lean(),
+      AcademicReview.find({
+        studentId: selectedStudentId,
+        status: 'active',
+        reviewerId: params.role === 'dept_head'
+          ? { $exists: true }
+          : new mongoose.Types.ObjectId(params.viewerId),
+      })
+        .sort({ createdAt: -1 })
+        .lean(),
+    ])
     : [[], [], [], []];
 
   const jobMap = selectedStudentId
     ? new Map(
-        (
-          await Job.find({
-            _id: { $in: applications.map((application) => application.jobId) },
-          })
-            .select('title companyName type')
-            .lean()
-        ).map((job) => [job._id.toString(), job])
-      )
+      (
+        await Job.find({
+          _id: { $in: applications.map((application) => application.jobId) },
+        })
+          .select('title companyName type')
+          .lean()
+      ).map((job) => [job._id.toString(), job])
+    )
     : new Map();
 
   const applicationJobIds = new Set(
@@ -519,73 +531,73 @@ export async function getTeacherRecommendationWorkspaceData(params: {
   );
   const recommendationPool = selectedStudent
     ? openJobs
-        .filter((job) => isRelevantJob(selectedStudent, job))
-        .filter((job) => !applicationJobIds.has(job._id.toString()))
-        .map((job) => {
-          const breakdown = getFitBreakdown(selectedStudent, job);
-          const isEvent = job.type === 'webinar' || job.type === 'workshop';
-          const dateValue = isEvent ? job.startDate : job.applicationDeadline;
-          const dateLabel = dateValue
-            ? new Intl.DateTimeFormat('en-BD', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-              }).format(dateValue)
-            : undefined;
+      .filter((job) => isRelevantJob(selectedStudent, job))
+      .filter((job) => !applicationJobIds.has(job._id.toString()))
+      .map((job) => {
+        const breakdown = getFitBreakdown(selectedStudent, job);
+        const isEvent = job.type === 'webinar' || job.type === 'workshop';
+        const dateValue = isEvent ? job.startDate : job.applicationDeadline;
+        const dateLabel = dateValue
+          ? new Intl.DateTimeFormat('en-BD', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          }).format(dateValue)
+          : undefined;
 
-          return {
-            id: job._id.toString(),
-            category: isEvent ? ('event' as const) : ('job' as const),
-            title: job.title,
-            organizationName: job.companyName,
-            fitScore: breakdown.fitScore,
-            rationale:
-              breakdown.matchedSignals.length > 0
-                ? `Strong alignment through ${breakdown.matchedSignals.slice(0, 2).join(' and ')}.`
-                : 'A broad opportunity match based on the student profile and targeting rules.',
-            matchedSignals: breakdown.matchedSignals.slice(0, 5),
-            missingSignals: breakdown.missingSignals.slice(0, 4),
-            href: buildOpportunityHref(job),
-            priority: priorityFromFit(breakdown.fitScore),
-            dateLabel,
-            missingSkills: breakdown.missingSkills,
-            missingCourses: breakdown.missingCourses,
-          };
-        })
-        .sort((left, right) => right.fitScore - left.fitScore)
-        .slice(0, 8)
+        return {
+          id: job._id.toString(),
+          category: isEvent ? ('event' as const) : ('job' as const),
+          title: job.title,
+          organizationName: job.companyName,
+          fitScore: breakdown.fitScore,
+          rationale:
+            breakdown.matchedSignals.length > 0
+              ? `Strong alignment through ${breakdown.matchedSignals.slice(0, 2).join(' and ')}.`
+              : 'A broad opportunity match based on the student profile and targeting rules.',
+          matchedSignals: breakdown.matchedSignals.slice(0, 5),
+          missingSignals: breakdown.missingSignals.slice(0, 4),
+          href: buildOpportunityHref(job),
+          priority: priorityFromFit(breakdown.fitScore),
+          dateLabel,
+          missingSkills: breakdown.missingSkills,
+          missingCourses: breakdown.missingCourses,
+        };
+      })
+      .sort((left, right) => right.fitScore - left.fitScore)
+      .slice(0, 8)
     : [];
 
   const jobRecommendationOptions: WorkspaceJobRecommendationOption[] = selectedStudent
     ? openJobs
-        .filter(
-          (job): job is JobDoc & { type: JobRecommendationType } =>
-            job.type === 'internship' || job.type === 'part-time' || job.type === 'full-time'
-        )
-        .map((job) => {
-          const breakdown = getFitBreakdown(selectedStudent, job);
-          const dateLabel = job.applicationDeadline
-            ? new Intl.DateTimeFormat('en-BD', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-              }).format(job.applicationDeadline)
-            : undefined;
+      .filter(
+        (job): job is JobDoc & { type: JobRecommendationType } =>
+          job.type === 'internship' || job.type === 'part-time' || job.type === 'full-time'
+      )
+      .map((job) => {
+        const breakdown = getFitBreakdown(selectedStudent, job);
+        const dateLabel = job.applicationDeadline
+          ? new Intl.DateTimeFormat('en-BD', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          }).format(job.applicationDeadline)
+          : undefined;
 
-          return {
-            id: job._id.toString(),
-            title: job.title,
-            companyName: job.companyName,
-            type: job.type,
-            fitScore: breakdown.fitScore,
-            dateLabel,
-          };
-        })
-        .sort((left, right) => {
-          if (right.fitScore !== left.fitScore) return right.fitScore - left.fitScore;
-          return left.title.localeCompare(right.title);
-        })
-        .slice(0, 30)
+        return {
+          id: job._id.toString(),
+          title: job.title,
+          companyName: job.companyName,
+          type: job.type,
+          fitScore: breakdown.fitScore,
+          dateLabel,
+        };
+      })
+      .sort((left, right) => {
+        if (right.fitScore !== left.fitScore) return right.fitScore - left.fitScore;
+        return left.title.localeCompare(right.title);
+      })
+      .slice(0, 30)
     : [];
 
   const studentGapSignals = [
@@ -615,34 +627,34 @@ export async function getTeacherRecommendationWorkspaceData(params: {
 
   const suggestedAcademicPaths: WorkspaceLearningAction[] = selectedStudent
     ? [
-        {
-          category: 'academic_path',
-          title:
-            (selectedStudent.yearOfStudy ?? 0) <= 2
-              ? 'Foundation strengthening path'
-              : 'Placement acceleration path',
-          description:
-            (selectedStudent.yearOfStudy ?? 0) <= 2
-              ? 'Prioritize core courses, hands-on portfolio projects, and one targeted event registration to build readiness before the major hiring window.'
-              : 'Prioritize high-fit openings, interview preparation, and the top missing requirements that are still blocking strong applications.',
-          focus: [
-            ...(topTerms(studentGapSignals, 2) ?? []),
-            ...(topTerms(studentCourseSignals, 1) ?? []),
-          ].filter(Boolean),
-          priority:
-            selectedStudent.opportunityScore && selectedStudent.opportunityScore < 45
-              ? 'high'
-              : 'medium',
-        },
-        {
-          category: 'skill_plan',
-          title: 'Three-step skill development plan',
-          description:
-            'Close one hard gap, package one visible project, and align one application-ready opportunity from the automated list to convert guidance into action this week.',
-          focus: topTerms(studentGapSignals, 3),
-          priority: 'medium',
-        },
-      ]
+      {
+        category: 'academic_path',
+        title:
+          (selectedStudent.yearOfStudy ?? 0) <= 2
+            ? 'Foundation strengthening path'
+            : 'Placement acceleration path',
+        description:
+          (selectedStudent.yearOfStudy ?? 0) <= 2
+            ? 'Prioritize core courses, hands-on portfolio projects, and one targeted event registration to build readiness before the major hiring window.'
+            : 'Prioritize high-fit openings, interview preparation, and the top missing requirements that are still blocking strong applications.',
+        focus: [
+          ...(topTerms(studentGapSignals, 2) ?? []),
+          ...(topTerms(studentCourseSignals, 1) ?? []),
+        ].filter(Boolean),
+        priority:
+          selectedStudent.opportunityScore && selectedStudent.opportunityScore < 45
+            ? 'high'
+            : 'medium',
+      },
+      {
+        category: 'skill_plan',
+        title: 'Three-step skill development plan',
+        description:
+          'Close one hard gap, package one visible project, and align one application-ready opportunity from the automated list to convert guidance into action this week.',
+        focus: topTerms(studentGapSignals, 3),
+        priority: 'medium',
+      },
+    ]
     : [];
 
   const manualCards: WorkspaceManualRecommendation[] = manualRecommendations
@@ -725,54 +737,54 @@ export async function getTeacherRecommendationWorkspaceData(params: {
 
   const selectedSnapshot: WorkspaceStudentSnapshot | undefined = selectedStudent
     ? {
-        id: selectedStudent._id.toString(),
-        name: selectedStudent.name,
-        email: selectedStudent.email,
-        university: selectedStudent.university,
-        department: selectedStudent.department,
-        currentSemester: selectedStudent.currentSemester,
-        studentId: selectedStudent.studentId,
-        yearOfStudy: selectedStudent.yearOfStudy,
-        cgpa: selectedStudent.cgpa,
-        opportunityScore: selectedStudent.opportunityScore ?? 0,
-        profileCompleteness: selectedStudent.profileCompleteness ?? 0,
-        skills: normalizeStringArray(selectedStudent.skills ?? []),
-        completedCourses: normalizeStringArray(selectedStudent.completedCourses ?? []),
-        topSkillGaps: topTerms(studentGapSignals, 5),
-        applicationHighlights: applications.slice(0, 5).map((application) => {
-          const job = jobMap.get(application.jobId.toString());
-          return {
-            id: application._id.toString(),
-            title: job?.title ?? 'Tracked opportunity',
-            companyName: job?.companyName ?? 'Nextern',
-            status: application.status,
-            fitScore: application.fitScore,
-            summary: application.fitSummary,
-          };
-        }),
-      }
+      id: selectedStudent._id.toString(),
+      name: selectedStudent.name,
+      email: selectedStudent.email,
+      university: selectedStudent.university,
+      department: selectedStudent.department,
+      currentSemester: selectedStudent.currentSemester,
+      studentId: selectedStudent.studentId,
+      yearOfStudy: selectedStudent.yearOfStudy,
+      cgpa: selectedStudent.cgpa,
+      opportunityScore: selectedStudent.opportunityScore ?? 0,
+      profileCompleteness: selectedStudent.profileCompleteness ?? 0,
+      skills: normalizeStringArray(selectedStudent.skills ?? []),
+      completedCourses: normalizeStringArray(selectedStudent.completedCourses ?? []),
+      topSkillGaps: topTerms(studentGapSignals, 5),
+      applicationHighlights: applications.slice(0, 5).map((application) => {
+        const job = jobMap.get(application.jobId.toString());
+        return {
+          id: application._id.toString(),
+          title: job?.title ?? 'Tracked opportunity',
+          companyName: job?.companyName ?? 'Nextern',
+          status: application.status,
+          fitScore: application.fitScore,
+          summary: application.fitSummary,
+        };
+      }),
+    }
     : undefined;
 
   const cohortSummary =
     params.role === 'advisor'
       ? {
-          totalStudents: studentOptions.length,
-          highAttentionStudents: studentOptions.filter(
-            (student) => student.attentionLevel === 'high'
-          ).length,
-          averageOpportunityScore: advisorDashboard?.stats.avgOpportunityScore ?? 0,
-          averageProfileCompleteness: advisorDashboard?.stats.avgProfileCompleteness ?? 0,
-          priorityStudents: advisorDashboard?.stats.priorityStudents ?? 0,
-        }
+        totalStudents: studentOptions.length,
+        highAttentionStudents: studentOptions.filter(
+          (student) => student.attentionLevel === 'high'
+        ).length,
+        averageOpportunityScore: advisorDashboard?.stats.avgOpportunityScore ?? 0,
+        averageProfileCompleteness: advisorDashboard?.stats.avgProfileCompleteness ?? 0,
+        priorityStudents: advisorDashboard?.stats.priorityStudents ?? 0,
+      }
       : {
-          totalStudents: studentOptions.length,
-          highAttentionStudents: studentOptions.filter(
-            (student) => student.attentionLevel === 'high'
-          ).length,
-          averageOpportunityScore: departmentDashboard?.stats.avgOpportunityScore ?? 0,
-          averageProfileCompleteness: undefined,
-          priorityStudents: undefined,
-        };
+        totalStudents: studentOptions.length,
+        highAttentionStudents: studentOptions.filter(
+          (student) => student.attentionLevel === 'high'
+        ).length,
+        averageOpportunityScore: departmentDashboard?.stats.avgOpportunityScore ?? 0,
+        averageProfileCompleteness: undefined,
+        priorityStudents: undefined,
+      };
 
   return {
     role: params.role,
@@ -782,7 +794,7 @@ export async function getTeacherRecommendationWorkspaceData(params: {
           ? `${scope.institutionName} advisees`
           : 'Assigned advisees'
         : [scope.advisoryDepartment, scope.institutionName].filter(Boolean).join(' · ') ||
-          'Department cohort',
+        'Department cohort',
     pickerLabel: params.role === 'advisor' ? 'Advisee focus list' : 'Department student focus',
     selectedStudentId,
     selectedStudent: selectedSnapshot,
@@ -801,18 +813,18 @@ export async function getTeacherRecommendationWorkspaceData(params: {
     advisorInsights:
       isAdvisorView && advisorDashboard
         ? {
-            topSkillGaps: advisorDashboard.topSkillGaps,
-            recentActions: advisorDashboard.recentActions,
-          }
+          topSkillGaps: advisorDashboard.topSkillGaps,
+          recentActions: advisorDashboard.recentActions,
+        }
         : undefined,
     departmentInsights:
       !isAdvisorView && departmentDashboard
         ? {
-            readinessDistribution: departmentDashboard.readinessDistribution,
-            industryAlignment: departmentDashboard.industryAlignment,
-            skillHeatmap: departmentDashboard.skillHeatmap,
-            semesterTrend: departmentDashboard.semesterTrend,
-          }
+          readinessDistribution: departmentDashboard.readinessDistribution,
+          industryAlignment: departmentDashboard.industryAlignment,
+          skillHeatmap: departmentDashboard.skillHeatmap,
+          semesterTrend: departmentDashboard.semesterTrend,
+        }
         : undefined,
   };
 }

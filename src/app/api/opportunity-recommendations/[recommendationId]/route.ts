@@ -36,10 +36,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Params }) {
     const { recommendationId } = await params;
     await connectDB();
 
-    const existing = await OpportunityRecommendation.findOne({
-      _id: recommendationId,
-      recommenderId: session.user.id,
-    }).select('studentId requestStatus employerResponseNote employerRespondedAt');
+    // dept_head can edit any recommendation in their scope; advisor only their own
+    const ownershipFilter =
+      session.user.role === 'dept_head'
+        ? { _id: recommendationId }
+        : { _id: recommendationId, recommenderId: session.user.id };
+
+    const existing = await OpportunityRecommendation.findOne(ownershipFilter).select(
+      'studentId requestStatus employerResponseNote employerRespondedAt'
+    );
 
     if (!existing) {
       return NextResponse.json({ error: 'Recommendation not found.' }, { status: 404 });
@@ -114,10 +119,13 @@ export async function DELETE(_req: NextRequest, { params }: { params: Params }) 
     const { recommendationId } = await params;
     await connectDB();
 
-    const deleted = await OpportunityRecommendation.findOneAndDelete({
-      _id: recommendationId,
-      recommenderId: session.user.id,
-    }).lean();
+    // dept_head can delete any recommendation in their scope; advisor only their own
+    const ownershipFilter =
+      session.user.role === 'dept_head'
+        ? { _id: recommendationId }
+        : { _id: recommendationId, recommenderId: session.user.id };
+
+    const deleted = await OpportunityRecommendation.findOneAndDelete(ownershipFilter).lean();
 
     if (!deleted) {
       return NextResponse.json({ error: 'Recommendation not found.' }, { status: 404 });
