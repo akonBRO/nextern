@@ -90,6 +90,7 @@ export default function NotificationBell({
   const [unread, setUnread] = useState(initialUnread);
   const [loading, setLoading] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
+  const [markingAllRead, setMarkingAllRead] = useState(false);
   const dropRef = useRef<HTMLDivElement>(null);
 
   // ── Close on outside click ────────────────────────────────────────────
@@ -182,6 +183,20 @@ export default function NotificationBell({
       console.error('[CLEAR NOTIFICATIONS ERROR]', error);
     } finally {
       setMarkingAll(false);
+    }
+  }
+
+  async function markAllRead() {
+    setMarkingAllRead(true);
+    try {
+      const res = await fetch('/api/notifications', { method: 'PATCH' });
+      if (!res.ok) throw new Error('Failed to mark all read');
+      setNotifs((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setUnread(0);
+    } catch (error) {
+      console.error('[MARK ALL READ ERROR]', error);
+    } finally {
+      setMarkingAllRead(false);
     }
   }
 
@@ -312,6 +327,30 @@ export default function NotificationBell({
               )}
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
+              {notifications.some((n) => !n.isRead) && (
+                <button
+                  onClick={markAllRead}
+                  disabled={markingAllRead}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    padding: '5px 10px',
+                    borderRadius: 8,
+                    background: '#EFF6FF',
+                    border: '1px solid #BFDBFE',
+                    color: '#2563EB',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: markingAllRead ? 'wait' : 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                  title="Mark all as read"
+                >
+                  <CheckCheck size={12} />
+                  {markingAllRead ? 'Marking…' : 'Mark all read'}
+                </button>
+              )}
               {notifications.length > 0 && (
                 <button
                   onClick={clearNotifications}
@@ -327,11 +366,12 @@ export default function NotificationBell({
                     color: '#64748B',
                     fontSize: 11,
                     fontWeight: 700,
-                    cursor: 'pointer',
+                    cursor: markingAll ? 'wait' : 'pointer',
+                    whiteSpace: 'nowrap',
                   }}
-                  title="Clear notifications"
+                  title="Clear all notifications"
                 >
-                  <CheckCheck size={12} />
+                  <X size={12} />
                   {markingAll ? 'Clearing…' : 'Clear'}
                 </button>
               )}
