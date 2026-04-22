@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/notifications/deadline-check",
-      "schedule": "0 9 * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/notifications/job-matches-check",
@@ -14,7 +14,7 @@
     },
     {
       "path": "/api/notifications/academic-event-reminders",
-      "schedule": "0 10 * * *"
+      "schedule": "15 * * * *"
     }
   ]
 }

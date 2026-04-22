@@ -439,7 +439,8 @@ export async function notifyDeadlineReminder(
   companyName: string,
   jobId: string,
   deadline: Date,
-  daysLeft: number
+  daysLeft: number,
+  reminderWindow?: string
 ) {
   const student = await User.findById(studentId)
     .select('name email notificationPreferences')
@@ -451,10 +452,17 @@ export async function notifyDeadlineReminder(
 
   if (prefs.deadline_reminders === false) return;
 
+  const title =
+    reminderWindow === '24h'
+      ? 'Deadline in 24 hours'
+      : reminderWindow === '6h'
+        ? 'Deadline in 6 hours'
+        : `Deadline in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`;
+
   const notification = await createNotification({
     userId: studentId,
     type: 'deadline_reminder',
-    title: `Deadline in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
+    title,
     body: `"${jobTitle}" at ${companyName} closes on ${deadline.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -467,6 +475,7 @@ export async function notifyDeadlineReminder(
       companyName,
       deadline: deadline.toISOString(),
       daysLeft,
+      reminderWindow,
       icon: 'AlarmClock',
     },
     expiresAt: deadline,
@@ -598,16 +607,28 @@ export async function notifyInterviewScheduled(
 
 export async function notifyHostedEventReminder(params: {
   ownerId: string;
-  ownerRole: 'advisor' | 'dept_head';
+  ownerRole: 'advisor' | 'dept_head' | 'employer';
   eventTitle: string;
   organizationName: string;
   jobId: string;
   reminderDate: Date;
   daysLeft: number;
+  reminderWindow?: string;
   kind: 'registration_deadline' | 'event_start';
+  opportunityType?: string;
 }) {
-  const { ownerId, ownerRole, eventTitle, organizationName, jobId, reminderDate, daysLeft, kind } =
-    params;
+  const {
+    ownerId,
+    ownerRole,
+    eventTitle,
+    organizationName,
+    jobId,
+    reminderDate,
+    daysLeft,
+    reminderWindow,
+    kind,
+    opportunityType,
+  } = params;
 
   const owner = await User.findById(ownerId)
     .select('name email notificationPreferences emailPreferences')
@@ -623,21 +644,44 @@ export async function notifyHostedEventReminder(params: {
 
   if (prefs[preferenceKey] === false) return;
 
+  const isHostedEvent = opportunityType === 'webinar' || opportunityType === 'workshop';
   const link =
-    ownerRole === 'dept_head'
-      ? `/dept/events/${jobId}/registrants`
-      : `/advisor/events/${jobId}/registrants`;
+    ownerRole === 'employer'
+      ? `/employer/jobs/${jobId}/applicants`
+      : ownerRole === 'dept_head'
+        ? `/dept/events/${jobId}/registrants`
+        : `/advisor/events/${jobId}/registrants`;
   const title =
     kind === 'registration_deadline'
-      ? `Registration closes in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`
-      : `Event starts in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
+      ? isHostedEvent
+        ? reminderWindow === '24h'
+          ? 'Registration closes in 24 hours'
+          : reminderWindow === '6h'
+            ? 'Registration closes in 6 hours'
+            : `Registration closes in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`
+        : reminderWindow === '24h'
+          ? 'Application deadline in 24 hours'
+          : reminderWindow === '6h'
+            ? 'Application deadline in 6 hours'
+            : `Application deadline in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`
+      : reminderWindow === '24h'
+        ? 'Event starts in 24 hours'
+        : reminderWindow === '6h'
+          ? 'Event starts in 6 hours'
+          : `Event starts in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
   const body =
     kind === 'registration_deadline'
-      ? `Registration for "${eventTitle}" closes on ${reminderDate.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })}. Review registrations and publish any final instructions.`
+      ? isHostedEvent
+        ? `Registration for "${eventTitle}" closes on ${reminderDate.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })}. Review registrations and publish any final instructions.`
+        : `Applications for "${eventTitle}" close on ${reminderDate.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })}. Review your applicant pipeline before the deadline passes.`
       : `"${eventTitle}" begins on ${reminderDate.toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
@@ -657,6 +701,7 @@ export async function notifyHostedEventReminder(params: {
       reminderKind: kind,
       reminderDate: reminderDate.toISOString(),
       daysLeft,
+      reminderWindow,
       icon: 'CalendarDays',
     },
     expiresAt: reminderDate,
@@ -694,8 +739,10 @@ export async function notifyRegisteredEventReminder(params: {
   jobId: string;
   eventDate: Date;
   daysLeft: number;
+  reminderWindow?: string;
 }) {
-  const { studentId, eventTitle, organizationName, jobId, eventDate, daysLeft } = params;
+  const { studentId, eventTitle, organizationName, jobId, eventDate, daysLeft, reminderWindow } =
+    params;
 
   const student = await User.findById(studentId)
     .select('name email notificationPreferences')
@@ -708,10 +755,17 @@ export async function notifyRegisteredEventReminder(params: {
 
   if (prefs.event_reminders === false) return;
 
+  const title =
+    reminderWindow === '24h'
+      ? 'Event starts in 24 hours'
+      : reminderWindow === '6h'
+        ? 'Event starts in 6 hours'
+        : `Event starts in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`;
+
   const notification = await createNotification({
     userId: studentId,
     type: 'deadline_reminder',
-    title: `Event starts in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
+    title,
     body: `Your registered event "${eventTitle}" begins on ${eventDate.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -725,6 +779,7 @@ export async function notifyRegisteredEventReminder(params: {
       reminderKind: 'registered_event_start',
       eventDate: eventDate.toISOString(),
       daysLeft,
+      reminderWindow,
       icon: 'CalendarDays',
     },
     expiresAt: eventDate,
@@ -804,6 +859,7 @@ export async function notifyRecommendationRequestDecision(params: {
   jobId: string;
   jobTitle: string;
   requestStatus: 'accepted' | 'rejected' | 'hold';
+  employerResponseNote?: string;
 }) {
   const {
     recommendationId,
@@ -815,6 +871,7 @@ export async function notifyRecommendationRequestDecision(params: {
     jobId,
     jobTitle,
     requestStatus,
+    employerResponseNote,
   } = params;
 
   const statusLabel =
@@ -836,7 +893,9 @@ export async function notifyRecommendationRequestDecision(params: {
     userId: recommenderId,
     type: 'recommendation_request',
     title,
-    body: `${employerName} ${statusLabel} your recommendation for ${studentName} on "${jobTitle}".`,
+    body: `${employerName} ${statusLabel} your recommendation for ${studentName} on "${jobTitle}".${
+      employerResponseNote ? ` Note: ${employerResponseNote}` : ''
+    }`,
     link,
     meta: {
       recommendationId,
@@ -844,7 +903,26 @@ export async function notifyRecommendationRequestDecision(params: {
       jobId,
       jobTitle,
       requestStatus,
+      employerResponseNote,
       icon: 'SendToBack',
+    },
+  });
+
+  await createNotification({
+    userId: studentId,
+    type: 'status_update',
+    title: `Employer reviewed your recommendation for ${jobTitle}`,
+    body: `${employerName} ${statusLabel} the academic recommendation shared for "${jobTitle}".${
+      employerResponseNote ? ` Feedback: ${employerResponseNote}` : ''
+    }`,
+    link: '/student/profile',
+    meta: {
+      recommendationId,
+      jobId,
+      jobTitle,
+      requestStatus,
+      employerResponseNote,
+      icon: 'Briefcase',
     },
   });
 }

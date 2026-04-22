@@ -310,21 +310,6 @@ export default function NotificationBell({
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Bell size={15} color="#2563EB" />
               <span style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>Notifications</span>
-              {unread > 0 && (
-                <span
-                  style={{
-                    background: '#EFF6FF',
-                    color: '#2563EB',
-                    border: '1px solid #BFDBFE',
-                    borderRadius: 999,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: '1px 7px',
-                  }}
-                >
-                  {unread} new
-                </span>
-              )}
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               {notifications.some((n) => !n.isRead) && (

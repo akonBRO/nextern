@@ -27,6 +27,7 @@ import {
 } from '@/components/dashboard/DashboardContent';
 import { Users, CheckCircle2, CalendarDays, FileText } from 'lucide-react';
 import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 
 async function getRegistrantsData(eventId: string, advisorId: string) {
   await connectDB();
@@ -76,26 +77,28 @@ export default async function EventRegistrantsPage({
   if (session.user.role !== 'advisor' && session.user.role !== 'dept_head') {
     redirect('/advisor/dashboard');
   }
+  const isDeptHead = session.user.role === 'dept_head';
+  const eventsBaseHref = isDeptHead ? '/dept/events' : '/advisor/events';
 
   const { eventId } = await params;
   const data = await getRegistrantsData(eventId, session.user.id);
-  if (!data) redirect('/advisor/events');
+  if (!data) redirect(eventsBaseHref);
 
   const { advisor, event, registrations, stats, chrome } = data;
 
   return (
     <DashboardShell
-      role="advisor"
-      roleLabel="Advisor dashboard"
-      homeHref="/advisor/dashboard"
-      navItems={ADVISOR_NAV_ITEMS}
+      role={isDeptHead ? 'departmentHead' : 'advisor'}
+      roleLabel={isDeptHead ? 'Department dashboard' : 'Advisor dashboard'}
+      homeHref={isDeptHead ? '/dept/dashboard' : '/advisor/dashboard'}
+      navItems={isDeptHead ? DEPT_NAV_ITEMS : ADVISOR_NAV_ITEMS}
       user={{
-        name: advisor?.name ?? 'Advisor',
+        name: advisor?.name ?? (isDeptHead ? 'Department Head' : 'Advisor'),
         email: advisor?.email ?? '',
         image: advisor?.image,
         subtitle:
           [advisor?.designation, advisor?.institutionName].filter(Boolean).join(' · ') ||
-          'Advisor workspace',
+          (isDeptHead ? 'Department workspace' : 'Advisor workspace'),
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
         userId: session.user.id,
@@ -108,8 +111,8 @@ export default async function EventRegistrantsPage({
           description={`${event.city ? `${event.city} · ` : ''}${formatStatusLabel(event.locationType)} · Deadline ${formatShortDate(event.applicationDeadline?.toISOString())}`}
           actions={
             <>
-              <ActionLink href={`/advisor/events/${eventId}/edit`} label="Edit event" />
-              <ActionLink href="/advisor/events" label="All events" tone="ghost" />
+              <ActionLink href={`${eventsBaseHref}/${eventId}/edit`} label="Edit event" />
+              <ActionLink href={eventsBaseHref} label="All events" tone="ghost" />
             </>
           }
           aside={
@@ -352,7 +355,7 @@ export default async function EventRegistrantsPage({
                         >
                           {/* View Application */}
                           <Link
-                            href={`/advisor/events/${eventId}/registrants/${student?._id}`}
+                            href={`${eventsBaseHref}/${eventId}/registrants/${student?._id}`}
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',

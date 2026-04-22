@@ -7,10 +7,17 @@ import { User } from '@/models/User';
 import { notifyHostedEventReminder, notifyRegisteredEventReminder } from '@/lib/notify';
 
 const CRON_SECRET = process.env.CRON_SECRET ?? 'nextern-cron-2026';
-const REMIND_DAYS = [3, 2, 1];
+const REMINDER_WINDOWS = [
+  { key: '3d', maxHours: 72, daysLeft: 3 },
+  { key: '2d', maxHours: 48, daysLeft: 2 },
+  { key: '24h', maxHours: 24, daysLeft: 1 },
+  { key: '6h', maxHours: 6, daysLeft: 0 },
+] as const;
 
-function daysUntil(targetDate: Date, now: Date) {
-  return Math.ceil((targetDate.getTime() - now.getTime()) / 86400000);
+function resolveReminderWindow(targetDate: Date, now: Date) {
+  const hoursLeft = (targetDate.getTime() - now.getTime()) / 3600000;
+  if (hoursLeft <= 0) return null;
+  return REMINDER_WINDOWS.find((window) => hoursLeft <= window.maxHours) ?? null;
 }
 
 export async function GET(req: NextRequest) {
@@ -27,13 +34,15 @@ export async function GET(req: NextRequest) {
 
     const jobs = await Job.find({
       isActive: true,
-      type: { $in: ['webinar', 'workshop'] },
       $or: [
         { applicationDeadline: { $gt: now, $lte: cutoff } },
-        { startDate: { $gt: now, $lte: cutoff } },
+        {
+          type: { $in: ['webinar', 'workshop'] },
+          startDate: { $gt: now, $lte: cutoff },
+        },
       ],
     })
-      .select('title companyName employerId applicationDeadline startDate')
+      .select('title companyName employerId applicationDeadline startDate type')
       .lean();
 
     const ownerIds = [...new Set(jobs.map((job) => job.employerId.toString()))];
@@ -42,8 +51,14 @@ export async function GET(req: NextRequest) {
       .lean();
     const ownerRoleMap = new Map(
       owners
-        .filter((owner) => owner.role === 'advisor' || owner.role === 'dept_head')
-        .map((owner) => [owner._id.toString(), owner.role as 'advisor' | 'dept_head'])
+        .filter(
+          (owner) =>
+            owner.role === 'advisor' || owner.role === 'dept_head' || owner.role === 'employer'
+        )
+        .map(
+          (owner) =>
+            [owner._id.toString(), owner.role as 'advisor' | 'dept_head' | 'employer'] as const
+        )
     );
 
     let fired = 0;
@@ -75,15 +90,15 @@ export async function GET(req: NextRequest) {
       }>;
 
       for (const reminder of reminders) {
-        const daysLeft = daysUntil(reminder.targetDate, now);
-        if (!REMIND_DAYS.includes(daysLeft)) continue;
+        const reminderWindow = resolveReminderWindow(reminder.targetDate, now);
+        if (!reminderWindow) continue;
 
         const alreadySent = await Notification.exists({
           userId: job.employerId,
           type: 'deadline_reminder',
           'meta.jobId': job._id.toString(),
           'meta.reminderKind': reminder.kind,
-          'meta.daysLeft': daysLeft,
+          'meta.reminderWindow': reminderWindow.key,
         });
 
         if (alreadySent) {
@@ -98,12 +113,15 @@ export async function GET(req: NextRequest) {
           organizationName: job.companyName,
           jobId: job._id.toString(),
           reminderDate: reminder.targetDate,
-          daysLeft,
+          daysLeft: reminderWindow.daysLeft,
+          reminderWindow: reminderWindow.key,
           kind: reminder.kind,
+          opportunityType: job.type,
         });
         fired++;
 
-        if (reminder.kind !== 'event_start') continue;
+        if (reminder.kind !== 'event_start' || (job.type !== 'webinar' && job.type !== 'workshop'))
+          continue;
 
         const registrations = await Application.find({
           jobId: job._id,
@@ -119,7 +137,7 @@ export async function GET(req: NextRequest) {
             type: 'deadline_reminder',
             'meta.jobId': job._id.toString(),
             'meta.reminderKind': 'registered_event_start',
-            'meta.daysLeft': daysLeft,
+            'meta.reminderWindow': reminderWindow.key,
           });
 
           if (studentAlreadySent) {
@@ -133,7 +151,8 @@ export async function GET(req: NextRequest) {
             organizationName: job.companyName,
             jobId: job._id.toString(),
             eventDate: reminder.targetDate,
-            daysLeft,
+            daysLeft: reminderWindow.daysLeft,
+            reminderWindow: reminderWindow.key,
           });
           fired++;
         }
