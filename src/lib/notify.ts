@@ -926,3 +926,42 @@ export async function notifyRecommendationRequestDecision(params: {
     },
   });
 }
+
+export async function notifyMentorshipRequest(
+  mentorUserId: string,
+  studentName: string,
+  sessionType: string
+) {
+  const sessionTypeLabel = sessionType.replace('_', ' ');
+  await createNotification({
+    userId: mentorUserId,
+    type: 'mentorship_request',
+    title: `New mentorship request`,
+    body: `${studentName} requested a ${sessionTypeLabel} session. Review the request to accept or decline.`,
+    link: '/student/mentorship/dashboard',
+    meta: { studentName, sessionType, icon: 'UserPlus' },
+  });
+}
+
+export async function notifyMentorshipAccepted(
+  studentId: string,
+  mentorName: string,
+  scheduledAt: Date
+) {
+  await createNotification({
+    userId: studentId,
+    type: 'mentorship_accepted',
+    title: `Mentorship request accepted`,
+    body: `${mentorName} accepted your mentorship request. The session is scheduled for ${scheduledAt.toLocaleDateString(
+      'en-US',
+      {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }
+    )}. A message thread has been opened.`,
+    link: '/student/mentorship/sessions',
+    meta: { mentorName, scheduledAt: scheduledAt.toISOString(), icon: 'UserCheck' },
+  });
+}
