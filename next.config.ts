@@ -1,5 +1,12 @@
 import type { NextConfig } from 'next';
 
+const localAllowedOrigins = [
+  'localhost:3000',
+  '127.0.0.1:3000',
+  'localhost:1242',
+  '127.0.0.1:1242',
+];
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -9,7 +16,7 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    serverActions: { allowedOrigins: ['localhost:3000'] },
+    serverActions: { allowedOrigins: localAllowedOrigins },
   },
   serverExternalPackages: ['pdfkit'],
 };

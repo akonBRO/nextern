@@ -50,3 +50,6 @@ next-env.d.ts
 /uploads
 .turbo
 *.log
+/docs
+/postman
+.codex-temp

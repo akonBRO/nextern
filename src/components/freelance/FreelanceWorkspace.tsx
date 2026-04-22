@@ -663,6 +663,34 @@ function AssetList({
   );
 }
 
+type ApiFieldErrors = Record<string, string[] | undefined>;
+
+function formatValidationFieldLabel(field: string) {
+  const normalized = field
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/_/g, ' ')
+    .trim();
+
+  if (!normalized) return 'Field';
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+function formatApiErrorMessage(error?: string, details?: ApiFieldErrors) {
+  const fieldMessages = Object.entries(details ?? {})
+    .flatMap(([field, messages]) =>
+      (messages ?? []).map((message) => `${formatValidationFieldLabel(field)}: ${message}`)
+    )
+    .filter(Boolean);
+
+  if (fieldMessages.length > 0) {
+    return error && error !== 'Validation failed'
+      ? `${error}: ${fieldMessages.join('; ')}`
+      : fieldMessages.join('; ');
+  }
+
+  return error ?? 'Request failed';
+}
+
 export default function FreelanceWorkspace({ role }: { role: WorkspaceRole }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -799,9 +827,12 @@ export default function FreelanceWorkspace({ role }: { role: WorkspaceRole }) {
       cache: 'no-store',
     });
 
-    const data = (await response.json().catch(() => ({}))) as T & { error?: string };
+    const data = (await response.json().catch(() => ({}))) as T & {
+      error?: string;
+      details?: ApiFieldErrors;
+    };
     if (!response.ok) {
-      throw new Error(data.error ?? 'Request failed');
+      throw new Error(formatApiErrorMessage(data.error, data.details));
     }
 
     return data;
@@ -1037,20 +1068,57 @@ export default function FreelanceWorkspace({ role }: { role: WorkspaceRole }) {
   async function submitOrder() {
     if (!orderComposerListing) return;
 
+    const requirements = requirementsText.trim();
+    const proposalNote = orderProposalNote.trim();
+    const quotedRateInput = orderQuotedRate.trim();
+    const quotedRateBDT = quotedRateInput ? Number(quotedRateInput) : orderComposerListing.priceBDT;
+
+    if (requirements.length < 20) {
+      setFlash({
+        tone: 'error',
+        text: 'Project requirements must be at least 20 characters so the freelancer has enough detail.',
+      });
+      return;
+    }
+
+    if (!Number.isInteger(quotedRateBDT) || quotedRateBDT < 1 || quotedRateBDT > 500000) {
+      setFlash({
+        tone: 'error',
+        text: 'Quote amount must be a whole number between 1 and 500000 BDT.',
+      });
+      return;
+    }
+
+    let quotedHours: number | undefined;
+    if (orderComposerListing.priceType === 'hourly') {
+      const parsedQuotedHours = Number(orderQuotedHours.trim() || '1');
+
+      if (
+        !Number.isInteger(parsedQuotedHours) ||
+        parsedQuotedHours < 1 ||
+        parsedQuotedHours > 400
+      ) {
+        setFlash({
+          tone: 'error',
+          text: 'Estimated hours must be a whole number between 1 and 400.',
+        });
+        return;
+      }
+
+      quotedHours = parsedQuotedHours;
+    }
+
     setSubmitting(true);
     try {
       await requestJson('/api/freelance/orders', {
         method: 'POST',
         body: JSON.stringify({
           listingId: orderComposerListing._id,
-          requirements: requirementsText.trim(),
+          requirements,
           requirementsFiles: requirementFiles,
-          quotedRateBDT: Number(orderQuotedRate),
-          quotedHours:
-            orderComposerListing.priceType === 'hourly'
-              ? Number(orderQuotedHours || '0')
-              : undefined,
-          proposalNote: orderProposalNote.trim(),
+          quotedRateBDT,
+          quotedHours,
+          proposalNote,
           paymentMethod: orderPaymentMethod,
         }),
       });
