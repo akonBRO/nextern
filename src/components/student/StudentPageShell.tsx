@@ -9,6 +9,7 @@ type UserProps = {
   email: string;
   image?: string;
   userId: string;
+  role?: string;
   opportunityScore: number;
   profileCompleteness: number;
   unreadNotifications: number;
@@ -35,6 +36,7 @@ function shouldUseStandaloneNavbar(pathname: string) {
   if (pathname.startsWith('/student/ger/')) return true;
   if (pathname.startsWith('/student/notifications/')) return true;
   if (pathname.startsWith('/student/premium/')) return true;
+  if (pathname.startsWith('/student/mentorship')) return true;
   return STANDALONE_NAVBAR_PATHS.has(pathname);
 }
 

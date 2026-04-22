@@ -30,7 +30,7 @@ type MiddlewareToken = {
 
 // Protected route prefixes and their allowed roles
 const ROLE_ROUTES: { prefix: string; roles: UserRole[] }[] = [
-  { prefix: '/student', roles: ['student'] },
+  { prefix: '/student', roles: ['student', 'alumni'] },
   { prefix: '/employer', roles: ['employer'] },
   { prefix: '/advisor', roles: ['advisor', 'dept_head'] },
   { prefix: '/dept', roles: ['dept_head'] },
@@ -103,6 +103,22 @@ export default async function middleware(req: NextRequest) {
     if (pathname.startsWith(prefix) && (!token?.role || !roles.includes(token.role))) {
       const redirectTarget = token?.role ? getDefaultAuthenticatedRoute(token) : '/';
       return NextResponse.redirect(new URL(redirectTarget, req.url));
+    }
+  }
+
+  // Strict isolation for alumni: Block them from student job-seeking tools
+  if (token?.role === 'alumni') {
+    const BLOCKED_ALUMNI_ROUTES = [
+      '/student/dashboard',
+      '/student/jobs',
+      '/student/applications',
+      '/student/freelance',
+      '/student/ger',
+    ];
+    if (
+      BLOCKED_ALUMNI_ROUTES.some((route) => pathname === route || pathname.startsWith(route + '/'))
+    ) {
+      return NextResponse.redirect(new URL('/student/mentorship/dashboard', req.url));
     }
   }
 

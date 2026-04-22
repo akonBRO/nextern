@@ -1,5 +1,6 @@
 export const ROLE_DASHBOARDS = {
   student: '/student/dashboard',
+  alumni: '/student/mentorship/dashboard',
   employer: '/employer/dashboard',
   advisor: '/advisor/dashboard',
   dept_head: '/dept/dashboard',
@@ -18,7 +19,7 @@ type RoutedUser = {
 const PENDING_APPROVAL_ROLES: UserRole[] = ['employer'];
 const AUTH_ONLY_ROUTES = ['/login', '/register', '/verify-email'];
 const ROLE_ROUTE_PREFIXES: { prefix: string; roles: UserRole[] }[] = [
-  { prefix: '/student', roles: ['student'] },
+  { prefix: '/student', roles: ['student', 'alumni'] },
   { prefix: '/employer', roles: ['employer'] },
   { prefix: '/advisor', roles: ['advisor', 'dept_head'] },
   { prefix: '/dept', roles: ['dept_head'] },
@@ -37,6 +38,9 @@ export function roleSatisfiesRequirement(actualRole: UserRole | undefined, requi
   if (!actualRole) return false;
   if (requiredRole === 'advisor') {
     return actualRole === 'advisor' || actualRole === 'dept_head';
+  }
+  if (requiredRole === 'student') {
+    return actualRole === 'student' || actualRole === 'alumni';
   }
 
   return actualRole === requiredRole;
