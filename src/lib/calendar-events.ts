@@ -12,6 +12,9 @@ export type UpcomingCalendarEvent = {
   title: string;
   companyName: string;
   date: string; // ISO string
+  dateLabel?: string;
+  secondaryDate?: string;
+  secondaryDateLabel?: string;
   daysLeft: number;
   status: string;
   jobId: string;
@@ -72,6 +75,7 @@ export async function getUpcomingCalendarEvents(
           title: job.title,
           companyName: job.companyName,
           date: date.toISOString(),
+          dateLabel: 'Interview date',
           daysLeft,
           status: app.status,
           jobId: job._id.toString(),
@@ -94,6 +98,36 @@ export async function getUpcomingCalendarEvents(
           title: job.title,
           companyName: job.companyName,
           date: date.toISOString(),
+          dateLabel: 'Event date',
+          secondaryDate: job.applicationDeadline
+            ? new Date(job.applicationDeadline).toISOString()
+            : undefined,
+          secondaryDateLabel: job.applicationDeadline ? 'Registration deadline' : undefined,
+          daysLeft,
+          status: app.status,
+          jobId: job._id.toString(),
+          applicationId: app._id.toString(),
+          href: '/student/applications',
+          isSynced: !!app.googleCalendarEventId,
+          jobType: job.type,
+        });
+      }
+    }
+
+    // Event registration deadline
+    if (app.isEventRegistration && job.applicationDeadline) {
+      const date = new Date(job.applicationDeadline);
+      if (date > now && date <= cutoff) {
+        const daysLeft = Math.ceil((date.getTime() - now.getTime()) / 86400000);
+        events.push({
+          id: `event-deadline-${app._id}`,
+          type: 'deadline',
+          title: `${job.title} registration deadline`,
+          companyName: job.companyName,
+          date: date.toISOString(),
+          dateLabel: 'Registration deadline',
+          secondaryDate: job.startDate ? new Date(job.startDate).toISOString() : undefined,
+          secondaryDateLabel: job.startDate ? 'Event date' : undefined,
           daysLeft,
           status: app.status,
           jobId: job._id.toString(),
@@ -116,6 +150,7 @@ export async function getUpcomingCalendarEvents(
           title: job.title,
           companyName: job.companyName,
           date: date.toISOString(),
+          dateLabel: 'Application deadline',
           daysLeft,
           status: app.status,
           jobId: job._id.toString(),
@@ -153,6 +188,7 @@ export async function getUpcomingCalendarEvents(
       title: job.title,
       companyName: job.companyName,
       date: date.toISOString(),
+      dateLabel: 'Saved job deadline',
       daysLeft,
       status: 'saved',
       jobId,

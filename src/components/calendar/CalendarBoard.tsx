@@ -102,6 +102,10 @@ function formatEventTime(event: UpcomingCalendarEvent) {
   return event.type === 'deadline' ? format(date, 'MMM d') : format(date, 'MMM d, h:mm a');
 }
 
+function formatCalendarDate(iso: string) {
+  return format(new Date(iso), 'MMM d, yyyy');
+}
+
 function formatTimelineLabel(event: UpcomingCalendarEvent) {
   if (event.daysLeft <= 0) {
     return event.type === 'deadline' ? 'Due today' : 'Happening today';
@@ -427,6 +431,27 @@ export default function CalendarBoard({
                           </div>
                           <p className="cb-event-title">{event.title}</p>
                           <p className="cb-event-company">{event.companyName}</p>
+                          <div className="cb-event-dates">
+                            <div className="cb-event-date-row">
+                              <span className="cb-event-date-label">
+                                {event.dateLabel ??
+                                  (event.type === 'deadline' ? 'Deadline' : 'Date')}
+                              </span>
+                              <span className="cb-event-date-value">
+                                {formatCalendarDate(event.date)}
+                              </span>
+                            </div>
+                            {event.secondaryDate && event.secondaryDateLabel && (
+                              <div className="cb-event-date-row">
+                                <span className="cb-event-date-label">
+                                  {event.secondaryDateLabel}
+                                </span>
+                                <span className="cb-event-date-value">
+                                  {formatCalendarDate(event.secondaryDate)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                           <div className="cb-event-meta">
                             <span className="cb-event-meta-pill">{formatTimelineLabel(event)}</span>
                             <span className="cb-event-meta-pill">
@@ -479,6 +504,12 @@ export default function CalendarBoard({
                     <p className="cb-next-date">
                       {format(new Date(nextUpcomingEvent.date), 'EEEE, MMMM d, yyyy')}
                     </p>
+                    {nextUpcomingEvent.secondaryDate && nextUpcomingEvent.secondaryDateLabel && (
+                      <p className="cb-next-subdate">
+                        {nextUpcomingEvent.secondaryDateLabel}:{' '}
+                        {formatCalendarDate(nextUpcomingEvent.secondaryDate)}
+                      </p>
+                    )}
                     <div className="cb-next-meta">
                       <span className="cb-next-meta-pill">
                         {formatTimelineLabel(nextUpcomingEvent)}
@@ -519,6 +550,13 @@ export default function CalendarBoard({
                                 <span style={{ color: s.text, fontWeight: 700 }}>{s.label}</span>
                                 <span>{event.companyName}</span>
                                 <span>{formatTimelineLabel(event)}</span>
+                                {event.dateLabel ? <span>{event.dateLabel}</span> : null}
+                                {event.secondaryDate && event.secondaryDateLabel ? (
+                                  <span>
+                                    {event.secondaryDateLabel}:{' '}
+                                    {formatCalendarDate(event.secondaryDate)}
+                                  </span>
+                                ) : null}
                               </span>
                             </span>
                             <span
@@ -815,7 +853,7 @@ export default function CalendarBoard({
         .cb-day {
           text-align: left;
           padding: 10px;
-          min-height: 96px;
+          min-height: 118px;
           border-radius: 14px;
           border: 1px solid #F3F4F6;
           background: #FFFFFF;
@@ -872,27 +910,38 @@ export default function CalendarBoard({
         .cb-day-events {
           display: grid;
           gap: 4px;
+          align-content: start;
         }
         .cb-event-chip {
           display: flex;
-          align-items: center;
-          gap: 5px;
-          border-radius: 7px;
+          align-items: flex-start;
+          gap: 6px;
+          border-radius: 9px;
           border: 1px solid;
-          padding: 4px 6px;
+          padding: 5px 7px;
+          min-width: 0;
+          max-width: 100%;
         }
         .cb-event-dot {
           width: 6px;
           height: 6px;
           border-radius: 50%;
           flex-shrink: 0;
+          margin-top: 4px;
         }
         .cb-event-chip-label {
+          min-width: 0;
+          flex: 1;
           font-size: 10.5px;
-          font-weight: 600;
-          white-space: nowrap;
+          font-weight: 700;
+          white-space: normal;
+          word-break: break-word;
+          overflow-wrap: anywhere;
+          line-height: 1.3;
           overflow: hidden;
-          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
         }
         .cb-day-more {
           font-size: 10px;
@@ -1007,6 +1056,30 @@ export default function CalendarBoard({
           font-size: 12.5px;
           color: #6B7280;
         }
+        .cb-event-dates {
+          display: grid;
+          gap: 6px;
+          margin-top: 10px;
+        }
+        .cb-event-date-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        .cb-event-date-label {
+          font-size: 11px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: #64748B;
+        }
+        .cb-event-date-value {
+          font-size: 12px;
+          font-weight: 700;
+          color: #0F172A;
+        }
         .cb-event-meta {
           display: flex;
           align-items: center;
@@ -1061,6 +1134,12 @@ export default function CalendarBoard({
           margin: 10px 0 0;
           font-size: 12px;
           color: #9CA3AF;
+        }
+        .cb-next-subdate {
+          margin: 8px 0 0;
+          font-size: 12px;
+          color: #64748B;
+          font-weight: 600;
         }
         .cb-next-meta {
           display: flex;
@@ -1201,8 +1280,11 @@ export default function CalendarBoard({
         }
         @media (max-width: 640px) {
           .cb-day {
-            min-height: 80px !important;
+            min-height: 104px !important;
             padding: 8px !important;
+          }
+          .cb-event-chip-label {
+            font-size: 10px;
           }
           .cb-body { padding: 14px; }
         }
