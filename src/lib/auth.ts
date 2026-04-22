@@ -162,7 +162,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           | 'employer'
           | 'advisor'
           | 'dept_head'
-          | 'admin';
+          | 'admin'
+          | 'alumni';
         session.user.isVerified = token.isVerified as boolean;
         session.user.isEmailVerified = token.isEmailVerified as boolean;
         session.user.verificationStatus = token.verificationStatus as

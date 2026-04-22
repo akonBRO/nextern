@@ -8,7 +8,7 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string;
-      role: 'student' | 'employer' | 'advisor' | 'dept_head' | 'admin';
+      role: 'student' | 'employer' | 'advisor' | 'dept_head' | 'admin' | 'alumni';
       isVerified: boolean;
       isEmailVerified: boolean;
       verificationStatus?: 'pending' | 'approved' | 'rejected';
@@ -18,7 +18,7 @@ declare module 'next-auth' {
 
   interface User {
     id: string;
-    role: 'student' | 'employer' | 'advisor' | 'dept_head' | 'admin';
+    role: 'student' | 'employer' | 'advisor' | 'dept_head' | 'admin' | 'alumni';
     isVerified: boolean;
     isEmailVerified: boolean;
     verificationStatus?: 'pending' | 'approved' | 'rejected';
@@ -29,7 +29,7 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT extends DefaultJWT {
     id: string;
-    role: 'student' | 'employer' | 'advisor' | 'dept_head' | 'admin';
+    role: 'student' | 'employer' | 'advisor' | 'dept_head' | 'admin' | 'alumni';
     isVerified: boolean;
     isEmailVerified: boolean;
     verificationStatus?: 'pending' | 'approved' | 'rejected';
