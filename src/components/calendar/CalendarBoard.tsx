@@ -102,6 +102,23 @@ function formatEventTime(event: UpcomingCalendarEvent) {
   return event.type === 'deadline' ? format(date, 'MMM d') : format(date, 'MMM d, h:mm a');
 }
 
+function formatTimelineLabel(event: UpcomingCalendarEvent) {
+  if (event.daysLeft <= 0) {
+    return event.type === 'deadline' ? 'Due today' : 'Happening today';
+  }
+  if (event.daysLeft === 1) {
+    return event.type === 'deadline' ? '1 day left' : 'Tomorrow';
+  }
+  return event.type === 'deadline' ? `${event.daysLeft} days left` : `In ${event.daysLeft} days`;
+}
+
+function formatStatusLabel(status: string) {
+  return status
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 export default function CalendarBoard({
   events,
   isCalendarConnected,
@@ -119,6 +136,7 @@ export default function CalendarBoard({
 }: Props) {
   const isDashboard = mode === 'dashboard';
   const isCalendarPage = mode === 'page';
+  const allowEventLinks = !isCalendarPage;
   const normalizedEvents = events
     .map((event) => {
       const dateObject = normalizeEventDate(event.date);
@@ -156,6 +174,9 @@ export default function CalendarBoard({
     style,
     count: normalizedEvents.filter((event) => event.type === key).length,
   })).filter((entry) => entry.count > 0);
+  const upcomingAgenda = normalizedEvents
+    .filter((event) => event.dateObject.getTime() >= startOfDay(new Date()).getTime())
+    .slice(0, 5);
 
   function jumpToMonth(nextMonth: Date) {
     setVisibleMonth(startOfMonth(nextMonth));
@@ -381,10 +402,9 @@ export default function CalendarBoard({
                     selectedEvents.map((event) => {
                       const s = EVENT_STYLES[event.type];
                       return (
-                        <Link
+                        <div
                           key={event.id}
-                          href={resolveEventHref(event)}
-                          className="cb-event-card"
+                          className={`cb-event-card ${allowEventLinks ? 'cb-event-card--link' : ''}`}
                           style={{ background: s.soft, borderColor: s.border }}
                         >
                           <div className="cb-event-card-top">
@@ -407,7 +427,21 @@ export default function CalendarBoard({
                           </div>
                           <p className="cb-event-title">{event.title}</p>
                           <p className="cb-event-company">{event.companyName}</p>
-                        </Link>
+                          <div className="cb-event-meta">
+                            <span className="cb-event-meta-pill">{formatTimelineLabel(event)}</span>
+                            <span className="cb-event-meta-pill">
+                              {formatStatusLabel(event.status)}
+                            </span>
+                            <span className="cb-event-meta-pill">
+                              {event.jobType ? formatStatusLabel(event.jobType) : 'Opportunity'}
+                            </span>
+                            <span
+                              className={`cb-event-meta-pill ${event.isSynced ? 'cb-event-meta-pill--synced' : ''}`}
+                            >
+                              {event.isSynced ? 'Google synced' : 'Not synced'}
+                            </span>
+                          </div>
+                        </div>
                       );
                     })
                   ) : (
@@ -445,9 +479,59 @@ export default function CalendarBoard({
                     <p className="cb-next-date">
                       {format(new Date(nextUpcomingEvent.date), 'EEEE, MMMM d, yyyy')}
                     </p>
+                    <div className="cb-next-meta">
+                      <span className="cb-next-meta-pill">
+                        {formatTimelineLabel(nextUpcomingEvent)}
+                      </span>
+                      <span className="cb-next-meta-pill">
+                        {formatStatusLabel(nextUpcomingEvent.status)}
+                      </span>
+                    </div>
                   </div>
                 ) : (
                   <div className="cb-empty-state">{emptyNextEventMessage}</div>
+                )}
+
+                {upcomingAgenda.length > 0 && (
+                  <div className="cb-agenda">
+                    <div className="cb-agenda-head">
+                      <p className="cb-panel-title">Upcoming agenda</p>
+                      <p className="cb-panel-sub">
+                        Your next five checkpoints across jobs and events
+                      </p>
+                    </div>
+                    <div className="cb-agenda-list">
+                      {upcomingAgenda.map((event) => {
+                        const s = EVENT_STYLES[event.type];
+                        return (
+                          <div key={`agenda-${event.id}`} className="cb-agenda-item">
+                            <span className="cb-agenda-date">
+                              <span className="cb-agenda-date-day">
+                                {format(new Date(event.date), 'd')}
+                              </span>
+                              <span className="cb-agenda-date-month">
+                                {format(new Date(event.date), 'MMM')}
+                              </span>
+                            </span>
+                            <span className="cb-agenda-body">
+                              <span className="cb-agenda-title">{event.title}</span>
+                              <span className="cb-agenda-sub">
+                                <span style={{ color: s.text, fontWeight: 700 }}>{s.label}</span>
+                                <span>{event.companyName}</span>
+                                <span>{formatTimelineLabel(event)}</span>
+                              </span>
+                            </span>
+                            <span
+                              className="cb-agenda-status"
+                              style={{ background: s.soft, color: s.text, borderColor: s.border }}
+                            >
+                              {event.isSynced ? 'Synced' : 'Pending sync'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
 
                 <div className="cb-type-breakdown">
@@ -877,13 +961,15 @@ export default function CalendarBoard({
         }
         .cb-event-card {
           display: block;
-          text-decoration: none;
           border-radius: 14px;
           border: 1px solid;
           padding: 14px 16px;
           transition: transform 0.15s, box-shadow 0.15s;
         }
-        .cb-event-card:hover {
+        .cb-event-card--link {
+          text-decoration: none;
+        }
+        .cb-event-card--link:hover {
           transform: translateY(-1px);
           box-shadow: 0 8px 20px rgba(0,0,0,0.06);
         }
@@ -921,6 +1007,29 @@ export default function CalendarBoard({
           font-size: 12.5px;
           color: #6B7280;
         }
+        .cb-event-meta {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-top: 10px;
+        }
+        .cb-event-meta-pill {
+          display: inline-flex;
+          align-items: center;
+          border-radius: 999px;
+          border: 1px solid rgba(148, 163, 184, 0.35);
+          background: rgba(255,255,255,0.66);
+          padding: 4px 9px;
+          font-size: 11px;
+          font-weight: 700;
+          color: #475569;
+        }
+        .cb-event-meta-pill--synced {
+          border-color: #A7F3D0;
+          background: #F0FDF4;
+          color: #15803D;
+        }
 
         /* ── Next event ── */
         .cb-next-event {
@@ -952,6 +1061,103 @@ export default function CalendarBoard({
           margin: 10px 0 0;
           font-size: 12px;
           color: #9CA3AF;
+        }
+        .cb-next-meta {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-top: 12px;
+        }
+        .cb-next-meta-pill {
+          display: inline-flex;
+          align-items: center;
+          border-radius: 999px;
+          padding: 4px 10px;
+          background: rgba(255,255,255,0.7);
+          border: 1px solid rgba(148, 163, 184, 0.25);
+          color: #475569;
+          font-size: 11px;
+          font-weight: 700;
+        }
+
+        .cb-agenda {
+          margin-bottom: 14px;
+        }
+        .cb-agenda-head {
+          margin-bottom: 12px;
+        }
+        .cb-agenda-list {
+          display: grid;
+          gap: 10px;
+          margin-bottom: 14px;
+        }
+        .cb-agenda-item {
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          gap: 12px;
+          align-items: center;
+          border-radius: 14px;
+          border: 1px solid #E5E7EB;
+          background: #FFFFFF;
+          padding: 12px;
+        }
+        .cb-agenda-date {
+          width: 48px;
+          border-radius: 12px;
+          background: #F8FAFC;
+          border: 1px solid #E2E8F0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 8px 0;
+          color: #0F172A;
+        }
+        .cb-agenda-date-day {
+          font-size: 17px;
+          font-weight: 800;
+          line-height: 1;
+        }
+        .cb-agenda-date-month {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: #64748B;
+          margin-top: 4px;
+        }
+        .cb-agenda-body {
+          display: grid;
+          gap: 4px;
+          min-width: 0;
+        }
+        .cb-agenda-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: #0F172A;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .cb-agenda-sub {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          font-size: 11.5px;
+          color: #64748B;
+        }
+        .cb-agenda-status {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+          border: 1px solid;
+          padding: 5px 9px;
+          font-size: 10.5px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          white-space: nowrap;
         }
 
         /* ── Type breakdown rows ── */

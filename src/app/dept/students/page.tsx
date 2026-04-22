@@ -12,7 +12,7 @@ import {
 } from '@/components/dashboard/DashboardContent';
 import StudentDirectory from '@/components/academic/StudentDirectory';
 import { getDeptDashboardData } from '@/lib/role-dashboard';
-import { getDepartmentNavItems } from '@/lib/academic-navigation';
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -96,8 +96,8 @@ export default async function DeptStudentsPage({ searchParams }: { searchParams:
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
-      navItems={getDepartmentNavItems()}
-      user={data.chromeUser}
+      navItems={DEPT_NAV_ITEMS}
+      user={{ ...data.chromeUser, userId: session.user.id }}
     >
       <DashboardPage>
         <HeroCard

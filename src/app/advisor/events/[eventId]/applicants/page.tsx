@@ -20,6 +20,7 @@ import {
 } from '@/components/dashboard/DashboardContent';
 import { Users, MapPin, Clock, FileText, PencilLine } from 'lucide-react';
 import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 
 async function getEventDetail(eventId: string, advisorId: string) {
   await connectDB();
@@ -72,10 +73,12 @@ export default async function AdvisorEventApplicantsPage({
   if (session.user.role !== 'advisor' && session.user.role !== 'dept_head') {
     redirect('/advisor/dashboard');
   }
+  const isDeptHead = session.user.role === 'dept_head';
+  const eventsBaseHref = isDeptHead ? '/dept/events' : '/advisor/events';
 
   const { eventId } = await params;
   const data = await getEventDetail(eventId, session.user.id);
-  if (!data) redirect('/advisor/events');
+  if (!data) redirect(eventsBaseHref);
 
   const { advisor, event, totalApplications, regCount, statusMap, chrome } = data;
 
@@ -113,17 +116,17 @@ export default async function AdvisorEventApplicantsPage({
 
   return (
     <DashboardShell
-      role="advisor"
-      roleLabel="Advisor dashboard"
-      homeHref="/advisor/dashboard"
-      navItems={ADVISOR_NAV_ITEMS}
+      role={isDeptHead ? 'departmentHead' : 'advisor'}
+      roleLabel={isDeptHead ? 'Department dashboard' : 'Advisor dashboard'}
+      homeHref={isDeptHead ? '/dept/dashboard' : '/advisor/dashboard'}
+      navItems={isDeptHead ? DEPT_NAV_ITEMS : ADVISOR_NAV_ITEMS}
       user={{
-        name: advisor?.name ?? 'Advisor',
+        name: advisor?.name ?? (isDeptHead ? 'Department Head' : 'Advisor'),
         email: advisor?.email ?? '',
         image: advisor?.image,
         subtitle:
           [advisor?.designation, advisor?.institutionName].filter(Boolean).join(' · ') ||
-          'Advisor workspace',
+          (isDeptHead ? 'Department workspace' : 'Advisor workspace'),
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
         userId: session.user.id,
@@ -300,7 +303,7 @@ export default async function AdvisorEventApplicantsPage({
               {/* Action buttons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
                 <Link
-                  href={`/advisor/events/${eventId}/registrants`}
+                  href={`${eventsBaseHref}/${eventId}/registrants`}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -319,7 +322,7 @@ export default async function AdvisorEventApplicantsPage({
                   <Users size={14} /> View Registrants ({formatCompactNumber(regCount)})
                 </Link>
                 <Link
-                  href={`/advisor/events/${eventId}/edit`}
+                  href={`${eventsBaseHref}/${eventId}/edit`}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -337,7 +340,7 @@ export default async function AdvisorEventApplicantsPage({
                   <PencilLine size={14} /> Edit Event
                 </Link>
                 <Link
-                  href="/advisor/events"
+                  href={eventsBaseHref}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
