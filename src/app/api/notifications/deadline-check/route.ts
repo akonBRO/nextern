@@ -21,7 +21,17 @@ import { notifyDeadlineReminder } from '@/lib/notify';
 import mongoose from 'mongoose';
 
 const CRON_SECRET = process.env.CRON_SECRET ?? 'nextern-cron-2026';
-const REMIND_DAYS = [3, 2, 1]; // fire reminders at these days-before-deadline
+const REMINDER_WINDOWS = [
+  { key: '3d', maxHours: 72, daysLeft: 3 },
+  { key: '2d', maxHours: 48, daysLeft: 2 },
+  { key: '24h', maxHours: 24, daysLeft: 1 },
+] as const;
+
+function resolveReminderWindow(deadline: Date, now: Date) {
+  const hoursLeft = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
+  if (hoursLeft <= 0) return null;
+  return REMINDER_WINDOWS.find((window) => hoursLeft <= window.maxHours) ?? null;
+}
 
 export async function GET(req: NextRequest) {
   // ── Auth check ──────────────────────────────────────────────────────────
@@ -61,10 +71,8 @@ export async function GET(req: NextRequest) {
       const deadline = new Date(job.applicationDeadline);
       if (deadline <= now || deadline > cutoff) continue;
 
-      const msLeft = deadline.getTime() - now.getTime();
-      const daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
-
-      if (!REMIND_DAYS.includes(daysLeft)) continue;
+      const reminderWindow = resolveReminderWindow(deadline, now);
+      if (!reminderWindow) continue;
 
       const studentId = savedJob.studentId.toString();
       const jobId = job._id.toString();
@@ -74,11 +82,11 @@ export async function GET(req: NextRequest) {
         userId: studentId,
         type: 'deadline_reminder',
         'meta.jobId': jobId,
-        'meta.daysLeft': daysLeft,
+        'meta.reminderWindow': reminderWindow.key,
       });
 
       if (alreadySent) {
-        skipped.push(`${studentId}:${jobId}:${daysLeft}d`);
+        skipped.push(`${studentId}:${jobId}:${reminderWindow.key}`);
         continue;
       }
 
@@ -88,10 +96,11 @@ export async function GET(req: NextRequest) {
         job.companyName,
         jobId,
         deadline,
-        daysLeft
+        reminderWindow.daysLeft,
+        reminderWindow.key
       );
 
-      fired.push(`${studentId}:${jobId}:${daysLeft}d`);
+      fired.push(`${studentId}:${jobId}:${reminderWindow.key}`);
     }
 
     return NextResponse.json({

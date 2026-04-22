@@ -37,7 +37,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Params }) {
       status: 'active',
       category: 'job',
     })
-      .populate('studentId', 'name')
+      .populate('studentId', 'name email')
       .populate('linkedJobId', 'title')
       .lean();
 
@@ -83,6 +83,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Params }) {
           ? recommendation.linkedJobId.title
           : recommendation.title,
       requestStatus: parsed.data.requestStatus,
+      employerResponseNote: parsed.data.employerResponseNote,
     });
 
     return NextResponse.json({

@@ -10,7 +10,7 @@ import {
 } from '@/components/dashboard/DashboardContent';
 import AdvisorProvisionClient from '@/components/academic/AdvisorProvisionClient';
 import { getDeptDashboardData } from '@/lib/role-dashboard';
-import { getDepartmentNavItems } from '@/lib/academic-navigation';
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 
 export default async function DeptAdvisorsPage() {
   const session = await auth();
@@ -30,8 +30,8 @@ export default async function DeptAdvisorsPage() {
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
-      navItems={getDepartmentNavItems()}
-      user={data.chromeUser}
+      navItems={DEPT_NAV_ITEMS}
+      user={{ ...data.chromeUser, userId: session.user.id }}
     >
       <DashboardPage>
         <HeroCard

@@ -41,6 +41,7 @@ import {
   Code2,
 } from 'lucide-react';
 import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 
 const STATUS_CFG: Record<
   string,
@@ -200,10 +201,12 @@ export default async function StudentApplicationPage({
   if (!session?.user?.id) redirect('/login');
   if (session.user.role !== 'advisor' && session.user.role !== 'dept_head')
     redirect('/advisor/dashboard');
+  const isDeptHead = session.user.role === 'dept_head';
+  const eventsBaseHref = isDeptHead ? '/dept/events' : '/advisor/events';
 
   const { eventId, studentId } = await params;
   const data = await getApplicationDetail(eventId, studentId, session.user.id);
-  if (!data) redirect(`/advisor/events/${eventId}/registrants`);
+  if (!data) redirect(`${eventsBaseHref}/${eventId}/registrants`);
 
   const { advisor, event, application, student, chrome } = data;
   const statusCfg = STATUS_CFG[application.status] ?? STATUS_CFG['applied'];
@@ -222,17 +225,17 @@ export default async function StudentApplicationPage({
 
   return (
     <DashboardShell
-      role="advisor"
-      roleLabel="Advisor dashboard"
-      homeHref="/advisor/dashboard"
-      navItems={ADVISOR_NAV_ITEMS}
+      role={isDeptHead ? 'departmentHead' : 'advisor'}
+      roleLabel={isDeptHead ? 'Department dashboard' : 'Advisor dashboard'}
+      homeHref={isDeptHead ? '/dept/dashboard' : '/advisor/dashboard'}
+      navItems={isDeptHead ? DEPT_NAV_ITEMS : ADVISOR_NAV_ITEMS}
       user={{
-        name: advisor?.name ?? 'Advisor',
+        name: advisor?.name ?? (isDeptHead ? 'Department Head' : 'Advisor'),
         email: advisor?.email ?? '',
         image: advisor?.image,
         subtitle:
           [advisor?.designation, advisor?.institutionName].filter(Boolean).join(' · ') ||
-          'Advisor workspace',
+          (isDeptHead ? 'Department workspace' : 'Advisor workspace'),
         unreadNotifications: chrome.unreadNotifications,
         unreadMessages: chrome.unreadMessages,
         userId: session.user.id,
@@ -242,7 +245,7 @@ export default async function StudentApplicationPage({
         <div style={{ maxWidth: 980, margin: '0 auto' }}>
           {/* Back link */}
           <Link
-            href={`/advisor/events/${eventId}/registrants`}
+            href={`${eventsBaseHref}/${eventId}/registrants`}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
