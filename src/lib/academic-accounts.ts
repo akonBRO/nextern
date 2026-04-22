@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { connectDB } from '@/lib/db';
 import { academicCredentialEmailTemplate, sendEmail } from '@/lib/email';
+import { onProfileVerified } from '@/lib/events';
 import { User } from '@/models/User';
 
 const BCRYPT_ROUNDS = 12;
@@ -81,6 +82,9 @@ export async function provisionAcademicAccount({
     await User.deleteOne({ _id: user._id });
     throw error;
   }
+
+  // Award verification badge since they are internally provisioned
+  await onProfileVerified(user._id.toString()).catch(console.error);
 
   return user;
 }
