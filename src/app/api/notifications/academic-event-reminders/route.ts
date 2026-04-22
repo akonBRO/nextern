@@ -11,7 +11,6 @@ const REMINDER_WINDOWS = [
   { key: '3d', maxHours: 72, daysLeft: 3 },
   { key: '2d', maxHours: 48, daysLeft: 2 },
   { key: '24h', maxHours: 24, daysLeft: 1 },
-  { key: '6h', maxHours: 6, daysLeft: 0 },
 ] as const;
 
 function resolveReminderWindow(targetDate: Date, now: Date) {
