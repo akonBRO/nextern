@@ -10,6 +10,7 @@ import { User } from '@/models/User';
 import { CreateJobSchema } from '@/lib/validations';
 import { checkFeatureAccess, syncPremiumStatus } from '@/lib/premium';
 import { syncOwnedEventToCalendar } from '@/lib/calendar';
+import { onJobPosted, onEventCreated } from '@/lib/events';
 
 // ── GET ───────────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
@@ -205,6 +206,13 @@ export async function POST(req: NextRequest) {
         job.type,
         job.applicationDeadline
       );
+    }
+
+    // Trigger badge evaluation
+    if (isEmployer) {
+      await onJobPosted(session.user.id).catch(console.error);
+    } else if (isAdvisorOrDept) {
+      await onEventCreated(session.user.id).catch(console.error);
     }
 
     return NextResponse.json({ message: 'Job posted successfully', job }, { status: 201 });

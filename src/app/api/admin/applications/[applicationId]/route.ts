@@ -70,9 +70,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       .lean();
 
     if (parsed.data.status) {
-      await onApplicationStatusChanged(application.studentId.toString(), parsed.data.status).catch(
-        console.error
-      );
+      await onApplicationStatusChanged(
+        application.studentId.toString(),
+        application.employerId?.toString(),
+        parsed.data.status
+      ).catch(console.error);
     }
 
     return NextResponse.json({

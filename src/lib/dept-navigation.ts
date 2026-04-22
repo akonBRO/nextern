@@ -88,5 +88,6 @@ export const DEPT_NAV_ITEMS: DashboardNavItem[] = [
       },
     ],
   },
+  { label: 'Messages', href: '/dept/messages', icon: 'messages' },
   { label: 'Badges', href: '/dept/badges', icon: 'shield' },
 ];

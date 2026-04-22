@@ -196,9 +196,11 @@ async function updateApplicationForAssessment(input: {
   });
 
   if (application.status !== 'assessment_sent') {
-    await onApplicationStatusChanged(application.studentId.toString(), 'assessment_sent').catch(
-      () => {}
-    );
+    await onApplicationStatusChanged(
+      application.studentId.toString(),
+      input.employerId,
+      'assessment_sent'
+    ).catch(() => {});
   }
 }
 
@@ -247,9 +249,11 @@ async function updateApplicationForInterview(input: {
   }
 
   if (application.status !== 'interview_scheduled') {
-    await onApplicationStatusChanged(application.studentId.toString(), 'interview_scheduled').catch(
-      () => {}
-    );
+    await onApplicationStatusChanged(
+      application.studentId.toString(),
+      input.employerId,
+      'interview_scheduled'
+    ).catch(() => {});
   }
 }
 

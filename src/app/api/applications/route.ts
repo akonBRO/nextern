@@ -10,6 +10,7 @@ import { UpdateApplicationStatusSchema } from '@/lib/validations';
 import { onApplicationStatusChanged } from '@/lib/events';
 import { Job } from '@/models/Job';
 import { syncInterviewToCalendar, removeCalendarEvent } from '@/lib/calendar';
+import mongoose from 'mongoose';
 
 // ── GET ───────────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
@@ -21,6 +22,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const jobId = searchParams.get('jobId');
+    const employerIdParam = searchParams.get('employerId');
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
     const limit = Math.min(50, parseInt(searchParams.get('limit') ?? '20'));
 
@@ -31,6 +33,9 @@ export async function GET(req: NextRequest) {
     if (session.user.role === 'student') {
       query.studentId = session.user.id;
       query.isWithdrawn = { $ne: true };
+      if (employerIdParam && mongoose.Types.ObjectId.isValid(employerIdParam)) {
+        query.employerId = new mongoose.Types.ObjectId(employerIdParam);
+      }
     } else if (session.user.role === 'employer') {
       query.employerId = session.user.id;
       if (jobId) query.jobId = jobId;
@@ -119,7 +124,11 @@ export async function PATCH(req: NextRequest) {
 
     // ── Calendar sync on status change ────────────────────────────────────
     if (newStatus !== previousStatus) {
-      await onApplicationStatusChanged(application.studentId.toString(), newStatus).catch(() => {});
+      await onApplicationStatusChanged(
+        application.studentId.toString(),
+        application.employerId.toString(),
+        newStatus
+      ).catch(() => {});
 
       // Handle calendar events based on new status
       try {

@@ -539,6 +539,7 @@ export default function Inbox({
     msg: null,
   });
   const [globalAlert, setGlobalAlert] = useState<string | null>(null);
+  const [messagingLocked, setMessagingLocked] = useState(false);
 
   const [inputFiles, setInputFiles] = useState<File[]>([]);
   const { startUpload, isUploading } = useUploadThing('messageAttachmentUploader', {
@@ -602,6 +603,42 @@ export default function Inbox({
       })
       .catch(console.error);
   }, [buildThreadsUrl, initiateFreelanceOrderId, initiateUserId]);
+
+  /* ── Check student → employer messaging eligibility ──────────── */
+  useEffect(() => {
+    let cancelled = false;
+    const ELIGIBLE = ['shortlisted', 'assessment_sent', 'interview_scheduled', 'hired'];
+
+    async function checkEligibility() {
+      // Not a student, or no thread selected, or not an employer direct thread
+      if (
+        currentUserRole !== 'student' ||
+        !selectedThread ||
+        selectedThread.otherUser.role !== 'employer' ||
+        selectedThread.threadType === 'freelance_order'
+      ) {
+        if (!cancelled) setMessagingLocked(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `/api/applications?employerId=${selectedThread.otherUser._id}&limit=50`
+        );
+        const d = await res.json();
+        const apps: { status: string }[] = d.applications ?? [];
+        const hasEligible = apps.some((a) => ELIGIBLE.includes(a.status));
+        if (!cancelled) setMessagingLocked(!hasEligible);
+      } catch {
+        if (!cancelled) setMessagingLocked(false);
+      }
+    }
+
+    checkEligibility();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUserRole, currentUserId, selectedThread]);
 
   /* ── Fetch Messages for Selected Thread ─────────────────────── */
   useEffect(() => {
@@ -718,10 +755,11 @@ export default function Inbox({
   const freelanceThreads = threads.filter((thread) => thread.threadType === 'freelance_order');
   const directThreads = threads.filter((thread) => thread.threadType !== 'freelance_order');
   const selectedThreadReadOnly =
-    selectedThread?.threadType === 'freelance_order' &&
-    !!selectedThread.freelanceOrder &&
-    (selectedThread.freelanceOrder.proposalStatus !== 'accepted' ||
-      ['completed', 'cancelled'].includes(selectedThread.freelanceOrder.status));
+    messagingLocked ||
+    (selectedThread?.threadType === 'freelance_order' &&
+      !!selectedThread.freelanceOrder &&
+      (selectedThread.freelanceOrder.proposalStatus !== 'accepted' ||
+        ['completed', 'cancelled'].includes(selectedThread.freelanceOrder.status)));
 
   /* ── Send / Edit ─────────────────────────────────────────────── */
   const handleSendOrEdit = async () => {
@@ -1658,7 +1696,30 @@ export default function Inbox({
                     </div>
                   )}
 
-                {selectedThreadReadOnly && (
+                {messagingLocked && (
+                  <div
+                    style={{
+                      marginBottom: 12,
+                      padding: '10px 14px',
+                      borderRadius: 12,
+                      background: '#FFF7ED',
+                      border: '1px solid #FED7AA',
+                      color: '#9A3412',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    🔒 You can only reply once your application is{' '}
+                    <strong>&nbsp;Shortlisted</strong>,&nbsp;
+                    <strong>Assessment Sent</strong>,&nbsp;<strong>Interview Scheduled</strong>,
+                    or&nbsp;<strong>Hired</strong>. You can still read messages from the employer.
+                  </div>
+                )}
+
+                {!messagingLocked && selectedThreadReadOnly && (
                   <div
                     style={{
                       marginBottom: 12,
