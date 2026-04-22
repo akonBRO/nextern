@@ -160,7 +160,7 @@ export async function PATCH(req: NextRequest) {
       { new: true, runValidators: true }
     ).select('-password');
 
-    if (user.role === 'student' && updated?.cgpa >= 3.5) {
+    if (user.role === 'student' && ('cgpa' in updates || updated?.cgpa)) {
       await onProfileVerified(user._id.toString()).catch(console.error);
     }
 

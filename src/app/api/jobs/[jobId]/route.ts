@@ -17,6 +17,7 @@ import { InterviewSession } from '@/models/InterviewSession';
 import { Message } from '@/models/Message';
 import { AdminJobUpdateSchema, UpdateJobSchema } from '@/lib/validations';
 import { removeCalendarEvent, syncOwnedEventToCalendar } from '@/lib/calendar';
+import { onJobPosted, onEventCreated } from '@/lib/events';
 
 type Params = { params: Promise<{ jobId: string }> };
 
@@ -139,6 +140,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       );
     }
 
+    if (ownerRole === 'advisor' || ownerRole === 'dept_head') {
+      await onEventCreated(updated.employerId.toString()).catch(console.error);
+    } else {
+      await onJobPosted(updated.employerId.toString()).catch(console.error);
+    }
+
     return NextResponse.json({ message: 'Job updated successfully', job: updated });
   } catch (error) {
     console.error('[UPDATE JOB ERROR]', error);
@@ -195,6 +202,12 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       Message.deleteMany({ relatedJobId: jobId }),
       Job.findByIdAndDelete(jobId),
     ]);
+
+    if (ownerRole === 'advisor' || ownerRole === 'dept_head') {
+      await onEventCreated(job.employerId.toString()).catch(console.error);
+    } else {
+      await onJobPosted(job.employerId.toString()).catch(console.error);
+    }
 
     return NextResponse.json({ message: 'Job deleted successfully' });
   } catch (error) {

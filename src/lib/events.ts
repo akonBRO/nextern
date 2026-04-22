@@ -74,9 +74,16 @@ export async function onProfileVerified(userId: string) {
 }
 
 // ── onApplicationStatusChanged ────────────────────────────────────────────
-export async function onApplicationStatusChanged(userId: string, status: string) {
+export async function onApplicationStatusChanged(
+  userId: string,
+  employerId: string | undefined,
+  status: string
+) {
   // 1. Badge evaluation
   await evaluateBadges(userId, 'onApplicationStatusChanged').catch(console.error);
+  if (employerId) {
+    await evaluateBadges(employerId, 'onApplicationStatusChanged', 'employer').catch(console.error);
+  }
 
   // 2. Notify student of status change
   // Note: the caller (applications PATCH route) should pass applicationId, jobTitle, companyName.
@@ -116,7 +123,7 @@ export async function onApplicationStatusChangedForApplication(applicationId: st
 
     const app = await Application.findById(applicationId)
       .populate('jobId', 'title companyName')
-      .select('studentId status jobId assessmentAssignmentId interviewSessionId')
+      .select('studentId employerId status jobId assessmentAssignmentId interviewSessionId')
       .lean();
 
     if (!app?.jobId || !app.studentId || !app.status) return;
@@ -124,6 +131,13 @@ export async function onApplicationStatusChangedForApplication(applicationId: st
     await evaluateBadges(app.studentId.toString(), 'onApplicationStatusChanged').catch(
       console.error
     );
+    if (app.employerId) {
+      await evaluateBadges(
+        app.employerId.toString(),
+        'onApplicationStatusChanged',
+        'employer'
+      ).catch(console.error);
+    }
 
     const job = app.jobId as { title: string; companyName: string };
     await notifyApplicationStatusChanged(
@@ -172,6 +186,11 @@ export async function onDepartmentScoreUpdate(deptHeadId: string, _newAverageSco
 // ── onEventCreated ────────────────────────────────────────────────────────
 export async function onEventCreated(deptHeadId: string) {
   await evaluateBadges(deptHeadId, 'onEventCreated', 'dept_head').catch(console.error);
+}
+
+// ── onJobPosted ───────────────────────────────────────────────────────────
+export async function onJobPosted(employerId: string) {
+  await evaluateBadges(employerId, 'onJobPosted', 'employer').catch(console.error);
 }
 
 // ── onBadgeEarned ─────────────────────────────────────────────────────────

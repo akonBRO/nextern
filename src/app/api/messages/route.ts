@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/db';
 import { getFreelanceOrderThreadId, inferFreelanceProposalStatus } from '@/lib/freelance-shared';
 import { Message } from '@/models/Message';
 import { FreelanceOrder } from '@/models/FreelanceOrder';
+import { Application } from '@/models/Application';
 import { User } from '@/models/User';
 import mongoose from 'mongoose';
 import Pusher from 'pusher';
@@ -340,6 +341,32 @@ export async function POST(req: NextRequest) {
     }
 
     resolvedThreadId = makeThreadId(session.user.id, receiverId);
+
+    // ── Student → Employer guard ───────────────────────────────────────────
+    // Students may only message employers if they have an eligible application.
+    if (session.user.role === 'student') {
+      const receiver = await User.findById(receiverId).select('role').lean();
+      if (receiver?.role === 'employer') {
+        const ELIGIBLE = ['shortlisted', 'assessment_sent', 'interview_scheduled', 'hired'];
+        const eligibleApp = await Application.findOne({
+          studentId: new mongoose.Types.ObjectId(session.user.id),
+          employerId: new mongoose.Types.ObjectId(receiverId),
+          status: { $in: ELIGIBLE },
+        })
+          .select('_id')
+          .lean();
+
+        if (!eligibleApp) {
+          return NextResponse.json(
+            {
+              error:
+                'You can only message employers once your application is shortlisted, has an assessment sent, interview scheduled, or you are hired.',
+            },
+            { status: 403 }
+          );
+        }
+      }
+    }
   }
 
   const message = await Message.create({
