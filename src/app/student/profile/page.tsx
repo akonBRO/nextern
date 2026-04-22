@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
+import AlumniConversionModal from '@/components/mentorship/AlumniConversionModal';
 import {
   AlertCircle,
   CheckCircle2,
@@ -725,6 +726,7 @@ export default function StudentProfilePage() {
   const [dragOver, setDragOver] = useState(false);
   const uploading = resumeUploading || isUploading;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [alumniModalOpen, setAlumniModalOpen] = useState(false);
   const resumeUrlRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -1385,6 +1387,40 @@ export default function StudentProfilePage() {
               />
               {graduationSaving ? 'Saving graduation status…' : 'I have graduated'}
             </label>
+
+            {form.isGraduated && (
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: 12,
+                  background: C.blueBg,
+                  borderRadius: 12,
+                  border: `1px solid ${C.blueBorder}`,
+                }}
+              >
+                <p
+                  style={{ margin: '0 0 10px 0', fontSize: 13, color: C.blueDark, fontWeight: 500 }}
+                >
+                  Congratulations on your graduation! You can now convert your account to alumni
+                  status to become a mentor.
+                </p>
+                <button
+                  onClick={() => setAlumniModalOpen(true)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: 8,
+                    background: C.blue,
+                    color: C.white,
+                    border: 'none',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Convert to Alumni Status
+                </button>
+              </div>
+            )}
           </div>
           <div style={{ marginTop: 16 }}>
             <Field label="Completed Courses">
@@ -2388,10 +2424,14 @@ export default function StudentProfilePage() {
                             </div>
                             <div style={{ fontSize: 11, color: C.gray, marginTop: 3 }}>
                               {review.reviewer.name}
-                              {review.reviewer.designation ? ` · ${review.reviewer.designation}` : ''}
+                              {review.reviewer.designation
+                                ? ` · ${review.reviewer.designation}`
+                                : ''}
                             </div>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}
+                          >
                             <span
                               style={{
                                 display: 'inline-flex',
@@ -2444,7 +2484,9 @@ export default function StudentProfilePage() {
                             background: '#FAFBFC',
                           }}
                         >
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingTop: 14 }}>
+                          <div
+                            style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingTop: 14 }}
+                          >
                             {typeof review.profileScore === 'number' ? (
                               <span
                                 style={{
@@ -2504,7 +2546,9 @@ export default function StudentProfilePage() {
                               >
                                 Strengths
                               </div>
-                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                              <div
+                                style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}
+                              >
                                 {review.strengths.length > 0 ? (
                                   review.strengths.map((item) => (
                                     <span
@@ -2525,7 +2569,9 @@ export default function StudentProfilePage() {
                                     </span>
                                   ))
                                 ) : (
-                                  <span style={{ fontSize: 12, color: C.gray }}>No strengths listed.</span>
+                                  <span style={{ fontSize: 12, color: C.gray }}>
+                                    No strengths listed.
+                                  </span>
                                 )}
                               </div>
                             </div>
@@ -2549,7 +2595,9 @@ export default function StudentProfilePage() {
                               >
                                 Growth Areas
                               </div>
-                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                              <div
+                                style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}
+                              >
                                 {review.growthAreas.length > 0 ? (
                                   review.growthAreas.map((item) => (
                                     <span
@@ -2570,7 +2618,9 @@ export default function StudentProfilePage() {
                                     </span>
                                   ))
                                 ) : (
-                                  <span style={{ fontSize: 12, color: C.gray }}>No growth areas listed.</span>
+                                  <span style={{ fontSize: 12, color: C.gray }}>
+                                    No growth areas listed.
+                                  </span>
                                 )}
                               </div>
                             </div>
@@ -2690,7 +2740,9 @@ export default function StudentProfilePage() {
                               {jobSubtitle}
                             </div>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}
+                          >
                             <span
                               style={{
                                 display: 'inline-flex',
@@ -2743,7 +2795,9 @@ export default function StudentProfilePage() {
                             background: '#FAFBFC',
                           }}
                         >
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingTop: 14 }}>
+                          <div
+                            style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingTop: 14 }}
+                          >
                             {typeof recommendation.fitScore === 'number' ? (
                               <span
                                 style={{
@@ -2776,7 +2830,9 @@ export default function StudentProfilePage() {
                           </p>
 
                           {recommendation.focusSkills.length > 0 ? (
-                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+                            <div
+                              style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}
+                            >
                               {recommendation.focusSkills.map((skill) => (
                                 <span
                                   key={`${recommendation.id}:${skill}`}
@@ -2799,14 +2855,17 @@ export default function StudentProfilePage() {
                           ) : null}
 
                           <div style={{ fontSize: 11, color: C.light, marginTop: 12 }}>
-                            {`Recommended by ${recommendation.recommender.name}${recommendation.recommender.designation
-                              ? ` · ${recommendation.recommender.designation}`
-                              : ''
-                              }`}
+                            {`Recommended by ${recommendation.recommender.name}${
+                              recommendation.recommender.designation
+                                ? ` · ${recommendation.recommender.designation}`
+                                : ''
+                            }`}
                           </div>
 
                           {recommendation.job || recommendation.resourceUrl ? (
-                            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
+                            <div
+                              style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}
+                            >
                               {recommendation.job ? (
                                 <Link
                                   href={`/student/jobs/${recommendation.job.id}`}
@@ -3226,6 +3285,15 @@ export default function StudentProfilePage() {
           </div>
         </div>
       )}
+
+      <AlumniConversionModal
+        isOpen={alumniModalOpen}
+        onClose={() => setAlumniModalOpen(false)}
+        onConverted={() => {
+          setAlumniModalOpen(false);
+          window.location.href = '/student/mentorship/dashboard';
+        }}
+      />
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
