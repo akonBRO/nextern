@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import {
   AlertCircle,
@@ -17,6 +18,7 @@ import {
   Star,
   TrendingUp,
   Zap,
+  Users,
 } from 'lucide-react';
 
 const C = {
@@ -116,6 +118,27 @@ const TYPE_CONFIG: Record<
     border: '#E2E8F0',
     label: 'Message',
   },
+  mentorship_request: {
+    icon: <Users size={16} />,
+    color: C.indigo,
+    bg: '#EEF2FF',
+    border: '#C7D2FE',
+    label: 'Mentor Request',
+  },
+  mentorship_accepted: {
+    icon: <CheckCheck size={16} />,
+    color: C.emerald,
+    bg: '#ECFDF5',
+    border: '#A7F3D0',
+    label: 'Mentorship',
+  },
+  review_received: {
+    icon: <Star size={16} />,
+    color: C.amber,
+    bg: '#FFFBEB',
+    border: '#FDE68A',
+    label: 'Review',
+  },
 };
 
 const FILTER_TYPES = [
@@ -125,6 +148,7 @@ const FILTER_TYPES = [
   { value: 'job_match', label: 'Matches', icon: <Zap size={13} /> },
   { value: 'advisor_note', label: 'Advisor', icon: <Star size={13} /> },
   { value: 'interview_scheduled', label: 'Interviews', icon: <CalendarClock size={13} /> },
+  { value: 'mentorship', label: 'Mentorship', icon: <Users size={13} /> },
 ];
 
 function typeConfig(type: string) {
@@ -190,11 +214,14 @@ function buildMetaChips(notif: Notif) {
 }
 
 export default function StudentNotificationsPage() {
+  const { data: sessionData } = useSession();
+  const isAlumni = sessionData?.user?.role === 'alumni';
+
   const [notifications, setNotifs] = useState<Notif[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
   const [markingAll, setMarkingAll] = useState(false);
-  const [filter, setFilter] = useState<'all' | string>('all');
+  const [filter, setFilter] = useState<'all' | string>(isAlumni ? 'mentorship' : 'all');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);

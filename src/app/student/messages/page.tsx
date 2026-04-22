@@ -12,7 +12,7 @@ export default async function StudentMessagesPage({
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
-  if (session.user.role !== 'student') redirect('/login');
+  if (session.user.role !== 'student' && session.user.role !== 'alumni') redirect('/login');
 
   const params = await searchParams;
   const initiateUser = typeof params?.user === 'string' ? params.user : undefined;
@@ -48,7 +48,7 @@ export default async function StudentMessagesPage({
       >
         <Inbox
           currentUserId={session.user.id}
-          currentUserRole="student"
+          currentUserRole={session.user.role as 'student' | 'alumni'}
           initiateUserId={initiateUser}
           initiateFreelanceOrderId={initiateFreelanceOrder}
         />
