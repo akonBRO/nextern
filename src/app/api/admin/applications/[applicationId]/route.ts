@@ -8,7 +8,7 @@ import { Assessment } from '@/models/Assessment';
 import { AssessmentSubmission } from '@/models/AssessmentSubmission';
 import { Job } from '@/models/Job';
 import { JobView } from '@/models/JobView';
-import { onApplicationStatusChanged } from '@/lib/events';
+import { onApplicationStatusChangedForApplication } from '@/lib/events';
 
 type Params = { params: Promise<{ applicationId: string }> };
 
@@ -70,9 +70,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       .lean();
 
     if (parsed.data.status) {
-      await onApplicationStatusChanged(application.studentId.toString(), parsed.data.status).catch(
-        console.error
-      );
+      await onApplicationStatusChangedForApplication(applicationId).catch(console.error);
     }
 
     return NextResponse.json({

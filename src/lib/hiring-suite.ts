@@ -8,7 +8,7 @@ import {
   hasAssessmentEvaluationGeminiConfig,
 } from '@/lib/gemini';
 import { createNotification } from '@/lib/notify';
-import { onApplicationStatusChanged } from '@/lib/events';
+import { onApplicationStatusChangedForApplication } from '@/lib/events';
 import { CodeExecutionConfigError, CodeExecutionUpstreamError, executeJudge0 } from '@/lib/judge0';
 import { syncInterviewToCalendar } from '@/lib/calendar';
 import { Assessment, type IAssessment } from '@/models/Assessment';
@@ -196,9 +196,7 @@ async function updateApplicationForAssessment(input: {
   });
 
   if (application.status !== 'assessment_sent') {
-    await onApplicationStatusChanged(application.studentId.toString(), 'assessment_sent').catch(
-      () => {}
-    );
+    await onApplicationStatusChangedForApplication(input.applicationId.toString()).catch(() => {});
   }
 }
 
@@ -247,9 +245,7 @@ async function updateApplicationForInterview(input: {
   }
 
   if (application.status !== 'interview_scheduled') {
-    await onApplicationStatusChanged(application.studentId.toString(), 'interview_scheduled').catch(
-      () => {}
-    );
+    await onApplicationStatusChangedForApplication(input.applicationId.toString()).catch(() => {});
   }
 }
 

@@ -110,6 +110,38 @@ export async function onApplicationStatusChanged(userId: string, status: string)
   }
 }
 
+export async function onApplicationStatusChangedForApplication(applicationId: string) {
+  try {
+    await connectDB();
+
+    const app = await Application.findById(applicationId)
+      .populate('jobId', 'title companyName')
+      .select('studentId status jobId assessmentAssignmentId interviewSessionId')
+      .lean();
+
+    if (!app?.jobId || !app.studentId || !app.status) return;
+
+    await evaluateBadges(app.studentId.toString(), 'onApplicationStatusChanged').catch(
+      console.error
+    );
+
+    const job = app.jobId as { title: string; companyName: string };
+    await notifyApplicationStatusChanged(
+      app.studentId.toString(),
+      job.title,
+      job.companyName,
+      app.status,
+      app._id.toString(),
+      {
+        assessmentAssignmentId: app.assessmentAssignmentId?.toString(),
+        interviewSessionId: app.interviewSessionId?.toString(),
+      }
+    );
+  } catch (err) {
+    console.error('[onApplicationStatusChangedForApplication notify error]', err);
+  }
+}
+
 // ── onMentorSessionComplete ───────────────────────────────────────────────
 export async function onMentorSessionComplete(studentId: string, mentorId: string) {
   await evaluateBadges(studentId, 'onMentorSessionComplete', 'student').catch(console.error);

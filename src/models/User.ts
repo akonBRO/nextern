@@ -51,6 +51,13 @@ interface INotificationPreferences {
 
 interface IEmailPreferences {
   application_received: boolean;
+  application_under_review: boolean;
+  application_shortlisted: boolean;
+  application_assessment_sent: boolean;
+  application_interview: boolean;
+  application_hired: boolean;
+  application_rejected: boolean;
+  application_withdrawn: boolean;
   deadline_reminders: boolean;
   event_registrations: boolean;
   event_reminders: boolean;
@@ -223,6 +230,13 @@ const UserSchema = new Schema<IUser>(
     },
     emailPreferences: {
       application_received: { type: Boolean, default: true },
+      application_under_review: { type: Boolean, default: true },
+      application_shortlisted: { type: Boolean, default: true },
+      application_assessment_sent: { type: Boolean, default: true },
+      application_interview: { type: Boolean, default: true },
+      application_hired: { type: Boolean, default: true },
+      application_rejected: { type: Boolean, default: true },
+      application_withdrawn: { type: Boolean, default: true },
       deadline_reminders: { type: Boolean, default: true },
       event_registrations: { type: Boolean, default: true },
       event_reminders: { type: Boolean, default: true },
