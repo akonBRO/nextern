@@ -109,6 +109,7 @@ export const UpdateStudentProfileSchema = z.object({
     )
     .optional(),
   notificationPreferences: z.record(z.string(), z.boolean()).optional(),
+  emailPreferences: z.record(z.string(), z.boolean()).optional(),
 });
 
 export const UpdateEmployerProfileSchema = z.object({

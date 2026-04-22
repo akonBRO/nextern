@@ -7,7 +7,7 @@ import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Application } from '@/models/Application';
 import { UpdateApplicationStatusSchema } from '@/lib/validations';
-import { onApplicationStatusChanged } from '@/lib/events';
+import { onApplicationStatusChangedForApplication } from '@/lib/events';
 import { Job } from '@/models/Job';
 import { syncInterviewToCalendar, removeCalendarEvent } from '@/lib/calendar';
 import mongoose from 'mongoose';
@@ -124,11 +124,7 @@ export async function PATCH(req: NextRequest) {
 
     // ── Calendar sync on status change ────────────────────────────────────
     if (newStatus !== previousStatus) {
-      await onApplicationStatusChanged(
-        application.studentId.toString(),
-        application.employerId.toString(),
-        newStatus
-      ).catch(() => {});
+      await onApplicationStatusChangedForApplication(appId).catch(() => {});
 
       // Handle calendar events based on new status
       try {
