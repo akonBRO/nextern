@@ -6,6 +6,8 @@ import { Message } from '@/models/Message';
 import { FreelanceOrder } from '@/models/FreelanceOrder';
 import { Application } from '@/models/Application';
 import { User } from '@/models/User';
+import { Mentor } from '@/models/Mentor';
+import { MentorSession } from '@/models/MentorSession';
 import mongoose from 'mongoose';
 import Pusher from 'pusher';
 
@@ -364,6 +366,47 @@ export async function POST(req: NextRequest) {
             },
             { status: 403 }
           );
+        }
+      }
+    }
+
+    // ── Student ↔ Mentor guard ─────────────────────────────────────────────
+    // Mentors (alumni) and students can only message each other if they have a scheduled/accepted/completed session
+    if (session.user.role === 'alumni' || session.user.role === 'student') {
+      const receiver = await User.findById(receiverId).select('role').lean();
+
+      if (
+        (session.user.role === 'alumni' && receiver?.role === 'student') ||
+        (session.user.role === 'student' && receiver?.role === 'alumni')
+      ) {
+        const studentId = session.user.role === 'student' ? session.user.id : receiverId.toString();
+        const mentorUserId =
+          session.user.role === 'alumni' ? session.user.id : receiverId.toString();
+
+        const mentorProfile = await Mentor.findOne({
+          userId: new mongoose.Types.ObjectId(mentorUserId),
+        })
+          .select('_id')
+          .lean();
+
+        if (mentorProfile) {
+          const activeSession = await MentorSession.findOne({
+            studentId: new mongoose.Types.ObjectId(studentId),
+            mentorId: mentorProfile._id,
+            status: { $in: ['pending', 'accepted', 'scheduled', 'completed'] },
+          })
+            .select('_id')
+            .lean();
+
+          if (!activeSession) {
+            return NextResponse.json(
+              {
+                error:
+                  'You can only message each other if you have a pending, accepted, scheduled, or completed mentorship session.',
+              },
+              { status: 403 }
+            );
+          }
         }
       }
     }

@@ -25,6 +25,7 @@ export default async function StudentLayout({ children }: { children: ReactNode 
     email: student?.email ?? '',
     image: student?.image ?? undefined,
     userId: session.user.id,
+    role: session.user.role,
     opportunityScore: student?.opportunityScore ?? 0,
     profileCompleteness: student?.profileCompleteness ?? 0,
     unreadNotifications: unreadNotifications ?? 0,

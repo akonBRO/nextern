@@ -7,6 +7,7 @@ import { User } from '@/models/User';
 import { Application } from '@/models/Application';
 import { BadgeAward } from '@/models/BadgeAward';
 import { Review } from '@/models/Review';
+import { MentorSession } from '@/models/MentorSession';
 import { computeGERScore, type RawGERInput, type GERData } from '@/lib/ger-pdf';
 import mongoose from 'mongoose';
 
@@ -77,19 +78,11 @@ export async function buildGERData(userId: string): Promise<{
         }, 0) / employerReviews.length
       : 0;
 
-  // ── Mentor sessions — graceful fallback ────────────────────────────
-  let mentorSessionCount = 0;
-  try {
-    const MentorSession = mongoose.models.MentorSession;
-    if (MentorSession) {
-      mentorSessionCount = await MentorSession.countDocuments({
-        studentId: oid,
-        status: 'completed',
-      });
-    }
-  } catch {
-    /* model not yet built */
-  }
+  // ── Mentor sessions ──────────────────────────────────────────────
+  const mentorSessionCount = await MentorSession.countDocuments({
+    studentId: oid,
+    status: 'completed',
+  });
 
   // ── Freelance orders — graceful fallback ───────────────────────────
   let freelanceOrderCount = 0;

@@ -54,7 +54,11 @@ export async function GET(req: NextRequest) {
     }
 
     // Only apply type filter if it's a known, safe type
-    if (type && type !== 'all' && ALLOWED_TYPES.has(type)) {
+    if (type === 'mentorship') {
+      query.type = {
+        $in: ['mentorship_request', 'mentorship_accepted', 'message_received', 'review_received'],
+      };
+    } else if (type && type !== 'all' && ALLOWED_TYPES.has(type)) {
       query.type = type;
     }
 

@@ -58,7 +58,7 @@ export type DashboardNavItem = {
   }[];
 };
 
-type DashboardRole = 'student' | 'employer' | 'advisor' | 'departmentHead';
+type DashboardRole = 'student' | 'employer' | 'advisor' | 'departmentHead' | 'alumni';
 
 const profileConfig: Record<
   DashboardRole,
@@ -68,6 +68,7 @@ const profileConfig: Record<
   employer: { label: 'Company Profile', href: '/employer/profile', icon: 'building' },
   advisor: { label: 'My Profile', href: '/advisor/profile', icon: 'users' },
   departmentHead: { label: 'My Profile', href: '/dept/profile', icon: 'users' },
+  alumni: { label: 'My Profile', href: '/student/mentorship/dashboard?tab=profile', icon: 'users' },
 };
 
 type DashboardShellProps = {
@@ -157,7 +158,7 @@ export default function DashboardShell({
 
   // Derive notifications page href based on role
   const notificationsHref =
-    role === 'student'
+    role === 'student' || role === 'alumni'
       ? '/student/notifications'
       : role === 'employer'
         ? '/employer/notifications'

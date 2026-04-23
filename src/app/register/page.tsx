@@ -453,10 +453,6 @@ export default function RegisterPage() {
     industry: '',
     tradeLicenseNo: '',
     headquartersCity: '',
-    institutionName: '',
-    advisorStaffId: '',
-    designation: '',
-    advisoryDepartment: '',
   });
 
   const set = (field: string, value: string) => {

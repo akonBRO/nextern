@@ -70,7 +70,20 @@ export async function onSkillGapClosed(userId: string, _skillName: string) {
 
 // ── onProfileVerified ─────────────────────────────────────────────────────
 export async function onProfileVerified(userId: string) {
-  await evaluateBadges(userId, 'onProfileVerified', 'student').catch(console.error);
+  try {
+    await connectDB();
+    const { User } = await import('@/models/User');
+    const user = await User.findById(userId).select('role').lean();
+    if (user && user.role) {
+      await evaluateBadges(
+        userId,
+        'onProfileVerified',
+        user.role as import('@/lib/badge-definitions').BadgeCategory
+      ).catch(console.error);
+    }
+  } catch (err) {
+    console.error('[onProfileVerified error]', err);
+  }
 }
 
 // ── onApplicationStatusChanged ────────────────────────────────────────────

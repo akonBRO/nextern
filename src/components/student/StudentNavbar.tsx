@@ -3,14 +3,18 @@
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import {
+  Award,
   BriefcaseBusiness,
+  CalendarDays,
   ChevronDown,
   ClipboardList,
+  Edit,
   FolderKanban,
   Home,
   LogOut,
   Mail,
   UserCircle2,
+  Users,
   Wallet,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -24,6 +28,7 @@ interface NavbarProps {
     email: string;
     image?: string;
     userId: string;
+    role?: string;
     opportunityScore: number;
     profileCompleteness: number;
     unreadNotifications: number;
@@ -34,6 +39,8 @@ interface NavbarProps {
 export default function StudentNavbar({ user }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [freelanceMenuOpen, setFreelanceMenuOpen] = useState(false);
+  const isMentorMode = user.role === 'alumni';
+
   const initials = user.name
     .split(' ')
     .map((part) => part[0])
@@ -84,7 +91,7 @@ export default function StudentNavbar({ user }: NavbarProps) {
             markRadius={12}
             textSize={18}
             textColor="#FFFFFF"
-            subtitle="Student dashboard"
+            subtitle={isMentorMode ? 'Mentor dashboard' : 'Student dashboard'}
             subtitleColor="#94A3B8"
           />
         </Link>
@@ -92,170 +99,245 @@ export default function StudentNavbar({ user }: NavbarProps) {
         {/* ── Nav links + user menu ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           {/* Nav links */}
-          <Link
-            href="/student/dashboard"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              color: '#CBD5E1',
-              textDecoration: 'none',
-              fontSize: 13,
-              fontWeight: 700,
-            }}
-          >
-            <Home size={15} strokeWidth={2} />
-            Overview
-          </Link>
+          {!isMentorMode && (
+            <>
+              <Link
+                href="/student/dashboard"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  color: '#CBD5E1',
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                <Home size={15} strokeWidth={2} />
+                Overview
+              </Link>
 
-          <Link
-            href="/student/jobs"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              color: '#CBD5E1',
-              textDecoration: 'none',
-              fontSize: 13,
-              fontWeight: 700,
-            }}
-          >
-            <BriefcaseBusiness size={15} strokeWidth={2} />
-            Jobs
-          </Link>
+              <Link
+                href="/student/jobs"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  color: '#CBD5E1',
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                <BriefcaseBusiness size={15} strokeWidth={2} />
+                Jobs
+              </Link>
 
-          <Link
-            href="/student/applications"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              color: '#CBD5E1',
-              textDecoration: 'none',
-              fontSize: 13,
-              fontWeight: 700,
-            }}
-          >
-            <ClipboardList size={15} strokeWidth={2} />
-            Applications
-          </Link>
+              <Link
+                href="/student/applications"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  color: '#CBD5E1',
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                <ClipboardList size={15} strokeWidth={2} />
+                Applications
+              </Link>
+            </>
+          )}
 
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => setFreelanceMenuOpen((value) => !value)}
+          {!isMentorMode && (
+            <Link
+              href="/student/mentorship"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
-                border: 'none',
-                background: 'transparent',
                 color: '#CBD5E1',
+                textDecoration: 'none',
                 fontSize: 13,
                 fontWeight: 700,
-                cursor: 'pointer',
-                padding: 0,
               }}
             >
-              <FolderKanban size={15} strokeWidth={2} />
-              Freelance
-              <ChevronDown
-                size={14}
-                strokeWidth={2}
-                style={{
-                  transform: freelanceMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                  transition: 'transform 0.2s ease',
-                }}
-              />
-            </button>
+              <Users size={15} strokeWidth={2} />
+              Mentors
+            </Link>
+          )}
 
-            {freelanceMenuOpen && (
-              <div
+          {/* ── Mentor-only nav links ── */}
+          {isMentorMode && (
+            <>
+              <Link
+                href="/student/mentorship/dashboard"
                 style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 10px)',
-                  left: 0,
-                  zIndex: 90,
-                  width: 260,
-                  background: '#FFFFFF',
-                  borderRadius: 18,
-                  border: '1px solid #D9E2EC',
-                  boxShadow: '0 18px 42px rgba(15,23,42,0.12)',
-                  padding: 10,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  color: '#CBD5E1',
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  fontWeight: 700,
                 }}
               >
-                {[
-                  {
-                    href: '/student/freelance?view=board',
-                    label: 'Marketplace',
-                    description: 'Browse the live freelance board',
-                    icon: <FolderKanban size={15} strokeWidth={2} />,
-                  },
-                  {
-                    href: '/student/freelance?view=services',
-                    label: 'My Services',
-                    description: 'Manage your service listings',
-                    icon: <BriefcaseBusiness size={15} strokeWidth={2} />,
-                  },
-                  {
-                    href: '/student/freelance?view=freelancerOrders',
-                    label: 'Freelancer Orders',
-                    description: 'Track work you are delivering',
-                    icon: <ClipboardList size={15} strokeWidth={2} />,
-                  },
-                  {
-                    href: '/student/freelance?view=finance',
-                    label: 'Earnings & Invoices',
-                    description: 'View balance, invoices, and withdrawals',
-                    icon: <Wallet size={15} strokeWidth={2} />,
-                  },
-                ].map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setFreelanceMenuOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 10,
-                      padding: '11px 12px',
-                      borderRadius: 12,
-                      textDecoration: 'none',
-                      color: '#1E293B',
-                      background: '#F8FAFC',
-                      border: '1px solid #E2E8F0',
-                      marginBottom: 6,
-                    }}
-                    onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
-                    onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
-                  >
-                    <div
+                <CalendarDays size={15} strokeWidth={2} />
+                Sessions
+              </Link>
+              <Link
+                href="/student/mentorship/dashboard?tab=achievements"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  color: '#CBD5E1',
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                <Award size={15} strokeWidth={2} />
+                Achievements
+              </Link>
+              <Link
+                href="/student/mentorship/dashboard?tab=profile"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 7,
+                  color: '#CBD5E1',
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                <Edit size={15} strokeWidth={2} />
+                Edit Profile
+              </Link>
+            </>
+          )}
+
+          {!isMentorMode && (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setFreelanceMenuOpen((value) => !value)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#CBD5E1',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                <FolderKanban size={15} strokeWidth={2} />
+                Freelance
+                <ChevronDown
+                  size={14}
+                  strokeWidth={2}
+                  style={{
+                    transform: freelanceMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
+                  }}
+                />
+              </button>
+
+              {freelanceMenuOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 10px)',
+                    left: 0,
+                    zIndex: 90,
+                    width: 260,
+                    background: '#FFFFFF',
+                    borderRadius: 18,
+                    border: '1px solid #D9E2EC',
+                    boxShadow: '0 18px 42px rgba(15,23,42,0.12)',
+                    padding: 10,
+                  }}
+                >
+                  {[
+                    {
+                      href: '/student/freelance?view=board',
+                      label: 'Marketplace',
+                      description: 'Browse the live freelance board',
+                      icon: <FolderKanban size={15} strokeWidth={2} />,
+                    },
+                    {
+                      href: '/student/freelance?view=services',
+                      label: 'My Services',
+                      description: 'Manage your service listings',
+                      icon: <BriefcaseBusiness size={15} strokeWidth={2} />,
+                    },
+                    {
+                      href: '/student/freelance?view=freelancerOrders',
+                      label: 'Freelancer Orders',
+                      description: 'Track work you are delivering',
+                      icon: <ClipboardList size={15} strokeWidth={2} />,
+                    },
+                    {
+                      href: '/student/freelance?view=finance',
+                      label: 'Earnings & Invoices',
+                      description: 'View balance, invoices, and withdrawals',
+                      icon: <Wallet size={15} strokeWidth={2} />,
+                    },
+                  ].map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setFreelanceMenuOpen(false)}
                       style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 10,
-                        background: '#EFF6FF',
-                        color: '#2563EB',
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
+                        alignItems: 'flex-start',
+                        gap: 10,
+                        padding: '11px 12px',
+                        borderRadius: 12,
+                        textDecoration: 'none',
+                        color: '#1E293B',
+                        background: '#F8FAFC',
+                        border: '1px solid #E2E8F0',
+                        marginBottom: 6,
                       }}
+                      onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
+                      onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
                     >
-                      {item.icon}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
-                        {item.label}
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 10,
+                          background: '#EFF6FF',
+                          color: '#2563EB',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {item.icon}
                       </div>
-                      <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
-                        {item.description}
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                          {item.label}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                          {item.description}
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Messages chip — static */}
           {user.userId ? (
@@ -357,7 +439,9 @@ export default function StudentNavbar({ user }: NavbarProps) {
               )}
               <div style={{ textAlign: 'left' }}>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{user.name}</div>
-                <div style={{ fontSize: 11, color: '#94A3B8' }}>{user.opportunityScore} score</div>
+                <div style={{ fontSize: 11, color: '#94A3B8' }}>
+                  {isMentorMode ? 'Mentor' : `${user.opportunityScore} score`}
+                </div>
               </div>
               <ChevronDown
                 size={14}
@@ -400,12 +484,14 @@ export default function StudentNavbar({ user }: NavbarProps) {
                       alignItems: 'center',
                       gap: 6,
                       fontSize: 12,
-                      color: '#2563EB',
+                      color: isMentorMode ? '#7C3AED' : '#2563EB',
                       fontWeight: 700,
                     }}
                   >
                     <UserCircle2 size={13} />
-                    {user.profileCompleteness}% profile complete
+                    {isMentorMode
+                      ? 'Alumni Mentor'
+                      : `${user.profileCompleteness}% profile complete`}
                   </div>
                 </div>
 
@@ -453,94 +539,189 @@ export default function StudentNavbar({ user }: NavbarProps) {
                     </div>
                   </Link>
 
-                  {/* Browse Jobs */}
-                  <Link
-                    href="/student/jobs"
-                    onClick={() => setMenuOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      padding: '11px 12px',
-                      borderRadius: 12,
-                      textDecoration: 'none',
-                      color: '#1E293B',
-                      background: '#F8FAFC',
-                      border: '1px solid #E2E8F0',
-                    }}
-                    onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
-                    onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
-                  >
-                    <div
+                  {/* Browse Jobs — hidden for alumni mentors */}
+                  {!isMentorMode && (
+                    <Link
+                      href="/student/jobs"
+                      onClick={() => setMenuOpen(false)}
                       style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 10,
-                        background: '#EFF6FF',
-                        color: '#2563EB',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
+                        gap: 10,
+                        padding: '11px 12px',
+                        borderRadius: 12,
+                        textDecoration: 'none',
+                        color: '#1E293B',
+                        background: '#F8FAFC',
+                        border: '1px solid #E2E8F0',
                       }}
+                      onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
+                      onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
                     >
-                      <BriefcaseBusiness size={15} strokeWidth={2} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
-                        Browse Jobs
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 10,
+                          background: '#EFF6FF',
+                          color: '#2563EB',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <BriefcaseBusiness size={15} strokeWidth={2} />
                       </div>
-                      <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
-                        Find internships and roles
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                          Browse Jobs
+                        </div>
+                        <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                          Find internships and roles
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  )}
 
-                  {/* My Applications */}
-                  <Link
-                    href="/student/applications"
-                    onClick={() => setMenuOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      padding: '11px 12px',
-                      borderRadius: 12,
-                      textDecoration: 'none',
-                      color: '#1E293B',
-                      background: '#F8FAFC',
-                      border: '1px solid #E2E8F0',
-                    }}
-                    onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
-                    onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
-                  >
-                    <div
+                  {/* My Applications — hidden for alumni mentors */}
+                  {!isMentorMode && (
+                    <Link
+                      href="/student/applications"
+                      onClick={() => setMenuOpen(false)}
                       style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 10,
-                        background: '#EFF6FF',
-                        color: '#2563EB',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
+                        gap: 10,
+                        padding: '11px 12px',
+                        borderRadius: 12,
+                        textDecoration: 'none',
+                        color: '#1E293B',
+                        background: '#F8FAFC',
+                        border: '1px solid #E2E8F0',
                       }}
+                      onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
+                      onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
                     >
-                      <ClipboardList size={15} strokeWidth={2} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
-                        My Applications
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 10,
+                          background: '#EFF6FF',
+                          color: '#2563EB',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <ClipboardList size={15} strokeWidth={2} />
                       </div>
-                      <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
-                        Track your pipeline
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                          My Applications
+                        </div>
+                        <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                          Track your pipeline
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  )}
 
+                  {/* Freelance Board — hidden for alumni mentors */}
+                  {!isMentorMode && (
+                    <Link
+                      href="/student/freelance?view=board"
+                      onClick={() => setMenuOpen(false)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        padding: '11px 12px',
+                        borderRadius: 12,
+                        textDecoration: 'none',
+                        color: '#1E293B',
+                        background: '#F8FAFC',
+                        border: '1px solid #E2E8F0',
+                      }}
+                      onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
+                      onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
+                    >
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 10,
+                          background: '#EFF6FF',
+                          color: '#2563EB',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <FolderKanban size={15} strokeWidth={2} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                          Freelance Board
+                        </div>
+                        <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                          Offer services and manage gigs
+                        </div>
+                      </div>
+                    </Link>
+                  )}
+
+                  {/* Mentor-specific: My Sessions — only for alumni */}
+                  {isMentorMode && (
+                    <Link
+                      href="/student/mentorship/sessions"
+                      onClick={() => setMenuOpen(false)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        padding: '11px 12px',
+                        borderRadius: 12,
+                        textDecoration: 'none',
+                        color: '#1E293B',
+                        background: '#F8FAFC',
+                        border: '1px solid #E2E8F0',
+                      }}
+                      onMouseOver={(e) => (e.currentTarget.style.background = '#EFF6FF')}
+                      onMouseOut={(e) => (e.currentTarget.style.background = '#F8FAFC')}
+                    >
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 10,
+                          background: '#EFF6FF',
+                          color: '#2563EB',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <CalendarDays size={15} strokeWidth={2} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                          My Sessions
+                        </div>
+                        <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                          View scheduled sessions
+                        </div>
+                      </div>
+                    </Link>
+                  )}
+
+                  {/* Mentorship Hub */}
                   <Link
-                    href="/student/freelance?view=board"
+                    href={isMentorMode ? '/student/mentorship/dashboard' : '/student/mentorship'}
                     onClick={() => setMenuOpen(false)}
                     style={{
                       display: 'flex',
@@ -569,14 +750,16 @@ export default function StudentNavbar({ user }: NavbarProps) {
                         flexShrink: 0,
                       }}
                     >
-                      <FolderKanban size={15} strokeWidth={2} />
+                      <Users size={15} strokeWidth={2} />
                     </div>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
-                        Freelance Board
+                        {isMentorMode ? 'Mentor Dashboard' : 'Mentorship Hub'}
                       </div>
                       <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
-                        Offer services and manage gigs
+                        {isMentorMode
+                          ? 'Go to your mentor overview'
+                          : 'Manage sessions and mentors'}
                       </div>
                     </div>
                   </Link>
