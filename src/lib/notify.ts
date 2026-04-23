@@ -204,7 +204,7 @@ export async function notifyApplicationStatusChanged(
 
   // ── Check notification preference before sending ──
   const student = await User.findById(studentId)
-    .select('name email notificationPreferences')
+    .select('name email notificationPreferences emailPreferences')
     .lean();
 
   if (!student) return;
@@ -212,6 +212,9 @@ export async function notifyApplicationStatusChanged(
   const prefs = normalizeNotificationPreferences(
     (student as { notificationPreferences?: Record<string, boolean> } | null)
       ?.notificationPreferences
+  );
+  const emailPrefs = normalizeEmailPreferences(
+    (student as { emailPreferences?: Record<string, boolean> } | null)?.emailPreferences
   );
 
   if (prefs[cfg.prefKey] === false) return; // student turned this off
@@ -237,7 +240,7 @@ export async function notifyApplicationStatusChanged(
     ? (newStatus as ApplicationStatusEmailType)
     : null;
 
-  if (emailStatus && student.email) {
+  if (emailStatus && student.email && emailPrefs[cfg.prefKey] !== false) {
     const appUrl = (process.env.NEXTAUTH_URL ?? 'http://localhost:3000').replace(/\/$/, '');
     const { subject, html } =
       emailStatus === 'assessment_sent'
@@ -286,6 +289,13 @@ const DEFAULT_NOTIFICATION_PREFERENCES: Record<string, boolean> = {
 
 const DEFAULT_EMAIL_PREFERENCES: Record<string, boolean> = {
   application_received: true,
+  application_under_review: true,
+  application_shortlisted: true,
+  application_assessment_sent: true,
+  application_interview: true,
+  application_hired: true,
+  application_rejected: true,
+  application_withdrawn: true,
   deadline_reminders: true,
   event_registrations: true,
   event_reminders: true,
