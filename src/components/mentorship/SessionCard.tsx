@@ -38,7 +38,6 @@ interface Props {
 }
 
 export default function SessionCard({ session, role, onAction, onJoinVideo }: Props) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
   const otherUser = role === 'student' ? session.mentorId?.userId : session.studentId;
 
@@ -111,142 +110,96 @@ export default function SessionCard({ session, role, onAction, onJoinVideo }: Pr
           </div>
         </div>
 
-        <div style={{ position: 'relative' }}>
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#94A3B8',
-              padding: 4,
-            }}
-          >
-            <MoreVertical size={20} />
-          </button>
-
-          {menuOpen && (
-            <div
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {role === 'mentor' && session.status === 'pending' && (
+            <>
+              <button
+                onClick={() => onAction(session._id, 'accept')}
+                style={{
+                  padding: '6px 14px',
+                  background: '#10B981',
+                  color: '#FFFFFF',
+                  borderRadius: 8,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  boxShadow: '0 2px 4px rgba(16,185,129,0.2)',
+                }}
+              >
+                Accept
+              </button>
+              <button
+                onClick={() => onAction(session._id, 'reject')}
+                style={{
+                  padding: '6px 14px',
+                  background: '#FEE2E2',
+                  color: '#EF4444',
+                  borderRadius: 8,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                Reject
+              </button>
+            </>
+          )}
+          {role === 'mentor' && session.status === 'accepted' && (
+            <button
+              onClick={() => onAction(session._id, 'complete')}
               style={{
-                position: 'absolute',
-                top: '100%',
-                right: 0,
-                width: 160,
-                background: '#FFFFFF',
-                borderRadius: 12,
-                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                border: '1px solid #E2E8F0',
-                zIndex: 10,
-                overflow: 'hidden',
+                padding: '6px 14px',
+                background: '#10B981',
+                color: '#FFFFFF',
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 600,
+                boxShadow: '0 2px 4px rgba(16,185,129,0.2)',
               }}
             >
-              {role === 'mentor' && session.status === 'pending' && (
-                <>
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onAction(session._id, 'accept');
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '10px 16px',
-                      textAlign: 'left',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: 13,
-                      color: '#10B981',
-                      fontWeight: 600,
-                    }}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onAction(session._id, 'reject');
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '10px 16px',
-                      textAlign: 'left',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: 13,
-                      color: '#EF4444',
-                      fontWeight: 600,
-                    }}
-                  >
-                    Reject
-                  </button>
-                </>
-              )}
-              {session.status === 'accepted' && (
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onAction(session._id, 'complete');
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '10px 16px',
-                    textAlign: 'left',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                    color: '#10B981',
-                    fontWeight: 600,
-                  }}
-                >
-                  Mark Completed
-                </button>
-              )}
-              {['pending', 'accepted'].includes(session.status) && (
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onAction(session._id, 'cancel');
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '10px 16px',
-                    textAlign: 'left',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                    color: '#64748B',
-                    fontWeight: 600,
-                  }}
-                >
-                  Cancel Session
-                </button>
-              )}
-              {role === 'student' && session.status === 'completed' && (
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onAction(session._id, 'rate');
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '10px 16px',
-                    textAlign: 'left',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                    color: '#F59E0B',
-                    fontWeight: 600,
-                  }}
-                >
-                  Rate Session
-                </button>
-              )}
-            </div>
+              Mark Done
+            </button>
           )}
+          {['pending', 'accepted'].includes(session.status) && (
+            <button
+              onClick={() => onAction(session._id, 'cancel')}
+              style={{
+                padding: '6px 14px',
+                background: '#F1F5F9',
+                color: '#64748B',
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              Cancel
+            </button>
+          )}
+          {role === 'student' &&
+            ['completed', 'rejected', 'cancelled'].includes(session.status) && (
+              <button
+                onClick={() => onAction(session._id, 'rate')}
+                style={{
+                  padding: '6px 14px',
+                  background: '#F59E0B',
+                  color: '#FFFFFF',
+                  borderRadius: 8,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  boxShadow: '0 2px 4px rgba(245,158,11,0.2)',
+                }}
+              >
+                Leave Review
+              </button>
+            )}
         </div>
       </div>
 

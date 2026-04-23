@@ -63,7 +63,7 @@ export default function MyMentorSessionsPage() {
   );
 
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', padding: '40px 24px' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40 }}>
         <Link
           href="/student/mentorship"
@@ -103,7 +103,7 @@ export default function MyMentorSessionsPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gap: 40 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40 }}>
         {/* Upcoming */}
         <section>
           <h2
@@ -123,7 +123,15 @@ export default function MyMentorSessionsPage() {
               Loading sessions...
             </div>
           ) : upcomingSessions.length > 0 ? (
-            <div style={{ display: 'grid', gap: 20 }}>
+            <div
+              style={{
+                display: 'grid',
+                gap: 20,
+                maxHeight: 'calc(100vh - 250px)',
+                overflowY: 'auto',
+                paddingRight: 8,
+              }}
+            >
               {upcomingSessions.map((session) => (
                 <div
                   key={session._id}
@@ -131,9 +139,7 @@ export default function MyMentorSessionsPage() {
                 >
                   <SessionCard session={session} role="student" onAction={handleAction} />
                   {session.status === 'accepted' && session.agoraChannelId && (
-                    <div style={{ maxWidth: 300 }}>
-                      <VideoSessionLauncher sessionId={session._id} />
-                    </div>
+                    <VideoSessionLauncher sessionId={session._id as string} />
                   )}
                 </div>
               ))}
@@ -178,7 +184,15 @@ export default function MyMentorSessionsPage() {
             Past Sessions
           </h2>
           {loading ? null : pastSessions.length > 0 ? (
-            <div style={{ display: 'grid', gap: 20 }}>
+            <div
+              style={{
+                display: 'grid',
+                gap: 20,
+                maxHeight: 'calc(100vh - 250px)',
+                overflowY: 'auto',
+                paddingRight: 8,
+              }}
+            >
               {pastSessions.map((session) => (
                 <SessionCard
                   key={session._id}
