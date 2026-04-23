@@ -28,6 +28,24 @@ export const STUDENT_NAV_ITEMS: DashboardNavItem[] = [
     ],
   },
   {
+    label: 'Mentors',
+    icon: 'users',
+    items: [
+      {
+        label: 'Find a Mentor',
+        href: '/student/mentorship',
+        description: 'Browse the alumni directory to find professional guidance.',
+        icon: 'users',
+      },
+      {
+        label: 'My Sessions',
+        href: '/student/mentorship/sessions',
+        description: 'Track your upcoming and past mentorship sessions.',
+        icon: 'calendar',
+      },
+    ],
+  },
+  {
     label: 'Hiring Suite',
     icon: 'target',
     items: [
@@ -161,5 +179,23 @@ export const STUDENT_NAV_ITEMS: DashboardNavItem[] = [
         icon: 'file',
       },
     ],
+  },
+];
+
+export const ALUMNI_NAV_ITEMS: DashboardNavItem[] = [
+  {
+    label: 'Sessions',
+    icon: 'calendar',
+    href: '/student/mentorship/dashboard',
+  },
+  {
+    label: 'Achievements',
+    icon: 'shield',
+    href: '/student/mentorship/dashboard?tab=achievements',
+  },
+  {
+    label: 'Edit Profile',
+    icon: 'file',
+    href: '/student/mentorship/dashboard?tab=profile',
   },
 ];
