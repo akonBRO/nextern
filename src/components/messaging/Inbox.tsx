@@ -610,28 +610,66 @@ export default function Inbox({
     const ELIGIBLE = ['shortlisted', 'assessment_sent', 'interview_scheduled', 'hired'];
 
     async function checkEligibility() {
-      // Not a student, or no thread selected, or not an employer direct thread
-      if (
-        currentUserRole !== 'student' ||
-        !selectedThread ||
-        selectedThread.otherUser.role !== 'employer' ||
-        selectedThread.threadType === 'freelance_order'
-      ) {
+      if (!selectedThread || selectedThread.threadType === 'freelance_order') {
         if (!cancelled) setMessagingLocked(false);
         return;
       }
 
-      try {
-        const res = await fetch(
-          `/api/applications?employerId=${selectedThread.otherUser._id}&limit=50`
-        );
-        const d = await res.json();
-        const apps: { status: string }[] = d.applications ?? [];
-        const hasEligible = apps.some((a) => ELIGIBLE.includes(a.status));
-        if (!cancelled) setMessagingLocked(!hasEligible);
-      } catch {
-        if (!cancelled) setMessagingLocked(false);
+      // 1. Student → Employer check
+      if (currentUserRole === 'student' && selectedThread.otherUser.role === 'employer') {
+        try {
+          const res = await fetch(
+            `/api/applications?employerId=${selectedThread.otherUser._id}&limit=50`
+          );
+          const d = await res.json();
+          const apps: { status: string }[] = d.applications ?? [];
+          const hasEligible = apps.some((a) => ELIGIBLE.includes(a.status));
+          if (!cancelled) setMessagingLocked(!hasEligible);
+        } catch {
+          if (!cancelled) setMessagingLocked(false);
+        }
+        return;
       }
+
+      // 2. Student ↔ Alumni (Mentor) check
+      if (
+        (currentUserRole === 'student' && selectedThread.otherUser.role === 'alumni') ||
+        (currentUserRole === 'alumni' && selectedThread.otherUser.role === 'student')
+      ) {
+        try {
+          // Fetch the sessions involving these two
+          // For a student querying their mentor sessions, they just hit /api/mentor-sessions
+          // But it's easier to fetch all sessions and filter.
+          const roleParam = currentUserRole === 'alumni' ? '?role=mentor' : '';
+          const res = await fetch(`/api/mentor-sessions${roleParam}`, { cache: 'no-store' });
+          const d = await res.json();
+          const sessions = Array.isArray(d) ? d : [];
+
+          // Check if there is an accepted or scheduled session with the other user
+          const mentorIdToCheck =
+            currentUserRole === 'alumni' ? currentUserId : selectedThread.otherUser._id;
+          const studentIdToCheck =
+            currentUserRole === 'student' ? currentUserId : selectedThread.otherUser._id;
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const hasEligibleSession = sessions.some((s: any) => {
+            const mUserId = s.mentorId?.userId;
+            const mId = (mUserId?._id || mUserId || s.mentorId)?.toString();
+            const stId = (s.studentId?._id || s.studentId)?.toString();
+
+            const isMatch = mId === mentorIdToCheck && stId === studentIdToCheck;
+
+            return isMatch && ['accepted', 'scheduled'].includes(s.status);
+          });
+
+          if (!cancelled) setMessagingLocked(!hasEligibleSession);
+        } catch {
+          if (!cancelled) setMessagingLocked(false);
+        }
+        return;
+      }
+
+      if (!cancelled) setMessagingLocked(false);
     }
 
     checkEligibility();
@@ -1712,29 +1750,42 @@ export default function Inbox({
                       gap: 8,
                     }}
                   >
-                    🔒 You can only reply once your application is{' '}
-                    <strong>&nbsp;Shortlisted</strong>,&nbsp;
-                    <strong>Assessment Sent</strong>,&nbsp;<strong>Interview Scheduled</strong>,
-                    or&nbsp;<strong>Hired</strong>. You can still read messages from the employer.
+                    {selectedThread.otherUser.role === 'employer' ||
+                    currentUserRole === 'employer' ? (
+                      <>
+                        🔒 You can only reply once your application is{' '}
+                        <strong>&nbsp;Shortlisted</strong>,&nbsp;
+                        <strong>Assessment Sent</strong>,&nbsp;<strong>Interview Scheduled</strong>,
+                        or&nbsp;<strong>Hired</strong>. You can still read messages from the
+                        employer.
+                      </>
+                    ) : (
+                      <>
+                        🔒 You can only message each other if you have an accepted or scheduled
+                        mentorship session. Completed or pending sessions are read-only.
+                      </>
+                    )}
                   </div>
                 )}
 
-                {!messagingLocked && selectedThreadReadOnly && (
-                  <div
-                    style={{
-                      marginBottom: 12,
-                      padding: '10px 14px',
-                      borderRadius: 12,
-                      background: '#FFF7ED',
-                      border: '1px solid #FED7AA',
-                      color: '#9A3412',
-                      fontSize: 12,
-                      fontWeight: 700,
-                    }}
-                  >
-                    This freelance chat is now read-only because the order is closed.
-                  </div>
-                )}
+                {!messagingLocked &&
+                  selectedThreadReadOnly &&
+                  selectedThread?.threadType === 'freelance_order' && (
+                    <div
+                      style={{
+                        marginBottom: 12,
+                        padding: '10px 14px',
+                        borderRadius: 12,
+                        background: '#FFF7ED',
+                        border: '1px solid #FED7AA',
+                        color: '#9A3412',
+                        fontSize: 12,
+                        fontWeight: 700,
+                      }}
+                    >
+                      This freelance chat is now read-only because the order is closed.
+                    </div>
+                  )}
 
                 {/* File Previews */}
                 {!editingMsg && inputFiles.length > 0 && (
@@ -1850,7 +1901,9 @@ export default function Inbox({
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder={
                       selectedThreadReadOnly
-                        ? 'This freelance order chat is closed.'
+                        ? selectedThread?.threadType === 'freelance_order'
+                          ? 'This freelance order chat is closed.'
+                          : 'This chat is closed.'
                         : editingMsg
                           ? 'Edit message…'
                           : 'Type a message…'

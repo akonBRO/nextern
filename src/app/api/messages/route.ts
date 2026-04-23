@@ -393,7 +393,7 @@ export async function POST(req: NextRequest) {
           const activeSession = await MentorSession.findOne({
             studentId: new mongoose.Types.ObjectId(studentId),
             mentorId: mentorProfile._id,
-            status: { $in: ['pending', 'accepted', 'scheduled', 'completed'] },
+            status: { $in: ['accepted', 'scheduled'] },
           })
             .select('_id')
             .lean();
@@ -402,11 +402,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(
               {
                 error:
-                  'You can only message each other if you have a pending, accepted, scheduled, or completed mentorship session.',
+                  'You can only message each other if you have an accepted or scheduled mentorship session. Completed sessions are read-only.',
               },
               { status: 403 }
             );
           }
+        } else {
+          return NextResponse.json({ error: 'Mentor profile not found.' }, { status: 403 });
         }
       }
     }

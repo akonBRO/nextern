@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
+import { Message } from '@/models/Message';
 
 export async function POST() {
   try {
@@ -29,6 +30,11 @@ export async function POST() {
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+
+    // Delete all previous messages as a student
+    await Message.deleteMany({
+      $or: [{ senderId: session.user.id }, { receiverId: session.user.id }],
+    });
 
     return NextResponse.json({ success: true, role: user.role });
   } catch (error) {
