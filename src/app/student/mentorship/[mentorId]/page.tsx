@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, use } from 'react';
@@ -9,7 +10,7 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
   const router = useRouter();
   const { mentorId } = use(params);
 
-  const [mentor, setMentor] = useState<Record<string, unknown> | null>(null);
+  const [mentor, setMentor] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [requestModalOpen, setRequestModalOpen] = useState(false);

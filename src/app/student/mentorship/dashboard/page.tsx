@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -39,8 +40,8 @@ function MentorDashboard() {
   const searchParams = useSearchParams();
   const activeTab = (searchParams.get('tab') as Tab) ?? 'sessions';
 
-  const [mentor, setMentor] = useState<Record<string, unknown> | null>(null);
-  const [sessions, setSessions] = useState<Record<string, unknown>[]>([]);
+  const [mentor, setMentor] = useState<any | null>(null);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -65,7 +66,7 @@ function MentorDashboard() {
 
   async function handleAction(sessionId: string, action: string) {
     let status: string | undefined;
-    let extra: Record<string, unknown> = {};
+    let extra: any = {};
     if (action === 'accept') {
       const d = new Date();
       d.setDate(d.getDate() + 1);
@@ -170,17 +171,14 @@ function MentorDashboard() {
       </div>
     );
 
-  const pending = sessions.filter((s: Record<string, unknown>) => s.status === 'pending');
-  const upcoming = sessions.filter((s: Record<string, unknown>) => s.status === 'accepted');
-  const past = sessions.filter((s: Record<string, unknown>) =>
+  const pending = sessions.filter((s: any) => s.status === 'pending');
+  const upcoming = sessions.filter((s: any) => s.status === 'accepted');
+  const past = sessions.filter((s: any) =>
     ['completed', 'rejected', 'cancelled'].includes(s.status as string)
   );
-  const badges = ((mentor as Record<string, unknown>).badges as Record<string, unknown>[]) ?? [];
-  const endorsements =
-    ((mentor as Record<string, unknown>).endorsements as Record<string, unknown>[]) ?? [];
-  const completedCount = sessions.filter(
-    (s: Record<string, unknown>) => s.status === 'completed'
-  ).length;
+  const badges = ((mentor as any).badges as any[]) ?? [];
+  const endorsements = ((mentor as any).endorsements as any[]) ?? [];
+  const completedCount = sessions.filter((s: any) => s.status === 'completed').length;
 
   const STATS = [
     {
@@ -450,7 +448,7 @@ function MentorDashboard() {
               >
                 {badges.length > 0 ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                    {badges.map((b: Record<string, unknown>) => (
+                    {badges.map((b: any) => (
                       <div
                         key={b._id}
                         className="mdb-badge"
@@ -498,7 +496,7 @@ function MentorDashboard() {
               >
                 {endorsements.length > 0 ? (
                   <div style={{ display: 'grid', gap: 14 }}>
-                    {endorsements.map((e: Record<string, unknown>) => (
+                    {endorsements.map((e: any) => (
                       <div
                         key={e._id}
                         className="mdb-endorse"

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,7 +9,7 @@ import RateSessionModal from '@/components/mentorship/RateSessionModal';
 import VideoSessionLauncher from '@/components/mentorship/VideoSessionLauncher';
 
 export default function MyMentorSessionsPage() {
-  const [sessions, setSessions] = useState<Record<string, unknown>[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [rateModalOpen, setRateModalOpen] = useState(false);
