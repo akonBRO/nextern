@@ -90,6 +90,9 @@ type RecommendationRecord = {
 };
 
 function mapAcademicReview(review: AcademicReviewRecord): StudentAcademicReviewSummary {
+  const reviewer =
+    typeof review.reviewerId === 'object' && review.reviewerId ? review.reviewerId : null;
+
   return {
     id: review._id.toString(),
     headline: review.headline,
@@ -101,32 +104,11 @@ function mapAcademicReview(review: AcademicReviewRecord): StudentAcademicReviewS
     createdAt:
       review.createdAt instanceof Date ? review.createdAt.toISOString() : new Date().toISOString(),
     reviewer: {
-      name:
-        typeof review.reviewerId === 'object' && review.reviewerId && 'name' in review.reviewerId
-          ? review.reviewerId.name
-          : 'Academic reviewer',
-      role:
-        typeof review.reviewerId === 'object' && review.reviewerId && 'role' in review.reviewerId
-          ? review.reviewerId.role
-          : 'advisor',
-      designation:
-        typeof review.reviewerId === 'object' &&
-        review.reviewerId &&
-        'designation' in review.reviewerId
-          ? review.reviewerId.designation
-          : undefined,
-      department:
-        typeof review.reviewerId === 'object' &&
-        review.reviewerId &&
-        'advisoryDepartment' in review.reviewerId
-          ? review.reviewerId.advisoryDepartment
-          : undefined,
-      institution:
-        typeof review.reviewerId === 'object' &&
-        review.reviewerId &&
-        'institutionName' in review.reviewerId
-          ? review.reviewerId.institutionName
-          : undefined,
+      name: reviewer?.name ?? 'Academic reviewer',
+      role: reviewer?.role ?? 'advisor',
+      designation: reviewer?.designation,
+      department: reviewer?.advisoryDepartment,
+      institution: reviewer?.institutionName,
     },
   };
 }
@@ -134,6 +116,11 @@ function mapAcademicReview(review: AcademicReviewRecord): StudentAcademicReviewS
 function mapJobRecommendation(
   recommendation: RecommendationRecord
 ): StudentJobRecommendationSummary {
+  const recommender =
+    typeof recommendation.recommenderId === 'object' && recommendation.recommenderId
+      ? recommendation.recommenderId
+      : null;
+
   return {
     id: recommendation._id.toString(),
     title: recommendation.title,
@@ -147,24 +134,9 @@ function mapJobRecommendation(
         ? recommendation.createdAt.toISOString()
         : new Date().toISOString(),
     recommender: {
-      name:
-        typeof recommendation.recommenderId === 'object' &&
-        recommendation.recommenderId &&
-        'name' in recommendation.recommenderId
-          ? recommendation.recommenderId.name
-          : 'Academic reviewer',
-      role:
-        typeof recommendation.recommenderId === 'object' &&
-        recommendation.recommenderId &&
-        'role' in recommendation.recommenderId
-          ? recommendation.recommenderId.role
-          : 'advisor',
-      designation:
-        typeof recommendation.recommenderId === 'object' &&
-        recommendation.recommenderId &&
-        'designation' in recommendation.recommenderId
-          ? recommendation.recommenderId.designation
-          : undefined,
+      name: recommender?.name ?? 'Academic reviewer',
+      role: recommender?.role ?? 'advisor',
+      designation: recommender?.designation,
     },
     job:
       typeof recommendation.linkedJobId === 'object' &&
