@@ -73,7 +73,7 @@ export const PREMIUM_LIMITS = {
     skillGapAnalysisPerMonth: 5,
     smartJobRecommendationsPerMonth: 10,
     mockInterviewsPerMonth: 2,
-    mentorshipRequestsPerMonth: 2,
+    mentorshipRequestsPerMonth: 20,
     jobPostingsPerMonth: 3, // employers
     aiApplicantShortlistsPerMonth: 5, // employers
   },
