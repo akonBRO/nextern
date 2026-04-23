@@ -267,6 +267,20 @@ function ChipGroup({
   );
 }
 
+function toDateInputValue(date: Date) {
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().split('T')[0];
+}
+
+function normalizeCgpaInput(value: string) {
+  if (!value) return '';
+  const sanitized = value.replace(/[^\d.]/g, '');
+  if (!/^\d*(\.\d{0,2})?$/.test(sanitized)) return null;
+  const numeric = Number(sanitized);
+  if (Number.isNaN(numeric)) return sanitized;
+  return numeric > 4 ? '4.00' : sanitized;
+}
+
 export default function EditJobPage() {
   const params = useParams();
   const router = useRouter();
@@ -302,6 +316,8 @@ export default function EditJobPage() {
     academicSession: '',
     isActive: true,
   });
+  const isEvent = form.type === 'webinar' || form.type === 'workshop';
+  const todayDate = toDateInputValue(new Date());
 
   // Load existing job data
   useEffect(() => {
@@ -352,13 +368,42 @@ export default function EditJobPage() {
     });
   }
 
-  async function handleSubmit() {
-    if (!form.title.trim()) {
-      setErrors({ title: 'Title is required' });
-      return;
-    }
+  function getValidationErrors() {
+    const errs: Record<string, string> = {};
+
+    if (!form.title.trim()) errs.title = 'Title is required';
     if (!form.applicationDeadline) {
-      setErrors({ applicationDeadline: 'Deadline is required' });
+      errs.applicationDeadline = isEvent
+        ? 'Registration deadline is required'
+        : 'Deadline is required';
+    } else if (form.applicationDeadline < todayDate) {
+      errs.applicationDeadline = 'Deadline cannot be earlier than today';
+    }
+
+    if (isEvent) {
+      if (!form.startDate) {
+        errs.startDate = 'Event date is required';
+      } else if (form.startDate < form.applicationDeadline) {
+        errs.startDate = 'Event date must be on or after the registration deadline';
+      }
+    } else if (form.startDate && form.startDate < todayDate) {
+      errs.startDate = 'Start date cannot be earlier than today';
+    }
+
+    if (form.minimumCGPA) {
+      const cgpa = Number(form.minimumCGPA);
+      if (Number.isNaN(cgpa) || cgpa < 0 || cgpa > 4) {
+        errs.minimumCGPA = 'CGPA must stay between 0.00 and 4.00';
+      }
+    }
+
+    return errs;
+  }
+
+  async function handleSubmit() {
+    const errs = getValidationErrors();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
       return;
     }
 
@@ -637,15 +682,27 @@ export default function EditJobPage() {
                         type="date"
                         value={form.applicationDeadline}
                         onChange={(e) => set('applicationDeadline', e.target.value)}
-                        style={inputBase}
+                        min={todayDate}
+                        style={{
+                          ...inputBase,
+                          borderColor: errors.applicationDeadline ? C.dangerBorder : C.border,
+                        }}
                       />
                     </Field>
-                    <Field label="Start Date" required={false}>
+                    <Field
+                      label={isEvent ? 'Event Date' : 'Start Date'}
+                      required={isEvent}
+                      error={errors.startDate}
+                    >
                       <input
                         type="date"
                         value={form.startDate}
                         onChange={(e) => set('startDate', e.target.value)}
-                        style={inputBase}
+                        min={isEvent ? form.applicationDeadline || todayDate : todayDate}
+                        style={{
+                          ...inputBase,
+                          borderColor: errors.startDate ? C.dangerBorder : C.border,
+                        }}
                       />
                     </Field>
                   </div>
@@ -726,15 +783,21 @@ export default function EditJobPage() {
                     onChange={(v) => set('requiredSkills', v)}
                   />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <Field label="Minimum CGPA" required={false}>
+                    <Field label="CGPA (on scale of 4)" required={false} error={errors.minimumCGPA}>
                       <input
                         type="number"
                         value={form.minimumCGPA}
-                        onChange={(e) => set('minimumCGPA', e.target.value)}
+                        onChange={(e) => {
+                          const nextValue = normalizeCgpaInput(e.target.value);
+                          if (nextValue !== null) set('minimumCGPA', nextValue);
+                        }}
                         min="0"
                         max="4"
-                        step="0.1"
-                        style={inputBase}
+                        step="0.01"
+                        style={{
+                          ...inputBase,
+                          borderColor: errors.minimumCGPA ? C.dangerBorder : C.border,
+                        }}
                       />
                     </Field>
                     <Field label="Experience Expectations" required={false}>

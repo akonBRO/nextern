@@ -6,10 +6,16 @@ import { getBadgeDefinitionMap } from '@/lib/badge-definitions';
 import { User } from '@/models/User';
 import { Application } from '@/models/Application';
 import { BadgeAward } from '@/models/BadgeAward';
+import { FreelanceOrder } from '@/models/FreelanceOrder';
+import { OpportunityScoreHistory } from '@/models/OpportunityScoreHistory';
 import { Review } from '@/models/Review';
 import { MentorSession } from '@/models/MentorSession';
 import { computeGERScore, type RawGERInput, type GERData } from '@/lib/ger-pdf';
 import mongoose from 'mongoose';
+
+function normalizeStringList(values: Array<string | null | undefined> | undefined) {
+  return [...new Set((values ?? []).map((value) => value?.trim()).filter(Boolean) as string[])];
+}
 
 export async function buildGERData(userId: string): Promise<{
   gerData: GERData;
@@ -35,7 +41,10 @@ export async function buildGERData(userId: string): Promise<{
   const oid = new mongoose.Types.ObjectId(userId);
 
   // ── Applications ────────────────────────────────────────────────────
-  const applications = await Application.find({ studentId: oid }).lean();
+  const applications = await Application.find({
+    studentId: oid,
+    isWithdrawn: { $ne: true },
+  }).lean();
   const jobApps = applications.filter((a) => !a.isEventRegistration);
   const eventApps = applications.filter((a) => a.isEventRegistration);
   const hiredApps = jobApps.filter((a) => a.status === 'hired');
@@ -46,7 +55,7 @@ export async function buildGERData(userId: string): Promise<{
   const badges = badgeAwards.map((a) => {
     const def = studentBadgeMap.get(a.badgeSlug);
     return {
-      badgeName: a.badgeName ?? '',
+      badgeName: a.badgeName ?? def?.name ?? a.badgeSlug ?? '',
       badgeSlug: a.badgeSlug ?? '',
       marksReward: typeof def?.marksReward === 'number' ? def.marksReward : 0,
     };
@@ -85,19 +94,30 @@ export async function buildGERData(userId: string): Promise<{
   });
 
   // ── Freelance orders — graceful fallback ───────────────────────────
-  let freelanceOrderCount = 0;
-  try {
-    const FreelanceOrder = mongoose.models.FreelanceOrder;
-    if (FreelanceOrder) {
-      freelanceOrderCount = await FreelanceOrder.countDocuments({
-        freelancerId: oid,
-        status: 'completed',
-        escrowStatus: 'released',
-      });
-    }
-  } catch {
-    /* model not yet built */
-  }
+  const freelanceOrderCount = await FreelanceOrder.countDocuments({
+    freelancerId: oid,
+    status: 'completed',
+    escrowStatus: 'released',
+  });
+
+  const profileSkills = normalizeStringList(user.skills);
+  const closedSkillGaps = normalizeStringList(user.closedSkillGaps);
+  const completedCourses = normalizeStringList(user.completedCourses);
+  const certifications = normalizeStringList(
+    (user.certifications ?? []).map((cert: { name?: string | null }) => cert.name)
+  );
+  const projects = normalizeStringList(
+    (user.projects ?? []).map((project: { title?: string | null }) => project.title)
+  );
+  const verifiedPortfolioCount = (user.verifiedPortfolioItems ?? []).filter(
+    (item: { title?: string | null; freelanceOrderId?: mongoose.Types.ObjectId | null }) =>
+      Boolean(item?.freelanceOrderId) || Boolean(item?.title?.trim())
+  ).length;
+  const effectiveFreelanceCount = Math.max(freelanceOrderCount, verifiedPortfolioCount);
+  const latestOpportunitySnapshot = await OpportunityScoreHistory.findOne({ userId: oid })
+    .sort({ createdAt: -1 })
+    .select('scoreAfter')
+    .lean();
 
   // ── Build RawGERInput ───────────────────────────────────────────────
   const raw: RawGERInput = {
@@ -110,21 +130,23 @@ export async function buildGERData(userId: string): Promise<{
     cgpaScore: user.cgpa ?? 0,
     gender: user.gender as 'male' | 'female' | 'other' | undefined,
     graduatedAt: new Date().toISOString(),
-    opportunityScore: user.opportunityScore ?? 0,
-    skills: user.skills ?? [],
-    closedSkillGaps: user.closedSkillGaps ?? [],
+    opportunityScore:
+      latestOpportunitySnapshot?.scoreAfter ??
+      (typeof user.opportunityScore === 'number' ? user.opportunityScore : 0),
+    skills: profileSkills,
+    closedSkillGaps,
     applicationCount: jobApps.length,
     eventCount: eventApps.length,
     hiredCount: hiredApps.length,
     mentorSessionCount,
-    freelanceOrderCount,
+    freelanceOrderCount: effectiveFreelanceCount,
     badges,
     // Real review data — not fitScore proxy
     employerEndorsementCount: employerReviews.length,
     avgEmployerRating: parseFloat(avgEmployerRating.toFixed(2)),
-    completedCourses: user.completedCourses ?? [],
-    certifications: (user.certifications ?? []).map((c: { name?: string }) => c.name ?? ''),
-    projects: (user.projects ?? []).map((p: { title?: string }) => p.title ?? ''),
+    completedCourses,
+    certifications,
+    projects,
   };
 
   const gerData = computeGERScore(raw);
@@ -139,7 +161,7 @@ export async function buildGERData(userId: string): Promise<{
       eventCount: eventApps.length,
       hiredCount: hiredApps.length,
       mentorSessions: mentorSessionCount,
-      freelanceOrders: freelanceOrderCount,
+      freelanceOrders: effectiveFreelanceCount,
       badgeCount: badges.length,
       reviewCount: employerReviews.length,
     },

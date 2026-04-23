@@ -9,6 +9,7 @@ import {
   Bell,
   Briefcase,
   CalendarDays,
+  CalendarClock,
   CheckCheck,
   ExternalLink,
   Filter,
@@ -56,6 +57,7 @@ type Props = {
   title: string;
   subtitle: string;
   filterTabs?: FilterTab[];
+  defaultFilter?: string;
 };
 
 const DEFAULT_TYPE_CONFIG: Record<
@@ -118,11 +120,25 @@ const DEFAULT_TYPE_CONFIG: Record<
     label: 'Advisor',
   },
   interview_scheduled: {
-    icon: <CalendarDays size={15} />,
+    icon: <CalendarClock size={15} />,
     color: '#059669',
     bg: '#ECFDF5',
     border: '#A7F3D0',
     label: 'Interview',
+  },
+  mentorship_request: {
+    icon: <Users size={15} />,
+    color: '#6366F1',
+    bg: '#EEF2FF',
+    border: '#C7D2FE',
+    label: 'Mentor Request',
+  },
+  mentorship_accepted: {
+    icon: <CheckCheck size={15} />,
+    color: '#059669',
+    bg: '#ECFDF5',
+    border: '#A7F3D0',
+    label: 'Mentorship',
   },
   score_update: {
     icon: <TrendingUp size={15} />,
@@ -180,13 +196,18 @@ export default function NotificationsPageClient({
   title,
   subtitle,
   filterTabs = DEFAULT_FILTER_TABS,
+  defaultFilter = 'all',
 }: Props) {
   const [notifications, setNotifs] = useState<Notif[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
   const [markingAll, setMarkingAll] = useState(false);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState(defaultFilter);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+
+  useEffect(() => {
+    setFilter(defaultFilter);
+  }, [defaultFilter]);
 
   const fetchNotifs = useCallback(async () => {
     setLoading(true);

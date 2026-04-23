@@ -226,6 +226,11 @@ const BD_DEPTS = [
   'Accounting',
 ];
 
+function toDateInputValue(date: Date) {
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().split('T')[0];
+}
+
 export default function NewEventPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -247,6 +252,7 @@ export default function NewEventPage() {
     academicSession: '',
     isActive: true,
   });
+  const todayDate = toDateInputValue(new Date());
 
   function set(field: string, value: unknown) {
     setForm((p) => ({ ...p, [field]: value }));
@@ -262,7 +268,11 @@ export default function NewEventPage() {
     if (!form.title.trim()) errs.title = 'Title is required';
     if (form.description.length < 20) errs.description = 'At least 20 characters required';
     if (!form.applicationDeadline) errs.applicationDeadline = 'Event deadline is required';
+    else if (form.applicationDeadline < todayDate) {
+      errs.applicationDeadline = 'Registration deadline cannot be earlier than today';
+    }
     if (!form.startDate) errs.startDate = 'Event date is required';
+    else if (form.startDate < todayDate) errs.startDate = 'Event date cannot be earlier than today';
     if (form.applicationDeadline && form.startDate && form.startDate < form.applicationDeadline) {
       errs.startDate = 'Event date must be on or after the registration deadline';
     }
@@ -483,6 +493,7 @@ export default function NewEventPage() {
                   type="date"
                   value={form.applicationDeadline}
                   onChange={(e) => set('applicationDeadline', e.target.value)}
+                  min={todayDate}
                   style={{
                     ...inputBase,
                     borderColor: errors.applicationDeadline ? C.dangerBorder : C.border,
@@ -494,6 +505,7 @@ export default function NewEventPage() {
                   type="date"
                   value={form.startDate}
                   onChange={(e) => set('startDate', e.target.value)}
+                  min={form.applicationDeadline || todayDate}
                   style={{
                     ...inputBase,
                     borderColor: errors.startDate ? C.dangerBorder : C.border,

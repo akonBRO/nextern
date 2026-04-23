@@ -393,10 +393,9 @@ export async function generateGERPDF(data: GERData): Promise<Buffer> {
     cy = doc.y + 12;
 
     const para2start =
-      `Upon comprehensive evaluation across eight weighted performance categories — encompassing ` +
-      `academic standing, skill growth, platform engagement, mentorship, freelance experience, peer ` +
-      `recognition, employer endorsements, and opportunity readiness — ${p.subj} has been assessed and ` +
-      `awarded a `;
+      `Upon comprehensive evaluation conducted through the Nextern Career Readiness Platform, ` +
+      `spanning multiple weighted performance dimensions reflective of both academic and ` +
+      `professional preparedness — ${p.subj} has been assessed and awarded a `;
     const para2bold = `Graduation Evaluation Score of ${data.totalScore} out of 100`;
 
     doc

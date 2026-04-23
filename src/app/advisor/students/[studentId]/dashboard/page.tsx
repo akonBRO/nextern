@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
-import { getStudentAcademicFeedback } from '@/lib/academic-feedback';
+import { getTeacherScopedAcademicFeedback } from '@/lib/academic-feedback';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 import { getStudentDashboardData } from '@/lib/student-dashboard';
@@ -41,14 +41,18 @@ export default async function AdvisorStudentDashboardPreviewPage({ params }: { p
 
   let calendarEvents: Awaited<ReturnType<typeof getUpcomingCalendarEvents>> = [];
   let isCalendarConnected = false;
-  let academicReviews: Awaited<ReturnType<typeof getStudentAcademicFeedback>>['reviews'] = [];
+  let academicReviews: Awaited<ReturnType<typeof getTeacherScopedAcademicFeedback>>['reviews'] = [];
 
   try {
     await connectDB();
     const [events, calUser, feedback] = await Promise.all([
       getUpcomingCalendarEvents(studentId, 24),
       User.findById(studentId).select('googleCalendarConnected').lean(),
-      getStudentAcademicFeedback(studentId),
+      getTeacherScopedAcademicFeedback({
+        studentId,
+        viewerId: session.user.id,
+        viewerRole: 'advisor',
+      }),
     ]);
     calendarEvents = events;
     isCalendarConnected = calUser?.googleCalendarConnected ?? false;
