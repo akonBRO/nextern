@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function RequestSessionModal({ isOpen, mentorId, onClose, onSuccess }: Props) {
-  const [sessionType, setSessionType] = useState('career_guidance');
+  const [sessionType, setSessionType] = useState('career_advice');
   const [studentNotes, setStudentNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -148,11 +148,10 @@ export default function RequestSessionModal({ isOpen, mentorId, onClose, onSucce
                   outline: 'none',
                 }}
               >
-                <option value="career_guidance">Career Guidance</option>
+                <option value="career_advice">Career Guidance</option>
                 <option value="resume_review">Resume / Portfolio Review</option>
-                <option value="interview_prep">Interview Preparation</option>
-                <option value="technical_help">Technical Help</option>
-                <option value="networking">Networking Advice</option>
+                <option value="mock_interview">Interview Preparation</option>
+                <option value="general">Technical Help & Networking</option>
               </select>
             </div>
 

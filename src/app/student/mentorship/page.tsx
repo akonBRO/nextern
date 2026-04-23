@@ -96,34 +96,11 @@ export default function BrowseMentorsPage() {
             <CalendarDays size={18} />
             My Sessions
           </Link>
-          <Link
-            href="/student/mentorship/dashboard"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '12px 20px',
-              borderRadius: 12,
-              background: 'linear-gradient(135deg, #1E293B, #0F172A)',
-              color: '#FFFFFF',
-              fontWeight: 700,
-              fontSize: 14,
-              border: 'none',
-              textDecoration: 'none',
-              boxShadow: '0 4px 12px rgba(15,23,42,0.2)',
-            }}
-          >
-            <LayoutDashboard size={18} />
-            Mentor Dashboard
-          </Link>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 32 }}>
-        <div>
-          <MentorFilterSidebar onFilterChange={setFilters} />
-        </div>
-
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+        <MentorFilterSidebar onFilterChange={setFilters} />
         <div>
           {loading ? (
             <div
@@ -137,6 +114,9 @@ export default function BrowseMentorsPage() {
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
                 gap: 24,
+                maxHeight: 'calc(100vh - 250px)',
+                overflowY: 'auto',
+                paddingRight: '8px',
               }}
             >
               {mentors.map((mentor) => (

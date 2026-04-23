@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Mentor } from '@/models/Mentor';
 import { User } from '@/models/User';
+import { BadgeAward } from '@/models/BadgeAward';
 import mongoose from 'mongoose';
 
 export async function GET(req: NextRequest) {
@@ -37,7 +38,24 @@ export async function GET(req: NextRequest) {
       .sort({ averageRating: -1, totalSessions: -1 })
       .lean();
 
-    return NextResponse.json(mentors);
+    const userIds = mentors.map((m) => m.userId._id);
+    const badgeAwards = await BadgeAward.find({
+      userId: { $in: userIds },
+      isDisplayed: true,
+    }).lean();
+
+    const mentorsWithBadges = mentors.map((m) => {
+      const userBadges = badgeAwards.filter((ba) => String(ba.userId) === String(m.userId._id));
+      return {
+        ...m,
+        badges: userBadges.map((ba) => ({
+          badgeName: ba.badgeName,
+          badgeIcon: ba.badgeIcon,
+        })),
+      };
+    });
+
+    return NextResponse.json(mentorsWithBadges);
   } catch (error) {
     console.error('[GET MENTORS ERROR]', error);
     return NextResponse.json({ error: 'Failed to fetch mentors' }, { status: 500 });

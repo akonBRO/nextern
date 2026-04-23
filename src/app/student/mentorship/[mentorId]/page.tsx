@@ -216,68 +216,130 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
               <span style={{ color: '#1E293B', fontWeight: 700 }}>{mentor.currentCompany}</span>
             </p>
 
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 32 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: 14,
-                  color: '#475569',
-                }}
-              >
-                <Star size={18} color="#EAB308" fill="#EAB308" />
-                <span style={{ fontWeight: 700, color: '#1E293B' }}>
-                  {mentor.averageRating > 0 ? mentor.averageRating.toFixed(1) : 'New'}
-                </span>
-                <span style={{ color: '#94A3B8' }}>({mentor.totalSessions} sessions)</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 32 }}>
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+                <div
+                  title="Average Rating from Students"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    fontSize: 15,
+                    color: '#475569',
+                    background: '#FEF3C7',
+                    border: '1px solid #FDE68A',
+                    padding: '8px 16px',
+                    borderRadius: 999,
+                  }}
+                >
+                  <Star size={20} color="#D97706" fill="#D97706" />
+                  <span style={{ fontWeight: 900, color: '#92400E' }}>
+                    {mentor.averageRating > 0 ? mentor.averageRating.toFixed(1) : 'New'}
+                  </span>
+                  <span style={{ color: '#B45309', fontSize: 13, fontWeight: 600 }}>
+                    ({mentor.totalSessions} sessions)
+                  </span>
+                </div>
+
+                <div style={{ width: 1, height: 32, background: '#E2E8F0' }}></div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontSize: 14,
+                    color: '#475569',
+                  }}
+                >
+                  <Briefcase size={18} color="#64748B" />
+                  {mentor.yearsOfExperience} yrs experience
+                </div>
+                <div style={{ width: 1, height: 32, background: '#E2E8F0' }}></div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontSize: 14,
+                    color: '#475569',
+                  }}
+                >
+                  <Building size={18} color="#64748B" />
+                  {mentor.industry}
+                </div>
+                {mentor.linkedinUrl && (
+                  <>
+                    <div style={{ width: 1, height: 32, background: '#E2E8F0' }}></div>
+                    <a
+                      href={mentor.linkedinUrl as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontSize: 14,
+                        color: '#0A66C2',
+                        textDecoration: 'none',
+                        fontWeight: 600,
+                      }}
+                    >
+                      <Linkedin size={18} /> LinkedIn
+                    </a>
+                  </>
+                )}
               </div>
-              <div style={{ width: 1, background: '#E2E8F0' }}></div>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: 14,
-                  color: '#475569',
-                }}
-              >
-                <Briefcase size={18} color="#64748B" />
-                {mentor.yearsOfExperience} yrs experience
-              </div>
-              <div style={{ width: 1, background: '#E2E8F0' }}></div>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: 14,
-                  color: '#475569',
-                }}
-              >
-                <Building size={18} color="#64748B" />
-                {mentor.industry}
-              </div>
-              {mentor.linkedinUrl && (
-                <>
-                  <div style={{ width: 1, background: '#E2E8F0' }}></div>
-                  <a
-                    href={mentor.linkedinUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+
+              {mentor.badges && mentor.badges.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                  <span
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      fontSize: 14,
-                      color: '#0A66C2',
-                      textDecoration: 'none',
-                      fontWeight: 600,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: '#64748B',
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5,
                     }}
                   >
-                    <Linkedin size={18} /> LinkedIn
-                  </a>
-                </>
+                    Achievements
+                  </span>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {(mentor.badges as { badgeName: string; badgeIcon: string }[]).map(
+                      (badge, idx) => {
+                        const isUploadthingUrl = badge.badgeIcon.startsWith('http');
+                        return (
+                          <div
+                            key={idx}
+                            title={`Achievement: ${badge.badgeName}`}
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              background: '#EFF6FF',
+                              border: '1px solid #BFDBFE',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 18,
+                              cursor: 'help',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                            }}
+                          >
+                            {isUploadthingUrl ? (
+                              <img
+                                src={badge.badgeIcon}
+                                alt={badge.badgeName}
+                                style={{ width: 20, height: 20, objectFit: 'contain' }}
+                              />
+                            ) : (
+                              <span>{badge.badgeIcon}</span>
+                            )}
+                          </div>
+                        );
+                      }
+                    )}
+                  </div>
+                </div>
               )}
             </div>
 

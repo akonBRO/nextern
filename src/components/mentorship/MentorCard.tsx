@@ -21,6 +21,7 @@ interface Mentor {
   isAvailable: boolean;
   mentorType: 'alumni' | 'professional';
   graduatedFrom?: string;
+  badges?: { badgeName: string; badgeIcon: string }[];
 }
 
 interface Props {
@@ -128,55 +129,99 @@ export default function MentorCard({ mentor, onRequestSession }: Props) {
       </div>
 
       {/* Stats row */}
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 13,
-            color: '#475569',
-            background: '#F8FAFC',
-            padding: '6px 12px',
-            borderRadius: 999,
-          }}
-        >
-          <Star size={14} color="#EAB308" fill="#EAB308" />
-          <span style={{ fontWeight: 700, color: '#1E293B' }}>
-            {mentor.averageRating > 0 ? mentor.averageRating.toFixed(1) : 'New'}
-          </span>
-          <span style={{ color: '#94A3B8' }}>({mentor.totalSessions} sessions)</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div
+            title="Average Rating from Students"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 13,
+              color: '#475569',
+              background: '#FEF3C7',
+              border: '1px solid #FDE68A',
+              padding: '6px 12px',
+              borderRadius: 999,
+            }}
+          >
+            <Star size={14} color="#D97706" fill="#D97706" />
+            <span style={{ fontWeight: 800, color: '#92400E' }}>
+              {mentor.averageRating > 0 ? mentor.averageRating.toFixed(1) : 'New'}
+            </span>
+            <span style={{ color: '#B45309' }}>({mentor.totalSessions} sessions)</span>
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 13,
+              color: '#475569',
+              background: '#F8FAFC',
+              padding: '6px 12px',
+              borderRadius: 999,
+            }}
+          >
+            <Briefcase size={14} color="#64748B" />
+            {mentor.yearsOfExperience} yrs exp.
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 13,
+              color: '#475569',
+              background: '#F8FAFC',
+              padding: '6px 12px',
+              borderRadius: 999,
+            }}
+          >
+            <Building size={14} color="#64748B" />
+            {mentor.industry}
+          </div>
         </div>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 13,
-            color: '#475569',
-            background: '#F8FAFC',
-            padding: '6px 12px',
-            borderRadius: 999,
-          }}
-        >
-          <Briefcase size={14} />
-          {mentor.yearsOfExperience} yrs exp
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 13,
-            color: '#475569',
-            background: '#F8FAFC',
-            padding: '6px 12px',
-            borderRadius: 999,
-          }}
-        >
-          <Building size={14} />
-          {mentor.industry}
-        </div>
+
+        {/* Badges Display */}
+        {mentor.badges && mentor.badges.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            {mentor.badges.map((badge, idx) => {
+              const isUploadthingUrl = badge.badgeIcon.startsWith('http');
+              return (
+                <div
+                  key={idx}
+                  title={`Achievement: ${badge.badgeName}`}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    background: '#EFF6FF',
+                    border: '1px solid #BFDBFE',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 16,
+                    cursor: 'help',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                  }}
+                >
+                  {isUploadthingUrl ? (
+                    <img
+                      src={badge.badgeIcon}
+                      alt={badge.badgeName}
+                      style={{ width: 16, height: 16, objectFit: 'contain' }}
+                    />
+                  ) : (
+                    <span>{badge.badgeIcon}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Expertise */}

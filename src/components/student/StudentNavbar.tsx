@@ -165,7 +165,7 @@ export default function StudentNavbar({ user }: NavbarProps) {
               }}
             >
               <Users size={15} strokeWidth={2} />
-              Mentorship
+              Mentors
             </Link>
           )}
 
@@ -721,7 +721,7 @@ export default function StudentNavbar({ user }: NavbarProps) {
 
                   {/* Mentorship Hub */}
                   <Link
-                    href="/student/mentorship/dashboard"
+                    href={isMentorMode ? '/student/mentorship/dashboard' : '/student/mentorship'}
                     onClick={() => setMenuOpen(false)}
                     style={{
                       display: 'flex',

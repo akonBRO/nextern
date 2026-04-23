@@ -355,7 +355,16 @@ function MentorDashboard() {
                   accent={C.accent}
                 />
                 {pending.length > 0 ? (
-                  <div style={{ display: 'grid', gap: 14, marginBottom: 32 }}>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gap: 14,
+                      marginBottom: 32,
+                      maxHeight: 'calc(100vh - 400px)',
+                      overflowY: 'auto',
+                      paddingRight: 8,
+                    }}
+                  >
                     {pending.map((s) => (
                       <SessionCard key={s._id} session={s} role="mentor" onAction={handleAction} />
                     ))}
@@ -374,7 +383,15 @@ function MentorDashboard() {
                   accent={C.accent}
                 />
                 {upcoming.length > 0 ? (
-                  <div style={{ display: 'grid', gap: 14 }}>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gap: 14,
+                      maxHeight: 'calc(100vh - 400px)',
+                      overflowY: 'auto',
+                      paddingRight: 8,
+                    }}
+                  >
                     {upcoming.map((s) => (
                       <div key={s._id} style={{ display: 'grid', gap: 10 }}>
                         <SessionCard session={s} role="mentor" onAction={handleAction} />
@@ -398,7 +415,15 @@ function MentorDashboard() {
                   accent="#16A34A"
                 />
                 {past.length > 0 ? (
-                  <div style={{ display: 'grid', gap: 14 }}>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gap: 14,
+                      maxHeight: 'calc(100vh - 250px)',
+                      overflowY: 'auto',
+                      paddingRight: 8,
+                    }}
+                  >
                     {past.map((s) => (
                       <SessionCard key={s._id} session={s} role="mentor" onAction={handleAction} />
                     ))}
