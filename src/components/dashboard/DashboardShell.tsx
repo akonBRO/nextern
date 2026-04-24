@@ -164,14 +164,59 @@ export default function DashboardShell({
             icon: 'shield' as const,
           },
         ]
-      : [
-          {
-            href: profile.href,
-            label: profile.label,
-            description: 'View and edit your profile',
-            icon: profile.icon,
-          },
-        ];
+      : role === 'employer'
+        ? [
+            {
+              href: profile.href,
+              label: profile.label,
+              description: 'View and edit your profile',
+              icon: profile.icon,
+            },
+            {
+              href: '/employer/badges',
+              label: 'Badges',
+              description: 'See your earned badges and trust signals',
+              icon: 'shield' as const,
+            },
+          ]
+        : role === 'advisor'
+          ? [
+              {
+                href: profile.href,
+                label: profile.label,
+                description: 'View and edit your profile',
+                icon: profile.icon,
+              },
+              {
+                href: '/advisor/badges',
+                label: 'Badges',
+                description: 'See your earned badges and progress',
+                icon: 'shield' as const,
+              },
+            ]
+          : role === 'departmentHead'
+            ? [
+                {
+                  href: profile.href,
+                  label: profile.label,
+                  description: 'View and edit your profile',
+                  icon: profile.icon,
+                },
+                {
+                  href: '/dept/badges',
+                  label: 'Badges',
+                  description: 'See your earned badges and leadership milestones',
+                  icon: 'shield' as const,
+                },
+              ]
+            : [
+                {
+                  href: profile.href,
+                  label: profile.label,
+                  description: 'View and edit your profile',
+                  icon: profile.icon,
+                },
+              ];
   const pathname = usePathname();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);

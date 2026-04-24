@@ -81,7 +81,6 @@ const navItems = [
       },
     ],
   },
-  { label: 'Badges', href: '/employer/badges', icon: 'shield' as const },
 ];
 
 function statusTone(isActive: boolean): 'success' | 'warning' {
