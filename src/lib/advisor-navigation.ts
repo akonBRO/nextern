@@ -53,5 +53,4 @@ export const ADVISOR_NAV_ITEMS: DashboardNavItem[] = [
     ],
   },
   { label: 'Messages', href: '/advisor/messages', icon: 'messages' },
-  { label: 'Badges', href: '/advisor/badges', icon: 'shield' },
 ];

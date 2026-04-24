@@ -118,7 +118,6 @@ export const EMPLOYER_NAV_ITEMS: DashboardNavItem[] = [
       },
     ],
   },
-  { label: 'Badges', href: '/employer/badges', icon: 'shield' },
   {
     label: 'Premium',
     icon: 'shield',

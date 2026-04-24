@@ -6,7 +6,19 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import EmployerClientShell from '@/components/employer/EmployerClientShell';
-import { CheckCircle2, AlertCircle, ChevronRight, ChevronLeft, Rocket } from 'lucide-react';
+import {
+  Check,
+  CheckCircle2,
+  AlertCircle,
+  Building2,
+  ChevronRight,
+  ChevronLeft,
+  Layers3,
+  Rocket,
+  Sparkles,
+  Target,
+  Users2,
+} from 'lucide-react';
 
 const C = {
   blue: '#2563EB',
@@ -303,6 +315,145 @@ function normalizeCgpaInput(value: string) {
   return numeric > 4 ? '4.00' : sanitized;
 }
 
+function formatSelectionSummary(items: string[], emptyLabel = 'All') {
+  if (items.length === 0) return emptyLabel;
+  if (items.length <= 3) return items.join(', ');
+  return `${items.slice(0, 3).join(', ')} +${items.length - 3} more`;
+}
+
+function ModeCard({
+  active,
+  title,
+  description,
+  meta,
+  icon,
+  onClick,
+}: {
+  active: boolean;
+  title: string;
+  description: string;
+  meta: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        width: '100%',
+        textAlign: 'left',
+        borderRadius: 18,
+        border: `1.5px solid ${active ? C.blueBorder : C.border}`,
+        background: active
+          ? 'linear-gradient(180deg, #EFF6FF 0%, #FFFFFF 100%)'
+          : 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)',
+        padding: '18px 18px 16px',
+        cursor: 'pointer',
+        boxShadow: active ? '0 16px 28px rgba(37,99,235,0.12)' : '0 6px 14px rgba(15,23,42,0.04)',
+        transition: 'all 0.18s ease',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 14,
+          marginBottom: 14,
+        }}
+      >
+        <div
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 14,
+            background: active ? 'linear-gradient(135deg, #2563EB, #0EA5E9)' : '#F1F5F9',
+            color: active ? '#fff' : '#475569',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          {icon}
+        </div>
+        <div
+          style={{
+            minWidth: 0,
+            padding: '5px 10px',
+            borderRadius: 999,
+            background: active ? '#DBEAFE' : '#F8FAFC',
+            border: `1px solid ${active ? '#BFDBFE' : '#E2E8F0'}`,
+            color: active ? '#1D4ED8' : '#64748B',
+            fontSize: 11,
+            fontWeight: 800,
+            letterSpacing: 0.2,
+          }}
+        >
+          {active ? 'Selected' : 'Available'}
+        </div>
+      </div>
+      <div style={{ fontSize: 16, fontWeight: 900, color: C.text, marginBottom: 6 }}>{title}</div>
+      <div style={{ fontSize: 13, lineHeight: 1.55, color: C.gray, marginBottom: 12 }}>
+        {description}
+      </div>
+      <div
+        style={{
+          fontSize: 12,
+          fontWeight: 700,
+          color: active ? C.blue : '#475569',
+        }}
+      >
+        {meta}
+      </div>
+    </button>
+  );
+}
+
+function MetricTile({
+  label,
+  value,
+  tone = 'blue',
+}: {
+  label: string;
+  value: string;
+  tone?: 'blue' | 'cyan' | 'green' | 'amber';
+}) {
+  const toneMap = {
+    blue: { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' },
+    cyan: { bg: '#ECFEFF', border: '#A5F3FC', color: '#0F766E' },
+    green: { bg: '#ECFDF5', border: '#A7F3D0', color: '#047857' },
+    amber: { bg: '#FFFBEB', border: '#FDE68A', color: '#B45309' },
+  }[tone];
+
+  return (
+    <div
+      style={{
+        borderRadius: 16,
+        border: `1px solid ${toneMap.border}`,
+        background: toneMap.bg,
+        padding: '14px 15px',
+      }}
+    >
+      <div style={{ fontSize: 11, fontWeight: 800, color: C.gray, textTransform: 'uppercase' }}>
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: 18,
+          fontWeight: 900,
+          color: toneMap.color,
+          marginTop: 6,
+          fontFamily: 'var(--font-display)',
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
 export default function NewJobPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -345,8 +496,85 @@ export default function NewJobPage() {
     });
   }
 
+  function setBatchHiringMode(nextValue: boolean) {
+    setForm((prev) => {
+      if (nextValue === prev.isBatchHiring) return prev;
+
+      if (nextValue) {
+        return {
+          ...prev,
+          isBatchHiring: true,
+          batchUniversities:
+            prev.batchUniversities.length > 0 ? prev.batchUniversities : prev.targetUniversities,
+        };
+      }
+
+      return {
+        ...prev,
+        isBatchHiring: false,
+        targetUniversities:
+          prev.targetUniversities.length > 0 ? prev.targetUniversities : prev.batchUniversities,
+      };
+    });
+
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.batchUniversities;
+      return next;
+    });
+  }
+
   const isEvent = form.type === 'webinar' || form.type === 'workshop';
   const todayDate = toDateInputValue(new Date());
+  const effectiveTargetUniversities = form.isBatchHiring
+    ? form.batchUniversities
+    : form.targetUniversities;
+  const selectedDepartmentsLabel = formatSelectionSummary(form.targetDepartments);
+  const selectedYearsLabel =
+    form.targetYears.length > 0
+      ? formatSelectionSummary(form.targetYears.map((year) => `Year ${year}`))
+      : 'All years';
+  const selectedUniversityCount = effectiveTargetUniversities.length;
+  const universityReachPercent = Math.round((selectedUniversityCount / BD_UNIS.length) * 100);
+  const batchHiringPresets = [
+    {
+      label: 'Top private universities',
+      values: BD_UNIS.filter((uni) =>
+        [
+          'BRAC University',
+          'North South University (NSU)',
+          'AIUB',
+          'Independent University Bangladesh (IUB)',
+          'East West University (EWU)',
+          'Daffodil International University (DIU)',
+          'ULAB',
+          'United International University (UIU)',
+        ].includes(uni)
+      ),
+    },
+    {
+      label: 'Engineering-heavy campuses',
+      values: BD_UNIS.filter((uni) =>
+        ['BUET', 'KUET', 'RUET', 'CUET', 'SUST', 'IUT'].includes(uni)
+      ),
+    },
+    {
+      label: 'Dhaka-focused mix',
+      values: BD_UNIS.filter((uni) =>
+        [
+          'BRAC University',
+          'North South University (NSU)',
+          'AIUB',
+          'Independent University Bangladesh (IUB)',
+          'East West University (EWU)',
+          'ULAB',
+          'United International University (UIU)',
+          'Dhaka University (DU)',
+          'IUT',
+        ].includes(uni)
+      ),
+    },
+  ];
 
   function getValidationErrors(target: 'step1' | 'step3' | 'submit') {
     const errs: Record<string, string> = {};
@@ -383,12 +611,20 @@ export default function NewJobPage() {
       }
     }
 
+    if (target === 'submit' && form.isBatchHiring && form.batchUniversities.length === 0) {
+      errs.batchUniversities = 'Select at least one university to launch a batch campaign';
+    }
+
     return errs;
   }
 
   function validateStep(s: number) {
-    const errs =
-      s === 1 ? getValidationErrors('step1') : s === 3 ? getValidationErrors('step3') : {};
+    const errs: Record<string, string> = {};
+    if (s === 1) Object.assign(errs, getValidationErrors('step1'));
+    if (s === 2 && form.isBatchHiring && form.batchUniversities.length === 0) {
+      errs.batchUniversities = 'Select at least one university to continue with batch hiring';
+    }
+    if (s === 3) Object.assign(errs, getValidationErrors('step3'));
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -403,6 +639,8 @@ export default function NewJobPage() {
       setErrors(errs);
       if (errs.title || errs.description || errs.applicationDeadline || errs.startDate) {
         setStep(1);
+      } else if (errs.batchUniversities) {
+        setStep(2);
       } else if (errs.minimumCGPA) {
         setStep(3);
       }
@@ -424,7 +662,7 @@ export default function NewJobPage() {
         applicationDeadline: form.applicationDeadline,
         startDate: form.startDate || undefined,
         durationMonths: form.durationMonths ? parseInt(form.durationMonths) : undefined,
-        targetUniversities: form.targetUniversities,
+        targetUniversities: effectiveTargetUniversities,
         targetDepartments: form.targetDepartments,
         targetYears: form.targetYears,
         isBatchHiring: form.isBatchHiring,
@@ -798,6 +1036,7 @@ export default function NewJobPage() {
                   {/* Batch hiring toggle */}
                   <div
                     style={{
+                      display: 'none',
                       background: form.isBatchHiring ? C.blueBg : C.bg,
                       border: `1.5px solid ${form.isBatchHiring ? C.blueBorder : C.border}`,
                       borderRadius: 14,
@@ -857,7 +1096,7 @@ export default function NewJobPage() {
                         />
                       </button>
                     </div>
-                    {form.isBatchHiring && (
+                    {false && form.isBatchHiring && (
                       <ChipGroup
                         label="Select Universities for Batch Hiring"
                         options={BD_UNIS}
@@ -867,13 +1106,580 @@ export default function NewJobPage() {
                     )}
                   </div>
 
-                  {!form.isBatchHiring && (
+                  {false && !form.isBatchHiring && (
                     <ChipGroup
                       label="Target Universities (leave blank = all)"
                       options={BD_UNIS}
                       selected={form.targetUniversities}
                       onChange={(v) => set('targetUniversities', v)}
                     />
+                  )}
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                      gap: 14,
+                    }}
+                  >
+                    <ModeCard
+                      active={!form.isBatchHiring}
+                      title="Precision targeting"
+                      description="Send this role to one campus, a few campuses, or everyone. Great for focused internships and department-specific openings."
+                      meta={
+                        form.targetUniversities.length > 0
+                          ? `${form.targetUniversities.length} universities selected`
+                          : 'Open to all universities'
+                      }
+                      icon={<Target size={18} />}
+                      onClick={() => setBatchHiringMode(false)}
+                    />
+                    <ModeCard
+                      active={form.isBatchHiring}
+                      title="Batch hiring campaign"
+                      description="Launch one shared role across multiple universities, then monitor applicants in one centralized funnel with campus-wise analytics."
+                      meta={
+                        form.batchUniversities.length > 0
+                          ? `${form.batchUniversities.length} campuses in campaign`
+                          : 'Select campuses to start'
+                      }
+                      icon={<Layers3 size={18} />}
+                      onClick={() => setBatchHiringMode(true)}
+                    />
+                  </div>
+
+                  {form.isBatchHiring ? (
+                    <div
+                      style={{
+                        borderRadius: 20,
+                        border: `1px solid ${C.blueBorder}`,
+                        background: 'linear-gradient(180deg, #EFF6FF 0%, #FFFFFF 100%)',
+                        padding: 22,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 18,
+                        boxShadow: '0 18px 32px rgba(37,99,235,0.08)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          gap: 16,
+                          flexWrap: 'wrap',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <div style={{ maxWidth: 560 }}>
+                          <div
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              borderRadius: 999,
+                              background: '#DBEAFE',
+                              color: '#1D4ED8',
+                              border: '1px solid #BFDBFE',
+                              padding: '6px 12px',
+                              fontSize: 12,
+                              fontWeight: 800,
+                              marginBottom: 12,
+                            }}
+                          >
+                            <Sparkles size={14} />
+                            Batch hiring mode is on
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 24,
+                              lineHeight: 1.15,
+                              fontWeight: 900,
+                              color: C.text,
+                              fontFamily: 'var(--font-display)',
+                              marginBottom: 8,
+                            }}
+                          >
+                            Build one multi-campus campaign instead of duplicate job posts
+                          </div>
+                          <div style={{ color: C.gray, fontSize: 14, lineHeight: 1.65 }}>
+                            Choose the universities below, then apply the same department and year
+                            filters across all of them. Students still see a personalized feed while
+                            your team reviews everyone in one hiring workspace.
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setBatchHiringMode(false)}
+                          style={{
+                            border: `1px solid ${C.border}`,
+                            background: C.white,
+                            color: C.gray,
+                            borderRadius: 999,
+                            padding: '9px 14px',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Switch to precision mode
+                        </button>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                          gap: 12,
+                        }}
+                      >
+                        <MetricTile
+                          label="Campuses"
+                          value={`${form.batchUniversities.length}/${BD_UNIS.length}`}
+                          tone="blue"
+                        />
+                        <MetricTile
+                          label="Departments"
+                          value={
+                            form.targetDepartments.length > 0
+                              ? `${form.targetDepartments.length} selected`
+                              : 'All departments'
+                          }
+                          tone="cyan"
+                        />
+                        <MetricTile
+                          label="Academic years"
+                          value={
+                            form.targetYears.length > 0
+                              ? `${form.targetYears.length} selected`
+                              : 'All years'
+                          }
+                          tone="amber"
+                        />
+                        <MetricTile label="AI fit engine" value="Connected" tone="green" />
+                      </div>
+
+                      <div
+                        style={{
+                          borderRadius: 16,
+                          border: `1px solid ${errors.batchUniversities ? C.dangerBorder : C.border}`,
+                          background: C.white,
+                          padding: 18,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            flexWrap: 'wrap',
+                            marginBottom: 10,
+                          }}
+                        >
+                          <div>
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                fontSize: 15,
+                                fontWeight: 800,
+                                color: C.text,
+                              }}
+                            >
+                              <Building2 size={16} color={C.blue} />
+                              Select campaign universities
+                            </div>
+                            <div style={{ color: C.gray, fontSize: 13, marginTop: 4 }}>
+                              These campuses will receive the same posting, filters, and analytics
+                              breakdown.
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                            <button
+                              type="button"
+                              onClick={() => set('batchUniversities', BD_UNIS)}
+                              style={{
+                                border: `1px solid ${C.border}`,
+                                background: '#F8FAFC',
+                                color: C.gray,
+                                borderRadius: 999,
+                                padding: '8px 12px',
+                                fontSize: 12,
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Select all
+                            </button>
+                            {batchHiringPresets.map((preset) => (
+                              <button
+                                key={preset.label}
+                                type="button"
+                                onClick={() => set('batchUniversities', preset.values)}
+                                style={{
+                                  border: `1px solid ${C.blueBorder}`,
+                                  background: '#F8FBFF',
+                                  color: C.blue,
+                                  borderRadius: 999,
+                                  padding: '8px 12px',
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                {preset.label}
+                              </button>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => set('batchUniversities', [])}
+                              style={{
+                                border: `1px solid ${C.border}`,
+                                background: C.white,
+                                color: C.gray,
+                                borderRadius: 999,
+                                padding: '8px 12px',
+                                fontSize: 12,
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                            gap: 10,
+                          }}
+                        >
+                          {BD_UNIS.map((uni, index) => {
+                            const selected = form.batchUniversities.includes(uni);
+                            return (
+                              <button
+                                key={uni}
+                                type="button"
+                                onClick={() =>
+                                  set(
+                                    'batchUniversities',
+                                    selected
+                                      ? form.batchUniversities.filter((item) => item !== uni)
+                                      : [...form.batchUniversities, uni]
+                                  )
+                                }
+                                style={{
+                                  borderRadius: 16,
+                                  border: `1.5px solid ${selected ? C.blueBorder : C.border}`,
+                                  background: selected ? '#EFF6FF' : '#FFFFFF',
+                                  padding: '14px 14px 13px',
+                                  textAlign: 'left',
+                                  cursor: 'pointer',
+                                  boxShadow: selected
+                                    ? '0 10px 20px rgba(37,99,235,0.08)'
+                                    : '0 2px 8px rgba(15,23,42,0.03)',
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    gap: 8,
+                                    marginBottom: 10,
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      width: 26,
+                                      height: 26,
+                                      borderRadius: 9,
+                                      background: selected ? C.blue : '#F1F5F9',
+                                      color: selected ? '#fff' : '#64748B',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontSize: 12,
+                                      fontWeight: 800,
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {selected ? <Check size={14} /> : index + 1}
+                                  </div>
+                                  <div
+                                    style={{
+                                      fontSize: 11,
+                                      fontWeight: 800,
+                                      color: selected ? C.blue : '#94A3B8',
+                                      textTransform: 'uppercase',
+                                    }}
+                                  >
+                                    {selected ? 'Included' : 'Tap to add'}
+                                  </div>
+                                </div>
+                                <div
+                                  style={{
+                                    fontSize: 13,
+                                    lineHeight: 1.5,
+                                    fontWeight: 700,
+                                    color: C.text,
+                                  }}
+                                >
+                                  {uni}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {errors.batchUniversities && (
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              color: C.danger,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              marginTop: 12,
+                            }}
+                          >
+                            <AlertCircle size={13} />
+                            {errors.batchUniversities}
+                          </div>
+                        )}
+                      </div>
+
+                      <div
+                        style={{
+                          borderRadius: 18,
+                          border: `1px solid ${C.border}`,
+                          background: '#FFFFFF',
+                          padding: 18,
+                          display: 'grid',
+                          gap: 14,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 10,
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
+                              Campaign delivery preview
+                            </div>
+                            <div style={{ color: C.gray, fontSize: 13, marginTop: 3 }}>
+                              How this role will be distributed once published
+                            </div>
+                          </div>
+                          <div
+                            style={{
+                              borderRadius: 999,
+                              border: '1px solid #BFDBFE',
+                              background: '#EFF6FF',
+                              color: '#1D4ED8',
+                              fontSize: 12,
+                              fontWeight: 800,
+                              padding: '7px 12px',
+                            }}
+                          >
+                            {selectedUniversityCount > 0
+                              ? `${universityReachPercent}% campus coverage`
+                              : 'No campuses selected yet'}
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                            gap: 12,
+                          }}
+                        >
+                          <div
+                            style={{
+                              borderRadius: 15,
+                              background: '#F8FAFC',
+                              border: '1px solid #E2E8F0',
+                              padding: 14,
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                color: '#0F172A',
+                                fontSize: 13,
+                                fontWeight: 800,
+                                marginBottom: 6,
+                              }}
+                            >
+                              <Building2 size={14} color={C.blue} />
+                              Campus coverage
+                            </div>
+                            <div style={{ color: C.gray, fontSize: 13, lineHeight: 1.6 }}>
+                              {formatSelectionSummary(
+                                form.batchUniversities,
+                                'Select campuses to begin'
+                              )}
+                            </div>
+                          </div>
+                          <div
+                            style={{
+                              borderRadius: 15,
+                              background: '#F8FAFC',
+                              border: '1px solid #E2E8F0',
+                              padding: 14,
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                color: '#0F172A',
+                                fontSize: 13,
+                                fontWeight: 800,
+                                marginBottom: 6,
+                              }}
+                            >
+                              <Users2 size={14} color="#0F766E" />
+                              Student filters
+                            </div>
+                            <div style={{ color: C.gray, fontSize: 13, lineHeight: 1.6 }}>
+                              {selectedDepartmentsLabel} - {selectedYearsLabel}
+                            </div>
+                          </div>
+                          <div
+                            style={{
+                              borderRadius: 15,
+                              background: '#F8FAFC',
+                              border: '1px solid #E2E8F0',
+                              padding: 14,
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                color: '#0F172A',
+                                fontSize: 13,
+                                fontWeight: 800,
+                                marginBottom: 6,
+                              }}
+                            >
+                              <Sparkles size={14} color="#047857" />
+                              Hiring workflow
+                            </div>
+                            <div style={{ color: C.gray, fontSize: 13, lineHeight: 1.6 }}>
+                              One posting, one deadline, one applicant funnel, plus university-wise
+                              analytics inside the hiring panel.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        borderRadius: 20,
+                        border: `1px solid ${C.border}`,
+                        background: '#FFFFFF',
+                        padding: 22,
+                        display: 'grid',
+                        gap: 16,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          justifyContent: 'space-between',
+                          gap: 16,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div style={{ maxWidth: 540 }}>
+                          <div
+                            style={{
+                              fontSize: 18,
+                              fontWeight: 900,
+                              color: C.text,
+                              fontFamily: 'var(--font-display)',
+                              marginBottom: 6,
+                            }}
+                          >
+                            Target a focused audience
+                          </div>
+                          <div style={{ color: C.gray, fontSize: 14, lineHeight: 1.6 }}>
+                            Keep this role tightly scoped to specific universities or leave it open
+                            to everyone. Department and year filters still refine visibility.
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            borderRadius: 999,
+                            background: '#F8FAFC',
+                            border: '1px solid #E2E8F0',
+                            color: C.gray,
+                            fontSize: 12,
+                            fontWeight: 800,
+                            padding: '8px 12px',
+                          }}
+                        >
+                          {selectedUniversityCount > 0
+                            ? `${selectedUniversityCount} universities selected`
+                            : 'Open to all universities'}
+                        </div>
+                      </div>
+
+                      <ChipGroup
+                        label="Target Universities (leave blank = all)"
+                        options={BD_UNIS}
+                        selected={form.targetUniversities}
+                        onChange={(v) => set('targetUniversities', v)}
+                      />
+
+                      <div
+                        style={{
+                          borderRadius: 16,
+                          background: '#F8FAFC',
+                          border: '1px solid #E2E8F0',
+                          padding: 16,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            fontSize: 13,
+                            fontWeight: 800,
+                            color: C.text,
+                            marginBottom: 6,
+                          }}
+                        >
+                          <Target size={14} color={C.blue} />
+                          Audience preview
+                        </div>
+                        <div style={{ color: C.gray, fontSize: 13, lineHeight: 1.6 }}>
+                          Students from{' '}
+                          {formatSelectionSummary(form.targetUniversities, 'all universities')} will
+                          see this role, then the department and year filters below narrow it
+                          further.
+                        </div>
+                      </div>
+                    </div>
                   )}
 
                   <ChipGroup
@@ -997,6 +1803,142 @@ export default function NewJobPage() {
               <div style={{ padding: '32px 36px' }}>
                 <SectionLabel label="Review & Publish" />
                 <div
+                  style={{
+                    borderRadius: 18,
+                    border: `1px solid ${form.isBatchHiring ? C.blueBorder : C.border}`,
+                    background: form.isBatchHiring
+                      ? 'linear-gradient(135deg, #0F172A 0%, #1D4ED8 100%)'
+                      : 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
+                    padding: '20px 22px',
+                    marginBottom: 22,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 16,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 800,
+                          letterSpacing: 0.8,
+                          textTransform: 'uppercase',
+                          color: form.isBatchHiring ? '#93C5FD' : '#64748B',
+                          marginBottom: 8,
+                        }}
+                      >
+                        Campaign snapshot
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 24,
+                          lineHeight: 1.15,
+                          fontWeight: 900,
+                          fontFamily: 'var(--font-display)',
+                          color: form.isBatchHiring ? '#FFFFFF' : C.text,
+                          marginBottom: 8,
+                        }}
+                      >
+                        {form.isBatchHiring
+                          ? 'Batch hiring campaign ready'
+                          : 'Targeted listing ready'}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 14,
+                          lineHeight: 1.6,
+                          color: form.isBatchHiring ? '#DBEAFE' : C.gray,
+                          maxWidth: 560,
+                        }}
+                      >
+                        {form.isBatchHiring
+                          ? `This posting will launch across ${selectedUniversityCount || 0} universities with one shared role and a centralized applicant funnel.`
+                          : 'This posting will appear in the student feed for the universities, departments, and years selected below.'}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                        gap: 10,
+                        width: '100%',
+                        maxWidth: 360,
+                      }}
+                    >
+                      <div
+                        style={{
+                          borderRadius: 14,
+                          padding: '12px 14px',
+                          background: form.isBatchHiring ? 'rgba(255,255,255,0.1)' : '#EFF6FF',
+                          border: form.isBatchHiring
+                            ? '1px solid rgba(255,255,255,0.14)'
+                            : '1px solid #BFDBFE',
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 800,
+                            color: form.isBatchHiring ? '#BFDBFE' : '#64748B',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          Universities
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 5,
+                            fontSize: 18,
+                            fontWeight: 900,
+                            color: form.isBatchHiring ? '#FFFFFF' : '#1D4ED8',
+                          }}
+                        >
+                          {selectedUniversityCount > 0 ? selectedUniversityCount : 'All'}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          borderRadius: 14,
+                          padding: '12px 14px',
+                          background: form.isBatchHiring ? 'rgba(255,255,255,0.1)' : '#ECFDF5',
+                          border: form.isBatchHiring
+                            ? '1px solid rgba(255,255,255,0.14)'
+                            : '1px solid #A7F3D0',
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 800,
+                            color: form.isBatchHiring ? '#BFDBFE' : '#64748B',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          Departments
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 5,
+                            fontSize: 18,
+                            fontWeight: 900,
+                            color: form.isBatchHiring ? '#FFFFFF' : '#047857',
+                          }}
+                        >
+                          {form.targetDepartments.length > 0
+                            ? form.targetDepartments.length
+                            : 'All'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div
                   style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}
                 >
                   {[
@@ -1019,8 +1961,15 @@ export default function NewJobPage() {
                     {
                       l: 'Batch Hiring',
                       v: form.isBatchHiring
-                        ? `Yes — ${form.batchUniversities.length} universities`
+                        ? `Yes - ${form.batchUniversities.length} universities`
                         : 'No',
+                    },
+                    {
+                      l: 'Campaign Universities',
+                      v: formatSelectionSummary(
+                        form.isBatchHiring ? form.batchUniversities : form.targetUniversities,
+                        'All'
+                      ),
                     },
                     {
                       l: 'Required Skills',
@@ -1030,10 +1979,10 @@ export default function NewJobPage() {
                     {
                       l: 'Target Universities',
                       v:
-                        form.targetUniversities.length > 0
-                          ? form.targetUniversities.slice(0, 3).join(', ') +
-                            (form.targetUniversities.length > 3
-                              ? ` +${form.targetUniversities.length - 3}`
+                        effectiveTargetUniversities.length > 0
+                          ? effectiveTargetUniversities.slice(0, 3).join(', ') +
+                            (effectiveTargetUniversities.length > 3
+                              ? ` +${effectiveTargetUniversities.length - 3}`
                               : '')
                           : 'All',
                     },
@@ -1081,7 +2030,7 @@ export default function NewJobPage() {
                   }}
                 >
                   <div style={{ fontWeight: 700, color: '#065F46', fontSize: 14, marginBottom: 3 }}>
-                    ✅ Ready to publish
+                    Ready to publish
                   </div>
                   <div style={{ color: C.gray, fontSize: 13 }}>
                     This job will be immediately visible to matching students once published.

@@ -55,7 +55,6 @@ export function getAdvisorNavItems(): DashboardNavItem[] {
         },
       ],
     },
-    { label: 'Badges', href: '/advisor/badges', icon: 'shield' },
   ];
 }
 
@@ -134,6 +133,5 @@ export function getDepartmentNavItems(): DashboardNavItem[] {
         },
       ],
     },
-    { label: 'Badges', href: '/dept/badges', icon: 'shield' },
   ];
 }

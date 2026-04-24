@@ -87,7 +87,6 @@ const navItems = [
       },
     ],
   },
-  { label: 'Badges', href: '/advisor/badges', icon: 'shield' as const },
 ];
 
 async function getAdvisorExtras(userId: string) {

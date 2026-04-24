@@ -318,6 +318,9 @@ export default function EditJobPage() {
   });
   const isEvent = form.type === 'webinar' || form.type === 'workshop';
   const todayDate = toDateInputValue(new Date());
+  const effectiveTargetUniversities = form.isBatchHiring
+    ? form.batchUniversities
+    : form.targetUniversities;
 
   // Load existing job data
   useEffect(() => {
@@ -422,7 +425,7 @@ export default function EditJobPage() {
         applicationDeadline: form.applicationDeadline,
         startDate: form.startDate || undefined,
         durationMonths: form.durationMonths ? parseInt(form.durationMonths) : undefined,
-        targetUniversities: form.targetUniversities,
+        targetUniversities: effectiveTargetUniversities,
         targetDepartments: form.targetDepartments,
         targetYears: form.targetYears,
         isBatchHiring: form.isBatchHiring,
