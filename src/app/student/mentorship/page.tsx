@@ -3,10 +3,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Users, LayoutDashboard, CalendarDays } from 'lucide-react';
+import { Users, CalendarDays } from 'lucide-react';
 import MentorCard from '@/components/mentorship/MentorCard';
 import MentorFilterSidebar from '@/components/mentorship/MentorFilterSidebar';
 import RequestSessionModal from '@/components/mentorship/RequestSessionModal';
+import { readJsonSafely } from '@/lib/safe-json';
 
 export default function BrowseMentorsPage() {
   const [mentors, setMentors] = useState<any[]>([]);
@@ -27,7 +28,7 @@ export default function BrowseMentorsPage() {
 
         const res = await fetch(`/api/mentors?${params.toString()}`);
         if (res.ok) {
-          const data = await res.json();
+          const data = await readJsonSafely<any[]>(res, []);
           setMentors(data);
         }
       } catch (err) {
@@ -45,8 +46,12 @@ export default function BrowseMentorsPage() {
   }
 
   return (
-    <div style={{ maxWidth: 1320, margin: '0 auto', padding: '40px 24px' }}>
+    <div
+      className="mobile-page-frame"
+      style={{ maxWidth: 1320, margin: '0 auto', padding: '40px 24px' }}
+    >
       <div
+        className="mobile-page-header"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -58,6 +63,7 @@ export default function BrowseMentorsPage() {
       >
         <div>
           <h1
+            className="mobile-page-header-title"
             style={{
               fontSize: 32,
               fontWeight: 900,
@@ -111,6 +117,7 @@ export default function BrowseMentorsPage() {
             </div>
           ) : mentors.length > 0 ? (
             <div
+              className="mobile-page-grid-mentor mobile-page-list-scroll"
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',

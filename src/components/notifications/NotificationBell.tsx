@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import Pusher from 'pusher-js';
 import { userChannel, PUSHER_EVENTS } from '@/lib/pusher';
+import { readJsonSafely } from '@/lib/safe-json';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type Notif = {
@@ -77,6 +78,7 @@ type Props = {
   userId: string;
   initialUnread?: number;
   notificationsHref?: string; // e.g. '/student/notifications'
+  compact?: boolean;
 };
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -84,6 +86,7 @@ export default function NotificationBell({
   userId,
   initialUnread = 0,
   notificationsHref = '/student/notifications',
+  compact = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifs] = useState<Notif[]>([]);
@@ -110,7 +113,7 @@ export default function NotificationBell({
     try {
       const res = await fetch('/api/notifications?limit=8');
       if (!res.ok) return;
-      const data = await res.json();
+      const data = await readJsonSafely<{ notifications?: Notif[]; unreadCount?: number }>(res, {});
       setNotifs(data.notifications ?? []);
       setUnread(data.unreadCount ?? 0);
     } finally {
@@ -121,7 +124,7 @@ export default function NotificationBell({
   // ── Initial fetch of unread count ─────────────────────────────────────
   useEffect(() => {
     fetch('/api/notifications?limit=1')
-      .then((r) => r.json())
+      .then((r) => readJsonSafely<{ unreadCount?: number }>(r, {}))
       .then((d) => setUnread(d.unreadCount ?? 0))
       .catch(() => {});
   }, []);
@@ -222,8 +225,11 @@ export default function NotificationBell({
           position: 'relative',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 7,
-          padding: '9px 12px',
+          gap: compact ? 0 : 7,
+          justifyContent: 'center',
+          minWidth: compact ? 40 : undefined,
+          minHeight: compact ? 40 : undefined,
+          padding: compact ? '0' : '9px 12px',
           borderRadius: 999,
           border: '1px solid rgba(255,255,255,0.08)',
           background: open ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)',
@@ -233,6 +239,7 @@ export default function NotificationBell({
           fontSize: 12,
           fontWeight: 700,
         }}
+        aria-label="Notifications"
         onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.12)')}
         onMouseLeave={(e) =>
           (e.currentTarget.style.background = open
@@ -258,7 +265,7 @@ export default function NotificationBell({
             />
           )}
         </span>
-        <span>Notifications</span>
+        {!compact && <span>Notifications</span>}
         {/* Badge */}
         {unread > 0 && (
           <span
@@ -273,7 +280,10 @@ export default function NotificationBell({
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '0 4px',
+              padding: compact ? '0 5px' : '0 4px',
+              position: compact ? 'absolute' : 'static',
+              top: compact ? -2 : undefined,
+              right: compact ? -2 : undefined,
             }}
           >
             {unread > 99 ? '99+' : unread}
@@ -289,7 +299,8 @@ export default function NotificationBell({
             right: 0,
             top: 'calc(100% + 10px)',
             zIndex: 200,
-            width: 360,
+            width: 'min(360px, calc(100vw - 24px))',
+            maxWidth: 'calc(100vw - 24px)',
             background: '#fff',
             border: '1px solid #E2E8F0',
             borderRadius: 20,
@@ -303,6 +314,8 @@ export default function NotificationBell({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 10,
               padding: '16px 18px 12px',
               borderBottom: '1px solid #F1F5F9',
             }}

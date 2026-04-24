@@ -7,6 +7,7 @@ import { ArrowLeft, CalendarDays, Inbox } from 'lucide-react';
 import SessionCard from '@/components/mentorship/SessionCard';
 import RateSessionModal from '@/components/mentorship/RateSessionModal';
 import VideoSessionLauncher from '@/components/mentorship/VideoSessionLauncher';
+import { readJsonSafely } from '@/lib/safe-json';
 
 export default function MyMentorSessionsPage() {
   const [sessions, setSessions] = useState<any[]>([]);
@@ -24,7 +25,7 @@ export default function MyMentorSessionsPage() {
       setLoading(true);
       const res = await fetch('/api/mentor-sessions?role=student');
       if (res.ok) {
-        const data = await res.json();
+        const data = await readJsonSafely<any[]>(res, []);
         setSessions(data);
       }
     } catch (err) {
@@ -64,8 +65,14 @@ export default function MyMentorSessionsPage() {
   );
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40 }}>
+    <div
+      className="mobile-page-frame"
+      style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px' }}
+    >
+      <div
+        className="mobile-page-header"
+        style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40 }}
+      >
         <Link
           href="/student/mentorship"
           style={{
@@ -85,6 +92,7 @@ export default function MyMentorSessionsPage() {
         </Link>
         <div>
           <h1
+            className="mobile-page-header-title"
             style={{
               fontSize: 32,
               fontWeight: 900,
@@ -104,7 +112,10 @@ export default function MyMentorSessionsPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40 }}>
+      <div
+        className="mobile-page-grid-2"
+        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40 }}
+      >
         {/* Upcoming */}
         <section>
           <h2
@@ -125,6 +136,7 @@ export default function MyMentorSessionsPage() {
             </div>
           ) : upcomingSessions.length > 0 ? (
             <div
+              className="mobile-page-list-scroll"
               style={{
                 display: 'grid',
                 gap: 20,
@@ -186,6 +198,7 @@ export default function MyMentorSessionsPage() {
           </h2>
           {loading ? null : pastSessions.length > 0 ? (
             <div
+              className="mobile-page-list-scroll"
               style={{
                 display: 'grid',
                 gap: 20,

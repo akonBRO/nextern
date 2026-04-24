@@ -891,7 +891,9 @@ export default async function AdvisorDashboard() {
             }
           }
           @media (max-width: 900px) {
-            .dashboard-stats-grid,
+            .dashboard-stats-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
             .dashboard-grid-two,
             .dashboard-inline-grid {
               grid-template-columns: 1fr !important;

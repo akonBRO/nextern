@@ -1177,9 +1177,11 @@ export default function DashboardClient({
           }
           @media (max-width: 960px) {
             .dashboard-stats-grid,
+            .dashboard-mini-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
             .dashboard-grid-two,
             .dashboard-card-grid,
-            .dashboard-mini-grid,
             .dashboard-inline-grid,
             .dashboard-review-grid {
               grid-template-columns: 1fr !important;

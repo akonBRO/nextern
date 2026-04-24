@@ -1062,7 +1062,10 @@ export default function StudentProfilePage() {
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
       >
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '20px 24px' }}>
+        <div
+          className="mobile-page-hero-inner"
+          style={{ maxWidth: 900, margin: '0 auto', padding: '20px 24px' }}
+        >
           <Link
             href="/student/dashboard"
             style={{ color: C.gray, fontSize: 13, textDecoration: 'none', fontWeight: 500 }}
@@ -1070,6 +1073,7 @@ export default function StudentProfilePage() {
             ← Back to Dashboard
           </Link>
           <div
+            className="mobile-page-hero-row"
             style={{
               display: 'flex',
               alignItems: 'flex-end',
@@ -1079,7 +1083,10 @@ export default function StudentProfilePage() {
               gap: 16,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div
+              className="mobile-page-stack"
+              style={{ display: 'flex', alignItems: 'center', gap: 16 }}
+            >
               <ProfilePictureUpload
                 currentImage={user?.image ?? null}
                 name={user?.name ?? ''}
@@ -1173,6 +1180,7 @@ export default function StudentProfilePage() {
 
       {/* ── Body ── */}
       <div
+        className="mobile-page-body"
         style={{
           maxWidth: 900,
           margin: '28px auto',
@@ -1230,7 +1238,10 @@ export default function StudentProfilePage() {
           }}
         >
           <SectionHeader icon={<User size={18} />} label="Personal Information" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div
+            className="mobile-page-grid-2"
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+          >
             <Field label="Full Name" required>
               <input
                 type="text"
@@ -1293,7 +1304,10 @@ export default function StudentProfilePage() {
           }}
         >
           <SectionHeader icon={<GraduationCap size={18} />} label="Academic Information" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div
+            className="mobile-page-grid-2"
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+          >
             <Field label="University">
               <select
                 value={form.university}
@@ -1965,7 +1979,10 @@ export default function StudentProfilePage() {
                     <Trash2 size={12} /> Remove
                   </button>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div
+                  className="mobile-page-grid-2"
+                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+                >
                   <Field label="Project Title" required>
                     <input
                       type="text"
@@ -2123,7 +2140,10 @@ export default function StudentProfilePage() {
                     <Trash2 size={12} /> Remove
                   </button>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div
+                  className="mobile-page-grid-2"
+                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+                >
                   <Field label="Certificate Name" required>
                     <input
                       type="text"
@@ -2168,7 +2188,10 @@ export default function StudentProfilePage() {
           }}
         >
           <SectionHeader icon={<Globe size={18} />} label="Online Presence" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div
+            className="mobile-page-grid-2"
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+          >
             <Field label="LinkedIn URL">
               <div style={{ position: 'relative' }}>
                 <div
@@ -3192,7 +3215,10 @@ export default function StudentProfilePage() {
         </div>
 
         {/* Save button */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}>
+        <div
+          className="mobile-page-action-row"
+          style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}
+        >
           <button
             onClick={handleSave}
             disabled={saving}

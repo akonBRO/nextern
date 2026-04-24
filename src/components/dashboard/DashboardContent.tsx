@@ -17,7 +17,14 @@ function clamp(value: number, min = 0, max = 100) {
 }
 
 export function DashboardPage({ children }: { children: ReactNode }) {
-  return <div style={{ maxWidth: 1320, margin: '0 auto', padding: '32px 24px 0' }}>{children}</div>;
+  return (
+    <div
+      className="dashboard-page"
+      style={{ maxWidth: 1320, margin: '0 auto', padding: '32px 24px 0' }}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function DashboardSection({
@@ -34,8 +41,9 @@ export function DashboardSection({
   children: ReactNode;
 }) {
   return (
-    <section id={id} style={{ marginTop: 28, scrollMarginTop: 148 }}>
+    <section id={id} className="dashboard-section" style={{ marginTop: 28, scrollMarginTop: 148 }}>
       <div
+        className="dashboard-section-header"
         style={{
           display: 'flex',
           alignItems: 'flex-end',
@@ -45,8 +53,9 @@ export function DashboardSection({
           flexWrap: 'wrap',
         }}
       >
-        <div>
+        <div className="dashboard-section-copy">
           <h2
+            className="dashboard-section-title"
             style={{
               margin: 0,
               fontSize: 24,
@@ -61,6 +70,7 @@ export function DashboardSection({
           </h2>
           {description ? (
             <p
+              className="dashboard-section-description"
               style={{
                 margin: '8px 0 0',
                 fontSize: 14,
@@ -97,6 +107,7 @@ export function HeroCard({
 }) {
   return (
     <div
+      className="dashboard-hero-card"
       style={{
         position: 'relative',
         overflow: 'hidden',
@@ -148,6 +159,7 @@ export function HeroCard({
           </div>
 
           <h1
+            className="dashboard-hero-title"
             style={{
               margin: '18px 0 0',
               fontSize: 38,
@@ -163,9 +175,14 @@ export function HeroCard({
           </h1>
 
           {/* ── Subtitle — shown under name, above description ── */}
-          {subtitle ? <div style={{ marginTop: 12 }}>{subtitle}</div> : null}
+          {subtitle ? (
+            <div className="dashboard-hero-subtitle" style={{ marginTop: 12 }}>
+              {subtitle}
+            </div>
+          ) : null}
 
           <p
+            className="dashboard-hero-description"
             style={{
               margin: '14px 0 0',
               color: '#D6E4FF',
@@ -178,7 +195,10 @@ export function HeroCard({
           </p>
 
           {actions ? (
-            <div style={{ marginTop: 22, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div
+              className="dashboard-hero-actions"
+              style={{ marginTop: 22, display: 'flex', gap: 12, flexWrap: 'wrap' }}
+            >
               {actions}
             </div>
           ) : null}
@@ -201,6 +221,7 @@ export function ActionLink({
   const isPrimary = tone === 'primary';
   return (
     <a
+      className="dashboard-action-link"
       href={href}
       style={{
         display: 'inline-flex',
@@ -239,6 +260,7 @@ export function StatCard({
 }) {
   return (
     <div
+      className="dashboard-stat-card"
       style={{
         borderRadius: 22,
         background: '#FFFFFF',
@@ -249,6 +271,7 @@ export function StatCard({
     >
       {showIcon ? (
         <div
+          className="dashboard-stat-icon"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -273,6 +296,7 @@ export function StatCard({
         </div>
       ) : null}
       <div
+        className="dashboard-stat-value"
         style={{
           marginTop: showIcon ? 18 : 0,
           fontSize: 32,
@@ -285,11 +309,17 @@ export function StatCard({
       >
         {value}
       </div>
-      <div style={{ marginTop: 8, fontSize: 14, fontWeight: 700, color: palette.text }}>
+      <div
+        className="dashboard-stat-label"
+        style={{ marginTop: 8, fontSize: 14, fontWeight: 700, color: palette.text }}
+      >
         {label}
       </div>
       {hint ? (
-        <div style={{ marginTop: 6, fontSize: 12, lineHeight: 1.6, color: palette.muted }}>
+        <div
+          className="dashboard-stat-hint"
+          style={{ marginTop: 6, fontSize: 12, lineHeight: 1.6, color: palette.muted }}
+        >
           {hint}
         </div>
       ) : null}
@@ -312,6 +342,7 @@ export function Panel({
 }) {
   return (
     <div
+      className="dashboard-panel"
       style={{
         borderRadius: 24,
         background: '#FFFFFF',
@@ -333,6 +364,7 @@ export function Panel({
       >
         <div>
           <h3
+            className="dashboard-panel-title"
             style={{
               margin: 0,
               fontSize: 19,
@@ -345,7 +377,10 @@ export function Panel({
             {title}
           </h3>
           {description ? (
-            <p style={{ margin: '8px 0 0', fontSize: 13, lineHeight: 1.6, color: palette.muted }}>
+            <p
+              className="dashboard-panel-description"
+              style={{ margin: '8px 0 0', fontSize: 13, lineHeight: 1.6, color: palette.muted }}
+            >
               {description}
             </p>
           ) : null}
@@ -374,6 +409,7 @@ export function Tag({
 
   return (
     <span
+      className="dashboard-tag"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -450,6 +486,7 @@ export function ProgressBar({
 export function EmptyState({ title, description }: { title: string; description: string }) {
   return (
     <div
+      className="dashboard-empty-state"
       style={{
         borderRadius: 20,
         border: '1px dashed #CBD5E1',
@@ -458,8 +495,16 @@ export function EmptyState({ title, description }: { title: string; description:
         textAlign: 'center',
       }}
     >
-      <div style={{ fontSize: 15, fontWeight: 800, color: palette.text }}>{title}</div>
-      <div style={{ marginTop: 8, fontSize: 13, lineHeight: 1.7, color: palette.muted }}>
+      <div
+        className="dashboard-empty-state-title"
+        style={{ fontSize: 15, fontWeight: 800, color: palette.text }}
+      >
+        {title}
+      </div>
+      <div
+        className="dashboard-empty-state-description"
+        style={{ marginTop: 8, fontSize: 13, lineHeight: 1.7, color: palette.muted }}
+      >
         {description}
       </div>
     </div>

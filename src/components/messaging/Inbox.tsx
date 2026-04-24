@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Pusher from 'pusher-js';
 import {
+  ArrowLeft,
   BriefcaseBusiness,
   Send,
   Check,
@@ -18,6 +19,7 @@ import {
   CircleAlert,
 } from 'lucide-react';
 import { useUploadThing } from '@/lib/uploadthing';
+import { readJsonSafely } from '@/lib/safe-json';
 
 /* ─── Types ──────────────────────────────────────────────────────── */
 type UserData = {
@@ -554,10 +556,32 @@ export default function Inbox({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pusherRef = useRef<Pusher | null>(null);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const [mobilePane, setMobilePane] = useState<'list' | 'chat'>('list');
 
   function scrollToBottom() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }
+
+  function handleThreadSelect(thread: Thread) {
+    setSelectedThread(thread);
+    setMobilePane('chat');
+  }
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 900px)');
+    const syncViewport = () => setIsMobileViewport(mediaQuery.matches);
+
+    syncViewport();
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', syncViewport);
+      return () => mediaQuery.removeEventListener('change', syncViewport);
+    }
+
+    mediaQuery.addListener(syncViewport);
+    return () => mediaQuery.removeListener(syncViewport);
+  }, []);
 
   const buildThreadsUrl = useCallback(() => {
     const params = new URLSearchParams();
@@ -572,7 +596,9 @@ export default function Inbox({
   const refetchThreads = useCallback(
     () =>
       fetch(buildThreadsUrl())
-        .then((r) => r.json())
+        .then((r) =>
+          readJsonSafely<{ threads?: Thread[]; initiatedThreadId?: string | null }>(r, {})
+        )
         .then((d) => {
           if (d.threads) setThreads(d.threads);
         }),
@@ -582,13 +608,16 @@ export default function Inbox({
   /* ── Fetch Threads ──────────────────────────────────────────── */
   useEffect(() => {
     fetch(buildThreadsUrl())
-      .then((r) => r.json())
+      .then((r) => readJsonSafely<{ threads?: Thread[]; initiatedThreadId?: string | null }>(r, {}))
       .then((d) => {
         if (d.threads) {
           setThreads(d.threads);
           if (initiateUserId) {
             const tgt = d.threads.find((t: Thread) => t.otherUser._id === initiateUserId);
-            if (tgt) setSelectedThread(tgt);
+            if (tgt) {
+              setSelectedThread(tgt);
+              setMobilePane('chat');
+            }
           } else if (initiateFreelanceOrderId) {
             const tgt =
               d.threads.find(
@@ -596,7 +625,10 @@ export default function Inbox({
                   t.freelanceOrder?._id === initiateFreelanceOrderId ||
                   t.threadId === d.initiatedThreadId
               ) || null;
-            if (tgt) setSelectedThread(tgt);
+            if (tgt) {
+              setSelectedThread(tgt);
+              setMobilePane('chat');
+            }
           }
         }
         setIsLoading(false);
@@ -621,7 +653,7 @@ export default function Inbox({
           const res = await fetch(
             `/api/applications?employerId=${selectedThread.otherUser._id}&limit=50`
           );
-          const d = await res.json();
+          const d = await readJsonSafely<{ applications?: { status: string }[] }>(res, {});
           const apps: { status: string }[] = d.applications ?? [];
           const hasEligible = apps.some((a) => ELIGIBLE.includes(a.status));
           if (!cancelled) setMessagingLocked(!hasEligible);
@@ -642,7 +674,7 @@ export default function Inbox({
           // But it's easier to fetch all sessions and filter.
           const roleParam = currentUserRole === 'alumni' ? '?role=mentor' : '';
           const res = await fetch(`/api/mentor-sessions${roleParam}`, { cache: 'no-store' });
-          const d = await res.json();
+          const d = await readJsonSafely<unknown[]>(res, []);
           const sessions = Array.isArray(d) ? d : [];
 
           // Check if there is an accepted or scheduled session with the other user
@@ -691,7 +723,7 @@ export default function Inbox({
       window.dispatchEvent(new CustomEvent('messages-read', { detail: { count: prevUnread } }));
 
     fetch(`/api/messages/${selectedThread.threadId}`)
-      .then((r) => r.json())
+      .then((r) => readJsonSafely<{ messages?: Message[] }>(r, {}))
       .then((d) => {
         setThreads((prev) =>
           prev.map((t) => (t.threadId === selectedThread.threadId ? { ...t, unreadCount: 0 } : t))
@@ -853,7 +885,7 @@ export default function Inbox({
             attachments: uploadedAttachments,
           }),
         });
-        const data = await res.json();
+        const data = await readJsonSafely<{ message?: Message; error?: string }>(res, {});
         if (data.message) {
           setMessages((prev) => [...prev, data.message]);
           setThreads((prev) => {
@@ -912,7 +944,7 @@ export default function Inbox({
         )
       );
     } else {
-      const d = await res.json();
+      const d = await readJsonSafely<{ error?: string }>(res, {});
       setGlobalAlert(d.error || 'Cannot delete for everyone'); // fallback
     }
     setDeleteModal({ open: false, msg: null });
@@ -961,6 +993,8 @@ export default function Inbox({
     );
 
   const canSend = !selectedThreadReadOnly && (inputText.trim().length > 0 || inputFiles.length > 0);
+  const showThreadList = !isMobileViewport || mobilePane === 'list' || !selectedThread;
+  const showChatPanel = !isMobileViewport || (!!selectedThread && mobilePane === 'chat');
 
   /* ── Render ──────────────────────────────────────────────────── */
   return (
@@ -999,147 +1033,333 @@ export default function Inbox({
           flex: 1,
           minHeight: 0,
           background: C.white,
-          borderRadius: 24,
-          boxShadow: '0 4px 24px rgba(37,99,235,0.06), 0 1px 4px rgba(0,0,0,0.04)',
+          borderRadius: isMobileViewport ? 0 : 24,
+          boxShadow: isMobileViewport
+            ? 'none'
+            : '0 4px 24px rgba(37,99,235,0.06), 0 1px 4px rgba(0,0,0,0.04)',
           overflow: 'hidden',
-          border: `1px solid ${C.border}`,
+          border: isMobileViewport ? 'none' : `1px solid ${C.border}`,
         }}
       >
         {/* ── LEFT: Thread List ── */}
-        <div
-          style={{
-            width: 300,
-            borderRight: `1px solid ${C.border}`,
-            display: 'flex',
-            flexDirection: 'column',
-            background: C.white,
-          }}
-        >
-          {/* Header */}
+        {showThreadList && (
           <div
             style={{
-              padding: '22px 20px 18px',
-              background: 'linear-gradient(135deg, #1e293b 100%, #2563eb 0%)',
-              borderBottom: `1px solid ${C.border}`,
+              width: isMobileViewport ? '100%' : 300,
+              borderRight: isMobileViewport ? 'none' : `1px solid ${C.border}`,
+              display: 'flex',
+              flexDirection: 'column',
+              background: C.white,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* Header */}
+            <div
+              style={{
+                padding: isMobileViewport ? '18px 16px 16px' : '22px 20px 18px',
+                background: 'linear-gradient(135deg, #1e293b 100%, #2563eb 0%)',
+                borderBottom: `1px solid ${C.border}`,
+              }}
+            >
               <div
                 style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 10,
-                  background: 'rgba(255,255,255,0.15)',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
                 }}
               >
-                <Send size={16} color="#fff" style={{ marginLeft: 1 }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 10,
+                      background: 'rgba(255,255,255,0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Send size={16} color="#fff" style={{ marginLeft: 1 }} />
+                  </div>
+                  <div>
+                    <h2
+                      style={{
+                        margin: 0,
+                        fontSize: 18,
+                        fontWeight: 900,
+                        color: '#fff',
+                        letterSpacing: '-0.3px',
+                        fontFamily: 'var(--font-display)',
+                      }}
+                    >
+                      Messages
+                    </h2>
+                    {isMobileViewport && (
+                      <div style={{ marginTop: 4, fontSize: 12, color: 'rgba(255,255,255,0.72)' }}>
+                        Tap a conversation to open it
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {isMobileViewport && threads.length > 0 ? (
+                  <div
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: 999,
+                      background: 'rgba(255,255,255,0.12)',
+                      color: '#fff',
+                      fontSize: 11,
+                      fontWeight: 800,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {threads.length} chats
+                  </div>
+                ) : null}
               </div>
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: 18,
-                  fontWeight: 900,
-                  color: '#fff',
-                  letterSpacing: '-0.3px',
-                  fontFamily: 'var(--font-display)',
-                }}
-              >
-                Messages
-              </h2>
             </div>
-          </div>
 
-          {/* Thread list */}
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {threads.length === 0 ? (
-              <div style={{ padding: 32, textAlign: 'center', color: C.gray, fontSize: 14 }}>
-                No conversations yet
-              </div>
-            ) : (
-              <>
-                {[
-                  {
-                    key: 'freelance',
-                    title: 'Freelance Chats',
-                    description: 'Accepted order conversations',
-                    items: freelanceThreads,
-                    icon: <BriefcaseBusiness size={12} />,
-                  },
-                  {
-                    key: 'direct',
-                    title: 'Direct Messages',
-                    description: 'General conversations',
-                    items: directThreads,
-                    icon: <Send size={12} />,
-                  },
-                ].map((section) =>
-                  section.items.length ? (
-                    <div key={section.key}>
-                      <div
-                        style={{
-                          padding: '14px 18px 10px',
-                          borderBottom: `1px solid ${C.bg}`,
-                          background: '#F8FAFC',
-                        }}
-                      >
+            {/* Thread list */}
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {threads.length === 0 ? (
+                <div
+                  style={{
+                    padding: isMobileViewport ? '32px 24px' : 32,
+                    textAlign: 'center',
+                    color: C.gray,
+                    fontSize: 14,
+                  }}
+                >
+                  No conversations yet
+                </div>
+              ) : (
+                <>
+                  {[
+                    {
+                      key: 'freelance',
+                      title: 'Freelance Chats',
+                      description: 'Accepted order conversations',
+                      items: freelanceThreads,
+                      icon: <BriefcaseBusiness size={12} />,
+                    },
+                    {
+                      key: 'direct',
+                      title: 'Direct Messages',
+                      description: 'General conversations',
+                      items: directThreads,
+                      icon: <Send size={12} />,
+                    },
+                  ].map((section) =>
+                    section.items.length ? (
+                      <div key={section.key}>
                         <div
                           style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            color: C.gray,
-                            fontSize: 11,
-                            fontWeight: 800,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.06em',
+                            padding: isMobileViewport ? '14px 16px 10px' : '14px 18px 10px',
+                            borderBottom: `1px solid ${C.bg}`,
+                            background: '#F8FAFC',
                           }}
                         >
-                          {section.icon}
-                          {section.title}
+                          <div
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              color: C.gray,
+                              fontSize: 11,
+                              fontWeight: 800,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.06em',
+                            }}
+                          >
+                            {section.icon}
+                            {section.title}
+                          </div>
+                          <div style={{ marginTop: 4, fontSize: 11, color: C.gray }}>
+                            {section.description}
+                          </div>
                         </div>
-                        <div style={{ marginTop: 4, fontSize: 11, color: C.gray }}>
-                          {section.description}
-                        </div>
+                        {section.items.map((thread) => {
+                          const sectionSelected = selectedThread?.threadId === thread.threadId;
+                          const sectionUnread = thread.unreadCount > 0;
+                          const otherUser = thread.otherUser;
+                          const sectionPreview = thread.lastMessage.isDeletedForEveryone
+                            ? 'Thread message deleted'
+                            : thread.lastMessage.content ||
+                              (thread.threadType === 'freelance_order'
+                                ? 'Freelance order chat ready'
+                                : '');
+
+                          return (
+                            <div
+                              key={thread.threadId}
+                              onClick={() => handleThreadSelect(thread)}
+                              style={{
+                                padding: isMobileViewport ? '14px 16px' : '14px 24px',
+                                cursor: 'pointer',
+                                background: sectionSelected
+                                  ? 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(34,211,238,0.06))'
+                                  : C.white,
+                                borderLeft: `4px solid ${sectionSelected ? C.primary : 'transparent'}`,
+                                borderBottom: `1px solid ${C.bg}`,
+                                transition: 'all 0.15s',
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!sectionSelected) e.currentTarget.style.background = C.bg;
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!sectionSelected) e.currentTarget.style.background = C.white;
+                              }}
+                            >
+                              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                                <div style={{ position: 'relative' }}>
+                                  <Avatar user={otherUser} size={44} />
+                                  {sectionUnread ? (
+                                    <div
+                                      style={{
+                                        position: 'absolute',
+                                        top: -2,
+                                        right: -2,
+                                        width: 14,
+                                        height: 14,
+                                        borderRadius: 7,
+                                        background: '#06b6d4',
+                                        border: '2px solid white',
+                                      }}
+                                    />
+                                  ) : null}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      alignItems: 'baseline',
+                                      marginBottom: 3,
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        fontWeight: sectionUnread ? 800 : 600,
+                                        fontSize: 14,
+                                        color: sectionSelected ? C.primary : C.deep,
+                                      }}
+                                    >
+                                      {otherUser.name}
+                                    </span>
+                                    <span
+                                      style={{
+                                        fontSize: 11,
+                                        color: sectionUnread ? C.primary : C.gray,
+                                        fontWeight: 600,
+                                        flexShrink: 0,
+                                        marginLeft: 8,
+                                      }}
+                                    >
+                                      {fmtTime(thread.lastMessage.createdAt)}
+                                    </span>
+                                  </div>
+                                  {thread.threadType === 'freelance_order' &&
+                                  thread.freelanceOrder ? (
+                                    <div
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 6,
+                                        marginBottom: 6,
+                                        padding: '3px 8px',
+                                        borderRadius: 999,
+                                        background: '#EFF6FF',
+                                        border: `1px solid rgba(37, 99, 235, 0.22)`,
+                                        color: C.primary,
+                                        fontSize: 10,
+                                        fontWeight: 800,
+                                      }}
+                                    >
+                                      {thread.freelanceOrder.title}
+                                    </div>
+                                  ) : null}
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      alignItems: 'center',
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        fontSize: 13,
+                                        color: sectionUnread ? C.deep : C.gray,
+                                        fontWeight: sectionUnread ? 600 : 400,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        flex: 1,
+                                        marginRight: 8,
+                                      }}
+                                    >
+                                      {getMessageSenderId(thread.lastMessage) === currentUserId
+                                        ? 'You: '
+                                        : ''}
+                                      {sectionPreview}
+                                    </div>
+                                    {sectionUnread ? (
+                                      <div
+                                        style={{
+                                          background: C.primary,
+                                          color: C.white,
+                                          fontSize: 10,
+                                          fontWeight: 800,
+                                          padding: '2px 7px',
+                                          borderRadius: 99,
+                                        }}
+                                      >
+                                        {thread.unreadCount}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                      {section.items.map((thread) => {
-                        const sectionSelected = selectedThread?.threadId === thread.threadId;
-                        const sectionUnread = thread.unreadCount > 0;
-                        const otherUser = thread.otherUser;
-                        const sectionPreview = thread.lastMessage.isDeletedForEveryone
-                          ? 'Thread message deleted'
-                          : thread.lastMessage.content ||
-                            (thread.threadType === 'freelance_order'
-                              ? 'Freelance order chat ready'
-                              : '');
+                    ) : null
+                  )}
+                  {false
+                    ? threads.map((thread) => {
+                        const sel = selectedThread?.threadId === thread.threadId;
+                        const unread = thread.unreadCount > 0;
+                        const ou = thread.otherUser;
+                        const preview = thread.lastMessage.isDeletedForEveryone
+                          ? '🗑 Message deleted'
+                          : thread.lastMessage.content || '';
 
                         return (
                           <div
                             key={thread.threadId}
-                            onClick={() => setSelectedThread(thread)}
+                            onClick={() => handleThreadSelect(thread)}
                             style={{
                               padding: '14px 24px',
                               cursor: 'pointer',
-                              background: sectionSelected
+                              background: sel
                                 ? 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(34,211,238,0.06))'
                                 : C.white,
-                              borderLeft: `4px solid ${sectionSelected ? C.primary : 'transparent'}`,
+                              borderLeft: `4px solid ${sel ? C.primary : 'transparent'}`,
                               borderBottom: `1px solid ${C.bg}`,
                               transition: 'all 0.15s',
                             }}
                             onMouseEnter={(e) => {
-                              if (!sectionSelected) e.currentTarget.style.background = C.bg;
+                              if (!sel) e.currentTarget.style.background = C.bg;
                             }}
                             onMouseLeave={(e) => {
-                              if (!sectionSelected) e.currentTarget.style.background = C.white;
+                              if (!sel) e.currentTarget.style.background = C.white;
                             }}
                           >
                             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                               <div style={{ position: 'relative' }}>
-                                <Avatar user={otherUser} size={44} />
-                                {sectionUnread ? (
+                                <Avatar user={ou} size={44} />
+                                {unread && (
                                   <div
                                     style={{
                                       position: 'absolute',
@@ -1152,7 +1372,7 @@ export default function Inbox({
                                       border: '2px solid white',
                                     }}
                                   />
-                                ) : null}
+                                )}
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div
@@ -1165,17 +1385,17 @@ export default function Inbox({
                                 >
                                   <span
                                     style={{
-                                      fontWeight: sectionUnread ? 800 : 600,
+                                      fontWeight: unread ? 800 : 600,
                                       fontSize: 14,
-                                      color: sectionSelected ? C.primary : C.deep,
+                                      color: sel ? C.primary : C.deep,
                                     }}
                                   >
-                                    {otherUser.name}
+                                    {ou.name}
                                   </span>
                                   <span
                                     style={{
                                       fontSize: 11,
-                                      color: sectionUnread ? C.primary : C.gray,
+                                      color: unread ? C.primary : C.gray,
                                       fontWeight: 600,
                                       flexShrink: 0,
                                       marginLeft: 8,
@@ -1184,26 +1404,6 @@ export default function Inbox({
                                     {fmtTime(thread.lastMessage.createdAt)}
                                   </span>
                                 </div>
-                                {thread.threadType === 'freelance_order' &&
-                                thread.freelanceOrder ? (
-                                  <div
-                                    style={{
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: 6,
-                                      marginBottom: 6,
-                                      padding: '3px 8px',
-                                      borderRadius: 999,
-                                      background: '#EFF6FF',
-                                      border: `1px solid rgba(37, 99, 235, 0.22)`,
-                                      color: C.primary,
-                                      fontSize: 10,
-                                      fontWeight: 800,
-                                    }}
-                                  >
-                                    {thread.freelanceOrder.title}
-                                  </div>
-                                ) : null}
                                 <div
                                   style={{
                                     display: 'flex',
@@ -1214,8 +1414,8 @@ export default function Inbox({
                                   <div
                                     style={{
                                       fontSize: 13,
-                                      color: sectionUnread ? C.deep : C.gray,
-                                      fontWeight: sectionUnread ? 600 : 400,
+                                      color: unread ? C.deep : C.gray,
+                                      fontWeight: unread ? 600 : 400,
                                       overflow: 'hidden',
                                       textOverflow: 'ellipsis',
                                       whiteSpace: 'nowrap',
@@ -1223,12 +1423,10 @@ export default function Inbox({
                                       marginRight: 8,
                                     }}
                                   >
-                                    {getMessageSenderId(thread.lastMessage) === currentUserId
-                                      ? 'You: '
-                                      : ''}
-                                    {sectionPreview}
+                                    {thread.lastMessage.senderId === currentUserId ? 'You: ' : ''}
+                                    {preview}
                                   </div>
-                                  {sectionUnread ? (
+                                  {unread && (
                                     <div
                                       style={{
                                         background: C.primary,
@@ -1241,536 +1439,425 @@ export default function Inbox({
                                     >
                                       {thread.unreadCount}
                                     </div>
-                                  ) : null}
+                                  )}
                                 </div>
                               </div>
                             </div>
                           </div>
                         );
-                      })}
-                    </div>
-                  ) : null
-                )}
-                {false
-                  ? threads.map((thread) => {
-                      const sel = selectedThread?.threadId === thread.threadId;
-                      const unread = thread.unreadCount > 0;
-                      const ou = thread.otherUser;
-                      const preview = thread.lastMessage.isDeletedForEveryone
-                        ? '🗑 Message deleted'
-                        : thread.lastMessage.content || '';
+                      })
+                    : null}
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
-                      return (
+        {/* ── RIGHT: Chat Window ── */}
+        {showChatPanel && (
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              background: C.bg,
+              minWidth: 0,
+            }}
+          >
+            {selectedThread ? (
+              <>
+                {/* Chat Header */}
+                <div
+                  style={{
+                    padding: isMobileViewport ? '12px 14px' : '14px 24px',
+                    background: 'linear-gradient(135deg, #1e293b 0%, #2563eb 100%)',
+                    borderBottom: `1px solid rgba(255,255,255,0.08)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: isMobileViewport ? 10 : 14,
+                  }}
+                >
+                  {isMobileViewport && (
+                    <button
+                      type="button"
+                      onClick={() => setMobilePane('list')}
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: 19,
+                        border: '1px solid rgba(255,255,255,0.18)',
+                        background: 'rgba(255,255,255,0.12)',
+                        color: C.white,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
+                      aria-label="Back to conversations"
+                    >
+                      <ArrowLeft size={18} />
+                    </button>
+                  )}
+                  <Avatar user={selectedThread.otherUser} size={isMobileViewport ? 40 : 46} />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div
+                      style={{
+                        fontWeight: 800,
+                        color: C.white,
+                        fontSize: isMobileViewport ? 15 : 16,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {selectedThread.otherUser.name}
+                    </div>
+                    {selectedThread.threadType === 'freelance_order' &&
+                    selectedThread.freelanceOrder ? (
+                      <>
                         <div
-                          key={thread.threadId}
-                          onClick={() => setSelectedThread(thread)}
                           style={{
-                            padding: '14px 24px',
-                            cursor: 'pointer',
-                            background: sel
-                              ? 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(34,211,238,0.06))'
-                              : C.white,
-                            borderLeft: `4px solid ${sel ? C.primary : 'transparent'}`,
-                            borderBottom: `1px solid ${C.bg}`,
-                            transition: 'all 0.15s',
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!sel) e.currentTarget.style.background = C.bg;
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!sel) e.currentTarget.style.background = C.white;
+                            fontSize: 12,
+                            color: 'rgba(255,255,255,0.95)',
+                            fontWeight: 700,
+                            marginTop: 2,
                           }}
                         >
-                          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                            <div style={{ position: 'relative' }}>
-                              <Avatar user={ou} size={44} />
-                              {unread && (
-                                <div
-                                  style={{
-                                    position: 'absolute',
-                                    top: -2,
-                                    right: -2,
-                                    width: 14,
-                                    height: 14,
-                                    borderRadius: 7,
-                                    background: '#06b6d4',
-                                    border: '2px solid white',
+                          {selectedThread.freelanceOrder.title}
+                        </div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.82)' }}>
+                          Freelance order chat ·{' '}
+                          {selectedThread.freelanceOrder.status.replace(/_/g, ' ')}
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ fontSize: 12, color: C.white, textTransform: 'capitalize' }}>
+                        {selectedThread.otherUser.role === 'employer'
+                          ? selectedThread.otherUser.companyName || 'Employer'
+                          : selectedThread.otherUser.role}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Messages */}
+                <div
+                  style={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    padding: isMobileViewport ? '16px 14px' : '24px 28px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: isMobileViewport ? 14 : 18,
+                  }}
+                >
+                  {messages.map((msg, i) => {
+                    const sid = typeof msg.senderId === 'string' ? msg.senderId : msg.senderId._id;
+                    const isMe = sid === currentUserId;
+
+                    return (
+                      <div
+                        key={msg._id || i}
+                        onMouseEnter={() => setHoveredMsgId(msg._id)}
+                        onMouseLeave={() => setHoveredMsgId(null)}
+                        style={{
+                          alignSelf: isMe ? 'flex-end' : 'flex-start',
+                          maxWidth: isMobileViewport ? '84%' : '68%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: isMe ? 'flex-end' : 'flex-start',
+                        }}
+                      >
+                        {/* Forwarded label */}
+                        {msg.forwardedFromId && (
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: C.gray,
+                              marginBottom: 4,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
+                          >
+                            <Forward size={11} /> Forwarded
+                          </div>
+                        )}
+
+                        <div
+                          style={{
+                            display: 'flex',
+                            gap: 8,
+                            alignItems: 'flex-end',
+                            flexDirection: isMe ? 'row-reverse' : 'row',
+                          }}
+                        >
+                          {/* Bubble */}
+                          {(() => {
+                            const hasText = !!msg.content?.trim();
+                            const isImageOnly =
+                              !hasText &&
+                              msg.attachments &&
+                              msg.attachments.length > 0 &&
+                              msg.attachments.every((a) => a.type.startsWith('image/'));
+
+                            return (
+                              <div
+                                style={{
+                                  background: isMe ? C.bubbleOut : C.bubbleIn,
+                                  color: isMe ? C.white : C.deep,
+                                  padding: isImageOnly ? '4px' : '12px 16px',
+                                  borderRadius: 20,
+                                  borderBottomRightRadius: isMe ? 4 : 20,
+                                  borderBottomLeftRadius: isMe ? 20 : 4,
+                                  fontSize: 14,
+                                  lineHeight: 1.55,
+                                  whiteSpace: 'pre-wrap',
+                                  boxShadow: isMe
+                                    ? '0 4px 14px rgba(37,99,235,0.25)'
+                                    : '0 2px 8px rgba(0,0,0,0.06)',
+                                  border: isMe ? 'none' : `1px solid ${C.border}`,
+                                }}
+                              >
+                                {msg.isDeletedForEveryone ? (
+                                  <span style={{ fontStyle: 'italic', opacity: 0.65 }}>
+                                    🗑 This message was deleted
+                                  </span>
+                                ) : (
+                                  hasText && <>{msg.content}</>
+                                )}
+
+                                {/* Attachments */}
+                                {msg.attachments &&
+                                  msg.attachments.length > 0 &&
+                                  !msg.isDeletedForEveryone && (
+                                    <div
+                                      style={{
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        gap: 6,
+                                        marginTop: hasText ? 8 : 0,
+                                      }}
+                                    >
+                                      {msg.attachments.map((att, i) =>
+                                        att.type.startsWith('image/') ? (
+                                          <a
+                                            key={i}
+                                            href={att.url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                          >
+                                            <img
+                                              src={att.url}
+                                              alt={att.name}
+                                              style={{
+                                                maxWidth: isMobileViewport ? 190 : 220,
+                                                maxHeight: isMobileViewport ? 190 : 220,
+                                                borderRadius: isImageOnly ? 16 : 12,
+                                                objectFit: 'cover',
+                                                display: 'block',
+                                                border: `1px solid ${
+                                                  isMe ? 'rgba(255,255,255,0.2)' : C.border
+                                                }`,
+                                              }}
+                                            />
+                                          </a>
+                                        ) : (
+                                          <a
+                                            key={i}
+                                            href={att.url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            style={{
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              gap: 6,
+                                              padding: '8px 12px',
+                                              background: isMe ? 'rgba(255,255,255,0.15)' : C.bg,
+                                              borderRadius: 12,
+                                              color: isMe ? C.white : C.primary,
+                                              textDecoration: 'none',
+                                              fontSize: 13,
+                                              border: `1px solid ${isMe ? 'transparent' : C.border}`,
+                                            }}
+                                          >
+                                            <FileText size={16} />
+                                            <span
+                                              style={{
+                                                maxWidth: 160,
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                              }}
+                                            >
+                                              {att.name}
+                                            </span>
+                                          </a>
+                                        )
+                                      )}
+                                    </div>
+                                  )}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Hover actions */}
+                          {hoveredMsgId === msg._id && !msg.isDeletedForEveryone && (
+                            <div
+                              style={{
+                                display: 'flex',
+                                gap: 2,
+                                background: C.white,
+                                padding: '4px 6px',
+                                borderRadius: 20,
+                                boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+                                border: `1px solid ${C.border}`,
+                                alignItems: 'center',
+                              }}
+                            >
+                              <ActionBtn
+                                icon={<Forward size={13} />}
+                                label="Forward"
+                                onClick={() => setForwardModal({ open: true, msg })}
+                              />
+                              {isMe && (msg.editCount ?? 0) < 5 && (
+                                <ActionBtn
+                                  icon={<Edit2 size={13} />}
+                                  label="Edit"
+                                  onClick={() => {
+                                    setEditingMsg(msg);
+                                    setInputText(msg.content);
                                   }}
                                 />
                               )}
+                              <ActionBtn
+                                icon={<Trash2 size={13} />}
+                                label="Delete"
+                                color={C.danger}
+                                onClick={() => setDeleteModal({ open: true, msg })}
+                              />
                             </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'baseline',
-                                  marginBottom: 3,
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    fontWeight: unread ? 800 : 600,
-                                    fontSize: 14,
-                                    color: sel ? C.primary : C.deep,
-                                  }}
-                                >
-                                  {ou.name}
-                                </span>
-                                <span
-                                  style={{
-                                    fontSize: 11,
-                                    color: unread ? C.primary : C.gray,
-                                    fontWeight: 600,
-                                    flexShrink: 0,
-                                    marginLeft: 8,
-                                  }}
-                                >
-                                  {fmtTime(thread.lastMessage.createdAt)}
-                                </span>
-                              </div>
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    fontSize: 13,
-                                    color: unread ? C.deep : C.gray,
-                                    fontWeight: unread ? 600 : 400,
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                    flex: 1,
-                                    marginRight: 8,
-                                  }}
-                                >
-                                  {thread.lastMessage.senderId === currentUserId ? 'You: ' : ''}
-                                  {preview}
-                                </div>
-                                {unread && (
-                                  <div
-                                    style={{
-                                      background: C.primary,
-                                      color: C.white,
-                                      fontSize: 10,
-                                      fontWeight: 800,
-                                      padding: '2px 7px',
-                                      borderRadius: 99,
-                                    }}
-                                  >
-                                    {thread.unreadCount}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+                          )}
                         </div>
-                      );
-                    })
-                  : null}
-              </>
-            )}
-          </div>
-        </div>
 
-        {/* ── RIGHT: Chat Window ── */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: C.bg }}>
-          {selectedThread ? (
-            <>
-              {/* Chat Header */}
-              <div
-                style={{
-                  padding: '14px 24px',
-                  background: 'linear-gradient(135deg, #1e293b 0%, #2563eb 100%)',
-                  borderBottom: `1px solid rgba(255,255,255,0.08)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 14,
-                }}
-              >
-                <Avatar user={selectedThread.otherUser} size={46} />
-                <div>
-                  <div style={{ fontWeight: 800, color: C.white, fontSize: 16 }}>
-                    {selectedThread.otherUser.name}
-                  </div>
-                  {selectedThread.threadType === 'freelance_order' &&
-                  selectedThread.freelanceOrder ? (
-                    <>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: 'rgba(255,255,255,0.95)',
-                          fontWeight: 700,
-                          marginTop: 2,
-                        }}
-                      >
-                        {selectedThread.freelanceOrder.title}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.82)' }}>
-                        Freelance order chat ·{' '}
-                        {selectedThread.freelanceOrder.status.replace(/_/g, ' ')}
-                      </div>
-                    </>
-                  ) : (
-                    <div style={{ fontSize: 12, color: C.white, textTransform: 'capitalize' }}>
-                      {selectedThread.otherUser.role === 'employer'
-                        ? selectedThread.otherUser.companyName || 'Employer'
-                        : selectedThread.otherUser.role}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Messages */}
-              <div
-                style={{
-                  flex: 1,
-                  overflowY: 'auto',
-                  padding: '24px 28px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 18,
-                }}
-              >
-                {messages.map((msg, i) => {
-                  const sid = typeof msg.senderId === 'string' ? msg.senderId : msg.senderId._id;
-                  const isMe = sid === currentUserId;
-
-                  return (
-                    <div
-                      key={msg._id || i}
-                      onMouseEnter={() => setHoveredMsgId(msg._id)}
-                      onMouseLeave={() => setHoveredMsgId(null)}
-                      style={{
-                        alignSelf: isMe ? 'flex-end' : 'flex-start',
-                        maxWidth: '68%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: isMe ? 'flex-end' : 'flex-start',
-                      }}
-                    >
-                      {/* Forwarded label */}
-                      {msg.forwardedFromId && (
+                        {/* Meta row */}
                         <div
                           style={{
                             fontSize: 11,
                             color: C.gray,
-                            marginBottom: 4,
+                            marginTop: 4,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 4,
+                            gap: 5,
                           }}
                         >
-                          <Forward size={11} /> Forwarded
+                          <span>{fmtTime(msg.createdAt)}</span>
+                          {(msg.editCount ?? 0) > 0 && <span>· Edited</span>}
+                          {isMe &&
+                            (msg.isRead ? (
+                              <CheckCheck size={14} color={C.primary} strokeWidth={2.5} />
+                            ) : (
+                              <Check size={14} color={C.gray} strokeWidth={2.5} />
+                            ))}
                         </div>
-                      )}
-
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: 8,
-                          alignItems: 'flex-end',
-                          flexDirection: isMe ? 'row-reverse' : 'row',
-                        }}
-                      >
-                        {/* Bubble */}
-                        {(() => {
-                          const hasText = !!msg.content?.trim();
-                          const isImageOnly =
-                            !hasText &&
-                            msg.attachments &&
-                            msg.attachments.length > 0 &&
-                            msg.attachments.every((a) => a.type.startsWith('image/'));
-
-                          return (
-                            <div
-                              style={{
-                                background: isMe ? C.bubbleOut : C.bubbleIn,
-                                color: isMe ? C.white : C.deep,
-                                padding: isImageOnly ? '4px' : '12px 16px',
-                                borderRadius: 20,
-                                borderBottomRightRadius: isMe ? 4 : 20,
-                                borderBottomLeftRadius: isMe ? 20 : 4,
-                                fontSize: 14,
-                                lineHeight: 1.55,
-                                whiteSpace: 'pre-wrap',
-                                boxShadow: isMe
-                                  ? '0 4px 14px rgba(37,99,235,0.25)'
-                                  : '0 2px 8px rgba(0,0,0,0.06)',
-                                border: isMe ? 'none' : `1px solid ${C.border}`,
-                              }}
-                            >
-                              {msg.isDeletedForEveryone ? (
-                                <span style={{ fontStyle: 'italic', opacity: 0.65 }}>
-                                  🗑 This message was deleted
-                                </span>
-                              ) : (
-                                hasText && <>{msg.content}</>
-                              )}
-
-                              {/* Attachments */}
-                              {msg.attachments &&
-                                msg.attachments.length > 0 &&
-                                !msg.isDeletedForEveryone && (
-                                  <div
-                                    style={{
-                                      display: 'flex',
-                                      flexWrap: 'wrap',
-                                      gap: 6,
-                                      marginTop: hasText ? 8 : 0,
-                                    }}
-                                  >
-                                    {msg.attachments.map((att, i) =>
-                                      att.type.startsWith('image/') ? (
-                                        <a key={i} href={att.url} target="_blank" rel="noreferrer">
-                                          <img
-                                            src={att.url}
-                                            alt={att.name}
-                                            style={{
-                                              maxWidth: 220,
-                                              maxHeight: 220,
-                                              borderRadius: isImageOnly ? 16 : 12,
-                                              objectFit: 'cover',
-                                              display: 'block',
-                                              border: `1px solid ${
-                                                isMe ? 'rgba(255,255,255,0.2)' : C.border
-                                              }`,
-                                            }}
-                                          />
-                                        </a>
-                                      ) : (
-                                        <a
-                                          key={i}
-                                          href={att.url}
-                                          target="_blank"
-                                          rel="noreferrer"
-                                          style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 6,
-                                            padding: '8px 12px',
-                                            background: isMe ? 'rgba(255,255,255,0.15)' : C.bg,
-                                            borderRadius: 12,
-                                            color: isMe ? C.white : C.primary,
-                                            textDecoration: 'none',
-                                            fontSize: 13,
-                                            border: `1px solid ${isMe ? 'transparent' : C.border}`,
-                                          }}
-                                        >
-                                          <FileText size={16} />
-                                          <span
-                                            style={{
-                                              maxWidth: 160,
-                                              overflow: 'hidden',
-                                              textOverflow: 'ellipsis',
-                                              whiteSpace: 'nowrap',
-                                            }}
-                                          >
-                                            {att.name}
-                                          </span>
-                                        </a>
-                                      )
-                                    )}
-                                  </div>
-                                )}
-                            </div>
-                          );
-                        })()}
-
-                        {/* Hover actions */}
-                        {hoveredMsgId === msg._id && !msg.isDeletedForEveryone && (
-                          <div
-                            style={{
-                              display: 'flex',
-                              gap: 2,
-                              background: C.white,
-                              padding: '4px 6px',
-                              borderRadius: 20,
-                              boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-                              border: `1px solid ${C.border}`,
-                              alignItems: 'center',
-                            }}
-                          >
-                            <ActionBtn
-                              icon={<Forward size={13} />}
-                              label="Forward"
-                              onClick={() => setForwardModal({ open: true, msg })}
-                            />
-                            {isMe && (msg.editCount ?? 0) < 5 && (
-                              <ActionBtn
-                                icon={<Edit2 size={13} />}
-                                label="Edit"
-                                onClick={() => {
-                                  setEditingMsg(msg);
-                                  setInputText(msg.content);
-                                }}
-                              />
-                            )}
-                            <ActionBtn
-                              icon={<Trash2 size={13} />}
-                              label="Delete"
-                              color={C.danger}
-                              onClick={() => setDeleteModal({ open: true, msg })}
-                            />
-                          </div>
-                        )}
                       </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </div>
 
-                      {/* Meta row */}
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: C.gray,
-                          marginTop: 4,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 5,
-                        }}
-                      >
-                        <span>{fmtTime(msg.createdAt)}</span>
-                        {(msg.editCount ?? 0) > 0 && <span>· Edited</span>}
-                        {isMe &&
-                          (msg.isRead ? (
-                            <CheckCheck size={14} color={C.primary} strokeWidth={2.5} />
-                          ) : (
-                            <Check size={14} color={C.gray} strokeWidth={2.5} />
-                          ))}
-                      </div>
-                    </div>
-                  );
-                })}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Input Area */}
-              <div
-                style={{
-                  padding: '16px 24px',
-                  background: C.white,
-                  borderTop: `1px solid ${C.border}`,
-                }}
-              >
-                {/* Editing indicator */}
-                {editingMsg && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '8px 14px',
-                      background: '#FEF9C3',
-                      border: `1px solid #FDE68A`,
-                      borderRadius: 8,
-                      marginBottom: 10,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: '#92400E',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Edit2 size={14} /> Editing message
-                    </div>
-                    <X
-                      size={15}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => {
-                        setEditingMsg(null);
-                        setInputText('');
+                {/* Input Area */}
+                <div
+                  style={{
+                    padding: isMobileViewport
+                      ? '12px 12px calc(12px + env(safe-area-inset-bottom))'
+                      : '16px 24px',
+                    background: C.white,
+                    borderTop: `1px solid ${C.border}`,
+                  }}
+                >
+                  {/* Editing indicator */}
+                  {editingMsg && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 14px',
+                        background: '#FEF9C3',
+                        border: `1px solid #FDE68A`,
+                        borderRadius: 8,
+                        marginBottom: 10,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: '#92400E',
                       }}
-                    />
-                  </div>
-                )}
-
-                {/* Templates */}
-                {currentUserRole === 'employer' &&
-                  selectedThread.threadType === 'direct' &&
-                  !editingMsg && (
-                    <div style={{ marginBottom: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {[
-                        {
-                          key: 'interview_invite',
-                          label: 'Interview Invite',
-                          bg: '#EFF6FF',
-                          border: '#BFDBFE',
-                          color: '#1E40AF',
-                        },
-                        {
-                          key: 'offer_letter',
-                          label: 'Offer Letter',
-                          bg: '#F0FDF4',
-                          border: '#BBF7D0',
-                          color: '#166534',
-                        },
-                        {
-                          key: 'rejection',
-                          label: 'Rejection',
-                          bg: '#FFF1F2',
-                          border: '#FECDD3',
-                          color: '#9F1239',
-                        },
-                      ].map((tmpl) => (
-                        <button
-                          key={tmpl.key}
-                          onClick={() => applyTemplate(tmpl.key)}
-                          style={{
-                            fontSize: 12,
-                            padding: '5px 14px',
-                            borderRadius: 99,
-                            background: tmpl.bg,
-                            border: `1px solid ${tmpl.border}`,
-                            cursor: 'pointer',
-                            color: tmpl.color,
-                            fontWeight: 700,
-                            transition: 'all 0.15s',
-                          }}
-                        >
-                          + {tmpl.label}
-                        </button>
-                      ))}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Edit2 size={14} /> Editing message
+                      </div>
+                      <X
+                        size={15}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => {
+                          setEditingMsg(null);
+                          setInputText('');
+                        }}
+                      />
                     </div>
                   )}
 
-                {messagingLocked && (
-                  <div
-                    style={{
-                      marginBottom: 12,
-                      padding: '10px 14px',
-                      borderRadius: 12,
-                      background: '#FFF7ED',
-                      border: '1px solid #FED7AA',
-                      color: '#9A3412',
-                      fontSize: 12,
-                      fontWeight: 700,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                    }}
-                  >
-                    {selectedThread.otherUser.role === 'employer' ||
-                    currentUserRole === 'employer' ? (
-                      <>
-                        🔒 You can only reply once your application is{' '}
-                        <strong>&nbsp;Shortlisted</strong>,&nbsp;
-                        <strong>Assessment Sent</strong>,&nbsp;<strong>Interview Scheduled</strong>,
-                        or&nbsp;<strong>Hired</strong>. You can still read messages from the
-                        employer.
-                      </>
-                    ) : (
-                      <>
-                        🔒 You can only message each other if you have an accepted or scheduled
-                        mentorship session. Completed or pending sessions are read-only.
-                      </>
+                  {/* Templates */}
+                  {currentUserRole === 'employer' &&
+                    selectedThread.threadType === 'direct' &&
+                    !editingMsg && (
+                      <div style={{ marginBottom: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {[
+                          {
+                            key: 'interview_invite',
+                            label: 'Interview Invite',
+                            bg: '#EFF6FF',
+                            border: '#BFDBFE',
+                            color: '#1E40AF',
+                          },
+                          {
+                            key: 'offer_letter',
+                            label: 'Offer Letter',
+                            bg: '#F0FDF4',
+                            border: '#BBF7D0',
+                            color: '#166534',
+                          },
+                          {
+                            key: 'rejection',
+                            label: 'Rejection',
+                            bg: '#FFF1F2',
+                            border: '#FECDD3',
+                            color: '#9F1239',
+                          },
+                        ].map((tmpl) => (
+                          <button
+                            key={tmpl.key}
+                            onClick={() => applyTemplate(tmpl.key)}
+                            style={{
+                              fontSize: 12,
+                              padding: '5px 14px',
+                              borderRadius: 99,
+                              background: tmpl.bg,
+                              border: `1px solid ${tmpl.border}`,
+                              cursor: 'pointer',
+                              color: tmpl.color,
+                              fontWeight: 700,
+                              transition: 'all 0.15s',
+                            }}
+                          >
+                            + {tmpl.label}
+                          </button>
+                        ))}
+                      </div>
                     )}
-                  </div>
-                )}
 
-                {!messagingLocked &&
-                  selectedThreadReadOnly &&
-                  selectedThread?.threadType === 'freelance_order' && (
+                  {messagingLocked && (
                     <div
                       style={{
                         marginBottom: 12,
@@ -1781,220 +1868,259 @@ export default function Inbox({
                         color: '#9A3412',
                         fontSize: 12,
                         fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
                       }}
                     >
-                      This freelance chat is now read-only because the order is closed.
+                      {selectedThread.otherUser.role === 'employer' ||
+                      currentUserRole === 'employer' ? (
+                        <>
+                          🔒 You can only reply once your application is{' '}
+                          <strong>&nbsp;Shortlisted</strong>,&nbsp;
+                          <strong>Assessment Sent</strong>,&nbsp;
+                          <strong>Interview Scheduled</strong>, or&nbsp;<strong>Hired</strong>. You
+                          can still read messages from the employer.
+                        </>
+                      ) : (
+                        <>
+                          🔒 You can only message each other if you have an accepted or scheduled
+                          mentorship session. Completed or pending sessions are read-only.
+                        </>
+                      )}
                     </div>
                   )}
 
-                {/* File Previews */}
-                {!editingMsg && inputFiles.length > 0 && (
-                  <div
-                    style={{ display: 'flex', gap: 10, flexWrap: 'wrap', padding: '0 10px 14px' }}
-                  >
-                    {inputFiles.map((file, idx) => (
+                  {!messagingLocked &&
+                    selectedThreadReadOnly &&
+                    selectedThread?.threadType === 'freelance_order' && (
                       <div
-                        key={idx}
                         style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 8,
-                          background: '#EFF6FF',
-                          padding: '6px 12px',
-                          borderRadius: 99,
+                          marginBottom: 12,
+                          padding: '10px 14px',
+                          borderRadius: 12,
+                          background: '#FFF7ED',
+                          border: '1px solid #FED7AA',
+                          color: '#9A3412',
                           fontSize: 12,
-                          color: '#1E40AF',
-                          border: `1px solid #BFDBFE`,
+                          fontWeight: 700,
                         }}
                       >
-                        {file.type.startsWith('image/') ? (
-                          <ImageIcon size={14} />
-                        ) : (
-                          <FileText size={14} />
-                        )}
-                        <span
+                        This freelance chat is now read-only because the order is closed.
+                      </div>
+                    )}
+
+                  {/* File Previews */}
+                  {!editingMsg && inputFiles.length > 0 && (
+                    <div
+                      style={{ display: 'flex', gap: 10, flexWrap: 'wrap', padding: '0 10px 14px' }}
+                    >
+                      {inputFiles.map((file, idx) => (
+                        <div
+                          key={idx}
                           style={{
-                            maxWidth: 120,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            background: '#EFF6FF',
+                            padding: '6px 12px',
+                            borderRadius: 99,
+                            fontSize: 12,
+                            color: '#1E40AF',
+                            border: `1px solid #BFDBFE`,
                           }}
                         >
-                          {file.name}
-                        </span>
-                        <X
-                          size={14}
-                          style={{ cursor: 'pointer', color: '#1E40AF', opacity: 0.6 }}
-                          onClick={() => setInputFiles((prev) => prev.filter((_, i) => i !== idx))}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
+                          {file.type.startsWith('image/') ? (
+                            <ImageIcon size={14} />
+                          ) : (
+                            <FileText size={14} />
+                          )}
+                          <span
+                            style={{
+                              maxWidth: 120,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              fontWeight: 600,
+                            }}
+                          >
+                            {file.name}
+                          </span>
+                          <X
+                            size={14}
+                            style={{ cursor: 'pointer', color: '#1E40AF', opacity: 0.6 }}
+                            onClick={() =>
+                              setInputFiles((prev) => prev.filter((_, i) => i !== idx))
+                            }
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                {/* Input row */}
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 10,
-                    alignItems: 'flex-end',
-                    background: C.bg,
-                    padding: '8px 8px 8px 14px',
-                    borderRadius: 24,
-                    border: `1.5px solid ${C.border}`,
-                    transition: 'border-color 0.15s',
-                  }}
-                >
-                  {/* Paperclip */}
-                  {!editingMsg && (
-                    <>
-                      <button
-                        title="Attach files (max 4, 8MB each)"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={
-                          isSending ||
-                          isUploading ||
-                          inputFiles.length >= 4 ||
-                          selectedThreadReadOnly
-                        }
-                        style={{
-                          border: 'none',
-                          background: 'transparent',
-                          cursor:
+                  {/* Input row */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: isMobileViewport ? 8 : 10,
+                      alignItems: 'flex-end',
+                      background: C.bg,
+                      padding: isMobileViewport ? '8px 8px 8px 12px' : '8px 8px 8px 14px',
+                      borderRadius: isMobileViewport ? 20 : 24,
+                      border: `1.5px solid ${C.border}`,
+                      transition: 'border-color 0.15s',
+                    }}
+                  >
+                    {/* Paperclip */}
+                    {!editingMsg && (
+                      <>
+                        <button
+                          title="Attach files (max 4, 8MB each)"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={
                             isSending ||
                             isUploading ||
                             inputFiles.length >= 4 ||
                             selectedThreadReadOnly
-                              ? 'not-allowed'
-                              : 'pointer',
-                          color: C.gray,
-                          padding: '0 4px 6px 0',
-                          display: 'flex',
-                          alignItems: 'flex-end',
-                          alignSelf: 'stretch',
-                          opacity: inputFiles.length >= 4 || selectedThreadReadOnly ? 0.3 : 1,
-                        }}
-                      >
-                        <Paperclip size={20} />
-                      </button>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*,application/pdf"
-                        ref={fileInputRef}
-                        style={{ display: 'none' }}
-                        onChange={(e) => {
-                          if (e.target.files) {
-                            const incoming = Array.from(e.target.files);
-                            setInputFiles((prev) => [...prev, ...incoming].slice(0, 4));
-                            if (fileInputRef.current) fileInputRef.current.value = '';
                           }
-                        }}
-                      />
-                    </>
-                  )}
-
-                  {/* Textarea */}
-                  <textarea
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    placeholder={
-                      selectedThreadReadOnly
-                        ? selectedThread?.threadType === 'freelance_order'
-                          ? 'This freelance order chat is closed.'
-                          : 'This chat is closed.'
-                        : editingMsg
-                          ? 'Edit message…'
-                          : 'Type a message…'
-                    }
-                    disabled={isSending || isUploading || selectedThreadReadOnly}
-                    style={{
-                      flex: 1,
-                      minHeight: 24,
-                      maxHeight: 120,
-                      resize: 'none',
-                      padding: '8px 0',
-                      background: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      fontSize: 14,
-                      fontFamily: 'inherit',
-                      color: C.deep,
-                      lineHeight: 1.5,
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendOrEdit();
-                      }
-                    }}
-                  />
-
-                  {/* Send button */}
-                  <button
-                    onClick={handleSendOrEdit}
-                    disabled={isSending || isUploading || !canSend}
-                    style={{
-                      width: 42,
-                      height: 42,
-                      borderRadius: 21,
-                      flexShrink: 0,
-                      background: canSend ? C.bubbleOut : '#CBD5E1',
-                      color: C.white,
-                      border: 'none',
-                      cursor: canSend ? 'pointer' : 'not-allowed',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: canSend ? `0 4px 14px rgba(37,99,235,0.3)` : 'none',
-                      transition: 'all 0.2s',
-                    }}
-                  >
-                    {isSending || isUploading ? (
-                      <Loader2 className="animate-spin" size={18} />
-                    ) : (
-                      <Send size={17} style={{ marginLeft: 1 }} />
+                          style={{
+                            border: 'none',
+                            background: 'transparent',
+                            cursor:
+                              isSending ||
+                              isUploading ||
+                              inputFiles.length >= 4 ||
+                              selectedThreadReadOnly
+                                ? 'not-allowed'
+                                : 'pointer',
+                            color: C.gray,
+                            padding: '0 4px 6px 0',
+                            display: 'flex',
+                            alignItems: 'flex-end',
+                            alignSelf: 'stretch',
+                            opacity: inputFiles.length >= 4 || selectedThreadReadOnly ? 0.3 : 1,
+                          }}
+                        >
+                          <Paperclip size={20} />
+                        </button>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*,application/pdf"
+                          ref={fileInputRef}
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            if (e.target.files) {
+                              const incoming = Array.from(e.target.files);
+                              setInputFiles((prev) => [...prev, ...incoming].slice(0, 4));
+                              if (fileInputRef.current) fileInputRef.current.value = '';
+                            }
+                          }}
+                        />
+                      </>
                     )}
-                  </button>
+
+                    {/* Textarea */}
+                    <textarea
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      placeholder={
+                        selectedThreadReadOnly
+                          ? selectedThread?.threadType === 'freelance_order'
+                            ? 'This freelance order chat is closed.'
+                            : 'This chat is closed.'
+                          : editingMsg
+                            ? 'Edit message…'
+                            : 'Type a message…'
+                      }
+                      disabled={isSending || isUploading || selectedThreadReadOnly}
+                      style={{
+                        flex: 1,
+                        minHeight: 24,
+                        maxHeight: 120,
+                        resize: 'none',
+                        padding: '8px 0',
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        fontSize: 14,
+                        fontFamily: 'inherit',
+                        color: C.deep,
+                        lineHeight: 1.5,
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendOrEdit();
+                        }
+                      }}
+                    />
+
+                    {/* Send button */}
+                    <button
+                      onClick={handleSendOrEdit}
+                      disabled={isSending || isUploading || !canSend}
+                      style={{
+                        width: isMobileViewport ? 40 : 42,
+                        height: isMobileViewport ? 40 : 42,
+                        borderRadius: isMobileViewport ? 20 : 21,
+                        flexShrink: 0,
+                        background: canSend ? C.bubbleOut : '#CBD5E1',
+                        color: C.white,
+                        border: 'none',
+                        cursor: canSend ? 'pointer' : 'not-allowed',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: canSend ? `0 4px 14px rgba(37,99,235,0.3)` : 'none',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {isSending || isUploading ? (
+                        <Loader2 className="animate-spin" size={18} />
+                      ) : (
+                        <Send size={17} style={{ marginLeft: 1 }} />
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </>
-          ) : (
-            /* Empty state */
-            <div
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 12,
-              }}
-            >
+              </>
+            ) : (
+              /* Empty state */
               <div
                 style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: 36,
-                  background: 'linear-gradient(135deg, #2563eb, #22d3ee)',
+                  flex: 1,
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 8px 24px rgba(37,99,235,0.25)',
+                  gap: 12,
                 }}
               >
-                <Send size={32} color={C.white} style={{ marginLeft: 3 }} />
+                <div
+                  style={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: 36,
+                    background: 'linear-gradient(135deg, #2563eb, #22d3ee)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 8px 24px rgba(37,99,235,0.25)',
+                  }}
+                >
+                  <Send size={32} color={C.white} style={{ marginLeft: 3 }} />
+                </div>
+                <p style={{ fontWeight: 700, fontSize: 17, color: C.deep, margin: 0 }}>
+                  Select a conversation
+                </p>
+                <p style={{ fontSize: 13, color: C.gray, margin: 0 }}>
+                  Pick a thread from the left to start chatting
+                </p>
               </div>
-              <p style={{ fontWeight: 700, fontSize: 17, color: C.deep, margin: 0 }}>
-                Select a conversation
-              </p>
-              <p style={{ fontSize: 13, color: C.gray, margin: 0 }}>
-                Pick a thread from the left to start chatting
-              </p>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

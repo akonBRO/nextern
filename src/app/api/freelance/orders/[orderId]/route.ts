@@ -12,6 +12,7 @@ import {
 import { calculateFreelanceQuote, inferFreelanceProposalStatus } from '@/lib/freelance-shared';
 import { createNotification } from '@/lib/notify';
 import { FreelanceOrderActionSchema } from '@/lib/validations';
+import '@/models/FreelanceListing';
 import { FreelanceOrder } from '@/models/FreelanceOrder';
 import { FreelanceReview } from '@/models/FreelanceReview';
 

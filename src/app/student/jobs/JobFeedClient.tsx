@@ -954,6 +954,7 @@ export default function JobFeedClient({
         </div>
       ) : (
         <div
+          className="job-card-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
@@ -970,6 +971,7 @@ export default function JobFeedClient({
             return (
               <div
                 key={job._id}
+                className="job-card"
                 style={{
                   background: C.white,
                   borderRadius: 18,
@@ -1412,8 +1414,23 @@ export default function JobFeedClient({
         }
 
         @media (max-width: 1100px) {
+          .job-card-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+
           .job-filter-grid {
             grid-template-columns: repeat(2, minmax(150px, 1fr));
+          }
+        }
+
+        @media (max-width: 760px) {
+          .job-card-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .job-card {
+            padding: 18px 16px !important;
+            border-radius: 16px !important;
           }
         }
 
