@@ -52,7 +52,7 @@ export default async function EmployerCalendarPage() {
     >
       <DashboardPage>
         <HeroCard
-          eyebrow="Hiring calendar"
+          eyebrow="Calendar"
           title="See your hiring schedule on a real monthly calendar"
           description="Navigate month by month, keep interview schedules visible, and monitor job deadlines and employer-hosted events from one shared planner."
           actions={
@@ -89,7 +89,7 @@ export default async function EmployerCalendarPage() {
             events={calendarEvents}
             isCalendarConnected={false}
             mode="page"
-            boardTitle="Hiring Calendar"
+            boardTitle="Calendar"
             boardSubtitle="Browse month by month, track interviews, deadlines, and employer-hosted events."
             fullCalendarHref={null}
             manageCalendarHref={null}

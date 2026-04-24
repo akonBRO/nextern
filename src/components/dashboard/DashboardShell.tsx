@@ -148,6 +148,30 @@ export default function DashboardShell({
   hideFooter = false,
 }: DashboardShellProps) {
   const profile = profileConfig[role];
+  const profileMenuItems =
+    role === 'student'
+      ? [
+          {
+            href: profile.href,
+            label: profile.label,
+            description: 'View and edit your profile',
+            icon: profile.icon,
+          },
+          {
+            href: '/student/badges',
+            label: 'Badges',
+            description: 'See your earned badges and progress',
+            icon: 'shield' as const,
+          },
+        ]
+      : [
+          {
+            href: profile.href,
+            label: profile.label,
+            description: 'View and edit your profile',
+            icon: profile.icon,
+          },
+        ];
   const pathname = usePathname();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -501,54 +525,59 @@ export default function DashboardShell({
                       )}
                     </div>
 
-                    <Link
-                      href={profile.href}
-                      onClick={() => setUserMenuOpen(false)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        padding: '11px 12px',
-                        borderRadius: 12,
-                        textDecoration: 'none',
-                        color: '#1E293B',
-                        marginBottom: 6,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#F1F5F9';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      <div
+                    {profileMenuItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setUserMenuOpen(false)}
                         style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 10,
-                          background: '#EFF6FF',
-                          color: '#2563EB',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
+                          gap: 10,
+                          padding: '11px 12px',
+                          borderRadius: 12,
+                          textDecoration: 'none',
+                          color: '#1E293B',
+                          marginBottom: 6,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#F1F5F9';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
                         }}
                       >
-                        {profile.icon === 'building' ? (
-                          <Building2 size={15} strokeWidth={2} />
-                        ) : (
-                          <Users size={15} strokeWidth={2} />
-                        )}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
-                          {profile.label}
+                        <div
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 10,
+                            background: '#EFF6FF',
+                            color: '#2563EB',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {item.icon === 'building' ? (
+                            <Building2 size={15} strokeWidth={2} />
+                          ) : item.icon === 'shield' ? (
+                            <ShieldCheck size={15} strokeWidth={2} />
+                          ) : (
+                            <Users size={15} strokeWidth={2} />
+                          )}
                         </div>
-                        <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
-                          View and edit your profile
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                            {item.label}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+                            {item.description}
+                          </div>
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
+                    ))}
 
                     <button
                       onClick={handleSignOut}

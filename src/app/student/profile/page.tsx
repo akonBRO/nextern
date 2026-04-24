@@ -30,6 +30,7 @@ import {
   Phone,
   Bell,
   Calendar,
+  Undo2,
 } from 'lucide-react';
 import { useUploadThing } from '@/lib/uploadthing';
 import CalendarConnectButton from '@/components/calendar/CalendarConnectButton';
@@ -2958,38 +2959,59 @@ export default function StudentProfilePage() {
               {[
                 {
                   key: 'application_under_review',
-                  label: '👀 Under Review',
+                  title: 'Under Review',
                   desc: 'When an employer starts reviewing your application',
+                  icon: <Eye size={15} />,
+                  iconBg: '#EFF6FF',
+                  iconColor: '#2563EB',
                 },
                 {
                   key: 'application_shortlisted',
-                  label: '🎉 Shortlisted',
+                  title: 'Shortlisted',
                   desc: 'When you get shortlisted for a role',
+                  icon: <CheckCircle2 size={15} />,
+                  iconBg: '#ECFDF5',
+                  iconColor: '#059669',
                 },
                 {
                   key: 'application_assessment_sent',
-                  label: '📋 Assessment Sent',
+                  title: 'Assessment Sent',
                   desc: 'When an assessment is assigned to you',
+                  icon: <FileText size={15} />,
+                  iconBg: '#F8FAFC',
+                  iconColor: '#475569',
                 },
                 {
                   key: 'application_interview',
-                  label: '📅 Interview Scheduled',
+                  title: 'Interview Scheduled',
                   desc: 'When an interview is booked for you',
+                  icon: <Calendar size={15} />,
+                  iconBg: '#F5F3FF',
+                  iconColor: '#7C3AED',
                 },
                 {
                   key: 'application_hired',
-                  label: '🎊 Hired',
+                  title: 'Hired',
                   desc: 'When you are selected for a role',
+                  icon: <Award size={15} />,
+                  iconBg: '#ECFDF5',
+                  iconColor: '#059669',
                 },
                 {
                   key: 'application_rejected',
-                  label: '📩 Not Selected',
+                  title: 'Not Selected',
                   desc: 'When an employer decides not to proceed',
+                  icon: <AlertCircle size={15} />,
+                  iconBg: '#FEF2F2',
+                  iconColor: '#DC2626',
                 },
                 {
                   key: 'application_withdrawn',
-                  label: '↩️ Withdrawn',
+                  title: 'Withdrawn',
                   desc: 'When your application is withdrawn',
+                  icon: <Undo2 size={15} />,
+                  iconBg: '#F8FAFC',
+                  iconColor: '#64748B',
                 },
               ].map((item) => {
                 const isOn = form.notificationPreferences[item.key] !== false;
@@ -3006,11 +3028,30 @@ export default function StudentProfilePage() {
                       borderRadius: 12,
                     }}
                   >
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-                        {item.label}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 10,
+                          background: item.iconBg,
+                          color: item.iconColor,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {item.icon}
                       </div>
-                      <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                          {item.title}
+                        </div>
+                        <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>
+                          {item.desc}
+                        </div>
+                      </div>
                     </div>
                     <button
                       type="button"

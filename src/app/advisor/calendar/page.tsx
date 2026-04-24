@@ -51,7 +51,7 @@ export default async function AdvisorCalendarPage() {
     >
       <DashboardPage>
         <HeroCard
-          eyebrow="Advising calendar"
+          eyebrow="Calendar"
           title="See your posted events on a real monthly calendar"
           description="Navigate month by month and keep only your hosted event dates and registration deadlines visible from one planner."
           actions={
@@ -95,7 +95,7 @@ export default async function AdvisorCalendarPage() {
             events={events}
             isCalendarConnected={advisor?.googleCalendarConnected ?? false}
             mode="page"
-            boardTitle="Advising Calendar"
+            boardTitle="Calendar"
             boardSubtitle="Browse month by month and track only your hosted sessions and deadlines."
             manageCalendarHref="/advisor/profile#calendar"
             eventHrefTemplate="/advisor/events/:jobId/registrants"

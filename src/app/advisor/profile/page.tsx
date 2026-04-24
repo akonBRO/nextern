@@ -17,6 +17,9 @@ import {
 } from 'lucide-react';
 import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
 import CalendarConnectButton from '@/components/calendar/CalendarConnectButton';
+import DashboardShell from '@/components/dashboard/DashboardShell';
+import { ADVISOR_NAV_ITEMS } from '@/lib/advisor-navigation';
+import { DEPT_NAV_ITEMS } from '@/lib/dept-navigation';
 
 const C = {
   blue: '#2563EB',
@@ -228,509 +231,542 @@ export default function AdvisorProfilePage() {
 
   const role = user?.role as string;
   const isDeptHead = role === 'dept_head';
+  const rawUserId = (user as { _id?: string | { toString(): string } } | null)?._id;
+  const resolvedUserId =
+    typeof rawUserId === 'string'
+      ? rawUserId
+      : rawUserId?.toString
+        ? rawUserId.toString()
+        : undefined;
+  const shellSubtitle =
+    [form.designation, form.institutionName].filter(Boolean).join(' · ') ||
+    (isDeptHead ? 'Department workspace' : 'Advisor workspace');
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
-      {/* Header */}
-      <div
-        style={{
-          background: `linear-gradient(145deg, ${C.dark}, ${C.indigo})`,
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-        }}
-      >
-        <div style={{ maxWidth: 820, margin: '0 auto', padding: '20px 24px' }}>
-          <Link
-            href={isDeptHead ? '/dept/dashboard' : '/advisor/dashboard'}
-            style={{ color: C.gray, fontSize: 13, textDecoration: 'none', fontWeight: 500 }}
-          >
-            ← Back to Dashboard
-          </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}>
-            <ProfilePictureUpload
-              currentImage={(user?.image as string) ?? null}
-              name={form.name ?? ''}
-              size={72}
-              radius="50%"
-              gradient="linear-gradient(135deg, #7C3AED, #6D28D9)"
-              onUploaded={async (url) => {
-                await fetch('/api/users/profile', {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ image: url }),
-                });
-                setUser((prev) => (prev ? { ...prev, image: url } : prev));
-              }}
-              onRemoved={async () => {
-                await fetch('/api/users/profile', {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ image: null }),
-                });
-                setUser((prev) => (prev ? { ...prev, image: undefined } : prev));
-              }}
-            />
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <span
+    <DashboardShell
+      role={isDeptHead ? 'departmentHead' : 'advisor'}
+      roleLabel={isDeptHead ? 'Department dashboard' : 'Advisor dashboard'}
+      homeHref={isDeptHead ? '/dept/dashboard' : '/advisor/dashboard'}
+      navItems={isDeptHead ? DEPT_NAV_ITEMS : ADVISOR_NAV_ITEMS}
+      user={{
+        name: form.name || (user?.name as string) || (isDeptHead ? 'Department Head' : 'Advisor'),
+        email: (user?.email as string) ?? '',
+        image: (user?.image as string) ?? undefined,
+        subtitle: shellSubtitle,
+        unreadNotifications: Number(
+          (user as { unreadNotifications?: number } | null)?.unreadNotifications ?? 0
+        ),
+        unreadMessages: Number((user as { unreadMessages?: number } | null)?.unreadMessages ?? 0),
+        userId: resolvedUserId,
+      }}
+    >
+      <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
+        {/* Header */}
+        <div
+          style={{
+            background: `linear-gradient(145deg, ${C.dark}, ${C.indigo})`,
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <div style={{ maxWidth: 820, margin: '0 auto', padding: '20px 24px' }}>
+            <Link
+              href={isDeptHead ? '/dept/dashboard' : '/advisor/dashboard'}
+              style={{ color: C.gray, fontSize: 13, textDecoration: 'none', fontWeight: 500 }}
+            >
+              ← Back to Dashboard
+            </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}>
+              <ProfilePictureUpload
+                currentImage={(user?.image as string) ?? null}
+                name={form.name ?? ''}
+                size={72}
+                radius="50%"
+                gradient="linear-gradient(135deg, #7C3AED, #6D28D9)"
+                onUploaded={async (url) => {
+                  await fetch('/api/users/profile', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: url }),
+                  });
+                  setUser((prev) => (prev ? { ...prev, image: url } : prev));
+                }}
+                onRemoved={async () => {
+                  await fetch('/api/users/profile', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: null }),
+                  });
+                  setUser((prev) => (prev ? { ...prev, image: undefined } : prev));
+                }}
+              />
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span
+                    style={{
+                      background: '#EDE9FE',
+                      color: '#7C3AED',
+                      border: '1px solid #DDD6FE',
+                      padding: '2px 10px',
+                      borderRadius: 999,
+                      fontSize: 11,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {isDeptHead ? 'Department Head' : 'Academic Advisor'}
+                  </span>
+                </div>
+                <h1
                   style={{
-                    background: '#EDE9FE',
-                    color: '#7C3AED',
-                    border: '1px solid #DDD6FE',
-                    padding: '2px 10px',
-                    borderRadius: 999,
-                    fontSize: 11,
-                    fontWeight: 700,
+                    fontSize: 22,
+                    fontWeight: 900,
+                    color: '#F8FAFC',
+                    fontFamily: 'var(--font-display)',
+                    margin: 0,
                   }}
                 >
-                  {isDeptHead ? 'Department Head' : 'Academic Advisor'}
-                </span>
-              </div>
-              <h1
-                style={{
-                  fontSize: 22,
-                  fontWeight: 900,
-                  color: '#F8FAFC',
-                  fontFamily: 'var(--font-display)',
-                  margin: 0,
-                }}
-              >
-                {form.name || 'Your Name'}
-              </h1>
-              <div style={{ color: C.gray, fontSize: 13, marginTop: 3 }}>
-                {form.designation || 'Designation not set'}
-                {form.institutionName ? ` · ${form.institutionName}` : ''}
+                  {form.name || 'Your Name'}
+                </h1>
+                <div style={{ color: C.gray, fontSize: 13, marginTop: 3 }}>
+                  {form.designation || 'Designation not set'}
+                  {form.institutionName ? ` · ${form.institutionName}` : ''}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Body */}
-      <div
-        style={{
-          maxWidth: 820,
-          margin: '28px auto',
-          padding: '0 24px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 20,
-        }}
-      >
-        {error && (
+        {/* Body */}
+        <div
+          style={{
+            maxWidth: 820,
+            margin: '28px auto',
+            padding: '0 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 20,
+          }}
+        >
+          {error && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                background: C.dangerBg,
+                border: `1px solid ${C.dangerBorder}`,
+                borderRadius: 12,
+                padding: '12px 16px',
+                color: '#991B1B',
+                fontSize: 14,
+              }}
+            >
+              <AlertCircle size={15} />
+              {error}
+            </div>
+          )}
+          {saved && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                background: C.successBg,
+                border: `1px solid ${C.successBorder}`,
+                borderRadius: 12,
+                padding: '12px 16px',
+                color: '#065F46',
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            >
+              <CheckCircle2 size={15} /> Profile saved successfully!
+            </div>
+          )}
+
+          {/* Personal Information */}
           <div
+            id="calendar"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              background: C.dangerBg,
-              border: `1px solid ${C.dangerBorder}`,
-              borderRadius: 12,
-              padding: '12px 16px',
-              color: '#991B1B',
-              fontSize: 14,
-            }}
-          >
-            <AlertCircle size={15} />
-            {error}
-          </div>
-        )}
-        {saved && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              background: C.successBg,
-              border: `1px solid ${C.successBorder}`,
-              borderRadius: 12,
-              padding: '12px 16px',
-              color: '#065F46',
-              fontSize: 14,
-              fontWeight: 600,
-            }}
-          >
-            <CheckCircle2 size={15} /> Profile saved successfully!
-          </div>
-        )}
-
-        {/* Personal Information */}
-        <div
-          id="calendar"
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <SectionHeader icon={<Calendar size={18} />} label="Google Calendar" />
-          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16, lineHeight: 1.6 }}>
-            Connect your Google Calendar to keep hosted webinar and workshop schedules, registration
-            deadlines, and key advising events visible in one personal timeline.
-          </div>
-          <CalendarConnectButton
-            isConnected={Boolean(user?.googleCalendarConnected)}
-            callbackUrl="/advisor/profile?calendar=connected#calendar"
-            description="Sync hosted event dates and important advising reminders to your Google Calendar automatically."
-            connectedDescription="Hosted events and advising reminders sync automatically"
-          />
-        </div>
-
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <SectionHeader icon={<User size={18} />} label="Personal Information" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <Field label="Full Name">
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => set('name', e.target.value)}
-                style={inputBase}
-              />
-            </Field>
-            <Field label="Phone">
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={(e) => set('phone', e.target.value)}
-                placeholder="+8801XXXXXXXXX"
-                style={inputBase}
-              />
-            </Field>
-            <Field label="City">
-              <input
-                type="text"
-                value={form.city}
-                onChange={(e) => set('city', e.target.value)}
-                placeholder="e.g. Dhaka"
-                style={inputBase}
-              />
-            </Field>
-            <Field label="Email">
-              <input
-                type="email"
-                value={(user?.email as string) ?? ''}
-                disabled
-                style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
-              />
-            </Field>
-          </div>
-          <div style={{ marginTop: 16 }}>
-            <Field label="Bio / Professional Summary">
-              <textarea
-                value={form.bio}
-                onChange={(e) => set('bio', e.target.value)}
-                placeholder="Your academic background, research interests, areas of expertise…"
-                rows={3}
-                style={{ ...inputBase, resize: 'vertical' }}
-              />
-            </Field>
-          </div>
-        </div>
-
-        {/* Academic Position */}
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <SectionHeader icon={<GraduationCap size={18} />} label="Academic Position" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <Field label="Institution / University">
-              <input
-                type="text"
-                value={form.institutionName}
-                readOnly
-                style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
-              />
-            </Field>
-            <Field label={isDeptHead ? 'Department' : 'Advisory Department'}>
-              <input
-                type="text"
-                value={form.advisoryDepartment}
-                readOnly
-                style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
-              />
-            </Field>
-            <Field label="Designation / Title">
-              <input
-                type="text"
-                value={form.designation}
-                onChange={(e) => set('designation', e.target.value)}
-                placeholder={
-                  isDeptHead
-                    ? 'e.g. Head of Department, CSE'
-                    : 'e.g. Assistant Professor, Academic Advisor'
-                }
-                style={inputBase}
-              />
-            </Field>
-            <Field label="Staff ID">
-              <input
-                type="text"
-                value={form.advisorStaffId}
-                onChange={(e) => set('advisorStaffId', e.target.value)}
-                placeholder="e.g. STF-2023-001"
-                style={inputBase}
-              />
-            </Field>
-            <Field label="LinkedIn URL">
-              <div style={{ position: 'relative' }}>
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: 12,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: '#0A66C2',
-                  }}
-                >
-                  <Linkedin size={15} />
-                </div>
-                <input
-                  type="url"
-                  value={form.linkedinUrl}
-                  onChange={(e) => set('linkedinUrl', e.target.value)}
-                  placeholder="https://linkedin.com/in/yourname"
-                  style={{ ...inputBase, paddingLeft: 36 }}
-                />
-              </div>
-            </Field>
-          </div>
-        </div>
-
-        {/* Notification Preferences */}
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <SectionHeader icon={<Bell size={18} />} label="Notification Preferences" />
-          <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
-            Control which advisor notifications you receive. All options are enabled by default.
-          </div>
-          <div
-            style={{
-              background: '#F8FAFC',
+              background: C.white,
+              borderRadius: 18,
               border: `1px solid ${C.border}`,
-              borderRadius: 12,
-              padding: '12px 16px',
-              marginBottom: 18,
-              fontSize: 13,
-              color: C.gray,
-              lineHeight: 1.7,
+              padding: '24px 28px',
+              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
             }}
           >
-            Your university and department scope are provisioned internally and remain locked here.
+            <SectionHeader icon={<Calendar size={18} />} label="Google Calendar" />
+            <div style={{ fontSize: 13, color: C.gray, marginBottom: 16, lineHeight: 1.6 }}>
+              Connect your Google Calendar to keep hosted webinar and workshop schedules,
+              registration deadlines, and key advising events visible in one personal timeline.
+            </div>
+            <CalendarConnectButton
+              isConnected={Boolean(user?.googleCalendarConnected)}
+              callbackUrl="/advisor/profile?calendar=connected#calendar"
+              description="Sync hosted event dates and important advising reminders to your Google Calendar automatically."
+              connectedDescription="Hosted events and advising reminders sync automatically"
+            />
           </div>
-          <div style={{ display: 'grid', gap: 10 }}>
-            {[
-              {
-                key: 'event_registrations',
-                label: 'Event registrations',
-                desc: 'When a student registers for your event.',
-              },
-              {
-                key: 'deadline_reminders',
-                label: 'Registration deadline reminders',
-                desc: 'When one of your hosted events is approaching its registration deadline.',
-              },
-              {
-                key: 'event_reminders',
-                label: 'Event start reminders',
-                desc: 'When one of your hosted webinars or workshops is about to begin.',
-              },
-              {
-                key: 'badge_earned',
-                label: 'Badge earned',
-                desc: 'When your advisor account earns a new platform badge.',
-              },
-            ].map((item) => {
-              const isOn = form.notificationPreferences[item.key] !== false;
-              return (
-                <div
-                  key={item.key}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 16px',
-                    background: '#FAFBFC',
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 12,
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{item.label}</div>
-                    <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      set('notificationPreferences', {
-                        ...form.notificationPreferences,
-                        [item.key]: !isOn,
-                      })
-                    }
-                    style={{
-                      width: 44,
-                      height: 24,
-                      borderRadius: 999,
-                      border: 'none',
-                      background: isOn ? C.blue : C.border,
-                      cursor: 'pointer',
-                      position: 'relative',
-                      transition: 'background 0.2s',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 18,
-                        height: 18,
-                        borderRadius: '50%',
-                        background: C.white,
-                        position: 'absolute',
-                        top: 3,
-                        left: isOn ? 23 : 3,
-                        transition: 'left 0.2s',
-                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-                      }}
-                    />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <SectionHeader icon={<Mail size={18} />} label="Email Preferences" />
-          <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
-            Decide which advisor email reminders should be delivered to your inbox. In-app
-            notifications remain controlled separately above.
-          </div>
-          <div style={{ display: 'grid', gap: 10 }}>
-            {[
-              {
-                key: 'deadline_reminders',
-                label: 'Registration deadline emails',
-                desc: 'Email reminders before registration closes for one of your hosted events.',
-              },
-              {
-                key: 'event_reminders',
-                label: 'Event date emails',
-                desc: 'Email reminders before one of your hosted webinars or workshops begins.',
-              },
-            ].map((item) => {
-              const isOn = form.emailPreferences[item.key] !== false;
-              return (
-                <div
-                  key={item.key}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 16px',
-                    background: '#FAFBFC',
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 12,
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{item.label}</div>
-                    <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      set('emailPreferences', {
-                        ...form.emailPreferences,
-                        [item.key]: !isOn,
-                      })
-                    }
-                    style={{
-                      width: 44,
-                      height: 24,
-                      borderRadius: 999,
-                      border: 'none',
-                      background: isOn ? C.blue : C.border,
-                      cursor: 'pointer',
-                      position: 'relative',
-                      transition: 'background 0.2s',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 18,
-                        height: 18,
-                        borderRadius: '50%',
-                        background: C.white,
-                        position: 'absolute',
-                        top: 3,
-                        left: isOn ? 23 : 3,
-                        transition: 'left 0.2s',
-                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-                      }}
-                    />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Save button */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}>
-          <button
-            onClick={handleSave}
-            disabled={saving}
+          <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '13px 32px',
-              background: saving ? '#C4B5FD' : 'linear-gradient(135deg, #7C3AED, #6D28D9)',
-              color: C.white,
-              border: 'none',
-              borderRadius: 12,
-              cursor: saving ? 'not-allowed' : 'pointer',
-              fontSize: 15,
-              fontWeight: 700,
-              fontFamily: 'var(--font-display)',
-              boxShadow: saving ? 'none' : '0 4px 16px rgba(124,58,237,0.35)',
+              background: C.white,
+              borderRadius: 18,
+              border: `1px solid ${C.border}`,
+              padding: '24px 28px',
+              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
             }}
           >
-            <Save size={16} />
-            {saving ? 'Saving…' : 'Save Profile'}
-          </button>
+            <SectionHeader icon={<User size={18} />} label="Personal Information" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <Field label="Full Name">
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => set('name', e.target.value)}
+                  style={inputBase}
+                />
+              </Field>
+              <Field label="Phone">
+                <input
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => set('phone', e.target.value)}
+                  placeholder="+8801XXXXXXXXX"
+                  style={inputBase}
+                />
+              </Field>
+              <Field label="City">
+                <input
+                  type="text"
+                  value={form.city}
+                  onChange={(e) => set('city', e.target.value)}
+                  placeholder="e.g. Dhaka"
+                  style={inputBase}
+                />
+              </Field>
+              <Field label="Email">
+                <input
+                  type="email"
+                  value={(user?.email as string) ?? ''}
+                  disabled
+                  style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
+                />
+              </Field>
+            </div>
+            <div style={{ marginTop: 16 }}>
+              <Field label="Bio / Professional Summary">
+                <textarea
+                  value={form.bio}
+                  onChange={(e) => set('bio', e.target.value)}
+                  placeholder="Your academic background, research interests, areas of expertise…"
+                  rows={3}
+                  style={{ ...inputBase, resize: 'vertical' }}
+                />
+              </Field>
+            </div>
+          </div>
+
+          {/* Academic Position */}
+          <div
+            style={{
+              background: C.white,
+              borderRadius: 18,
+              border: `1px solid ${C.border}`,
+              padding: '24px 28px',
+              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+            }}
+          >
+            <SectionHeader icon={<GraduationCap size={18} />} label="Academic Position" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <Field label="Institution / University">
+                <input
+                  type="text"
+                  value={form.institutionName}
+                  readOnly
+                  style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
+                />
+              </Field>
+              <Field label={isDeptHead ? 'Department' : 'Advisory Department'}>
+                <input
+                  type="text"
+                  value={form.advisoryDepartment}
+                  readOnly
+                  style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
+                />
+              </Field>
+              <Field label="Designation / Title">
+                <input
+                  type="text"
+                  value={form.designation}
+                  onChange={(e) => set('designation', e.target.value)}
+                  placeholder={
+                    isDeptHead
+                      ? 'e.g. Head of Department, CSE'
+                      : 'e.g. Assistant Professor, Academic Advisor'
+                  }
+                  style={inputBase}
+                />
+              </Field>
+              <Field label="Staff ID">
+                <input
+                  type="text"
+                  value={form.advisorStaffId}
+                  onChange={(e) => set('advisorStaffId', e.target.value)}
+                  placeholder="e.g. STF-2023-001"
+                  style={inputBase}
+                />
+              </Field>
+              <Field label="LinkedIn URL">
+                <div style={{ position: 'relative' }}>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: 12,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#0A66C2',
+                    }}
+                  >
+                    <Linkedin size={15} />
+                  </div>
+                  <input
+                    type="url"
+                    value={form.linkedinUrl}
+                    onChange={(e) => set('linkedinUrl', e.target.value)}
+                    placeholder="https://linkedin.com/in/yourname"
+                    style={{ ...inputBase, paddingLeft: 36 }}
+                  />
+                </div>
+              </Field>
+            </div>
+          </div>
+
+          {/* Notification Preferences */}
+          <div
+            style={{
+              background: C.white,
+              borderRadius: 18,
+              border: `1px solid ${C.border}`,
+              padding: '24px 28px',
+              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+            }}
+          >
+            <SectionHeader icon={<Bell size={18} />} label="Notification Preferences" />
+            <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
+              Control which advisor notifications you receive. All options are enabled by default.
+            </div>
+            <div
+              style={{
+                background: '#F8FAFC',
+                border: `1px solid ${C.border}`,
+                borderRadius: 12,
+                padding: '12px 16px',
+                marginBottom: 18,
+                fontSize: 13,
+                color: C.gray,
+                lineHeight: 1.7,
+              }}
+            >
+              Your university and department scope are provisioned internally and remain locked
+              here.
+            </div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              {[
+                {
+                  key: 'event_registrations',
+                  label: 'Event registrations',
+                  desc: 'When a student registers for your event.',
+                },
+                {
+                  key: 'deadline_reminders',
+                  label: 'Registration deadline reminders',
+                  desc: 'When one of your hosted events is approaching its registration deadline.',
+                },
+                {
+                  key: 'event_reminders',
+                  label: 'Event start reminders',
+                  desc: 'When one of your hosted webinars or workshops is about to begin.',
+                },
+                {
+                  key: 'badge_earned',
+                  label: 'Badge earned',
+                  desc: 'When your advisor account earns a new platform badge.',
+                },
+              ].map((item) => {
+                const isOn = form.notificationPreferences[item.key] !== false;
+                return (
+                  <div
+                    key={item.key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      background: '#FAFBFC',
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                        {item.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        set('notificationPreferences', {
+                          ...form.notificationPreferences,
+                          [item.key]: !isOn,
+                        })
+                      }
+                      style={{
+                        width: 44,
+                        height: 24,
+                        borderRadius: 999,
+                        border: 'none',
+                        background: isOn ? C.blue : C.border,
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background 0.2s',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: '50%',
+                          background: C.white,
+                          position: 'absolute',
+                          top: 3,
+                          left: isOn ? 23 : 3,
+                          transition: 'left 0.2s',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                        }}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div
+            style={{
+              background: C.white,
+              borderRadius: 18,
+              border: `1px solid ${C.border}`,
+              padding: '24px 28px',
+              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+            }}
+          >
+            <SectionHeader icon={<Mail size={18} />} label="Email Preferences" />
+            <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
+              Decide which advisor email reminders should be delivered to your inbox. In-app
+              notifications remain controlled separately above.
+            </div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              {[
+                {
+                  key: 'deadline_reminders',
+                  label: 'Registration deadline emails',
+                  desc: 'Email reminders before registration closes for one of your hosted events.',
+                },
+                {
+                  key: 'event_reminders',
+                  label: 'Event date emails',
+                  desc: 'Email reminders before one of your hosted webinars or workshops begins.',
+                },
+              ].map((item) => {
+                const isOn = form.emailPreferences[item.key] !== false;
+                return (
+                  <div
+                    key={item.key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      background: '#FAFBFC',
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                        {item.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        set('emailPreferences', {
+                          ...form.emailPreferences,
+                          [item.key]: !isOn,
+                        })
+                      }
+                      style={{
+                        width: 44,
+                        height: 24,
+                        borderRadius: 999,
+                        border: 'none',
+                        background: isOn ? C.blue : C.border,
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background 0.2s',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: '50%',
+                          background: C.white,
+                          position: 'absolute',
+                          top: 3,
+                          left: isOn ? 23 : 3,
+                          transition: 'left 0.2s',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                        }}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Save button */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '13px 32px',
+                background: saving ? '#C4B5FD' : 'linear-gradient(135deg, #7C3AED, #6D28D9)',
+                color: C.white,
+                border: 'none',
+                borderRadius: 12,
+                cursor: saving ? 'not-allowed' : 'pointer',
+                fontSize: 15,
+                fontWeight: 700,
+                fontFamily: 'var(--font-display)',
+                boxShadow: saving ? 'none' : '0 4px 16px rgba(124,58,237,0.35)',
+              }}
+            >
+              <Save size={16} />
+              {saving ? 'Saving…' : 'Save Profile'}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </DashboardShell>
   );
 }
