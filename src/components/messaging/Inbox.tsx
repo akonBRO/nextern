@@ -886,12 +886,14 @@ export default function Inbox({
           }),
         });
         const data = await readJsonSafely<{ message?: Message; error?: string }>(res, {});
-        if (data.message) {
-          setMessages((prev) => [...prev, data.message]);
+        const createdMessage = data.message;
+
+        if (createdMessage) {
+          setMessages((prev) => [...prev, createdMessage]);
           setThreads((prev) => {
             const updated = [...prev];
             const idx = updated.findIndex((t) => t.threadId === selectedThread.threadId);
-            if (idx >= 0) updated[idx].lastMessage = data.message;
+            if (idx >= 0) updated[idx].lastMessage = createdMessage;
             return updated.sort(
               (a, b) =>
                 new Date(b.lastMessage.createdAt).getTime() -
