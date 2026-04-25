@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { buildFreelanceInvoice } from '@/lib/freelance';
+import '@/models/FreelanceListing';
 import { FreelanceOrder } from '@/models/FreelanceOrder';
 import { FreelanceWithdrawal } from '@/models/FreelanceWithdrawal';
 import { User } from '@/models/User';

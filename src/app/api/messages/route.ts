@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { getFreelanceOrderThreadId, inferFreelanceProposalStatus } from '@/lib/freelance-shared';
 import { Message } from '@/models/Message';
+import '@/models/FreelanceListing';
 import { FreelanceOrder } from '@/models/FreelanceOrder';
 import { Application } from '@/models/Application';
 import { User } from '@/models/User';

@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import DashboardShell from '@/components/dashboard/DashboardShell';
 import { EMPLOYER_NAV_ITEMS } from '@/lib/employer-navigation';
+import { readJsonSafely } from '@/lib/safe-json';
 
 type EmployerShellUser = {
   name: string;
@@ -37,10 +38,10 @@ export default function EmployerClientShell({ children }: { children: ReactNode 
         ]);
 
         const profileData = profileRes.ok
-          ? ((await profileRes.json()) as { user?: Record<string, unknown> })
+          ? await readJsonSafely<{ user?: Record<string, unknown> }>(profileRes, {})
           : {};
         const premiumData = premiumRes.ok
-          ? ((await premiumRes.json()) as { isPremium?: boolean })
+          ? await readJsonSafely<{ isPremium?: boolean }>(premiumRes, {})
           : {};
         const profile = profileData.user;
 

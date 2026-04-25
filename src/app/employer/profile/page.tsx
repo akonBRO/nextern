@@ -303,14 +303,20 @@ export default function EmployerProfilePage() {
             borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
         >
-          <div style={{ maxWidth: 860, margin: '0 auto', padding: '20px 24px' }}>
+          <div
+            className="mobile-page-hero-inner"
+            style={{ maxWidth: 860, margin: '0 auto', padding: '20px 24px' }}
+          >
             <Link
               href="/employer/dashboard"
               style={{ color: C.gray, fontSize: 13, textDecoration: 'none', fontWeight: 500 }}
             >
               ← Back to Dashboard
             </Link>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}>
+            <div
+              className="mobile-page-stack"
+              style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}
+            >
               <div>
                 <ProfilePictureUpload
                   currentImage={(user?.companyLogo as string) ?? null}
@@ -364,6 +370,7 @@ export default function EmployerProfilePage() {
         </div>
 
         <div
+          className="mobile-page-body"
           style={{
             maxWidth: 860,
             margin: '28px auto',
@@ -421,7 +428,10 @@ export default function EmployerProfilePage() {
             }}
           >
             <SectionHeader icon={<Phone size={18} />} label="Contact Information" />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div
+              className="mobile-page-grid-2"
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+            >
               <Field label="Contact Person Name">
                 <input
                   type="text"
@@ -461,7 +471,10 @@ export default function EmployerProfilePage() {
             }}
           >
             <SectionHeader icon={<Building2 size={18} />} label="Company Information" />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div
+              className="mobile-page-grid-2"
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+            >
               <Field label="Company Name">
                 <input
                   type="text"
@@ -846,7 +859,10 @@ export default function EmployerProfilePage() {
           </div>
 
           {/* Save */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}>
+          <div
+            className="mobile-page-action-row"
+            style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}
+          >
             <button
               onClick={handleSave}
               disabled={saving}

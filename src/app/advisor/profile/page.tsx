@@ -268,14 +268,20 @@ export default function AdvisorProfilePage() {
             borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
         >
-          <div style={{ maxWidth: 820, margin: '0 auto', padding: '20px 24px' }}>
+          <div
+            className="mobile-page-hero-inner"
+            style={{ maxWidth: 820, margin: '0 auto', padding: '20px 24px' }}
+          >
             <Link
               href={isDeptHead ? '/dept/dashboard' : '/advisor/dashboard'}
               style={{ color: C.gray, fontSize: 13, textDecoration: 'none', fontWeight: 500 }}
             >
               ← Back to Dashboard
             </Link>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}>
+            <div
+              className="mobile-page-stack"
+              style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}
+            >
               <ProfilePictureUpload
                 currentImage={(user?.image as string) ?? null}
                 name={form.name ?? ''}
@@ -337,6 +343,7 @@ export default function AdvisorProfilePage() {
 
         {/* Body */}
         <div
+          className="mobile-page-body"
           style={{
             maxWidth: 820,
             margin: '28px auto',
@@ -417,7 +424,10 @@ export default function AdvisorProfilePage() {
             }}
           >
             <SectionHeader icon={<User size={18} />} label="Personal Information" />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div
+              className="mobile-page-grid-2"
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+            >
               <Field label="Full Name">
                 <input
                   type="text"
@@ -477,7 +487,10 @@ export default function AdvisorProfilePage() {
             }}
           >
             <SectionHeader icon={<GraduationCap size={18} />} label="Academic Position" />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div
+              className="mobile-page-grid-2"
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+            >
               <Field label="Institution / University">
                 <input
                   type="text"
@@ -741,7 +754,10 @@ export default function AdvisorProfilePage() {
           </div>
 
           {/* Save button */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}>
+          <div
+            className="mobile-page-action-row"
+            style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}
+          >
             <button
               onClick={handleSave}
               disabled={saving}

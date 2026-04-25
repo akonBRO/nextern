@@ -10,6 +10,7 @@ import {
 import { createNotification } from '@/lib/notify';
 import { requireAdminSession } from '@/lib/admin';
 import { AdminFreelanceOrderUpdateSchema } from '@/lib/validations';
+import '@/models/FreelanceListing';
 import { FreelanceOrder } from '@/models/FreelanceOrder';
 
 type Params = { params: Promise<{ orderId: string }> };

@@ -88,8 +88,11 @@ function FooterLinkItem({ label, href, external }: FooterLink) {
 
 export default function GlobalFooter() {
   return (
-    <footer style={{ background: '#0F172A', padding: '64px 0 0' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
+    <footer className="site-footer" style={{ background: '#0F172A', padding: '64px 0 0' }}>
+      <div
+        className="site-footer-container"
+        style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}
+      >
         <div
           className="site-footer-grid"
           style={{
@@ -99,7 +102,7 @@ export default function GlobalFooter() {
             marginBottom: 56,
           }}
         >
-          <div>
+          <div className="site-footer-brand">
             <NexternLogo
               markSize={32}
               markRadius={9}
@@ -108,6 +111,7 @@ export default function GlobalFooter() {
               style={{ marginBottom: 16 }}
             />
             <p
+              className="site-footer-intro"
               style={{
                 color: '#475569',
                 fontSize: 14,
@@ -120,7 +124,10 @@ export default function GlobalFooter() {
               AI-powered, mentor-backed, university-verified.
             </p>
 
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div
+              className="site-footer-social-row"
+              style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}
+            >
               {SOCIAL_LINKS.map(({ label, href, icon: Icon }) => (
                 <a
                   key={label}
@@ -149,8 +156,9 @@ export default function GlobalFooter() {
           </div>
 
           {FOOTER_COLUMNS.map((column) => (
-            <div key={column.title}>
+            <div key={column.title} className="site-footer-column">
               <div
+                className="site-footer-column-title"
                 style={{
                   color: '#E2E8F0',
                   fontSize: 13,
@@ -163,7 +171,11 @@ export default function GlobalFooter() {
               </div>
 
               {column.links.map((link) => (
-                <div key={`${column.title}:${link.label}`} style={{ marginBottom: 12 }}>
+                <div
+                  key={`${column.title}:${link.label}`}
+                  className="site-footer-link-row"
+                  style={{ marginBottom: 12 }}
+                >
                   <FooterLinkItem {...link} />
                 </div>
               ))}

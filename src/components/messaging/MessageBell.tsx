@@ -9,9 +9,15 @@ interface MessageBellProps {
   userId: string;
   initialUnread: number;
   href: string;
+  compact?: boolean;
 }
 
-export default function MessageBell({ userId, initialUnread, href }: MessageBellProps) {
+export default function MessageBell({
+  userId,
+  initialUnread,
+  href,
+  compact = false,
+}: MessageBellProps) {
   const [unread, setUnread] = useState(initialUnread);
   const pusherRef = useRef<Pusher | null>(null);
 
@@ -60,8 +66,11 @@ export default function MessageBell({ userId, initialUnread, href }: MessageBell
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 8,
-          padding: '9px 12px',
+          gap: compact ? 0 : 8,
+          justifyContent: 'center',
+          minWidth: compact ? 40 : undefined,
+          minHeight: compact ? 40 : undefined,
+          padding: compact ? '0' : '9px 12px',
           borderRadius: 999,
           border: '1px solid rgba(255,255,255,0.08)',
           background: 'rgba(255,255,255,0.05)',
@@ -72,11 +81,12 @@ export default function MessageBell({ userId, initialUnread, href }: MessageBell
           transition: 'background 0.2s',
           position: 'relative',
         }}
+        aria-label="Messages"
       >
         <span style={{ display: 'inline-flex', color: '#22D3EE' }}>
           <Mail size={14} strokeWidth={2} />
         </span>
-        <span>Messages</span>
+        {!compact && <span>Messages</span>}
         {unread > 0 && (
           <span
             style={{
@@ -84,10 +94,17 @@ export default function MessageBell({ userId, initialUnread, href }: MessageBell
               color: '#fff',
               fontSize: 10,
               fontWeight: 800,
-              padding: '1px 6px',
+              padding: compact ? '0 5px' : '1px 6px',
               borderRadius: 99,
               minWidth: 18,
+              height: compact ? 18 : undefined,
               textAlign: 'center',
+              position: compact ? 'absolute' : 'static',
+              top: compact ? -2 : undefined,
+              right: compact ? -2 : undefined,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             {unread > 99 ? '99+' : unread}

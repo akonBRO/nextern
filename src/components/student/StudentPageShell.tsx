@@ -2,7 +2,8 @@
 
 import { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import StudentNavbar from '@/components/student/StudentNavbar';
+import DashboardShell from '@/components/dashboard/DashboardShell';
+import { ALUMNI_NAV_ITEMS, STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 
 type UserProps = {
   name: string;
@@ -21,33 +22,52 @@ type StudentPageShellProps = {
   children: ReactNode;
 };
 
-const STANDALONE_NAVBAR_PATHS = new Set([
-  '/student/profile',
-  '/student/resume',
-  '/student/ger',
-  '/student/notifications',
-  '/student/premium',
-]);
+const PAGE_LEVEL_SHELL_PREFIXES = [
+  '/student/dashboard',
+  '/student/jobs',
+  '/student/applications',
+  '/student/skills',
+  '/student/assessments',
+  '/student/interviews',
+  '/student/calendar',
+  '/student/freelance',
+  '/student/messages',
+  '/student/badges',
+  '/student/subscription',
+  '/student/mock-interview',
+];
 
-function shouldUseStandaloneNavbar(pathname: string) {
-  if (!pathname.startsWith('/student')) return false;
-  if (pathname.startsWith('/student/profile/')) return true;
-  if (pathname.startsWith('/student/resume/')) return true;
-  if (pathname.startsWith('/student/ger/')) return true;
-  if (pathname.startsWith('/student/notifications/')) return true;
-  if (pathname.startsWith('/student/premium/')) return true;
-  if (pathname.startsWith('/student/mentorship')) return true;
-  return STANDALONE_NAVBAR_PATHS.has(pathname);
+function hasPageLevelShell(pathname: string) {
+  return PAGE_LEVEL_SHELL_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
 }
 
 export default function StudentPageShell({ user, children }: StudentPageShellProps) {
   const pathname = usePathname();
-  const showNavbar = !pathname || shouldUseStandaloneNavbar(pathname);
+  const isMentor = user.role === 'alumni';
+
+  if (!pathname?.startsWith('/student') || hasPageLevelShell(pathname)) {
+    return <>{children}</>;
+  }
 
   return (
-    <>
-      {showNavbar && <StudentNavbar user={user} />}
+    <DashboardShell
+      role={isMentor ? 'alumni' : 'student'}
+      roleLabel={isMentor ? 'Mentor dashboard' : 'Student dashboard'}
+      homeHref={isMentor ? '/student/mentorship/dashboard' : '/student/dashboard'}
+      navItems={isMentor ? ALUMNI_NAV_ITEMS : STUDENT_NAV_ITEMS}
+      user={{
+        name: user.name,
+        email: user.email,
+        image: user.image,
+        userId: user.userId,
+        subtitle: isMentor ? 'Mentor workspace' : 'Student workspace',
+        unreadNotifications: user.unreadNotifications,
+        unreadMessages: user.unreadMessages,
+      }}
+    >
       {children}
-    </>
+    </DashboardShell>
   );
 }

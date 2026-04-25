@@ -9,6 +9,7 @@ import {
 } from '@/lib/freelance';
 import { createNotification } from '@/lib/notify';
 import { FreelanceReviewSchema } from '@/lib/validations';
+import '@/models/FreelanceListing';
 import { FreelanceOrder } from '@/models/FreelanceOrder';
 import { FreelanceReview } from '@/models/FreelanceReview';
 import { User } from '@/models/User';

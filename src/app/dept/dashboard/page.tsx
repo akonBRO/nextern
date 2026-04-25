@@ -1225,7 +1225,8 @@ export default async function DeptDashboard() {
             .dashboard-stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
           }
           @media (max-width: 900px) {
-            .dashboard-stats-grid, .dashboard-grid-two { grid-template-columns: 1fr !important; }
+            .dashboard-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            .dashboard-grid-two { grid-template-columns: 1fr !important; }
           }
         `}</style>
       </DashboardPage>

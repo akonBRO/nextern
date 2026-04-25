@@ -20,6 +20,7 @@ import {
   TrendingUp,
   SendToBack,
 } from 'lucide-react';
+import { readJsonSafely } from '@/lib/safe-json';
 
 const C = {
   blue: '#2563EB',
@@ -216,7 +217,7 @@ export default function NotificationsPageClient({
       if (showUnreadOnly) params.set('unread', 'true');
       if (filter !== 'all') params.set('type', filter);
       const res = await fetch(`/api/notifications?${params}`);
-      const data = await res.json();
+      const data = await readJsonSafely<{ notifications?: Notif[]; unreadCount?: number }>(res, {});
       setNotifs(data.notifications ?? []);
       setUnread(data.unreadCount ?? 0);
     } finally {
