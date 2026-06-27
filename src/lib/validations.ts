@@ -61,7 +61,7 @@ export const UpdateStudentProfileSchema = z.object({
   bio: z.string().max(500).optional(),
 
   // Profile image
-  image: z.string().url().optional(),
+  image: z.string().url().optional().nullable(),
 
   // ── Resume URLs ──────────────────────────────────────────────────────────
   // resumeUrl          → manually uploaded PDF (from student/profile page)
@@ -121,7 +121,7 @@ export const UpdateEmployerProfileSchema = z.object({
     .or(z.literal('')),
 
   // ONLY company logo for employers
-  companyLogo: z.string().url().optional(),
+  companyLogo: z.string().url().optional().nullable(),
   companyName: z.string().min(2).max(120).optional(),
   industry: z.string().max(80).optional(),
   companySize: z.enum(['1-10', '11-50', '51-200', '201-500', '500+']).optional(),
@@ -142,7 +142,7 @@ export const UpdateAdvisorProfileSchema = z.object({
     .optional()
     .or(z.literal('')),
   bio: z.string().max(500).optional(),
-  image: z.string().optional(),
+  image: z.string().optional().nullable(),
   institutionName: z.string().max(120).optional(),
   advisorStaffId: z.string().max(30).optional(),
   designation: z.string().max(80).optional(),

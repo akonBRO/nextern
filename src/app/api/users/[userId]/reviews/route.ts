@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       isPublic: true,
       isVerified: true,
     })
-      .populate('reviewerId', 'name profilePicture isVerified')
+      .populate('reviewerId', 'name image companyLogo isVerified')
       .sort({ createdAt: -1 });
 
     return NextResponse.json({ success: true, count: reviews.length, data: reviews });

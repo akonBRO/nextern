@@ -16,6 +16,8 @@ type Props = {
   gradient?: string;
   uploaderType?: UploaderType; // which UT endpoint to use — default: profilePictureUploader
   label?: string; // modal title — default: 'Choose profile picture'
+  imageLabel?: string;
+  fileNamePrefix?: string;
   onUploaded: (url: string) => void;
   onRemoved?: () => void;
 };
@@ -32,6 +34,8 @@ export default function ProfilePictureUpload({
   gradient = 'linear-gradient(135deg, #2563EB, #22D3EE)',
   uploaderType = 'profilePictureUploader',
   label = 'Choose profile picture',
+  imageLabel = 'profile picture',
+  fileNamePrefix,
   onUploaded,
   onRemoved,
 }: Props) {
@@ -179,7 +183,10 @@ export default function ProfilePictureUpload({
         .trim()
         .replace(/\s+/g, '_')
         .replace(/[^a-zA-Z0-9_]/g, '');
-      const filename = `ProfilePicture_${safeName}.jpg`;
+      const safePrefix =
+        fileNamePrefix ??
+        (uploaderType === 'companyLogoUploader' ? 'CompanyProfilePicture' : 'ProfilePicture');
+      const filename = `${safePrefix}_${safeName || 'image'}.jpg`;
       const croppedFile = new File([blob], filename, { type: 'image/jpeg' });
       const res = await startUpload([croppedFile]);
       if (res?.[0]?.ufsUrl) {
@@ -193,6 +200,7 @@ export default function ProfilePictureUpload({
   }
 
   const initials = name?.charAt(0)?.toUpperCase() ?? '?';
+  const normalizedImageLabel = imageLabel.trim() || 'profile picture';
 
   // ── Dropdown vertical position ─────────────────────────────────────────
   const dropdownPos = menuAbove
@@ -290,7 +298,7 @@ export default function ProfilePictureUpload({
               <>
                 <MenuBtn
                   icon={<Eye size={15} color="#94A3B8" />}
-                  label={`See ${label.toLowerCase().replace('choose ', '')}`}
+                  label={`See ${normalizedImageLabel}`}
                   onClick={() => {
                     setViewerOpen(true);
                     setMenuOpen(false);
@@ -312,7 +320,7 @@ export default function ProfilePictureUpload({
                 <Divider />
                 <MenuBtn
                   icon={<Trash2 size={15} color="#F87171" />}
-                  label="Delete photo"
+                  label={`Delete ${normalizedImageLabel}`}
                   danger
                   onClick={() => {
                     setDeleteOpen(true);
@@ -592,7 +600,7 @@ export default function ProfilePictureUpload({
                   </>
                 ) : (
                   <>
-                    <Check size={15} /> Save photo
+                    <Check size={15} /> Save {normalizedImageLabel}
                   </>
                 )}
               </button>
@@ -645,10 +653,10 @@ export default function ProfilePictureUpload({
                 fontFamily: 'var(--font-display)',
               }}
             >
-              Delete photo?
+              Delete {normalizedImageLabel}?
             </h3>
             <p style={{ margin: '10px 0 26px', fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
-              Your photo will be removed and replaced with your initials. This cannot be undone.
+              This image will be removed and replaced with initials. This cannot be undone.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button
