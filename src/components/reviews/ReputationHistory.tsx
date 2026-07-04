@@ -22,6 +22,7 @@ interface ReviewData {
   reviewerId: {
     _id: string;
     name: string;
+    image?: string;
     profilePicture?: string;
     isVerified: boolean;
   };
@@ -438,9 +439,9 @@ export default function ReputationHistory({
                     flexShrink: 0,
                   }}
                 >
-                  {r.reviewerId?.profilePicture ? (
+                  {r.reviewerId?.image || r.reviewerId?.profilePicture ? (
                     <img
-                      src={r.reviewerId.profilePicture}
+                      src={r.reviewerId.image || r.reviewerId.profilePicture}
                       alt=""
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
@@ -613,9 +614,13 @@ export default function ReputationHistory({
                       flexShrink: 0,
                     }}
                   >
-                    {selectedReview.reviewerId?.profilePicture ? (
+                    {selectedReview.reviewerId?.image ||
+                    selectedReview.reviewerId?.profilePicture ? (
                       <img
-                        src={selectedReview.reviewerId.profilePicture}
+                        src={
+                          selectedReview.reviewerId.image ||
+                          selectedReview.reviewerId.profilePicture
+                        }
                         alt=""
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
