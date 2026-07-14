@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import path from 'path';
 
 const localAllowedOrigins = [
   'localhost:3000',
@@ -19,6 +20,9 @@ const nextConfig: NextConfig = {
     serverActions: { allowedOrigins: localAllowedOrigins },
   },
   serverExternalPackages: ['pdfkit'],
+  turbopack: {
+    root: path.join(__dirname),
+  },
 };
 
 export default nextConfig;
