@@ -10,8 +10,7 @@
     "lint": "eslint",
     "prepare": "husky",
     "test": "echo \"No tests yet\"",
-    "type-check": "tsc --noEmit",
-    "cleanup:academic": "tsx src/scripts/removeLegacyAcademicAccounts.ts"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
