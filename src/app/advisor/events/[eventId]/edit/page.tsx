@@ -1,8 +1,9 @@
+'use client';
+
 import BrandLoader from '@/components/ui/BrandLoader';
 // src/app/advisor/events/[eventId]/edit/page.tsx
 // Advisor edits their own posted event
 
-('use client');
 import FormField from '@/components/ui/FormField';
 
 import { useEffect, useState } from 'react';

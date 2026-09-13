@@ -1,6 +1,7 @@
-import BrandLoader from '@/components/ui/BrandLoader';
+'use client';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-('use client');
+import BrandLoader from '@/components/ui/BrandLoader';
 import BadgeIcon from '@/components/ui/BadgeIcon';
 
 import { useState, useEffect, Suspense } from 'react';
