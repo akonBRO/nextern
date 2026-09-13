@@ -44,7 +44,7 @@ next-env.d.ts
 # Already included by Next.js — verify these exist:
 .env.local
 .env.*.local
-
+.env.example
 # Add these manually:
 .env
 *.pem
