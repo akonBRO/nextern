@@ -1,7 +1,6 @@
 'use client';
 
-import { Calendar, Clock, Video, MoreVertical, MessageSquare } from 'lucide-react';
-import { useState } from 'react';
+import { Calendar, Clock, Video, MessageSquare } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface Session {
@@ -44,20 +43,21 @@ export default function SessionCard({ session, role, onAction, onJoinVideo }: Pr
 
   const statusColors = {
     pending: { bg: '#FEF3C7', text: '#D97706' },
-    accepted: { bg: '#DBEAFE', text: '#2563EB' },
+    accepted: { bg: '#d9eee9', text: '#087f72' },
     rejected: { bg: '#FEE2E2', text: '#DC2626' },
     completed: { bg: '#D1FAE5', text: '#059669' },
-    cancelled: { bg: '#F1F5F9', text: '#64748B' },
+    cancelled: { bg: '#f6f8f9', text: '#60717d' },
   };
 
   const statusConfig = statusColors[session.status] || statusColors.pending;
 
   return (
     <div
+      className="nx-surface"
       style={{
         background: '#FFFFFF',
-        borderRadius: 20,
-        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        border: '1px solid #dfe6e9',
         padding: 24,
         display: 'flex',
         flexDirection: 'column',
@@ -78,20 +78,20 @@ export default function SessionCard({ session, role, onAction, onJoinVideo }: Pr
                 width: 48,
                 height: 48,
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #3B82F6, #06B6D4)',
+                background: '#087f72',
                 color: '#FFFFFF',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: 18,
-                fontWeight: 800,
+                fontWeight: 700,
               }}
             >
               {otherUser?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
           )}
           <div>
-            <h3 style={{ margin: '0 0 4px 0', fontSize: 16, fontWeight: 700, color: '#1E293B' }}>
+            <h3 style={{ margin: '0 0 4px 0', fontSize: 16, fontWeight: 700, color: '#182c39' }}>
               {otherUser?.name || 'Unknown User'}
             </h3>
             <span
@@ -102,7 +102,7 @@ export default function SessionCard({ session, role, onAction, onJoinVideo }: Pr
                 fontSize: 12,
                 fontWeight: 700,
                 padding: '2px 8px',
-                borderRadius: 999,
+                borderRadius: 6,
                 textTransform: 'capitalize',
               }}
             >
@@ -170,8 +170,8 @@ export default function SessionCard({ session, role, onAction, onJoinVideo }: Pr
               onClick={() => onAction(session._id, 'cancel')}
               style={{
                 padding: '6px 14px',
-                background: '#F1F5F9',
-                color: '#64748B',
+                background: '#f6f8f9',
+                color: '#60717d',
                 borderRadius: 8,
                 border: 'none',
                 cursor: 'pointer',
@@ -203,7 +203,7 @@ export default function SessionCard({ session, role, onAction, onJoinVideo }: Pr
         </div>
       </div>
 
-      <div style={{ display: 'grid', gap: 8, fontSize: 14, color: '#475569' }}>
+      <div style={{ display: 'grid', gap: 8, fontSize: 14, color: '#435663' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Video size={16} /> <strong>Topic:</strong> {session.sessionType.replace('_', ' ')}
         </div>
@@ -226,7 +226,7 @@ export default function SessionCard({ session, role, onAction, onJoinVideo }: Pr
 
       <div
         style={{
-          background: '#F8FAFC',
+          background: '#f6f8f9',
           padding: 16,
           borderRadius: 12,
           fontSize: 14,
@@ -248,11 +248,11 @@ export default function SessionCard({ session, role, onAction, onJoinVideo }: Pr
                 flex: 1,
                 padding: '12px',
                 borderRadius: 12,
-                background: '#F1F5F9',
-                color: '#475569',
+                background: '#f6f8f9',
+                color: '#435663',
                 fontWeight: 700,
                 fontSize: 14,
-                border: '1px solid #E2E8F0',
+                border: '1px solid #dfe6e9',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -260,8 +260,8 @@ export default function SessionCard({ session, role, onAction, onJoinVideo }: Pr
                 gap: 8,
                 transition: 'background 0.2s',
               }}
-              onMouseOver={(e) => (e.currentTarget.style.background = '#E2E8F0')}
-              onMouseOut={(e) => (e.currentTarget.style.background = '#F1F5F9')}
+              onMouseOver={(e) => (e.currentTarget.style.background = '#dfe6e9')}
+              onMouseOut={(e) => (e.currentTarget.style.background = '#f6f8f9')}
             >
               <MessageSquare size={18} /> Message
             </button>
@@ -274,7 +274,7 @@ export default function SessionCard({ session, role, onAction, onJoinVideo }: Pr
               flex: 1,
               padding: '12px',
               borderRadius: 12,
-              background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+              background: '#087f72',
               color: '#FFFFFF',
               fontWeight: 700,
               fontSize: 14,
@@ -284,7 +284,7 @@ export default function SessionCard({ session, role, onAction, onJoinVideo }: Pr
               alignItems: 'center',
               justifyContent: 'center',
               gap: 8,
-              boxShadow: '0 4px 12px rgba(37,99,235,0.2)',
+              boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
             }}
           >
             <Video size={18} /> Join Video Call

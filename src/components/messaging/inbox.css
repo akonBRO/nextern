@@ -1,0 +1,62 @@
+.inbox-shell {
+  min-width: 0;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 10px rgba(24, 44, 57, 0.035) !important;
+}
+.inbox-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px;
+  padding: 0 11px;
+  min-height: 42px;
+  border: 1px solid #dfe6e9;
+  border-radius: 8px;
+  color: #60717d;
+}
+.inbox-search input {
+  min-width: 0;
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #182c39;
+  padding: 10px 0;
+}
+.inbox-search:focus-within {
+  border-color: #087f72;
+  box-shadow: 0 0 0 3px #eef7f5;
+}
+.inbox-search-empty {
+  margin: 4px 20px 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #60717d;
+}
+:is(.inbox-shell, .inbox-dialog) :is(button, [role='button'], textarea, a):focus-visible {
+  outline: 3px solid #b3dcd3 !important;
+  outline-offset: -2px;
+}
+.inbox-dialog {
+  overscroll-behavior: contain;
+}
+.inbox-dialog button {
+  min-height: 40px;
+}
+.inbox-shell textarea {
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .inbox-shell {
+    border-radius: 0 !important;
+  }
+  .inbox-shell button[title] {
+    min-width: 36px;
+    min-height: 36px;
+  }
+  .inbox-dialog {
+    width: 100% !important;
+  }
+}

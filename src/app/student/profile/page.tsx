@@ -1,4 +1,11 @@
 'use client';
+
+import BrandLoader from '@/components/ui/BrandLoader';
+import BadgeIcon from '@/components/ui/BadgeIcon';
+
+import FormField from '@/components/ui/FormField';
+import SectionTabs from '@/components/ui/SectionTabs';
+import ContextIcon from '@/components/ui/ContextIcon';
 // src/app/student/profile/page.tsx
 
 import { useEffect, useState, useRef } from 'react';
@@ -36,29 +43,29 @@ import { useUploadThing } from '@/lib/uploadthing';
 import CalendarConnectButton from '@/components/calendar/CalendarConnectButton';
 
 const C = {
-  blue: '#2563EB',
-  blueDark: '#1D4ED8',
+  blue: '#087f72',
+  blueDark: '#06665d',
   teal: '#0D9488',
   tealDark: '#0F766E',
-  indigo: '#1E293B',
-  bg: '#F1F5F9',
-  gray: '#64748B',
-  success: '#10B981',
-  warning: '#F59E0B',
+  indigo: '#243e4a',
+  bg: '#f6f8f9',
+  gray: '#60717d',
+  success: '#168257',
+  warning: '#a86714',
   white: '#fff',
-  dark: '#0F172A',
+  dark: '#182c39',
   mid: '#334155',
-  border: '#E2E8F0',
-  text: '#0F172A',
+  border: '#dfe6e9',
+  text: '#182c39',
   muted: '#374151',
-  light: '#94A3B8',
+  light: '#60717d',
   danger: '#EF4444',
   dangerBg: '#FEF2F2',
   dangerBorder: '#FECACA',
   successBg: '#ECFDF5',
   successBorder: '#A7F3D0',
-  blueBg: '#EFF6FF',
-  blueBorder: '#BFDBFE',
+  blueBg: '#edf7f3',
+  blueBorder: '#bdddd5',
   tealBg: '#F0FDFA',
   tealBorder: '#99F6E4',
 };
@@ -125,7 +132,7 @@ function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }
     >
       <div style={{ color: C.blue }}>{icon}</div>
       <div
-        style={{ fontSize: 15, fontWeight: 800, color: C.text, fontFamily: 'var(--font-display)' }}
+        style={{ fontSize: 15, fontWeight: 700, color: C.text, fontFamily: 'var(--font-display)' }}
       >
         {label}
       </div>
@@ -143,23 +150,9 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <label
-        style={{
-          display: 'block',
-          fontSize: 12,
-          fontWeight: 700,
-          color: C.muted,
-          marginBottom: 6,
-          textTransform: 'uppercase',
-          letterSpacing: 0.5,
-        }}
-      >
-        {label}
-        {required && <span style={{ color: C.danger, marginLeft: 2 }}>*</span>}
-      </label>
+    <FormField label={label} required={required}>
       {children}
-    </div>
+    </FormField>
   );
 }
 
@@ -275,7 +268,7 @@ const RS = ({ title }: { title: string }) => (
     <div
       style={{
         fontSize: 9,
-        fontWeight: 800,
+        fontWeight: 700,
         color: C.teal,
         letterSpacing: 1.1,
         textTransform: 'uppercase' as const,
@@ -330,16 +323,17 @@ function InPlatformResume({ user }: { user: UserData | null }) {
         borderRadius: 14,
         overflow: 'hidden',
         background: C.white,
-        boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       {/* Resume header band */}
       <div
         style={{
-          background: `linear-gradient(135deg, ${C.dark}, ${C.indigo})`,
+          background: 'var(--surface-muted)',
           padding: '20px 24px 16px',
           borderBottom: `3px solid ${C.blue}`,
         }}
+        className="v2-light-panel"
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           {/* Avatar */}
@@ -348,14 +342,14 @@ function InPlatformResume({ user }: { user: UserData | null }) {
               width: 52,
               height: 52,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #2563EB, #0D9488)',
+              background: 'var(--primary)',
               border: '2px solid rgba(255,255,255,0.15)',
               overflow: 'hidden',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 20,
-              fontWeight: 900,
+              fontWeight: 700,
               color: '#fff',
               fontFamily: 'var(--font-display)',
               flexShrink: 0,
@@ -377,8 +371,8 @@ function InPlatformResume({ user }: { user: UserData | null }) {
             <div
               style={{
                 fontSize: 17,
-                fontWeight: 900,
-                color: '#F8FAFC',
+                fontWeight: 700,
+                color: 'var(--deep)',
                 fontFamily: 'var(--font-display)',
                 letterSpacing: '-0.2px',
               }}
@@ -386,7 +380,7 @@ function InPlatformResume({ user }: { user: UserData | null }) {
               {user.name}
             </div>
             {(user.department || user.university) && (
-              <div style={{ fontSize: 9.5, color: '#93C5FD', marginTop: 2 }}>
+              <div style={{ fontSize: 9.5, color: 'var(--deep)', marginTop: 2 }}>
                 {[user.department, user.university].filter(Boolean).join('  ·  ')}
               </div>
             )}
@@ -395,7 +389,7 @@ function InPlatformResume({ user }: { user: UserData | null }) {
                 <span
                   style={{
                     fontSize: 8,
-                    color: '#94A3B8',
+                    color: '#60717d',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 3,
@@ -409,7 +403,7 @@ function InPlatformResume({ user }: { user: UserData | null }) {
                 <span
                   style={{
                     fontSize: 8,
-                    color: '#94A3B8',
+                    color: '#60717d',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 3,
@@ -423,7 +417,7 @@ function InPlatformResume({ user }: { user: UserData | null }) {
                 <span
                   style={{
                     fontSize: 8,
-                    color: '#94A3B8',
+                    color: '#60717d',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 3,
@@ -462,7 +456,7 @@ function InPlatformResume({ user }: { user: UserData | null }) {
               style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
             >
               <div>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: C.dark }}>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: C.dark }}>
                   {user.university}
                 </div>
                 <div style={{ fontSize: 9, color: C.gray, marginTop: 2 }}>
@@ -483,7 +477,7 @@ function InPlatformResume({ user }: { user: UserData | null }) {
                     borderRadius: 7,
                     padding: '4px 10px',
                     fontSize: 9,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     color: C.blue,
                   }}
                 >
@@ -519,7 +513,7 @@ function InPlatformResume({ user }: { user: UserData | null }) {
                   borderBottom: i < user.projects.length - 1 ? `1px solid ${C.border}` : 'none',
                 }}
               >
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: C.dark }}>{proj.title}</div>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: C.dark }}>{proj.title}</div>
                 {proj.techStack?.length > 0 && (
                   <div style={{ fontSize: 8, color: C.teal, fontWeight: 600, margin: '3px 0' }}>
                     {proj.techStack.join('  ·  ')}
@@ -569,7 +563,7 @@ function InPlatformResume({ user }: { user: UserData | null }) {
             <RS title="Completed Courses" />
             <div style={{ display: 'flex', flexWrap: 'wrap' }}>
               {user.completedCourses.map((c) => (
-                <Pill key={c} label={c} color={C.gray} bg="#F8FAFC" border={C.border} />
+                <Pill key={c} label={c} color={C.gray} bg="#f6f8f9" border={C.border} />
               ))}
             </div>
           </>
@@ -1034,44 +1028,28 @@ export default function StudentProfilePage() {
   }
 
   if (fetching) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: C.bg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <div style={{ textAlign: 'center', color: C.gray, fontFamily: 'var(--font-body)' }}>
-          Loading profile…
-        </div>
-      </div>
-    );
+    return <BrandLoader variant="page" label="Loading profile" />;
   }
 
   const completeness = user?.profileCompleteness ?? 0;
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
+    <div
+      className="profile-workspace"
+      style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}
+    >
       {/* ── Header ── */}
       <div
         style={{
-          background: `linear-gradient(145deg, ${C.dark}, ${C.indigo})`,
+          background: 'var(--surface-muted)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
+        className="v2-light-panel"
       >
         <div
-          className="mobile-page-hero-inner"
+          className="mobile-page-hero-inner nx-page-width"
           style={{ maxWidth: 900, margin: '0 auto', padding: '20px 24px' }}
         >
-          <Link
-            href="/student/dashboard"
-            style={{ color: C.gray, fontSize: 13, textDecoration: 'none', fontWeight: 500 }}
-          >
-            ← Back to Dashboard
-          </Link>
           <div
             className="mobile-page-hero-row"
             style={{
@@ -1092,7 +1070,7 @@ export default function StudentProfilePage() {
                 name={user?.name ?? ''}
                 size={72}
                 radius="50%"
-                gradient="linear-gradient(135deg, #2563EB, #22D3EE)"
+                gradient="linear-gradient(135deg, #087f72, #178d80)"
                 onUploaded={(url) => {
                   setUser((p) => (p ? { ...p, image: url } : p));
                   setPreviewUser((p) => (p ? { ...p, image: url } : p));
@@ -1106,8 +1084,8 @@ export default function StudentProfilePage() {
                 <h1
                   style={{
                     fontSize: 22,
-                    fontWeight: 900,
-                    color: '#F8FAFC',
+                    fontWeight: 700,
+                    color: 'var(--deep)',
                     fontFamily: 'var(--font-display)',
                     margin: 0,
                   }}
@@ -1123,6 +1101,7 @@ export default function StudentProfilePage() {
             </div>
             {/* Completeness */}
             <div
+              className="profile-completion"
               style={{
                 background: 'rgba(255,255,255,0.07)',
                 border: '1px solid rgba(255,255,255,0.1)',
@@ -1139,13 +1118,13 @@ export default function StudentProfilePage() {
                   marginBottom: 8,
                 }}
               >
-                <span style={{ color: '#9FB4D0', fontSize: 12, fontWeight: 600 }}>
+                <span style={{ color: 'var(--deep)', fontSize: 12, fontWeight: 600 }}>
                   Profile completeness
                 </span>
                 <span
                   style={{
-                    color: completeness >= 80 ? '#10B981' : '#F59E0B',
-                    fontWeight: 800,
+                    color: completeness >= 80 ? '#168257' : '#a86714',
+                    fontWeight: 700,
                     fontSize: 14,
                   }}
                 >
@@ -1166,8 +1145,8 @@ export default function StudentProfilePage() {
                     height: '100%',
                     background:
                       completeness >= 80
-                        ? 'linear-gradient(90deg,#10B981,#34D399)'
-                        : 'linear-gradient(90deg,#F59E0B,#FBBF24)',
+                        ? 'linear-gradient(90deg,#168257,#34D399)'
+                        : 'linear-gradient(90deg,#a86714,#FBBF24)',
                     borderRadius: 999,
                     transition: 'width 0.4s ease',
                   }}
@@ -1180,7 +1159,7 @@ export default function StudentProfilePage() {
 
       {/* ── Body ── */}
       <div
-        className="mobile-page-body"
+        className="mobile-page-body nx-page-width"
         style={{
           maxWidth: 900,
           margin: '28px auto',
@@ -1226,1995 +1205,2054 @@ export default function StudentProfilePage() {
             <CheckCircle2 size={15} /> Profile saved successfully!
           </div>
         )}
-
-        {/* 1 — Personal Info */}
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
+        <SectionTabs
+          labels={['About me', 'Skills & experience', 'Resume & links', 'Feedback', 'Preferences']}
         >
-          <SectionHeader icon={<User size={18} />} label="Personal Information" />
-          <div
-            className="mobile-page-grid-2"
-            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
-          >
-            <Field label="Full Name" required>
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => set('name', e.target.value)}
-                style={inputBase}
-              />
-            </Field>
-            <Field label="Phone Number">
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={(e) => set('phone', e.target.value)}
-                placeholder="+8801XXXXXXXXX"
-                style={inputBase}
-              />
-            </Field>
-            <Field label="City / District">
-              <input
-                type="text"
-                value={form.city}
-                onChange={(e) => set('city', e.target.value)}
-                placeholder="e.g. Dhaka"
-                style={inputBase}
-              />
-            </Field>
-            <Field label="Email">
-              <input
-                type="email"
-                value={user?.email ?? ''}
-                disabled
-                style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
-              />
-            </Field>
-          </div>
-          <div style={{ marginTop: 16 }}>
-            <Field label="Bio / About Me">
-              <textarea
-                value={form.bio}
-                onChange={(e) => set('bio', e.target.value)}
-                placeholder="Write a short professional bio about yourself…"
-                rows={3}
-                style={{ ...inputBase, resize: 'vertical' }}
-              />
-              <div style={{ fontSize: 11, color: C.light, marginTop: 4 }}>
-                {form.bio.length}/500 characters
-              </div>
-            </Field>
-          </div>
-        </div>
-
-        {/* 2 — Academic Info */}
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <SectionHeader icon={<GraduationCap size={18} />} label="Academic Information" />
-          <div
-            className="mobile-page-grid-2"
-            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
-          >
-            <Field label="University">
-              <select
-                value={form.university}
-                onChange={(e) => set('university', e.target.value)}
-                style={{ ...inputBase, appearance: 'none' as const }}
-              >
-                <option value="">Select university</option>
-                {BD_UNIS.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Department">
-              <select
-                value={form.department}
-                onChange={(e) => set('department', e.target.value)}
-                style={{ ...inputBase, appearance: 'none' as const }}
-              >
-                <option value="">Select department</option>
-                {BD_DEPTS.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Student ID">
-              <input
-                type="text"
-                value={form.studentId}
-                onChange={(e) => set('studentId', e.target.value)}
-                placeholder="e.g. 22301206"
-                style={inputBase}
-              />
-            </Field>
-            <Field label="Year of Study">
-              <select
-                value={form.yearOfStudy}
-                onChange={(e) => set('yearOfStudy', e.target.value)}
-                style={{ ...inputBase, appearance: 'none' as const }}
-              >
-                <option value="">Select year</option>
-                {[1, 2, 3, 4, 5].map((y) => (
-                  <option key={y} value={y}>
-                    Year {y}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Current Semester">
-              <input
-                type="text"
-                value={form.currentSemester}
-                onChange={(e) => set('currentSemester', e.target.value)}
-                placeholder="e.g. Spring 2026"
-                style={inputBase}
-              />
-            </Field>
-            <Field label="CGPA (out of 4.0)">
-              <input
-                type="number"
-                value={form.cgpa}
-                onChange={(e) => set('cgpa', e.target.value)}
-                placeholder="e.g. 3.75"
-                min="0"
-                max="4"
-                step="0.01"
-                style={inputBase}
-              />
-            </Field>
-          </div>
-          <div style={{ marginTop: 16 }}>
-            <label
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                cursor: 'pointer',
-                fontSize: 14,
-                color: C.gray,
-                fontWeight: 600,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={form.isGraduated}
-                onChange={(e) => void handleGraduationToggle(e.target.checked)}
-                disabled={graduationSaving}
-                style={{ width: 16, height: 16, accentColor: C.blue }}
-              />
-              {graduationSaving ? 'Saving graduation status…' : 'I have graduated'}
-            </label>
-
-            {form.isGraduated && (
-              <div
-                style={{
-                  marginTop: 12,
-                  padding: 12,
-                  background: C.blueBg,
-                  borderRadius: 12,
-                  border: `1px solid ${C.blueBorder}`,
-                }}
-              >
-                <p
-                  style={{ margin: '0 0 10px 0', fontSize: 13, color: C.blueDark, fontWeight: 500 }}
-                >
-                  Congratulations on your graduation! You can now convert your account to alumni
-                  status to become a mentor.
-                </p>
-                <button
-                  onClick={() => setAlumniModalOpen(true)}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: 8,
-                    background: C.blue,
-                    color: C.white,
-                    border: 'none',
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Convert to Alumni Status
-                </button>
-              </div>
-            )}
-          </div>
-          <div style={{ marginTop: 16 }}>
-            <Field label="Completed Courses">
-              <TagInput
-                tags={form.completedCourses}
-                onChange={(v) => set('completedCourses', v)}
-                placeholder="e.g. CSE110, CSE220 — press Enter"
-              />
-            </Field>
-          </div>
-        </div>
-
-        {/* 3 — Resume (PDF Upload) */}
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <SectionHeader icon={<FileText size={18} />} label="Resume" />
-
-          {resumeSaved && (
+          <div className="profile-section-grid">
             <div
+              className="nx-surface"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                background: C.successBg,
-                border: `1px solid ${C.successBorder}`,
+                background: C.white,
                 borderRadius: 12,
-                padding: '12px 16px',
-                color: '#065F46',
-                fontSize: 14,
-                fontWeight: 600,
-                marginBottom: 16,
+                border: `1px solid ${C.border}`,
+                padding: '24px 28px',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
-              <CheckCircle2 size={15} /> Resume uploaded successfully!
+              <SectionHeader icon={<User size={18} />} label="Personal Information" />
+              <div
+                className="mobile-page-grid-2 v2-page-grid"
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+              >
+                <Field label="Full Name" required>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => set('name', e.target.value)}
+                    style={inputBase}
+                  />
+                </Field>
+                <Field label="Phone Number">
+                  <input
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => set('phone', e.target.value)}
+                    placeholder="+8801XXXXXXXXX"
+                    style={inputBase}
+                  />
+                </Field>
+                <Field label="City / District">
+                  <input
+                    type="text"
+                    value={form.city}
+                    onChange={(e) => set('city', e.target.value)}
+                    placeholder="e.g. Dhaka"
+                    style={inputBase}
+                  />
+                </Field>
+                <Field label="Email">
+                  <input
+                    type="email"
+                    value={user?.email ?? ''}
+                    disabled
+                    style={{ ...inputBase, background: C.bg, color: C.gray, cursor: 'not-allowed' }}
+                  />
+                </Field>
+              </div>
+              <div style={{ marginTop: 16 }}>
+                <Field label="Bio / About Me">
+                  <textarea
+                    value={form.bio}
+                    onChange={(e) => set('bio', e.target.value)}
+                    placeholder="Write a short professional bio about yourself…"
+                    rows={3}
+                    style={{ ...inputBase, resize: 'vertical' }}
+                  />
+                  <div style={{ fontSize: 11, color: C.light, marginTop: 4 }}>
+                    {form.bio.length}/500 characters
+                  </div>
+                </Field>
+              </div>
             </div>
-          )}
-
-          {user?.resumeUrl ? (
             <div
+              className="nx-surface"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: '#F0FDF4',
-                border: '1px solid #A7F3D0',
-                borderRadius: 14,
-                padding: '14px 18px',
-                marginBottom: 18,
-                flexWrap: 'wrap',
-                gap: 12,
+                background: C.white,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+                padding: '24px 28px',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div
+              <SectionHeader icon={<GraduationCap size={18} />} label="Academic Information" />
+              <div
+                className="mobile-page-grid-2 v2-page-grid"
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+              >
+                <Field label="University">
+                  <select
+                    value={form.university}
+                    onChange={(e) => set('university', e.target.value)}
+                    style={{ ...inputBase, appearance: 'none' as const }}
+                  >
+                    <option value="">Select university</option>
+                    {BD_UNIS.map((u) => (
+                      <option key={u} value={u}>
+                        {u}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Department">
+                  <select
+                    value={form.department}
+                    onChange={(e) => set('department', e.target.value)}
+                    style={{ ...inputBase, appearance: 'none' as const }}
+                  >
+                    <option value="">Select department</option>
+                    {BD_DEPTS.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Student ID">
+                  <input
+                    type="text"
+                    value={form.studentId}
+                    onChange={(e) => set('studentId', e.target.value)}
+                    placeholder="e.g. 22301206"
+                    style={inputBase}
+                  />
+                </Field>
+                <Field label="Year of Study">
+                  <select
+                    value={form.yearOfStudy}
+                    onChange={(e) => set('yearOfStudy', e.target.value)}
+                    style={{ ...inputBase, appearance: 'none' as const }}
+                  >
+                    <option value="">Select year</option>
+                    {[1, 2, 3, 4, 5].map((y) => (
+                      <option key={y} value={y}>
+                        Year {y}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Current Semester">
+                  <input
+                    type="text"
+                    value={form.currentSemester}
+                    onChange={(e) => set('currentSemester', e.target.value)}
+                    placeholder="e.g. Spring 2026"
+                    style={inputBase}
+                  />
+                </Field>
+                <Field label="CGPA (out of 4.0)">
+                  <input
+                    type="number"
+                    value={form.cgpa}
+                    onChange={(e) => set('cgpa', e.target.value)}
+                    placeholder="e.g. 3.75"
+                    min="0"
+                    max="4"
+                    step="0.01"
+                    style={inputBase}
+                  />
+                </Field>
+              </div>
+              <div style={{ marginTop: 16 }}>
+                <label
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 10,
-                    background: '#DCFCE7',
-                    border: '1px solid #A7F3D0',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#16A34A',
-                    flexShrink: 0,
+                    gap: 10,
+                    cursor: 'pointer',
+                    fontSize: 14,
+                    color: C.gray,
+                    fontWeight: 600,
                   }}
                 >
-                  <FileText size={18} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#065F46' }}>
-                    Resume on file
+                  <input
+                    type="checkbox"
+                    checked={form.isGraduated}
+                    onChange={(e) => void handleGraduationToggle(e.target.checked)}
+                    disabled={graduationSaving}
+                    style={{ width: 16, height: 16, accentColor: C.blue }}
+                  />
+                  {graduationSaving ? 'Saving graduation status…' : 'I have graduated'}
+                </label>
+
+                {form.isGraduated && (
+                  <div
+                    style={{
+                      marginTop: 12,
+                      padding: 12,
+                      background: C.blueBg,
+                      borderRadius: 12,
+                      border: `1px solid ${C.blueBorder}`,
+                    }}
+                  >
+                    <p
+                      style={{
+                        margin: '0 0 10px 0',
+                        fontSize: 13,
+                        color: C.blueDark,
+                        fontWeight: 500,
+                      }}
+                    >
+                      Congratulations on your graduation! You can now convert your account to alumni
+                      status to become a mentor.
+                    </p>
+                    <button
+                      onClick={() => setAlumniModalOpen(true)}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: 8,
+                        background: C.blue,
+                        color: C.white,
+                        border: 'none',
+                        fontWeight: 700,
+                        fontSize: 13,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Convert to Alumni Status
+                    </button>
                   </div>
-                  <div style={{ fontSize: 12, color: '#16A34A', marginTop: 2 }}>
-                    PDF · Attached to all your job applications
-                  </div>
-                </div>
+                )}
               </div>
-              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                <a
-                  href={user.resumeUrl}
-                  target="_blank"
-                  rel="noreferrer"
+              <div style={{ marginTop: 16 }}>
+                <Field label="Completed Courses">
+                  <TagInput
+                    tags={form.completedCourses}
+                    onChange={(v) => set('completedCourses', v)}
+                    placeholder="e.g. CSE110, CSE220 — press Enter"
+                  />
+                </Field>
+              </div>
+            </div>
+          </div>
+          <div className="profile-section-grid">
+            <div
+              className="nx-surface"
+              style={{
+                background: C.white,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+                padding: '24px 28px',
+                boxShadow: 'var(--shadow-card)',
+              }}
+            >
+              <SectionHeader icon={<Code2 size={18} />} label="Skills" />
+              <TagInput
+                tags={form.skills}
+                onChange={(v) => set('skills', v)}
+                placeholder="e.g. React, Python, Figma — press Enter"
+                color="#087f72"
+                bg="#e0f0eb"
+                border="#bdddd5"
+              />
+              <div style={{ fontSize: 12, color: C.light, marginTop: 8 }}>
+                These skills feed directly into the AI fit scoring engine for job matching.
+              </div>
+            </div>
+            <div
+              className="nx-surface"
+              style={{
+                background: C.white,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+                padding: '24px 28px',
+                boxShadow: 'var(--shadow-card)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 20,
+                  paddingBottom: 12,
+                  borderBottom: `1px solid ${C.bg}`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ color: C.blue }}>
+                    <Briefcase size={18} />
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: C.text,
+                      fontFamily: 'var(--font-display)',
+                    }}
+                  >
+                    Projects
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={addProject}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
-                    background: '#16A34A',
-                    color: '#fff',
-                    padding: '8px 14px',
+                    background: C.blueBg,
+                    color: C.blue,
+                    border: `1px solid ${C.blueBorder}`,
+                    padding: '7px 14px',
+                    borderRadius: 9,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Plus size={13} /> Add Project
+                </button>
+              </div>
+              {form.projects.length === 0 && (
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '24px',
+                    color: C.light,
+                    fontSize: 14,
+                    border: '1px dashed #CBD5E1',
+                    borderRadius: 12,
+                  }}
+                >
+                  No projects added yet. Click Add Project to get started.
+                </div>
+              )}
+              <div style={{ maxHeight: 600, overflowY: 'auto', paddingRight: 8 }}>
+                {form.projects.map((proj, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 14,
+                      padding: '18px 20px',
+                      marginBottom: 12,
+                      background: '#FAFBFC',
+                    }}
+                  >
+                    <div
+                      style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}
+                    >
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.gray }}>
+                        Project {i + 1}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeProject(i)}
+                        style={{
+                          background: C.dangerBg,
+                          color: C.danger,
+                          border: `1px solid ${C.dangerBorder}`,
+                          borderRadius: 8,
+                          padding: '4px 10px',
+                          cursor: 'pointer',
+                          fontSize: 12,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <Trash2 size={12} /> Remove
+                      </button>
+                    </div>
+                    <div
+                      className="mobile-page-grid-2 v2-page-grid"
+                      style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+                    >
+                      <Field label="Project Title" required>
+                        <input
+                          type="text"
+                          value={proj.title}
+                          onChange={(e) => setProject(i, 'title', e.target.value)}
+                          placeholder="e.g. E-Commerce Platform"
+                          style={inputBase}
+                        />
+                      </Field>
+                      <Field label="Live URL">
+                        <input
+                          type="url"
+                          value={proj.projectUrl}
+                          onChange={(e) => setProject(i, 'projectUrl', e.target.value)}
+                          placeholder="https://myproject.com"
+                          style={inputBase}
+                        />
+                      </Field>
+                      <Field label="GitHub Repo">
+                        <input
+                          type="url"
+                          value={proj.repoUrl}
+                          onChange={(e) => setProject(i, 'repoUrl', e.target.value)}
+                          placeholder="https://github.com/..."
+                          style={inputBase}
+                        />
+                      </Field>
+                    </div>
+                    <div style={{ marginTop: 12 }}>
+                      <Field label="Description">
+                        <textarea
+                          value={proj.description}
+                          onChange={(e) => setProject(i, 'description', e.target.value)}
+                          placeholder="What did you build and what technologies did you use?"
+                          rows={2}
+                          style={{ ...inputBase, resize: 'vertical' }}
+                        />
+                      </Field>
+                    </div>
+                    <div style={{ marginTop: 12 }}>
+                      <Field label="Tech Stack">
+                        <TagInput
+                          tags={proj.techStack}
+                          onChange={(v) => setProject(i, 'techStack', v)}
+                          placeholder="e.g. React, Node.js — press Enter"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div
+              className="nx-surface"
+              style={{
+                background: C.white,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+                padding: '24px 28px',
+                boxShadow: 'var(--shadow-card)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 20,
+                  paddingBottom: 12,
+                  borderBottom: `1px solid ${C.bg}`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ color: C.blue }}>
+                    <Award size={18} />
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: C.text,
+                      fontFamily: 'var(--font-display)',
+                    }}
+                  >
+                    Certifications
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={addCert}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: C.blueBg,
+                    color: C.blue,
+                    border: `1px solid ${C.blueBorder}`,
+                    padding: '7px 14px',
+                    borderRadius: 9,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Plus size={13} /> Add Certificate
+                </button>
+              </div>
+              {form.certifications.length === 0 && (
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '24px',
+                    color: C.light,
+                    fontSize: 14,
+                    border: '1px dashed #CBD5E1',
+                    borderRadius: 12,
+                  }}
+                >
+                  No certifications added yet.
+                </div>
+              )}
+              <div style={{ maxHeight: 400, overflowY: 'auto', paddingRight: 8 }}>
+                {form.certifications.map((cert, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 14,
+                      padding: '18px 20px',
+                      marginBottom: 12,
+                      background: '#FAFBFC',
+                    }}
+                  >
+                    <div
+                      style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}
+                    >
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.gray }}>
+                        Certificate {i + 1}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeCert(i)}
+                        style={{
+                          background: C.dangerBg,
+                          color: C.danger,
+                          border: `1px solid ${C.dangerBorder}`,
+                          borderRadius: 8,
+                          padding: '4px 10px',
+                          cursor: 'pointer',
+                          fontSize: 12,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <Trash2 size={12} /> Remove
+                      </button>
+                    </div>
+                    <div
+                      className="mobile-page-grid-2 v2-page-grid"
+                      style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+                    >
+                      <Field label="Certificate Name" required>
+                        <input
+                          type="text"
+                          value={cert.name}
+                          onChange={(e) => setCert(i, 'name', e.target.value)}
+                          placeholder="e.g. AWS Cloud Practitioner"
+                          style={inputBase}
+                        />
+                      </Field>
+                      <Field label="Issued By" required>
+                        <input
+                          type="text"
+                          value={cert.issuedBy}
+                          onChange={(e) => setCert(i, 'issuedBy', e.target.value)}
+                          placeholder="e.g. Amazon Web Services"
+                          style={inputBase}
+                        />
+                      </Field>
+                      <Field label="Credential URL">
+                        <input
+                          type="url"
+                          value={cert.credentialUrl}
+                          onChange={(e) => setCert(i, 'credentialUrl', e.target.value)}
+                          placeholder="https://credential.net/..."
+                          style={inputBase}
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="profile-section-grid">
+            <div
+              className="nx-surface"
+              style={{
+                background: C.white,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+                padding: '24px 28px',
+                boxShadow: 'var(--shadow-card)',
+              }}
+            >
+              <SectionHeader icon={<FileText size={18} />} label="Resume" />
+
+              {resumeSaved && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    background: C.successBg,
+                    border: `1px solid ${C.successBorder}`,
+                    borderRadius: 12,
+                    padding: '12px 16px',
+                    color: '#065F46',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    marginBottom: 16,
+                  }}
+                >
+                  <CheckCircle2 size={15} /> Resume uploaded successfully!
+                </div>
+              )}
+
+              {user?.resumeUrl ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: '#F0FDF4',
+                    border: '1px solid #A7F3D0',
+                    borderRadius: 14,
+                    padding: '14px 18px',
+                    marginBottom: 18,
+                    flexWrap: 'wrap',
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 10,
+                        background: '#DCFCE7',
+                        border: '1px solid #A7F3D0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#16A34A',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <FileText size={18} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#065F46' }}>
+                        Resume on file
+                      </div>
+                      <div style={{ fontSize: 12, color: '#16A34A', marginTop: 2 }}>
+                        PDF · Attached to all your job applications
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                    <a
+                      href={user.resumeUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        background: '#16A34A',
+                        color: '#fff',
+                        padding: '8px 14px',
+                        borderRadius: 9,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                      }}
+                    >
+                      <ExternalLink size={13} /> View
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        background: C.dangerBg,
+                        color: C.danger,
+                        border: `1px solid ${C.dangerBorder}`,
+                        padding: '8px 14px',
+                        borderRadius: 9,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Trash2 size={13} /> Delete
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    background: '#f6f8f9',
+                    border: '1px dashed #CBD5E1',
+                    borderRadius: 14,
+                    padding: '14px 18px',
+                    marginBottom: 18,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 10,
+                      background: '#f6f8f9',
+                      border: '1px solid #dfe6e9',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: C.light,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <FileText size={18} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
+                      No resume uploaded yet
+                    </div>
+                    <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>
+                      Upload a PDF to attach it automatically to your job applications
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Drop zone */}
+              <label
+                htmlFor="resume-upload"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 12,
+                  padding: '32px 24px',
+                  border: `2px dashed ${dragOver ? C.blue : resumeFile ? C.blue : '#CBD5E1'}`,
+                  borderRadius: 12,
+                  background: dragOver ? C.blueBg : resumeFile ? '#F8FBFF' : '#FAFBFC',
+                  cursor: uploading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  textAlign: 'center',
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOver(false);
+                  const f = e.dataTransfer.files?.[0];
+                  if (f) handleFileSelect(f);
+                }}
+              >
+                <input
+                  id="resume-upload"
+                  type="file"
+                  accept="application/pdf"
+                  disabled={uploading}
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleFileSelect(f);
+                    e.target.value = '';
+                  }}
+                />
+                <div
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 12,
+                    background: resumeFile ? C.blueBg : '#f6f8f9',
+                    border: `1.5px solid ${resumeFile ? C.blueBorder : C.border}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: resumeFile ? C.blue : C.light,
+                  }}
+                >
+                  {resumeUploading ? (
+                    <span
+                      style={{
+                        width: 22,
+                        height: 22,
+                        border: `3px solid ${C.blueBorder}`,
+                        borderTopColor: C.blue,
+                        borderRadius: '50%',
+                        display: 'inline-block',
+                        animation: 'spin 0.7s linear infinite',
+                      }}
+                    />
+                  ) : (
+                    <FileText size={24} />
+                  )}
+                </div>
+                {resumeFile ? (
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: C.blue }}>
+                      {resumeFile.name}
+                    </div>
+                    <div style={{ fontSize: 12, color: C.gray, marginTop: 3 }}>
+                      {(resumeFile.size / 1024 / 1024).toFixed(2)} MB · PDF · Ready to upload
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>
+                      {dragOver ? 'Drop your resume here' : 'Drag & drop your resume'}
+                    </div>
+                    <div style={{ fontSize: 13, color: C.light, marginTop: 4 }}>
+                      or{' '}
+                      <span style={{ color: C.blue, fontWeight: 700, textDecoration: 'underline' }}>
+                        click to browse
+                      </span>{' '}
+                      — PDF only, max 8MB
+                    </div>
+                  </div>
+                )}
+              </label>
+
+              {resumeError && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    background: C.dangerBg,
+                    border: `1px solid ${C.dangerBorder}`,
+                    borderRadius: 10,
+                    padding: '10px 14px',
+                    color: '#991B1B',
+                    fontSize: 13,
+                    marginTop: 12,
+                  }}
+                >
+                  <AlertCircle size={14} /> {resumeError}
+                </div>
+              )}
+
+              {resumeFile && (
+                <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+                  <button
+                    type="button"
+                    onClick={handleResumeUpload}
+                    disabled={uploading}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      background: resumeUploading
+                        ? '#93C5FD'
+                        : `linear-gradient(135deg,${C.blue},#06665d)`,
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 10,
+                      padding: '10px 22px',
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: uploading ? 'not-allowed' : 'pointer',
+                      fontFamily: 'var(--font-display)',
+                      boxShadow: resumeUploading ? 'none' : '0 4px 12px rgba(37,99,235,0.3)',
+                    }}
+                  >
+                    {resumeUploading ? (
+                      <>
+                        <span
+                          style={{
+                            width: 13,
+                            height: 13,
+                            border: '2px solid rgba(255,255,255,0.3)',
+                            borderTopColor: '#fff',
+                            borderRadius: '50%',
+                            display: 'inline-block',
+                            animation: 'spin 0.7s linear infinite',
+                          }}
+                        />
+                        Uploading…
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={14} /> Upload Resume
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResumeFile(null);
+                      setResumeError('');
+                    }}
+                    disabled={uploading}
+                    style={{
+                      padding: '10px 18px',
+                      background: C.white,
+                      border: `1.5px solid ${C.border}`,
+                      borderRadius: 10,
+                      color: C.gray,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: uploading ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+              <div style={{ fontSize: 12, color: C.light, marginTop: 12 }}>
+                <ContextIcon name="attachment" /> Your resume is automatically attached to every job
+                application you submit on Nextern.
+                {user?.resumeUrl ? ' Upload a new file to replace the current one.' : ''}
+              </div>
+            </div>
+            <div
+              className="nx-surface"
+              style={{
+                background: C.white,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+                padding: '24px 28px',
+                boxShadow: 'var(--shadow-card)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 16,
+                  paddingBottom: 14,
+                  borderBottom: `1px solid ${C.bg}`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ color: C.teal }}>
+                    <Layers size={18} />
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: C.text,
+                      fontFamily: 'var(--font-display)',
+                    }}
+                  >
+                    In-Platform Resume
+                  </div>
+                </div>
+                <Link
+                  href="/student/resume"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: C.tealBg,
+                    color: C.teal,
+                    border: `1px solid ${C.tealBorder}`,
+                    padding: '7px 14px',
                     borderRadius: 9,
                     fontSize: 12,
                     fontWeight: 700,
                     textDecoration: 'none',
                   }}
                 >
-                  <ExternalLink size={13} /> View
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    background: C.dangerBg,
-                    color: C.danger,
-                    border: `1px solid ${C.dangerBorder}`,
-                    padding: '8px 14px',
-                    borderRadius: 9,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  <Trash2 size={13} /> Delete
-                </button>
+                  <Eye size={13} /> Full View & Download
+                </Link>
               </div>
+              <div style={{ fontSize: 13, color: C.gray, marginBottom: 16, lineHeight: 1.6 }}>
+                This is your Nextern-generated resume — built from your profile data above. It
+                updates every time you <strong>Save Profile</strong>. Use the Resume Builder to
+                download it as a PDF.
+              </div>
+              <InPlatformResume user={previewUser} />
             </div>
-          ) : (
             <div
+              className="nx-surface"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                background: '#F8FAFC',
-                border: '1px dashed #CBD5E1',
-                borderRadius: 14,
-                padding: '14px 18px',
-                marginBottom: 18,
+                background: C.white,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+                padding: '24px 28px',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
+              <SectionHeader icon={<Globe size={18} />} label="Online Presence" />
               <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 10,
-                  background: '#F1F5F9',
-                  border: '1px solid #E2E8F0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: C.light,
-                  flexShrink: 0,
-                }}
+                className="mobile-page-grid-2 v2-page-grid"
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
               >
-                <FileText size={18} />
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
-                  No resume uploaded yet
-                </div>
-                <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>
-                  Upload a PDF to attach it automatically to your job applications
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Drop zone */}
-          <label
-            htmlFor="resume-upload"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 12,
-              padding: '32px 24px',
-              border: `2px dashed ${dragOver ? C.blue : resumeFile ? C.blue : '#CBD5E1'}`,
-              borderRadius: 16,
-              background: dragOver ? C.blueBg : resumeFile ? '#F8FBFF' : '#FAFBFC',
-              cursor: uploading ? 'not-allowed' : 'pointer',
-              transition: 'all 0.2s ease',
-              textAlign: 'center',
-            }}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOver(true);
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragOver(false);
-              const f = e.dataTransfer.files?.[0];
-              if (f) handleFileSelect(f);
-            }}
-          >
-            <input
-              id="resume-upload"
-              type="file"
-              accept="application/pdf"
-              disabled={uploading}
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) handleFileSelect(f);
-                e.target.value = '';
-              }}
-            />
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 16,
-                background: resumeFile ? C.blueBg : '#F1F5F9',
-                border: `1.5px solid ${resumeFile ? C.blueBorder : C.border}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: resumeFile ? C.blue : C.light,
-              }}
-            >
-              {resumeUploading ? (
-                <span
-                  style={{
-                    width: 22,
-                    height: 22,
-                    border: `3px solid ${C.blueBorder}`,
-                    borderTopColor: C.blue,
-                    borderRadius: '50%',
-                    display: 'inline-block',
-                    animation: 'spin 0.7s linear infinite',
-                  }}
-                />
-              ) : (
-                <FileText size={24} />
-              )}
-            </div>
-            {resumeFile ? (
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.blue }}>
-                  {resumeFile.name}
-                </div>
-                <div style={{ fontSize: 12, color: C.gray, marginTop: 3 }}>
-                  {(resumeFile.size / 1024 / 1024).toFixed(2)} MB · PDF · Ready to upload
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>
-                  {dragOver ? 'Drop your resume here' : 'Drag & drop your resume'}
-                </div>
-                <div style={{ fontSize: 13, color: C.light, marginTop: 4 }}>
-                  or{' '}
-                  <span style={{ color: C.blue, fontWeight: 700, textDecoration: 'underline' }}>
-                    click to browse
-                  </span>{' '}
-                  — PDF only, max 8MB
-                </div>
-              </div>
-            )}
-          </label>
-
-          {resumeError && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                background: C.dangerBg,
-                border: `1px solid ${C.dangerBorder}`,
-                borderRadius: 10,
-                padding: '10px 14px',
-                color: '#991B1B',
-                fontSize: 13,
-                marginTop: 12,
-              }}
-            >
-              <AlertCircle size={14} /> {resumeError}
-            </div>
-          )}
-
-          {resumeFile && (
-            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-              <button
-                type="button"
-                onClick={handleResumeUpload}
-                disabled={uploading}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 7,
-                  background: resumeUploading
-                    ? '#93C5FD'
-                    : `linear-gradient(135deg,${C.blue},#1D4ED8)`,
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 10,
-                  padding: '10px 22px',
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: uploading ? 'not-allowed' : 'pointer',
-                  fontFamily: 'var(--font-display)',
-                  boxShadow: resumeUploading ? 'none' : '0 4px 12px rgba(37,99,235,0.3)',
-                }}
-              >
-                {resumeUploading ? (
-                  <>
-                    <span
+                <Field label="LinkedIn URL">
+                  <div style={{ position: 'relative' }}>
+                    <div
                       style={{
-                        width: 13,
-                        height: 13,
-                        border: '2px solid rgba(255,255,255,0.3)',
-                        borderTopColor: '#fff',
-                        borderRadius: '50%',
-                        display: 'inline-block',
-                        animation: 'spin 0.7s linear infinite',
+                        position: 'absolute',
+                        left: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: '#0A66C2',
                       }}
-                    />
-                    Uploading…
-                  </>
-                ) : (
-                  <>
-                    <Upload size={14} /> Upload Resume
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setResumeFile(null);
-                  setResumeError('');
-                }}
-                disabled={uploading}
-                style={{
-                  padding: '10px 18px',
-                  background: C.white,
-                  border: `1.5px solid ${C.border}`,
-                  borderRadius: 10,
-                  color: C.gray,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: uploading ? 'not-allowed' : 'pointer',
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-          <div style={{ fontSize: 12, color: C.light, marginTop: 12 }}>
-            📎 Your resume is automatically attached to every job application you submit on Nextern.
-            {user?.resumeUrl ? ' Upload a new file to replace the current one.' : ''}
-          </div>
-        </div>
-
-        {/* ── NEW: In-Platform Resume ── */}
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 16,
-              paddingBottom: 14,
-              borderBottom: `1px solid ${C.bg}`,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ color: C.teal }}>
-                <Layers size={18} />
-              </div>
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 800,
-                  color: C.text,
-                  fontFamily: 'var(--font-display)',
-                }}
-              >
-                In-Platform Resume
-              </div>
-            </div>
-            <Link
-              href="/student/resume"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                background: C.tealBg,
-                color: C.teal,
-                border: `1px solid ${C.tealBorder}`,
-                padding: '7px 14px',
-                borderRadius: 9,
-                fontSize: 12,
-                fontWeight: 700,
-                textDecoration: 'none',
-              }}
-            >
-              <Eye size={13} /> Full View & Download
-            </Link>
-          </div>
-          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16, lineHeight: 1.6 }}>
-            This is your Nextern-generated resume — built from your profile data above. It updates
-            every time you <strong>Save Profile</strong>. Use the Resume Builder to download it as a
-            PDF.
-          </div>
-          <InPlatformResume user={previewUser} />
-        </div>
-
-        {/* 4 — Skills */}
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <SectionHeader icon={<Code2 size={18} />} label="Skills" />
-          <TagInput
-            tags={form.skills}
-            onChange={(v) => set('skills', v)}
-            placeholder="e.g. React, Python, Figma — press Enter"
-            color="#7C3AED"
-            bg="#EDE9FE"
-            border="#DDD6FE"
-          />
-          <div style={{ fontSize: 12, color: C.light, marginTop: 8 }}>
-            These skills feed directly into the AI fit scoring engine for job matching.
-          </div>
-        </div>
-
-        {/* 5 — Projects */}
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 20,
-              paddingBottom: 12,
-              borderBottom: `1px solid ${C.bg}`,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ color: C.blue }}>
-                <Briefcase size={18} />
-              </div>
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 800,
-                  color: C.text,
-                  fontFamily: 'var(--font-display)',
-                }}
-              >
-                Projects
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={addProject}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                background: C.blueBg,
-                color: C.blue,
-                border: `1px solid ${C.blueBorder}`,
-                padding: '7px 14px',
-                borderRadius: 9,
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              <Plus size={13} /> Add Project
-            </button>
-          </div>
-          {form.projects.length === 0 && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '24px',
-                color: C.light,
-                fontSize: 14,
-                border: '1px dashed #CBD5E1',
-                borderRadius: 12,
-              }}
-            >
-              No projects added yet. Click Add Project to get started.
-            </div>
-          )}
-          <div style={{ maxHeight: 600, overflowY: 'auto', paddingRight: 8 }}>
-            {form.projects.map((proj, i) => (
-              <div
-                key={i}
-                style={{
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 14,
-                  padding: '18px 20px',
-                  marginBottom: 12,
-                  background: '#FAFBFC',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: C.gray }}>
-                    Project {i + 1}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeProject(i)}
-                    style={{
-                      background: C.dangerBg,
-                      color: C.danger,
-                      border: `1px solid ${C.dangerBorder}`,
-                      borderRadius: 8,
-                      padding: '4px 10px',
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                    }}
-                  >
-                    <Trash2 size={12} /> Remove
-                  </button>
-                </div>
-                <div
-                  className="mobile-page-grid-2"
-                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
-                >
-                  <Field label="Project Title" required>
-                    <input
-                      type="text"
-                      value={proj.title}
-                      onChange={(e) => setProject(i, 'title', e.target.value)}
-                      placeholder="e.g. E-Commerce Platform"
-                      style={inputBase}
-                    />
-                  </Field>
-                  <Field label="Live URL">
-                    <input
-                      type="url"
-                      value={proj.projectUrl}
-                      onChange={(e) => setProject(i, 'projectUrl', e.target.value)}
-                      placeholder="https://myproject.com"
-                      style={inputBase}
-                    />
-                  </Field>
-                  <Field label="GitHub Repo">
-                    <input
-                      type="url"
-                      value={proj.repoUrl}
-                      onChange={(e) => setProject(i, 'repoUrl', e.target.value)}
-                      placeholder="https://github.com/..."
-                      style={inputBase}
-                    />
-                  </Field>
-                </div>
-                <div style={{ marginTop: 12 }}>
-                  <Field label="Description">
-                    <textarea
-                      value={proj.description}
-                      onChange={(e) => setProject(i, 'description', e.target.value)}
-                      placeholder="What did you build and what technologies did you use?"
-                      rows={2}
-                      style={{ ...inputBase, resize: 'vertical' }}
-                    />
-                  </Field>
-                </div>
-                <div style={{ marginTop: 12 }}>
-                  <Field label="Tech Stack">
-                    <TagInput
-                      tags={proj.techStack}
-                      onChange={(v) => setProject(i, 'techStack', v)}
-                      placeholder="e.g. React, Node.js — press Enter"
-                    />
-                  </Field>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 6 — Certifications */}
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 20,
-              paddingBottom: 12,
-              borderBottom: `1px solid ${C.bg}`,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ color: C.blue }}>
-                <Award size={18} />
-              </div>
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 800,
-                  color: C.text,
-                  fontFamily: 'var(--font-display)',
-                }}
-              >
-                Certifications
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={addCert}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                background: C.blueBg,
-                color: C.blue,
-                border: `1px solid ${C.blueBorder}`,
-                padding: '7px 14px',
-                borderRadius: 9,
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              <Plus size={13} /> Add Certificate
-            </button>
-          </div>
-          {form.certifications.length === 0 && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '24px',
-                color: C.light,
-                fontSize: 14,
-                border: '1px dashed #CBD5E1',
-                borderRadius: 12,
-              }}
-            >
-              No certifications added yet.
-            </div>
-          )}
-          <div style={{ maxHeight: 400, overflowY: 'auto', paddingRight: 8 }}>
-            {form.certifications.map((cert, i) => (
-              <div
-                key={i}
-                style={{
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 14,
-                  padding: '18px 20px',
-                  marginBottom: 12,
-                  background: '#FAFBFC',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: C.gray }}>
-                    Certificate {i + 1}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeCert(i)}
-                    style={{
-                      background: C.dangerBg,
-                      color: C.danger,
-                      border: `1px solid ${C.dangerBorder}`,
-                      borderRadius: 8,
-                      padding: '4px 10px',
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                    }}
-                  >
-                    <Trash2 size={12} /> Remove
-                  </button>
-                </div>
-                <div
-                  className="mobile-page-grid-2"
-                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
-                >
-                  <Field label="Certificate Name" required>
-                    <input
-                      type="text"
-                      value={cert.name}
-                      onChange={(e) => setCert(i, 'name', e.target.value)}
-                      placeholder="e.g. AWS Cloud Practitioner"
-                      style={inputBase}
-                    />
-                  </Field>
-                  <Field label="Issued By" required>
-                    <input
-                      type="text"
-                      value={cert.issuedBy}
-                      onChange={(e) => setCert(i, 'issuedBy', e.target.value)}
-                      placeholder="e.g. Amazon Web Services"
-                      style={inputBase}
-                    />
-                  </Field>
-                  <Field label="Credential URL">
-                    <input
-                      type="url"
-                      value={cert.credentialUrl}
-                      onChange={(e) => setCert(i, 'credentialUrl', e.target.value)}
-                      placeholder="https://credential.net/..."
-                      style={inputBase}
-                    />
-                  </Field>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 7 — Online Presence */}
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <SectionHeader icon={<Globe size={18} />} label="Online Presence" />
-          <div
-            className="mobile-page-grid-2"
-            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
-          >
-            <Field label="LinkedIn URL">
-              <div style={{ position: 'relative' }}>
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: 12,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: '#0A66C2',
-                  }}
-                >
-                  <Linkedin size={15} />
-                </div>
-                <input
-                  type="url"
-                  value={form.linkedinUrl}
-                  onChange={(e) => set('linkedinUrl', e.target.value)}
-                  placeholder="https://linkedin.com/in/yourname"
-                  style={{ ...inputBase, paddingLeft: 36 }}
-                />
-              </div>
-            </Field>
-            <Field label="GitHub URL">
-              <div style={{ position: 'relative' }}>
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: 12,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: C.dark,
-                  }}
-                >
-                  <Github size={15} />
-                </div>
-                <input
-                  type="url"
-                  value={form.githubUrl}
-                  onChange={(e) => set('githubUrl', e.target.value)}
-                  placeholder="https://github.com/yourname"
-                  style={{ ...inputBase, paddingLeft: 36 }}
-                />
-              </div>
-            </Field>
-            <Field label="Portfolio URL">
-              <div style={{ position: 'relative' }}>
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: 12,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: C.blue,
-                  }}
-                >
-                  <Globe size={15} />
-                </div>
-                <input
-                  type="url"
-                  value={form.portfolioUrl}
-                  onChange={(e) => set('portfolioUrl', e.target.value)}
-                  placeholder="https://yourportfolio.com"
-                  style={{ ...inputBase, paddingLeft: 36 }}
-                />
-              </div>
-            </Field>
-          </div>
-        </div>
-
-        {/* 8 — Badges */}
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <SectionHeader icon={<Award size={18} />} label="Badges & Achievements" />
-          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16 }}>
-            Badges you earn on Nextern are permanently displayed here to showcase your verified
-            achievements.
-          </div>
-          {badges.length === 0 ? (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '24px',
-                color: C.light,
-                fontSize: 14,
-                border: '1px dashed #CBD5E1',
-                borderRadius: 12,
-              }}
-            >
-              No badges earned yet. Keep engaging with the platform to unlock achievements!
-            </div>
-          ) : (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))',
-                gap: 12,
-                maxHeight: 400,
-                overflowY: 'auto',
-                paddingRight: 8,
-              }}
-            >
-              {badges.map((b) => (
-                <div
-                  key={`${b.badgeSlug}-${b.awardedAt}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '12px',
-                    background: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
-                    borderRadius: 12,
-                  }}
-                >
-                  <div style={{ fontSize: 24 }}>{b.badgeIcon}</div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
-                      {b.badgeName}
+                    >
+                      <Linkedin size={15} />
                     </div>
-                    <div style={{ fontSize: 11, color: C.gray }}>
-                      Earned {new Date(b.awardedAt).toLocaleDateString()}
-                    </div>
+                    <input
+                      type="url"
+                      value={form.linkedinUrl}
+                      onChange={(e) => set('linkedinUrl', e.target.value)}
+                      placeholder="https://linkedin.com/in/yourname"
+                      style={{ ...inputBase, paddingLeft: 36 }}
+                    />
                   </div>
-                </div>
-              ))}
+                </Field>
+                <Field label="GitHub URL">
+                  <div style={{ position: 'relative' }}>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: C.dark,
+                      }}
+                    >
+                      <Github size={15} />
+                    </div>
+                    <input
+                      type="url"
+                      value={form.githubUrl}
+                      onChange={(e) => set('githubUrl', e.target.value)}
+                      placeholder="https://github.com/yourname"
+                      style={{ ...inputBase, paddingLeft: 36 }}
+                    />
+                  </div>
+                </Field>
+                <Field label="Portfolio URL">
+                  <div style={{ position: 'relative' }}>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: C.blue,
+                      }}
+                    >
+                      <Globe size={15} />
+                    </div>
+                    <input
+                      type="url"
+                      value={form.portfolioUrl}
+                      onChange={(e) => set('portfolioUrl', e.target.value)}
+                      placeholder="https://yourportfolio.com"
+                      style={{ ...inputBase, paddingLeft: 36 }}
+                    />
+                  </div>
+                </Field>
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* 9 — Google Calendar */}
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <SectionHeader icon={<FileText size={18} />} label="Advisor & Department Feedback" />
-          <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.7 }}>
-            Reviews and recommendations from your advisor or department head are saved here so you
-            can track formal profile feedback and job-specific guidance in one place.
           </div>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-              gap: 18,
-            }}
-            className="student-feedback-grid"
-          >
+          <div className="profile-section-grid">
             <div
+              className="nx-surface"
               style={{
-                borderRadius: 16,
+                background: C.white,
+                borderRadius: 12,
                 border: `1px solid ${C.border}`,
-                background: '#F8FAFC',
-                padding: 18,
+                padding: '24px 28px',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 12,
-                    background: C.tealBg,
-                    border: `1px solid ${C.tealBorder}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: C.tealDark,
-                  }}
-                >
-                  <FileText size={16} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
-                    Profile Reviews
-                  </div>
-                  <div style={{ fontSize: 12, color: C.gray }}>
-                    Overall academic and readiness guidance
-                  </div>
-                </div>
+              <SectionHeader icon={<Award size={18} />} label="Badges & Achievements" />
+              <div style={{ fontSize: 13, color: C.gray, marginBottom: 16 }}>
+                Badges you earn on Nextern are permanently displayed here to showcase your verified
+                achievements.
               </div>
-
-              {academicReviews.length === 0 ? (
+              {badges.length === 0 ? (
                 <div
                   style={{
-                    borderRadius: 12,
-                    border: `1px dashed ${C.border}`,
-                    background: C.white,
-                    padding: '18px 16px',
+                    textAlign: 'center',
+                    padding: '24px',
                     color: C.light,
-                    fontSize: 13,
-                    lineHeight: 1.7,
+                    fontSize: 14,
+                    border: '1px dashed #CBD5E1',
+                    borderRadius: 12,
                   }}
                 >
-                  No academic reviews have been added yet.
+                  No badges earned yet. Keep engaging with the platform to unlock achievements!
                 </div>
               ) : (
-                <div style={{ display: 'grid', gap: 12 }}>
-                  {academicReviews.map((review) => {
-                    const readinessPalette =
-                      review.readinessLevel === 'ready'
-                        ? { bg: C.successBg, border: C.successBorder, color: C.success }
-                        : review.readinessLevel === 'priority_support'
-                          ? { bg: C.dangerBg, border: C.dangerBorder, color: C.danger }
-                          : { bg: '#FFFBEB', border: '#FDE68A', color: C.warning };
-
-                    return (
-                      <details
-                        key={review.id}
-                        style={{
-                          borderRadius: 14,
-                          border: `1px solid ${C.border}`,
-                          background: C.white,
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <summary
-                          style={{
-                            listStyle: 'none',
-                            cursor: 'pointer',
-                            padding: '13px 16px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 12,
-                            background: C.white,
-                            userSelect: 'none',
-                          }}
-                        >
-                          <div style={{ minWidth: 0 }}>
-                            <div
-                              style={{
-                                fontSize: 14,
-                                fontWeight: 800,
-                                color: C.text,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {review.headline}
-                            </div>
-                            <div style={{ fontSize: 11, color: C.gray, marginTop: 3 }}>
-                              {review.reviewer.name}
-                              {review.reviewer.designation
-                                ? ` · ${review.reviewer.designation}`
-                                : ''}
-                            </div>
-                          </div>
-                          <div
-                            style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}
-                          >
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                padding: '4px 8px',
-                                borderRadius: 999,
-                                background: readinessPalette.bg,
-                                border: `1px solid ${readinessPalette.border}`,
-                                color: readinessPalette.color,
-                                fontSize: 10,
-                                fontWeight: 800,
-                                textTransform: 'uppercase',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {review.readinessLevel.replace(/_/g, ' ')}
-                            </span>
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                width: 28,
-                                height: 28,
-                                borderRadius: 8,
-                                border: `1px solid ${C.border}`,
-                                background: '#F8FAFC',
-                                color: C.gray,
-                                flexShrink: 0,
-                              }}
-                            >
-                              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                                <path
-                                  d="M4 6L8 10L12 6"
-                                  stroke="currentColor"
-                                  strokeWidth="1.8"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </span>
-                          </div>
-                        </summary>
-
-                        {/* Expanded content */}
-                        <div
-                          style={{
-                            padding: '0 16px 16px',
-                            borderTop: `1px solid ${C.border}`,
-                            background: '#FAFBFC',
-                          }}
-                        >
-                          <div
-                            style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingTop: 14 }}
-                          >
-                            {typeof review.profileScore === 'number' ? (
-                              <span
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  padding: '5px 10px',
-                                  borderRadius: 999,
-                                  background: C.blueBg,
-                                  border: `1px solid ${C.blueBorder}`,
-                                  color: C.blue,
-                                  fontSize: 11,
-                                  fontWeight: 800,
-                                  textTransform: 'uppercase',
-                                }}
-                              >
-                                Profile {review.profileScore}%
-                              </span>
-                            ) : null}
-                          </div>
-
-                          <p
-                            style={{
-                              margin: '12px 0 0',
-                              fontSize: 13,
-                              color: C.gray,
-                              lineHeight: 1.7,
-                            }}
-                          >
-                            {review.summary}
-                          </p>
-
-                          <div
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                              gap: 10,
-                              marginTop: 12,
-                            }}
-                            className="student-feedback-detail-grid"
-                          >
-                            <div
-                              style={{
-                                borderRadius: 12,
-                                border: `1px solid ${C.successBorder}`,
-                                background: C.successBg,
-                                padding: 12,
-                              }}
-                            >
-                              <div
-                                style={{
-                                  fontSize: 11,
-                                  fontWeight: 800,
-                                  color: C.success,
-                                  textTransform: 'uppercase',
-                                  letterSpacing: 0.8,
-                                }}
-                              >
-                                Strengths
-                              </div>
-                              <div
-                                style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}
-                              >
-                                {review.strengths.length > 0 ? (
-                                  review.strengths.map((item) => (
-                                    <span
-                                      key={`${review.id}:${item}:strength`}
-                                      style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        padding: '5px 9px',
-                                        borderRadius: 999,
-                                        background: C.white,
-                                        border: `1px solid ${C.successBorder}`,
-                                        color: C.success,
-                                        fontSize: 11,
-                                        fontWeight: 700,
-                                      }}
-                                    >
-                                      {item}
-                                    </span>
-                                  ))
-                                ) : (
-                                  <span style={{ fontSize: 12, color: C.gray }}>
-                                    No strengths listed.
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div
-                              style={{
-                                borderRadius: 12,
-                                border: '1px solid #FDE68A',
-                                background: '#FFFBEB',
-                                padding: 12,
-                              }}
-                            >
-                              <div
-                                style={{
-                                  fontSize: 11,
-                                  fontWeight: 800,
-                                  color: C.warning,
-                                  textTransform: 'uppercase',
-                                  letterSpacing: 0.8,
-                                }}
-                              >
-                                Growth Areas
-                              </div>
-                              <div
-                                style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}
-                              >
-                                {review.growthAreas.length > 0 ? (
-                                  review.growthAreas.map((item) => (
-                                    <span
-                                      key={`${review.id}:${item}:gap`}
-                                      style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        padding: '5px 9px',
-                                        borderRadius: 999,
-                                        background: C.white,
-                                        border: '1px solid #FDE68A',
-                                        color: '#B45309',
-                                        fontSize: 11,
-                                        fontWeight: 700,
-                                      }}
-                                    >
-                                      {item}
-                                    </span>
-                                  ))
-                                ) : (
-                                  <span style={{ fontSize: 12, color: C.gray }}>
-                                    No growth areas listed.
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div style={{ fontSize: 11, color: C.light, marginTop: 12 }}>
-                            Added {new Date(review.createdAt).toLocaleDateString()}
-                            {review.reviewer.institution ? ` · ${review.reviewer.institution}` : ''}
-                          </div>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))',
+                    gap: 12,
+                    maxHeight: 400,
+                    overflowY: 'auto',
+                    paddingRight: 8,
+                  }}
+                  className="v2-page-grid"
+                >
+                  {badges.map((b) => (
+                    <div
+                      key={`${b.badgeSlug}-${b.awardedAt}`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '12px',
+                        background: '#f6f8f9',
+                        border: '1px solid #dfe6e9',
+                        borderRadius: 12,
+                      }}
+                    >
+                      <div style={{ fontSize: 24 }}>
+                        <BadgeIcon value={b.badgeIcon} label={b.badgeName} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+                          {b.badgeName}
                         </div>
-                      </details>
-                    );
-                  })}
+                        <div style={{ fontSize: 11, color: C.gray }}>
+                          Earned {new Date(b.awardedAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-
             <div
+              className="nx-surface"
               style={{
-                borderRadius: 16,
+                background: C.white,
+                borderRadius: 12,
                 border: `1px solid ${C.border}`,
-                background: '#F8FAFC',
-                padding: 18,
+                padding: '24px 28px',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 12,
-                    background: C.blueBg,
-                    border: `1px solid ${C.blueBorder}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: C.blue,
-                  }}
-                >
-                  <Briefcase size={16} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
-                    Job Recommendations
-                  </div>
-                  <div style={{ fontSize: 12, color: C.gray }}>
-                    Roles your teachers think you should prioritize
-                  </div>
-                </div>
+              <SectionHeader icon={<FileText size={18} />} label="Advisor & Department Feedback" />
+              <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.7 }}>
+                Reviews and recommendations from your advisor or department head are saved here so
+                you can track formal profile feedback and job-specific guidance in one place.
               </div>
 
-              {jobRecommendations.length === 0 ? (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+                  gap: 18,
+                }}
+                className="student-feedback-grid v2-page-grid"
+              >
                 <div
                   style={{
                     borderRadius: 12,
-                    border: `1px dashed ${C.border}`,
-                    background: C.white,
-                    padding: '18px 16px',
-                    color: C.light,
-                    fontSize: 13,
-                    lineHeight: 1.7,
+                    border: `1px solid ${C.border}`,
+                    background: '#f6f8f9',
+                    padding: 18,
                   }}
                 >
-                  No job recommendations have been added yet.
-                </div>
-              ) : (
-                <div style={{ display: 'grid', gap: 12 }}>
-                  {jobRecommendations.map((recommendation) => {
-                    const priorityPalette =
-                      recommendation.priority === 'high'
-                        ? { bg: C.dangerBg, border: C.dangerBorder, color: C.danger }
-                        : recommendation.priority === 'medium'
-                          ? { bg: '#FFFBEB', border: '#FDE68A', color: C.warning }
-                          : { bg: C.blueBg, border: C.blueBorder, color: C.blue };
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 12,
+                        background: C.tealBg,
+                        border: `1px solid ${C.tealBorder}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: C.tealDark,
+                      }}
+                    >
+                      <FileText size={16} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>
+                        Profile Reviews
+                      </div>
+                      <div style={{ fontSize: 12, color: C.gray }}>
+                        Overall academic and readiness guidance
+                      </div>
+                    </div>
+                  </div>
 
-                    const jobSubtitle = recommendation.job
-                      ? `${recommendation.job.companyName} · ${recommendation.job.type.replace(/-/g, ' ')}`
-                      : recommendation.recommender.name;
+                  {academicReviews.length === 0 ? (
+                    <div
+                      style={{
+                        borderRadius: 12,
+                        border: `1px dashed ${C.border}`,
+                        background: C.white,
+                        padding: '18px 16px',
+                        color: C.light,
+                        fontSize: 13,
+                        lineHeight: 1.7,
+                      }}
+                    >
+                      No academic reviews have been added yet.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gap: 12 }}>
+                      {academicReviews.map((review) => {
+                        const readinessPalette =
+                          review.readinessLevel === 'ready'
+                            ? { bg: C.successBg, border: C.successBorder, color: C.success }
+                            : review.readinessLevel === 'priority_support'
+                              ? { bg: C.dangerBg, border: C.dangerBorder, color: C.danger }
+                              : { bg: '#FFFBEB', border: '#FDE68A', color: C.warning };
 
-                    return (
-                      <details
-                        key={recommendation.id}
-                        style={{
-                          borderRadius: 14,
-                          border: `1px solid ${C.border}`,
-                          background: C.white,
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <summary
-                          style={{
-                            listStyle: 'none',
-                            cursor: 'pointer',
-                            padding: '13px 16px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 12,
-                            background: C.white,
-                            userSelect: 'none',
-                          }}
-                        >
-                          <div style={{ minWidth: 0 }}>
-                            <div
-                              style={{
-                                fontSize: 14,
-                                fontWeight: 800,
-                                color: C.text,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {recommendation.title}
-                            </div>
-                            <div style={{ fontSize: 11, color: C.gray, marginTop: 3 }}>
-                              {jobSubtitle}
-                            </div>
-                          </div>
-                          <div
-                            style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}
-                          >
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                padding: '4px 8px',
-                                borderRadius: 999,
-                                background: priorityPalette.bg,
-                                border: `1px solid ${priorityPalette.border}`,
-                                color: priorityPalette.color,
-                                fontSize: 10,
-                                fontWeight: 800,
-                                textTransform: 'uppercase',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {recommendation.priority}
-                            </span>
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                width: 28,
-                                height: 28,
-                                borderRadius: 8,
-                                border: `1px solid ${C.border}`,
-                                background: '#F8FAFC',
-                                color: C.gray,
-                                flexShrink: 0,
-                              }}
-                            >
-                              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                                <path
-                                  d="M4 6L8 10L12 6"
-                                  stroke="currentColor"
-                                  strokeWidth="1.8"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </span>
-                          </div>
-                        </summary>
-
-                        {/* Expanded content */}
-                        <div
-                          style={{
-                            padding: '0 16px 16px',
-                            borderTop: `1px solid ${C.border}`,
-                            background: '#FAFBFC',
-                          }}
-                        >
-                          <div
-                            style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingTop: 14 }}
-                          >
-                            {typeof recommendation.fitScore === 'number' ? (
-                              <span
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  padding: '5px 10px',
-                                  borderRadius: 999,
-                                  background: C.successBg,
-                                  border: `1px solid ${C.successBorder}`,
-                                  color: C.success,
-                                  fontSize: 11,
-                                  fontWeight: 800,
-                                  textTransform: 'uppercase',
-                                }}
-                              >
-                                {`Fit ${recommendation.fitScore}%`}
-                              </span>
-                            ) : null}
-                          </div>
-
-                          <p
+                        return (
+                          <details
+                            key={review.id}
                             style={{
-                              margin: '12px 0 0',
-                              fontSize: 13,
-                              color: C.gray,
-                              lineHeight: 1.7,
+                              borderRadius: 14,
+                              border: `1px solid ${C.border}`,
+                              background: C.white,
+                              overflow: 'hidden',
                             }}
                           >
-                            {recommendation.description}
-                          </p>
-
-                          {recommendation.focusSkills.length > 0 ? (
-                            <div
-                              style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}
+                            <summary
+                              style={{
+                                listStyle: 'none',
+                                cursor: 'pointer',
+                                padding: '13px 16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 12,
+                                background: C.white,
+                                userSelect: 'none',
+                              }}
                             >
-                              {recommendation.focusSkills.map((skill) => (
+                              <div style={{ minWidth: 0 }}>
+                                <div
+                                  style={{
+                                    fontSize: 14,
+                                    fontWeight: 700,
+                                    color: C.text,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                  }}
+                                >
+                                  {review.headline}
+                                </div>
+                                <div style={{ fontSize: 11, color: C.gray, marginTop: 3 }}>
+                                  {review.reviewer.name}
+                                  {review.reviewer.designation
+                                    ? ` · ${review.reviewer.designation}`
+                                    : ''}
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 8,
+                                  flexShrink: 0,
+                                }}
+                              >
                                 <span
-                                  key={`${recommendation.id}:${skill}`}
                                   style={{
                                     display: 'inline-flex',
                                     alignItems: 'center',
-                                    padding: '5px 9px',
+                                    padding: '4px 8px',
                                     borderRadius: 999,
-                                    background: C.blueBg,
-                                    border: `1px solid ${C.blueBorder}`,
-                                    color: C.blue,
-                                    fontSize: 11,
+                                    background: readinessPalette.bg,
+                                    border: `1px solid ${readinessPalette.border}`,
+                                    color: readinessPalette.color,
+                                    fontSize: 10,
                                     fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    whiteSpace: 'nowrap',
                                   }}
                                 >
-                                  {skill}
+                                  {review.readinessLevel.replace(/_/g, ' ')}
                                 </span>
-                              ))}
-                            </div>
-                          ) : null}
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: 8,
+                                    border: `1px solid ${C.border}`,
+                                    background: '#f6f8f9',
+                                    color: C.gray,
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                                    <path
+                                      d="M4 6L8 10L12 6"
+                                      stroke="currentColor"
+                                      strokeWidth="1.8"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </span>
+                              </div>
+                            </summary>
 
-                          <div style={{ fontSize: 11, color: C.light, marginTop: 12 }}>
-                            {`Recommended by ${recommendation.recommender.name}${
-                              recommendation.recommender.designation
-                                ? ` · ${recommendation.recommender.designation}`
-                                : ''
-                            }`}
-                          </div>
-
-                          {recommendation.job || recommendation.resourceUrl ? (
+                            {/* Expanded content */}
                             <div
-                              style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}
+                              style={{
+                                padding: '0 16px 16px',
+                                borderTop: `1px solid ${C.border}`,
+                                background: '#FAFBFC',
+                              }}
                             >
-                              {recommendation.job ? (
-                                <Link
-                                  href={`/student/jobs/${recommendation.job.id}`}
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  gap: 8,
+                                  flexWrap: 'wrap',
+                                  paddingTop: 14,
+                                }}
+                              >
+                                {typeof review.profileScore === 'number' ? (
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      padding: '5px 10px',
+                                      borderRadius: 999,
+                                      background: C.blueBg,
+                                      border: `1px solid ${C.blueBorder}`,
+                                      color: C.blue,
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                      textTransform: 'uppercase',
+                                    }}
+                                  >
+                                    Profile {review.profileScore}%
+                                  </span>
+                                ) : null}
+                              </div>
+
+                              <p
+                                style={{
+                                  margin: '12px 0 0',
+                                  fontSize: 13,
+                                  color: C.gray,
+                                  lineHeight: 1.7,
+                                }}
+                              >
+                                {review.summary}
+                              </p>
+
+                              <div
+                                style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                                  gap: 10,
+                                  marginTop: 12,
+                                }}
+                                className="student-feedback-detail-grid v2-form-grid"
+                              >
+                                <div
                                   style={{
-                                    color: C.blue,
-                                    fontSize: 12,
-                                    fontWeight: 700,
-                                    textDecoration: 'none',
+                                    borderRadius: 12,
+                                    border: `1px solid ${C.successBorder}`,
+                                    background: C.successBg,
+                                    padding: 12,
                                   }}
                                 >
-                                  View Job
-                                </Link>
+                                  <div
+                                    style={{
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                      color: C.success,
+                                      textTransform: 'uppercase',
+                                      letterSpacing: 0.8,
+                                    }}
+                                  >
+                                    Strengths
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      gap: 8,
+                                      flexWrap: 'wrap',
+                                      marginTop: 10,
+                                    }}
+                                  >
+                                    {review.strengths.length > 0 ? (
+                                      review.strengths.map((item) => (
+                                        <span
+                                          key={`${review.id}:${item}:strength`}
+                                          style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            padding: '5px 9px',
+                                            borderRadius: 999,
+                                            background: C.white,
+                                            border: `1px solid ${C.successBorder}`,
+                                            color: C.success,
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                          }}
+                                        >
+                                          {item}
+                                        </span>
+                                      ))
+                                    ) : (
+                                      <span style={{ fontSize: 12, color: C.gray }}>
+                                        No strengths listed.
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div
+                                  style={{
+                                    borderRadius: 12,
+                                    border: '1px solid #FDE68A',
+                                    background: '#FFFBEB',
+                                    padding: 12,
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                      color: C.warning,
+                                      textTransform: 'uppercase',
+                                      letterSpacing: 0.8,
+                                    }}
+                                  >
+                                    Growth Areas
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      gap: 8,
+                                      flexWrap: 'wrap',
+                                      marginTop: 10,
+                                    }}
+                                  >
+                                    {review.growthAreas.length > 0 ? (
+                                      review.growthAreas.map((item) => (
+                                        <span
+                                          key={`${review.id}:${item}:gap`}
+                                          style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            padding: '5px 9px',
+                                            borderRadius: 999,
+                                            background: C.white,
+                                            border: '1px solid #FDE68A',
+                                            color: '#B45309',
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                          }}
+                                        >
+                                          {item}
+                                        </span>
+                                      ))
+                                    ) : (
+                                      <span style={{ fontSize: 12, color: C.gray }}>
+                                        No growth areas listed.
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div style={{ fontSize: 11, color: C.light, marginTop: 12 }}>
+                                Added {new Date(review.createdAt).toLocaleDateString()}
+                                {review.reviewer.institution
+                                  ? ` · ${review.reviewer.institution}`
+                                  : ''}
+                              </div>
+                            </div>
+                          </details>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    borderRadius: 12,
+                    border: `1px solid ${C.border}`,
+                    background: '#f6f8f9',
+                    padding: 18,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 12,
+                        background: C.blueBg,
+                        border: `1px solid ${C.blueBorder}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: C.blue,
+                      }}
+                    >
+                      <Briefcase size={16} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>
+                        Job Recommendations
+                      </div>
+                      <div style={{ fontSize: 12, color: C.gray }}>
+                        Roles your teachers think you should prioritize
+                      </div>
+                    </div>
+                  </div>
+
+                  {jobRecommendations.length === 0 ? (
+                    <div
+                      style={{
+                        borderRadius: 12,
+                        border: `1px dashed ${C.border}`,
+                        background: C.white,
+                        padding: '18px 16px',
+                        color: C.light,
+                        fontSize: 13,
+                        lineHeight: 1.7,
+                      }}
+                    >
+                      No job recommendations have been added yet.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gap: 12 }}>
+                      {jobRecommendations.map((recommendation) => {
+                        const priorityPalette =
+                          recommendation.priority === 'high'
+                            ? { bg: C.dangerBg, border: C.dangerBorder, color: C.danger }
+                            : recommendation.priority === 'medium'
+                              ? { bg: '#FFFBEB', border: '#FDE68A', color: C.warning }
+                              : { bg: C.blueBg, border: C.blueBorder, color: C.blue };
+
+                        const jobSubtitle = recommendation.job
+                          ? `${recommendation.job.companyName} · ${recommendation.job.type.replace(/-/g, ' ')}`
+                          : recommendation.recommender.name;
+
+                        return (
+                          <details
+                            key={recommendation.id}
+                            style={{
+                              borderRadius: 14,
+                              border: `1px solid ${C.border}`,
+                              background: C.white,
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <summary
+                              style={{
+                                listStyle: 'none',
+                                cursor: 'pointer',
+                                padding: '13px 16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 12,
+                                background: C.white,
+                                userSelect: 'none',
+                              }}
+                            >
+                              <div style={{ minWidth: 0 }}>
+                                <div
+                                  style={{
+                                    fontSize: 14,
+                                    fontWeight: 700,
+                                    color: C.text,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                  }}
+                                >
+                                  {recommendation.title}
+                                </div>
+                                <div style={{ fontSize: 11, color: C.gray, marginTop: 3 }}>
+                                  {jobSubtitle}
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 8,
+                                  flexShrink: 0,
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    padding: '4px 8px',
+                                    borderRadius: 999,
+                                    background: priorityPalette.bg,
+                                    border: `1px solid ${priorityPalette.border}`,
+                                    color: priorityPalette.color,
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    whiteSpace: 'nowrap',
+                                  }}
+                                >
+                                  {recommendation.priority}
+                                </span>
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: 8,
+                                    border: `1px solid ${C.border}`,
+                                    background: '#f6f8f9',
+                                    color: C.gray,
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                                    <path
+                                      d="M4 6L8 10L12 6"
+                                      stroke="currentColor"
+                                      strokeWidth="1.8"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </span>
+                              </div>
+                            </summary>
+
+                            {/* Expanded content */}
+                            <div
+                              style={{
+                                padding: '0 16px 16px',
+                                borderTop: `1px solid ${C.border}`,
+                                background: '#FAFBFC',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  gap: 8,
+                                  flexWrap: 'wrap',
+                                  paddingTop: 14,
+                                }}
+                              >
+                                {typeof recommendation.fitScore === 'number' ? (
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      padding: '5px 10px',
+                                      borderRadius: 999,
+                                      background: C.successBg,
+                                      border: `1px solid ${C.successBorder}`,
+                                      color: C.success,
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                      textTransform: 'uppercase',
+                                    }}
+                                  >
+                                    {`Fit ${recommendation.fitScore}%`}
+                                  </span>
+                                ) : null}
+                              </div>
+
+                              <p
+                                style={{
+                                  margin: '12px 0 0',
+                                  fontSize: 13,
+                                  color: C.gray,
+                                  lineHeight: 1.7,
+                                }}
+                              >
+                                {recommendation.description}
+                              </p>
+
+                              {recommendation.focusSkills.length > 0 ? (
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    gap: 8,
+                                    flexWrap: 'wrap',
+                                    marginTop: 12,
+                                  }}
+                                >
+                                  {recommendation.focusSkills.map((skill) => (
+                                    <span
+                                      key={`${recommendation.id}:${skill}`}
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        padding: '5px 9px',
+                                        borderRadius: 999,
+                                        background: C.blueBg,
+                                        border: `1px solid ${C.blueBorder}`,
+                                        color: C.blue,
+                                        fontSize: 11,
+                                        fontWeight: 700,
+                                      }}
+                                    >
+                                      {skill}
+                                    </span>
+                                  ))}
+                                </div>
                               ) : null}
-                              {recommendation.resourceUrl ? (
-                                <a
-                                  href={recommendation.resourceUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
+
+                              <div style={{ fontSize: 11, color: C.light, marginTop: 12 }}>
+                                {`Recommended by ${recommendation.recommender.name}${
+                                  recommendation.recommender.designation
+                                    ? ` · ${recommendation.recommender.designation}`
+                                    : ''
+                                }`}
+                              </div>
+
+                              {recommendation.job || recommendation.resourceUrl ? (
+                                <div
                                   style={{
-                                    color: C.teal,
-                                    fontSize: 12,
-                                    fontWeight: 700,
-                                    textDecoration: 'none',
+                                    display: 'flex',
+                                    gap: 10,
+                                    flexWrap: 'wrap',
+                                    marginTop: 10,
                                   }}
                                 >
-                                  Open Resource
-                                </a>
+                                  {recommendation.job ? (
+                                    <Link
+                                      href={`/student/jobs/${recommendation.job.id}`}
+                                      style={{
+                                        color: C.blue,
+                                        fontSize: 12,
+                                        fontWeight: 700,
+                                        textDecoration: 'none',
+                                      }}
+                                    >
+                                      View Job
+                                    </Link>
+                                  ) : null}
+                                  {recommendation.resourceUrl ? (
+                                    <a
+                                      href={recommendation.resourceUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      style={{
+                                        color: C.teal,
+                                        fontSize: 12,
+                                        fontWeight: 700,
+                                        textDecoration: 'none',
+                                      }}
+                                    >
+                                      Open Resource
+                                    </a>
+                                  ) : null}
+                                </div>
                               ) : null}
                             </div>
-                          ) : null}
+                          </details>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="profile-section-grid">
+            <div
+              className="nx-surface"
+              id="calendar"
+              style={{
+                background: C.white,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+                padding: '24px 28px',
+                boxShadow: 'var(--shadow-card)',
+              }}
+            >
+              <SectionHeader icon={<Calendar size={18} />} label="Google Calendar" />
+              <div style={{ fontSize: 13, color: C.gray, marginBottom: 16, lineHeight: 1.6 }}>
+                Connect your Google Calendar to automatically sync job application deadlines,
+                scheduled interviews, and registered events. Updates happen instantly — no manual
+                tracking needed.
+              </div>
+              <CalendarConnectButton isConnected={user?.googleCalendarConnected ?? false} />
+            </div>
+            <div
+              className="nx-surface"
+              style={{
+                background: C.white,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+                padding: '24px 28px',
+                boxShadow: 'var(--shadow-card)',
+              }}
+            >
+              <SectionHeader icon={<Bell size={18} />} label="Notification Preferences" />
+              <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
+                Control which notifications you receive. All are enabled by default. Changes are
+                saved when you click <strong>Save Profile</strong>.
+              </div>
+
+              {/* Application Status group */}
+              <div style={{ marginBottom: 24 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: C.light,
+                    letterSpacing: 1,
+                    textTransform: 'uppercase' as const,
+                    marginBottom: 12,
+                  }}
+                >
+                  Application Status Updates
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[
+                    {
+                      key: 'application_under_review',
+                      title: 'Under Review',
+                      desc: 'When an employer starts reviewing your application',
+                      icon: <Eye size={15} />,
+                      iconBg: '#edf7f3',
+                      iconColor: '#087f72',
+                    },
+                    {
+                      key: 'application_shortlisted',
+                      title: 'Shortlisted',
+                      desc: 'When you get shortlisted for a role',
+                      icon: <CheckCircle2 size={15} />,
+                      iconBg: '#ECFDF5',
+                      iconColor: '#059669',
+                    },
+                    {
+                      key: 'application_assessment_sent',
+                      title: 'Assessment Sent',
+                      desc: 'When an assessment is assigned to you',
+                      icon: <FileText size={15} />,
+                      iconBg: '#f6f8f9',
+                      iconColor: '#475569',
+                    },
+                    {
+                      key: 'application_interview',
+                      title: 'Interview Scheduled',
+                      desc: 'When an interview is booked for you',
+                      icon: <Calendar size={15} />,
+                      iconBg: '#edf7f3',
+                      iconColor: '#087f72',
+                    },
+                    {
+                      key: 'application_hired',
+                      title: 'Hired',
+                      desc: 'When you are selected for a role',
+                      icon: <Award size={15} />,
+                      iconBg: '#ECFDF5',
+                      iconColor: '#059669',
+                    },
+                    {
+                      key: 'application_rejected',
+                      title: 'Not Selected',
+                      desc: 'When an employer decides not to proceed',
+                      icon: <AlertCircle size={15} />,
+                      iconBg: '#FEF2F2',
+                      iconColor: '#DC2626',
+                    },
+                    {
+                      key: 'application_withdrawn',
+                      title: 'Withdrawn',
+                      desc: 'When your application is withdrawn',
+                      icon: <Undo2 size={15} />,
+                      iconBg: '#f6f8f9',
+                      iconColor: '#60717d',
+                    },
+                  ].map((item) => {
+                    const isOn = form.notificationPreferences[item.key] !== false;
+                    return (
+                      <div
+                        key={item.key}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px 16px',
+                          background: '#FAFBFC',
+                          border: `1px solid ${C.border}`,
+                          borderRadius: 12,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                          <div
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 10,
+                              background: item.iconBg,
+                              color: item.iconColor,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
+                          >
+                            {item.icon}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                              {item.title}
+                            </div>
+                            <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>
+                              {item.desc}
+                            </div>
+                          </div>
                         </div>
-                      </details>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            set('notificationPreferences', {
+                              ...form.notificationPreferences,
+                              [item.key]: !isOn,
+                            })
+                          }
+                          style={{
+                            width: 44,
+                            height: 24,
+                            borderRadius: 999,
+                            border: 'none',
+                            background: isOn ? C.blue : C.border,
+                            cursor: 'pointer',
+                            position: 'relative',
+                            transition: 'background 0.2s',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 18,
+                              height: 18,
+                              borderRadius: '50%',
+                              background: C.white,
+                              position: 'absolute',
+                              top: 3,
+                              left: isOn ? 23 : 3,
+                              transition: 'left 0.2s',
+                              boxShadow: 'var(--shadow-card)',
+                            }}
+                          />
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
+              </div>
 
-        <div
-          id="calendar"
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <SectionHeader icon={<Calendar size={18} />} label="Google Calendar" />
-          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16, lineHeight: 1.6 }}>
-            Connect your Google Calendar to automatically sync job application deadlines, scheduled
-            interviews, and registered events. Updates happen instantly — no manual tracking needed.
-          </div>
-          <CalendarConnectButton isConnected={user?.googleCalendarConnected ?? false} />
-        </div>
-
-        {/* 10 — Notification Preferences */}
-        <div
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            border: `1px solid ${C.border}`,
-            padding: '24px 28px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-          }}
-        >
-          <SectionHeader icon={<Bell size={18} />} label="Notification Preferences" />
-          <div style={{ fontSize: 13, color: C.gray, marginBottom: 20, lineHeight: 1.6 }}>
-            Control which notifications you receive. All are enabled by default. Changes are saved
-            when you click <strong>Save Profile</strong>.
-          </div>
-
-          {/* Application Status group */}
-          <div style={{ marginBottom: 24 }}>
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: C.light,
-                letterSpacing: 1,
-                textTransform: 'uppercase' as const,
-                marginBottom: 12,
-              }}
-            >
-              Application Status Updates
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[
-                {
-                  key: 'application_under_review',
-                  title: 'Under Review',
-                  desc: 'When an employer starts reviewing your application',
-                  icon: <Eye size={15} />,
-                  iconBg: '#EFF6FF',
-                  iconColor: '#2563EB',
-                },
-                {
-                  key: 'application_shortlisted',
-                  title: 'Shortlisted',
-                  desc: 'When you get shortlisted for a role',
-                  icon: <CheckCircle2 size={15} />,
-                  iconBg: '#ECFDF5',
-                  iconColor: '#059669',
-                },
-                {
-                  key: 'application_assessment_sent',
-                  title: 'Assessment Sent',
-                  desc: 'When an assessment is assigned to you',
-                  icon: <FileText size={15} />,
-                  iconBg: '#F8FAFC',
-                  iconColor: '#475569',
-                },
-                {
-                  key: 'application_interview',
-                  title: 'Interview Scheduled',
-                  desc: 'When an interview is booked for you',
-                  icon: <Calendar size={15} />,
-                  iconBg: '#F5F3FF',
-                  iconColor: '#7C3AED',
-                },
-                {
-                  key: 'application_hired',
-                  title: 'Hired',
-                  desc: 'When you are selected for a role',
-                  icon: <Award size={15} />,
-                  iconBg: '#ECFDF5',
-                  iconColor: '#059669',
-                },
-                {
-                  key: 'application_rejected',
-                  title: 'Not Selected',
-                  desc: 'When an employer decides not to proceed',
-                  icon: <AlertCircle size={15} />,
-                  iconBg: '#FEF2F2',
-                  iconColor: '#DC2626',
-                },
-                {
-                  key: 'application_withdrawn',
-                  title: 'Withdrawn',
-                  desc: 'When your application is withdrawn',
-                  icon: <Undo2 size={15} />,
-                  iconBg: '#F8FAFC',
-                  iconColor: '#64748B',
-                },
-              ].map((item) => {
-                const isOn = form.notificationPreferences[item.key] !== false;
-                return (
-                  <div
-                    key={item.key}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '12px 16px',
-                      background: '#FAFBFC',
-                      border: `1px solid ${C.border}`,
-                      borderRadius: 12,
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              {/* Other notifications group */}
+              <div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: C.light,
+                    letterSpacing: 1,
+                    textTransform: 'uppercase' as const,
+                    marginBottom: 12,
+                  }}
+                >
+                  Other Notifications
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[
+                    {
+                      key: 'deadline_reminders',
+                      label: '⏰ Deadline Reminders',
+                      desc: '3 days before a saved job closes',
+                    },
+                    {
+                      key: 'job_matches',
+                      label: 'Job Matches',
+                      desc: 'When a new job matches your profile',
+                    },
+                    {
+                      key: 'badge_earned',
+                      label: 'Badges Earned',
+                      desc: 'When you unlock a new achievement',
+                    },
+                    {
+                      key: 'advisor_notes',
+                      label: 'Advisor Notes',
+                      desc: 'When your advisor sends you a note',
+                    },
+                  ].map((item) => {
+                    const isOn = form.notificationPreferences[item.key] !== false;
+                    return (
                       <div
+                        key={item.key}
                         style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 10,
-                          background: item.iconBg,
-                          color: item.iconColor,
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
+                          justifyContent: 'space-between',
+                          padding: '12px 16px',
+                          background: '#FAFBFC',
+                          border: `1px solid ${C.border}`,
+                          borderRadius: 12,
                         }}
                       >
-                        {item.icon}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-                          {item.title}
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                            {item.label}
+                          </div>
+                          <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>
+                            {item.desc}
+                          </div>
                         </div>
-                        <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>
-                          {item.desc}
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            set('notificationPreferences', {
+                              ...form.notificationPreferences,
+                              [item.key]: !isOn,
+                            })
+                          }
+                          style={{
+                            width: 44,
+                            height: 24,
+                            borderRadius: 999,
+                            border: 'none',
+                            background: isOn ? C.blue : C.border,
+                            cursor: 'pointer',
+                            position: 'relative',
+                            transition: 'background 0.2s',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 18,
+                              height: 18,
+                              borderRadius: '50%',
+                              background: C.white,
+                              position: 'absolute',
+                              top: 3,
+                              left: isOn ? 23 : 3,
+                              transition: 'left 0.2s',
+                              boxShadow: 'var(--shadow-card)',
+                            }}
+                          />
+                        </button>
                       </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        set('notificationPreferences', {
-                          ...form.notificationPreferences,
-                          [item.key]: !isOn,
-                        })
-                      }
-                      style={{
-                        width: 44,
-                        height: 24,
-                        borderRadius: 999,
-                        border: 'none',
-                        background: isOn ? C.blue : C.border,
-                        cursor: 'pointer',
-                        position: 'relative',
-                        transition: 'background 0.2s',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 18,
-                          height: 18,
-                          borderRadius: '50%',
-                          background: C.white,
-                          position: 'absolute',
-                          top: 3,
-                          left: isOn ? 23 : 3,
-                          transition: 'left 0.2s',
-                          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-                        }}
-                      />
-                    </button>
-                  </div>
-                );
-              })}
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* Other notifications group */}
-          <div>
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: C.light,
-                letterSpacing: 1,
-                textTransform: 'uppercase' as const,
-                marginBottom: 12,
-              }}
-            >
-              Other Notifications
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[
-                {
-                  key: 'deadline_reminders',
-                  label: '⏰ Deadline Reminders',
-                  desc: '3 days before a saved job closes',
-                },
-                {
-                  key: 'job_matches',
-                  label: '⚡ Job Matches',
-                  desc: 'When a new job matches your profile',
-                },
-                {
-                  key: 'badge_earned',
-                  label: '🏅 Badges Earned',
-                  desc: 'When you unlock a new achievement',
-                },
-                {
-                  key: 'advisor_notes',
-                  label: '💬 Advisor Notes',
-                  desc: 'When your advisor sends you a note',
-                },
-              ].map((item) => {
-                const isOn = form.notificationPreferences[item.key] !== false;
-                return (
-                  <div
-                    key={item.key}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '12px 16px',
-                      background: '#FAFBFC',
-                      border: `1px solid ${C.border}`,
-                      borderRadius: 12,
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-                        {item.label}
-                      </div>
-                      <div style={{ fontSize: 12, color: C.light, marginTop: 2 }}>{item.desc}</div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        set('notificationPreferences', {
-                          ...form.notificationPreferences,
-                          [item.key]: !isOn,
-                        })
-                      }
-                      style={{
-                        width: 44,
-                        height: 24,
-                        borderRadius: 999,
-                        border: 'none',
-                        background: isOn ? C.blue : C.border,
-                        cursor: 'pointer',
-                        position: 'relative',
-                        transition: 'background 0.2s',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 18,
-                          height: 18,
-                          borderRadius: '50%',
-                          background: C.white,
-                          position: 'absolute',
-                          top: 3,
-                          left: isOn ? 23 : 3,
-                          transition: 'left 0.2s',
-                          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-                        }}
-                      />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Save button */}
+        </SectionTabs>
         <div
           className="mobile-page-action-row"
           style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 32 }}
@@ -3227,7 +3265,7 @@ export default function StudentProfilePage() {
               alignItems: 'center',
               gap: 8,
               padding: '13px 32px',
-              background: saving ? '#93C5FD' : `linear-gradient(135deg,${C.blue},#1D4ED8)`,
+              background: saving ? '#93C5FD' : `linear-gradient(135deg,${C.blue},#06665d)`,
               color: C.white,
               border: 'none',
               borderRadius: 12,
@@ -3252,23 +3290,24 @@ export default function StudentProfilePage() {
             inset: 0,
             zIndex: 999,
             background: 'rgba(15,23,42,0.55)',
-            backdropFilter: 'blur(4px)',
+            backdropFilter: 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: 24,
           }}
           onClick={() => setShowDeleteConfirm(false)}
+          className="v2-dialog-overlay"
         >
           <div
             style={{
               background: '#fff',
-              borderRadius: 20,
+              borderRadius: 12,
               padding: '32px 28px',
               maxWidth: 400,
               width: '100%',
-              boxShadow: '0 24px 60px rgba(15,23,42,0.18)',
-              border: '1px solid #E2E8F0',
+              boxShadow: 'var(--shadow-card)',
+              border: '1px solid #dfe6e9',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -3276,7 +3315,7 @@ export default function StudentProfilePage() {
               style={{
                 width: 52,
                 height: 52,
-                borderRadius: 16,
+                borderRadius: 12,
                 background: C.dangerBg,
                 border: `1px solid ${C.dangerBorder}`,
                 display: 'flex',
@@ -3292,7 +3331,7 @@ export default function StudentProfilePage() {
               style={{
                 margin: 0,
                 fontSize: 18,
-                fontWeight: 800,
+                fontWeight: 700,
                 color: C.text,
                 fontFamily: 'var(--font-display)',
                 textAlign: 'center',
@@ -3343,7 +3382,7 @@ export default function StudentProfilePage() {
                   fontSize: 14,
                   fontWeight: 700,
                   cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(239,68,68,0.3)',
+                  boxShadow: 'var(--shadow-card)',
                 }}
               >
                 Yes, delete it

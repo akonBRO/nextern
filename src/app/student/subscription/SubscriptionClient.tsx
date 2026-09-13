@@ -32,25 +32,25 @@ interface Props {
 }
 
 const C = {
-  blue: '#2563EB',
-  border: '#E2E8F0',
-  text: '#0F172A',
-  muted: '#64748B',
-  success: '#10B981',
-  bg: '#F1F5F9',
+  blue: '#087f72',
+  border: '#dfe6e9',
+  text: '#182c39',
+  muted: '#60717d',
+  success: '#168257',
+  bg: '#f6f8f9',
 };
 
 const METHOD_LABEL: Record<string, string> = {
-  bkash: '🔴 bKash',
-  visa: '💳 Visa',
-  mastercard: '💳 Mastercard',
+  bkash: 'bKash',
+  visa: 'Visa',
+  mastercard: 'Mastercard',
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   success: { bg: '#DCFCE7', color: '#166534' },
   initiated: { bg: '#FEF9C3', color: '#92400E' },
   failed: { bg: '#FEE2E2', color: '#991B1B' },
-  refunded: { bg: '#EDE9FE', color: '#5B21B6' },
+  refunded: { bg: '#e0f0eb', color: '#5B21B6' },
 };
 
 function formatDate(value: string) {
@@ -210,27 +210,16 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
       {subscription ? (
         <div
           style={{
-            background: 'linear-gradient(145deg, #1E293B, #0F172A)',
-            borderRadius: 24,
+            background: 'var(--surface-muted)',
+            borderRadius: 12,
             padding: 28,
             border: '1px solid rgba(37,99,235,0.3)',
-            boxShadow: '0 16px 40px rgba(15,23,42,0.2)',
+            boxShadow: 'var(--shadow-card)',
             position: 'relative',
             overflow: 'hidden',
           }}
+          className="v2-light-panel"
         >
-          <div
-            style={{
-              position: 'absolute',
-              top: -40,
-              right: -40,
-              width: 160,
-              height: 160,
-              background: 'radial-gradient(circle, rgba(37,99,235,0.18), transparent 70%)',
-              borderRadius: '50%',
-            }}
-          />
-
           <div
             style={{
               display: 'flex',
@@ -254,37 +243,37 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
                   marginBottom: 10,
                 }}
               >
-                <Crown size={13} color="#F59E0B" />
-                <span style={{ color: '#F59E0B', fontSize: 12, fontWeight: 700 }}>
+                <Crown size={13} color="#a86714" />
+                <span style={{ color: '#a86714', fontSize: 12, fontWeight: 700 }}>
                   {subscription.status === 'cancelled' ? 'Cancelled renewal' : 'Active'}
                 </span>
               </div>
               <h2
                 style={{
-                  color: '#fff',
+                  color: 'var(--deep)',
                   fontSize: 22,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   fontFamily: 'var(--font-display)',
                   marginBottom: 4,
                 }}
               >
                 {plan.name}
               </h2>
-              <p style={{ color: '#64748B', fontSize: 14 }}>{plan.tagline}</p>
+              <p style={{ color: '#60717d', fontSize: 14 }}>{plan.tagline}</p>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div
                 style={{
-                  color: '#fff',
+                  color: 'var(--deep)',
                   fontSize: 36,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   fontFamily: 'var(--font-display)',
                   lineHeight: 1,
                 }}
               >
                 ৳{subscription.amountBDT}
               </div>
-              <div style={{ color: '#64748B', fontSize: 13, marginTop: 4 }}>per month</div>
+              <div style={{ color: '#60717d', fontSize: 13, marginTop: 4 }}>per month</div>
             </div>
           </div>
 
@@ -295,6 +284,7 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
               gap: 14,
               marginBottom: 24,
             }}
+            className="v2-form-grid"
           >
             {[
               { label: 'Started', value: formatDate(subscription.startDate) },
@@ -327,9 +317,9 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
                 </div>
                 <div
                   style={{
-                    color: item.highlight ? '#F59E0B' : '#E2E8F0',
+                    color: item.highlight ? '#a86714' : 'var(--deep)',
                     fontSize: 15,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     fontFamily: 'var(--font-display)',
                   }}
                 >
@@ -350,7 +340,7 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ color: '#475569', fontSize: 13 }}>Paid via</span>
-              <span style={{ color: '#CBD5E1', fontSize: 13, fontWeight: 600 }}>
+              <span style={{ color: 'var(--deep)', fontSize: 13, fontWeight: 600 }}>
                 {METHOD_LABEL[subscription.paymentMethod] ?? subscription.paymentMethod}
               </span>
             </div>
@@ -412,7 +402,7 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
                 </div>
               )
             ) : (
-              <span style={{ color: '#FBBF24', fontSize: 13, fontWeight: 700 }}>
+              <span style={{ color: 'var(--deep)', fontSize: 13, fontWeight: 700 }}>
                 Renewal cancelled - access continues until the end date
               </span>
             )}
@@ -420,21 +410,22 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
         </div>
       ) : (
         <div
+          className="nx-surface"
           style={{
             background: '#fff',
-            borderRadius: 24,
+            borderRadius: 12,
             padding: 40,
             border: `1px solid ${C.border}`,
             textAlign: 'center',
-            boxShadow: '0 16px 34px rgba(15,23,42,0.06)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
           <div
             style={{
               width: 64,
               height: 64,
-              borderRadius: 20,
-              background: '#EFF6FF',
+              borderRadius: 12,
+              background: '#edf7f3',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -446,7 +437,7 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
           <h3
             style={{
               fontSize: 20,
-              fontWeight: 800,
+              fontWeight: 700,
               color: C.text,
               fontFamily: 'var(--font-display)',
               marginBottom: 8,
@@ -471,7 +462,7 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
               fontSize: 15,
               fontWeight: 700,
               fontFamily: 'var(--font-display)',
-              boxShadow: '0 6px 20px rgba(37,99,235,0.35)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <Crown size={16} />
@@ -482,18 +473,19 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
 
       {payments.length > 0 ? (
         <div
+          className="nx-surface"
           style={{
             background: '#fff',
-            borderRadius: 24,
+            borderRadius: 12,
             padding: 24,
             border: `1px solid ${C.border}`,
-            boxShadow: '0 16px 34px rgba(15,23,42,0.06)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
           <h3
             style={{
               fontSize: 17,
-              fontWeight: 800,
+              fontWeight: 700,
               color: C.text,
               fontFamily: 'var(--font-display)',
               marginBottom: 18,
@@ -525,7 +517,7 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
                         width: 38,
                         height: 38,
                         borderRadius: 10,
-                        background: '#EFF6FF',
+                        background: '#edf7f3',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -559,7 +551,7 @@ export default function SubscriptionClient({ role, subscription, payments }: Pro
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span
                       style={{
-                        fontWeight: 800,
+                        fontWeight: 700,
                         color: C.text,
                         fontSize: 16,
                         fontFamily: 'var(--font-display)',

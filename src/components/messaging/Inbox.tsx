@@ -1,5 +1,6 @@
 'use client';
 
+import BrandLoader from '@/components/ui/BrandLoader';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Pusher from 'pusher-js';
 import {
@@ -17,9 +18,18 @@ import {
   FileText,
   Image as ImageIcon,
   CircleAlert,
+  Lock,
+  Search,
+  MessageSquare,
+  MoreHorizontal,
+  ChevronDown,
+  ArrowDown,
 } from 'lucide-react';
 import { useUploadThing } from '@/lib/uploadthing';
 import { readJsonSafely } from '@/lib/safe-json';
+import useDialog from '@/components/ui/useDialog';
+import './inbox.css';
+import './inbox-workspace.css';
 
 /* ─── Types ──────────────────────────────────────────────────────── */
 type UserData = {
@@ -70,18 +80,18 @@ function supportMessageTypeLabel(type?: Message['messageType']) {
 
 /* ─── Colour tokens (mirrors globals.css) ────────────────────────── */
 const C = {
-  primary: '#2563eb',
-  primaryHover: '#1d4ed8',
-  cyan: '#22d3ee',
-  deep: '#1e293b',
-  bg: '#f1f5f9',
-  gray: '#64748b',
+  primary: '#087f72',
+  primaryHover: '#06665d',
+  cyan: '#087f72',
+  deep: '#182c39',
+  bg: '#f6f8f9',
+  gray: '#60717d',
   success: '#10b981',
   danger: '#ef4444',
-  border: '#e2e8f0',
+  border: '#dfe6e9',
   white: '#ffffff',
   /* gradient sent bubble */
-  bubbleOut: 'linear-gradient(135deg, #2563eb, #22d3ee)',
+  bubbleOut: '#087f72',
   bubbleIn: '#ffffff',
 } as const;
 
@@ -89,6 +99,19 @@ const C = {
 const fmtTime = (iso: string) => {
   const d = new Date(iso);
   return isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+const fmtConversationDate = (iso: string) => {
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return '';
+  return date.toDateString() === new Date().toDateString()
+    ? fmtTime(iso)
+    : date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+};
+const fmtMessageDate = (iso: string) => {
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return '';
+  if (date.toDateString() === new Date().toDateString()) return 'Today';
+  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
 };
 const initials = (name: string) => name?.charAt(0).toUpperCase() ?? '?';
 const getMessageSenderId = (message: Pick<Message, 'senderId'>) =>
@@ -102,13 +125,13 @@ function Avatar({ user, size = 40 }: { user: UserData; size?: number }) {
         width: size,
         height: size,
         borderRadius: size / 2,
-        background: `linear-gradient(135deg, ${C.primary}, ${C.cyan})`,
+        background: '#e3ece0',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: size * 0.38,
-        fontWeight: 800,
-        color: C.white,
+        fontWeight: 700,
+        color: '#315d46',
         overflow: 'hidden',
         flexShrink: 0,
       }}
@@ -134,16 +157,18 @@ function AlertModal({ message, onClose }: { message: string; onClose: () => void
 
   return (
     <div
+      role="alert"
       style={{
         position: 'fixed',
-        bottom: 32,
-        right: 32,
+        bottom: 20,
+        right: 20,
+        maxWidth: 'calc(100vw - 40px)',
         zIndex: 99999,
-        background: '#1E293B',
-        color: '#F8FAFC',
+        background: '#182c39',
+        color: '#f6f8f9',
         padding: '16px 20px',
-        borderRadius: 16,
-        boxShadow: '0 20px 40px -8px rgba(0,0,0,0.3)',
+        borderRadius: 12,
+        boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
         display: 'flex',
         alignItems: 'center',
         gap: 14,
@@ -165,11 +190,12 @@ function AlertModal({ message, onClose }: { message: string; onClose: () => void
         <CircleAlert size={18} />
       </div>
       <div>
-        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Error Alert</div>
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Something went wrong</div>
         <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{message}</div>
       </div>
       <button
         type="button"
+        aria-label="Dismiss notification"
         onClick={onClose}
         style={{
           background: 'transparent',
@@ -201,10 +227,12 @@ function DeleteModal({
   onDeleteForEveryone: () => void;
   onClose: () => void;
 }) {
+  const dialogRef = useDialog(true, onClose);
   return (
     <div
       style={{
         position: 'fixed',
+        padding: 16,
         inset: 0,
         background: 'rgba(15,23,42,0.5)',
         backdropFilter: 'blur(6px)',
@@ -215,19 +243,27 @@ function DeleteModal({
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Delete message"
+        tabIndex={-1}
+        className="inbox-dialog"
         style={{
           background: C.white,
-          borderRadius: 20,
-          width: 380,
+          borderRadius: 12,
+          width: '100%',
+          maxWidth: 380,
+          maxHeight: 'calc(100dvh - 32px)',
           boxShadow: '0 25px 60px -12px rgba(0,0,0,0.35)',
-          overflow: 'hidden',
+          overflow: 'auto',
         }}
       >
         {/* Gradient Header */}
         <div
           style={{
             padding: '20px 24px',
-            background: 'linear-gradient(135deg, #dc2626 0%, #f87171 100%)',
+            background: '#dc2626',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -248,7 +284,7 @@ function DeleteModal({
               <Trash2 size={18} color="#fff" />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#fff' }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#fff' }}>
                 Delete message
               </h3>
               <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>
@@ -280,7 +316,7 @@ function DeleteModal({
             style={{
               width: '100%',
               padding: '14px 18px',
-              borderRadius: 14,
+              borderRadius: 12,
               border: `1.5px solid ${C.border}`,
               background: C.white,
               cursor: 'pointer',
@@ -326,7 +362,7 @@ function DeleteModal({
               style={{
                 width: '100%',
                 padding: '14px 18px',
-                borderRadius: 14,
+                borderRadius: 12,
                 border: '1.5px solid #FECACA',
                 background: '#FFF5F5',
                 cursor: 'pointer',
@@ -404,10 +440,12 @@ function ForwardModal({
   onForward: (userId: string) => void;
   onClose: () => void;
 }) {
+  const dialogRef = useDialog(true, onClose);
   return (
     <div
       style={{
         position: 'fixed',
+        padding: 16,
         inset: 0,
         background: 'rgba(15,23,42,0.5)',
         backdropFilter: 'blur(6px)',
@@ -418,19 +456,27 @@ function ForwardModal({
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Forward message"
+        tabIndex={-1}
+        className="inbox-dialog"
         style={{
           background: C.white,
-          width: 420,
-          borderRadius: 20,
+          width: '100%',
+          maxWidth: 420,
+          maxHeight: 'calc(100dvh - 32px)',
+          borderRadius: 12,
           boxShadow: '0 25px 60px -12px rgba(0,0,0,0.35)',
-          overflow: 'hidden',
+          overflow: 'auto',
         }}
       >
         {/* Gradient Header */}
         <div
           style={{
             padding: '20px 24px',
-            background: 'linear-gradient(135deg, #1e293b 0%, #2563eb 100%)',
+            background: '#182c39',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -451,7 +497,7 @@ function ForwardModal({
               <Forward size={18} color="#fff" />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#fff' }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#fff' }}>
                 Forward message
               </h3>
               <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>
@@ -532,6 +578,17 @@ export default function Inbox({
   initiateFreelanceOrderId?: string;
 }) {
   const [threads, setThreads] = useState<Thread[]>([]);
+  const [conversationSearch, setConversationSearch] = useState('');
+  const [conversationFilter, setConversationFilter] = useState<'all' | 'unread' | 'read'>('all');
+  const [conversationKind, setConversationKind] = useState<'all' | 'direct' | 'freelance_order'>(
+    'all'
+  );
+  const [threadError, setThreadError] = useState(false);
+  const [threadRetry, setThreadRetry] = useState(0);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [messageLoadError, setMessageLoadError] = useState(false);
+  const [messageRetry, setMessageRetry] = useState(0);
+  const [showLatest, setShowLatest] = useState(false);
   const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
@@ -539,7 +596,6 @@ export default function Inbox({
   const [isSending, setIsSending] = useState(false);
   const [template, setTemplate] = useState('');
   const [editingMsg, setEditingMsg] = useState<Message | null>(null);
-  const [hoveredMsgId, setHoveredMsgId] = useState<string | null>(null);
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; msg: Message | null }>({
     open: false,
     msg: null,
@@ -562,22 +618,43 @@ export default function Inbox({
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollerRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+  const draftsRef = useRef<Record<string, { text: string; files: File[]; template: string }>>({});
   const pusherRef = useRef<Pusher | null>(null);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [mobilePane, setMobilePane] = useState<'list' | 'chat'>('list');
 
   function scrollToBottom() {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const history = messagesScrollerRef.current;
+    history?.scrollTo({
+      top: history.scrollHeight,
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    });
   }
 
   function handleThreadSelect(thread: Thread) {
+    if (selectedThread?.threadId === thread.threadId) {
+      setMobilePane('chat');
+      return;
+    }
+    if (selectedThread && !editingMsg)
+      draftsRef.current[selectedThread.threadId] = { text: inputText, files: inputFiles, template };
+    const draft = draftsRef.current[thread.threadId];
+    setInputText(draft?.text ?? '');
+    setInputFiles(draft?.files ?? []);
+    setTemplate(draft?.template ?? '');
+    setEditingMsg(null);
+    setMessages([]);
+    setMessagesLoading(true);
+    setMessageLoadError(false);
+    setShowLatest(false);
     setSelectedThread(thread);
     setMobilePane('chat');
   }
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 900px)');
+    const mediaQuery = window.matchMedia('(max-width: 760px)');
     const syncViewport = () => setIsMobileViewport(mediaQuery.matches);
 
     syncViewport();
@@ -615,14 +692,22 @@ export default function Inbox({
 
   /* ── Fetch Threads ──────────────────────────────────────────── */
   useEffect(() => {
+    let cancelled = false;
     fetch(buildThreadsUrl())
-      .then((r) => readJsonSafely<{ threads?: Thread[]; initiatedThreadId?: string | null }>(r, {}))
+      .then((r) => {
+        if (!r.ok) throw new Error('Conversations unavailable');
+        return readJsonSafely<{ threads?: Thread[]; initiatedThreadId?: string | null }>(r, {});
+      })
       .then((d) => {
+        if (cancelled) return;
         if (d.threads) {
           setThreads(d.threads);
           if (initiateUserId) {
             const tgt = d.threads.find((t: Thread) => t.otherUser._id === initiateUserId);
             if (tgt) {
+              setMessages([]);
+              setMessagesLoading(true);
+              setMessageLoadError(false);
               setSelectedThread(tgt);
               setMobilePane('chat');
             }
@@ -634,6 +719,9 @@ export default function Inbox({
                   t.threadId === d.initiatedThreadId
               ) || null;
             if (tgt) {
+              setMessages([]);
+              setMessagesLoading(true);
+              setMessageLoadError(false);
               setSelectedThread(tgt);
               setMobilePane('chat');
             }
@@ -641,8 +729,16 @@ export default function Inbox({
         }
         setIsLoading(false);
       })
-      .catch(console.error);
-  }, [buildThreadsUrl, initiateFreelanceOrderId, initiateUserId]);
+      .catch(() => {
+        if (!cancelled) {
+          setThreadError(true);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [buildThreadsUrl, initiateFreelanceOrderId, initiateUserId, threadRetry]);
 
   /* ── Check student → employer messaging eligibility ──────────── */
   useEffect(() => {
@@ -725,14 +821,24 @@ export default function Inbox({
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ threadId: selectedThread.threadId }),
+    }).catch(() => {
+      /* Reading the thread remains available if the receipt request fails. */
     });
     const prevUnread = selectedThread.unreadCount;
     if (prevUnread > 0)
       window.dispatchEvent(new CustomEvent('messages-read', { detail: { count: prevUnread } }));
+  }, [selectedThread]);
 
+  useEffect(() => {
+    if (!selectedThread) return;
+    let cancelled = false;
     fetch(`/api/messages/${selectedThread.threadId}`)
-      .then((r) => readJsonSafely<{ messages?: Message[] }>(r, {}))
+      .then((r) => {
+        if (!r.ok) throw new Error('Messages unavailable');
+        return readJsonSafely<{ messages?: Message[] }>(r, {});
+      })
       .then((d) => {
+        if (cancelled) return;
         setThreads((prev) =>
           prev.map((t) => (t.threadId === selectedThread.threadId ? { ...t, unreadCount: 0 } : t))
         );
@@ -740,8 +846,17 @@ export default function Inbox({
           setMessages(d.messages);
           setTimeout(scrollToBottom, 50);
         }
+      })
+      .catch(() => {
+        if (!cancelled) setMessageLoadError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setMessagesLoading(false);
       });
-  }, [selectedThread]);
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedThread, messageRetry]);
 
   /* ── Pusher ──────────────────────────────────────────────────── */
   useEffect(() => {
@@ -830,6 +945,10 @@ export default function Inbox({
     };
   }, [currentUserId, refetchThreads, selectedThread]);
 
+  const matchesSearch = (thread: Thread) =>
+    `${thread.otherUser.name} ${thread.otherUser.companyName ?? ''} ${thread.freelanceOrder?.title ?? ''} ${thread.lastMessage.isDeletedForEveryone ? '' : thread.lastMessage.content}`
+      .toLowerCase()
+      .includes(conversationSearch.toLowerCase().trim());
   const freelanceThreads = threads.filter((thread) => thread.threadType === 'freelance_order');
   const directThreads = threads.filter((thread) => thread.threadType !== 'freelance_order');
   const selectedThreadReadOnly =
@@ -993,23 +1112,28 @@ export default function Inbox({
   };
 
   /* ── Loading ─────────────────────────────────────────────────── */
-  if (isLoading)
-    return (
-      <div
-        style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}
-      >
-        <Loader2 className="animate-spin" size={32} color={C.primary} />
-      </div>
-    );
-
   const canSend = !selectedThreadReadOnly && (inputText.trim().length > 0 || inputFiles.length > 0);
   const showThreadList = !isMobileViewport || mobilePane === 'list' || !selectedThread;
   const showChatPanel = !isMobileViewport || (!!selectedThread && mobilePane === 'chat');
+  const unreadThreads = threads.filter((thread) => thread.unreadCount > 0).length;
+  const visibleThreads = threads
+    .filter(matchesSearch)
+    .filter(
+      (thread) =>
+        (conversationFilter === 'all' ||
+          (conversationFilter === 'unread' ? thread.unreadCount > 0 : thread.unreadCount === 0)) &&
+        (conversationKind === 'all' || thread.threadType === conversationKind)
+    );
 
-  /* ── Render ──────────────────────────────────────────────────── */
   return (
-    <>
-      {/* Modals */}
+    <div
+      className={[
+        'messaging-workspace',
+        isMobileViewport && mobilePane === 'chat' && selectedThread && 'is-chat-open',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       {globalAlert && <AlertModal message={globalAlert} onClose={() => setGlobalAlert(null)} />}
       {deleteModal.open && deleteModal.msg && (
         <DeleteModal
@@ -1035,975 +1159,406 @@ export default function Inbox({
         />
       )}
 
-      {/* Shell */}
-      <div
-        style={{
-          display: 'flex',
-          height: '100%',
-          flex: 1,
-          minHeight: 0,
-          background: C.white,
-          borderRadius: isMobileViewport ? 0 : 24,
-          boxShadow: isMobileViewport
-            ? 'none'
-            : '0 4px 24px rgba(37,99,235,0.06), 0 1px 4px rgba(0,0,0,0.04)',
-          overflow: 'hidden',
-          border: isMobileViewport ? 'none' : `1px solid ${C.border}`,
-        }}
-      >
-        {/* ── LEFT: Thread List ── */}
+      <div className="messaging-heading">
+        <div>
+          <h1>Messages</h1>
+          <p>Keep your career conversations moving.</p>
+        </div>
+        {!isLoading && unreadThreads > 0 && (
+          <span className="messaging-unread-summary">
+            {unreadThreads} unread {unreadThreads === 1 ? 'conversation' : 'conversations'}
+          </span>
+        )}
+      </div>
+
+      <div className="inbox-shell">
         {showThreadList && (
-          <div
-            style={{
-              width: isMobileViewport ? '100%' : 300,
-              borderRight: isMobileViewport ? 'none' : `1px solid ${C.border}`,
-              display: 'flex',
-              flexDirection: 'column',
-              background: C.white,
-            }}
-          >
-            {/* Header */}
-            <div
-              style={{
-                padding: isMobileViewport ? '18px 16px 16px' : '22px 20px 18px',
-                background: 'linear-gradient(135deg, #1e293b 100%, #2563eb 0%)',
-                borderBottom: `1px solid ${C.border}`,
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 10,
-                      background: 'rgba(255,255,255,0.15)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+          <aside className="inbox-thread-panel" aria-label="Conversations">
+            <div className="inbox-list-heading">
+              <h2>Your conversations</h2>
+              <span>{isLoading ? '…' : threads.length}</span>
+            </div>
+            <label className="inbox-search">
+              <Search size={17} aria-hidden="true" />
+              <input
+                type="search"
+                value={conversationSearch}
+                onChange={(event) => setConversationSearch(event.target.value)}
+                placeholder="Search conversations"
+                aria-label="Search conversations"
+              />
+            </label>
+            <div className="inbox-filters" role="group" aria-label="Filter conversations">
+              {(['all', 'unread', 'read'] as const).map((filter) => (
+                <button
+                  key={filter}
+                  type="button"
+                  aria-pressed={conversationFilter === filter}
+                  onClick={() => setConversationFilter(filter)}
+                >
+                  {filter === 'all' ? 'All' : filter === 'unread' ? 'Unread' : 'Read'}
+                  {filter === 'unread' && unreadThreads > 0 && <span>{unreadThreads}</span>}
+                </button>
+              ))}
+            </div>
+            {freelanceThreads.length > 0 && (
+              <label className="inbox-kind-filter">
+                <BriefcaseBusiness size={14} aria-hidden="true" />
+                <select
+                  aria-label="Conversation type"
+                  value={conversationKind}
+                  onChange={(event) =>
+                    setConversationKind(event.target.value as 'all' | 'direct' | 'freelance_order')
+                  }
+                >
+                  <option value="all">All conversation types</option>
+                  <option value="direct">Direct messages</option>
+                  <option value="freelance_order">Freelance orders</option>
+                </select>
+              </label>
+            )}
+            <div className="inbox-thread-scroll" aria-busy={isLoading}>
+              {isLoading ? (
+                <div
+                  className="inbox-thread-loading"
+                  role="status"
+                  aria-label="Loading conversations"
+                >
+                  {[0, 1, 2, 3].map((item) => (
+                    <div key={item} aria-hidden="true">
+                      <i />
+                      <span />
+                    </div>
+                  ))}
+                </div>
+              ) : threadError ? (
+                <div className="inbox-list-empty" role="status">
+                  <CircleAlert size={26} />
+                  <h3>Conversations couldn’t load</h3>
+                  <p>Please try again in a moment.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLoading(true);
+                      setThreadError(false);
+                      setThreadRetry((value) => value + 1);
                     }}
                   >
-                    <Send size={16} color="#fff" style={{ marginLeft: 1 }} />
-                  </div>
-                  <div>
-                    <h2
-                      style={{
-                        margin: 0,
-                        fontSize: 18,
-                        fontWeight: 900,
-                        color: '#fff',
-                        letterSpacing: '-0.3px',
-                        fontFamily: 'var(--font-display)',
+                    Try again
+                  </button>
+                </div>
+              ) : visibleThreads.length === 0 ? (
+                <div className="inbox-list-empty" role="status">
+                  {threads.length ? <Search size={26} /> : <MessageSquare size={26} />}
+                  <h3>
+                    {threads.length ? 'No conversations match' : 'Your conversations start here'}
+                  </h3>
+                  <p>
+                    {threads.length
+                      ? 'Try another name, message, or filter.'
+                      : 'Messages from employers, mentors, and your university will appear here.'}
+                  </p>
+                  {threads.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConversationSearch('');
+                        setConversationFilter('all');
+                        setConversationKind('all');
                       }}
                     >
-                      Messages
-                    </h2>
-                    {isMobileViewport && (
-                      <div style={{ marginTop: 4, fontSize: 12, color: 'rgba(255,255,255,0.72)' }}>
-                        Tap a conversation to open it
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {isMobileViewport && threads.length > 0 ? (
-                  <div
-                    style={{
-                      padding: '6px 10px',
-                      borderRadius: 999,
-                      background: 'rgba(255,255,255,0.12)',
-                      color: '#fff',
-                      fontSize: 11,
-                      fontWeight: 800,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {threads.length} chats
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            {/* Thread list */}
-            <div style={{ flex: 1, overflowY: 'auto' }}>
-              {threads.length === 0 ? (
-                <div
-                  style={{
-                    padding: isMobileViewport ? '32px 24px' : 32,
-                    textAlign: 'center',
-                    color: C.gray,
-                    fontSize: 14,
-                  }}
-                >
-                  No conversations yet
+                      Clear search and filters
+                    </button>
+                  )}
                 </div>
               ) : (
-                <>
-                  {[
-                    {
-                      key: 'freelance',
-                      title: 'Freelance Chats',
-                      description: 'Accepted order conversations',
-                      items: freelanceThreads,
-                      icon: <BriefcaseBusiness size={12} />,
-                    },
-                    {
-                      key: 'direct',
-                      title: 'Direct Messages',
-                      description: 'General conversations',
-                      items: directThreads,
-                      icon: <Send size={12} />,
-                    },
-                  ].map((section) =>
-                    section.items.length ? (
-                      <div key={section.key}>
-                        <div
-                          style={{
-                            padding: isMobileViewport ? '14px 16px 10px' : '14px 18px 10px',
-                            borderBottom: `1px solid ${C.bg}`,
-                            background: '#F8FAFC',
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 6,
-                              color: C.gray,
-                              fontSize: 11,
-                              fontWeight: 800,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.06em',
-                            }}
-                          >
-                            {section.icon}
-                            {section.title}
-                          </div>
-                          <div style={{ marginTop: 4, fontSize: 11, color: C.gray }}>
-                            {section.description}
-                          </div>
-                        </div>
-                        {section.items.map((thread) => {
-                          const sectionSelected = selectedThread?.threadId === thread.threadId;
-                          const sectionUnread = thread.unreadCount > 0;
-                          const otherUser = thread.otherUser;
-                          const sectionPreview = thread.lastMessage.isDeletedForEveryone
-                            ? 'Thread message deleted'
-                            : thread.lastMessage.content ||
-                              (thread.threadType === 'freelance_order'
-                                ? 'Freelance order chat ready'
-                                : '');
-
-                          return (
-                            <div
-                              key={thread.threadId}
-                              onClick={() => handleThreadSelect(thread)}
-                              style={{
-                                padding: isMobileViewport ? '14px 16px' : '14px 24px',
-                                cursor: 'pointer',
-                                background: sectionSelected
-                                  ? 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(34,211,238,0.06))'
-                                  : C.white,
-                                borderLeft: `4px solid ${sectionSelected ? C.primary : 'transparent'}`,
-                                borderBottom: `1px solid ${C.bg}`,
-                                transition: 'all 0.15s',
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!sectionSelected) e.currentTarget.style.background = C.bg;
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!sectionSelected) e.currentTarget.style.background = C.white;
-                              }}
-                            >
-                              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                                <div style={{ position: 'relative' }}>
-                                  <Avatar user={otherUser} size={44} />
-                                  {sectionUnread ? (
-                                    <div
-                                      style={{
-                                        position: 'absolute',
-                                        top: -2,
-                                        right: -2,
-                                        width: 14,
-                                        height: 14,
-                                        borderRadius: 7,
-                                        background: '#06b6d4',
-                                        border: '2px solid white',
-                                      }}
-                                    />
-                                  ) : null}
-                                </div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div
-                                    style={{
-                                      display: 'flex',
-                                      justifyContent: 'space-between',
-                                      alignItems: 'baseline',
-                                      marginBottom: 3,
-                                    }}
-                                  >
-                                    <span
-                                      style={{
-                                        fontWeight: sectionUnread ? 800 : 600,
-                                        fontSize: 14,
-                                        color: sectionSelected ? C.primary : C.deep,
-                                      }}
-                                    >
-                                      {otherUser.name}
-                                    </span>
-                                    <span
-                                      style={{
-                                        fontSize: 11,
-                                        color: sectionUnread ? C.primary : C.gray,
-                                        fontWeight: 600,
-                                        flexShrink: 0,
-                                        marginLeft: 8,
-                                      }}
-                                    >
-                                      {fmtTime(thread.lastMessage.createdAt)}
-                                    </span>
-                                  </div>
-                                  {thread.threadType === 'freelance_order' &&
-                                  thread.freelanceOrder ? (
-                                    <div
-                                      style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: 6,
-                                        marginBottom: 6,
-                                        padding: '3px 8px',
-                                        borderRadius: 999,
-                                        background: '#EFF6FF',
-                                        border: `1px solid rgba(37, 99, 235, 0.22)`,
-                                        color: C.primary,
-                                        fontSize: 10,
-                                        fontWeight: 800,
-                                      }}
-                                    >
-                                      {thread.freelanceOrder.title}
-                                    </div>
-                                  ) : null}
-                                  <div
-                                    style={{
-                                      display: 'flex',
-                                      justifyContent: 'space-between',
-                                      alignItems: 'center',
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        fontSize: 13,
-                                        color: sectionUnread ? C.deep : C.gray,
-                                        fontWeight: sectionUnread ? 600 : 400,
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap',
-                                        flex: 1,
-                                        marginRight: 8,
-                                      }}
-                                    >
-                                      {getMessageSenderId(thread.lastMessage) === currentUserId
-                                        ? 'You: '
-                                        : ''}
-                                      {sectionPreview}
-                                    </div>
-                                    {sectionUnread ? (
-                                      <div
-                                        style={{
-                                          background: C.primary,
-                                          color: C.white,
-                                          fontSize: 10,
-                                          fontWeight: 800,
-                                          padding: '2px 7px',
-                                          borderRadius: 99,
-                                        }}
-                                      >
-                                        {thread.unreadCount}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : null
-                  )}
-                  {false
-                    ? threads.map((thread) => {
-                        const sel = selectedThread?.threadId === thread.threadId;
-                        const unread = thread.unreadCount > 0;
-                        const ou = thread.otherUser;
-                        const preview = thread.lastMessage.isDeletedForEveryone
-                          ? '🗑 Message deleted'
-                          : thread.lastMessage.content || '';
-
-                        return (
-                          <div
-                            key={thread.threadId}
-                            onClick={() => handleThreadSelect(thread)}
-                            style={{
-                              padding: '14px 24px',
-                              cursor: 'pointer',
-                              background: sel
-                                ? 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(34,211,238,0.06))'
-                                : C.white,
-                              borderLeft: `4px solid ${sel ? C.primary : 'transparent'}`,
-                              borderBottom: `1px solid ${C.bg}`,
-                              transition: 'all 0.15s',
-                            }}
-                            onMouseEnter={(e) => {
-                              if (!sel) e.currentTarget.style.background = C.bg;
-                            }}
-                            onMouseLeave={(e) => {
-                              if (!sel) e.currentTarget.style.background = C.white;
-                            }}
-                          >
-                            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                              <div style={{ position: 'relative' }}>
-                                <Avatar user={ou} size={44} />
-                                {unread && (
-                                  <div
-                                    style={{
-                                      position: 'absolute',
-                                      top: -2,
-                                      right: -2,
-                                      width: 14,
-                                      height: 14,
-                                      borderRadius: 7,
-                                      background: '#06b6d4',
-                                      border: '2px solid white',
-                                    }}
-                                  />
-                                )}
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div
-                                  style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'baseline',
-                                    marginBottom: 3,
-                                  }}
-                                >
-                                  <span
-                                    style={{
-                                      fontWeight: unread ? 800 : 600,
-                                      fontSize: 14,
-                                      color: sel ? C.primary : C.deep,
-                                    }}
-                                  >
-                                    {ou.name}
-                                  </span>
-                                  <span
-                                    style={{
-                                      fontSize: 11,
-                                      color: unread ? C.primary : C.gray,
-                                      fontWeight: 600,
-                                      flexShrink: 0,
-                                      marginLeft: 8,
-                                    }}
-                                  >
-                                    {fmtTime(thread.lastMessage.createdAt)}
-                                  </span>
-                                </div>
-                                <div
-                                  style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      fontSize: 13,
-                                      color: unread ? C.deep : C.gray,
-                                      fontWeight: unread ? 600 : 400,
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                      whiteSpace: 'nowrap',
-                                      flex: 1,
-                                      marginRight: 8,
-                                    }}
-                                  >
-                                    {thread.lastMessage.senderId === currentUserId ? 'You: ' : ''}
-                                    {preview}
-                                  </div>
-                                  {unread && (
-                                    <div
-                                      style={{
-                                        background: C.primary,
-                                        color: C.white,
-                                        fontSize: 10,
-                                        fontWeight: 800,
-                                        padding: '2px 7px',
-                                        borderRadius: 99,
-                                      }}
-                                    >
-                                      {thread.unreadCount}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })
-                    : null}
-                </>
+                visibleThreads.map((thread) => {
+                  const active = selectedThread?.threadId === thread.threadId;
+                  const unread = thread.unreadCount > 0;
+                  const preview = thread.lastMessage.isDeletedForEveryone
+                    ? 'Message deleted'
+                    : thread.lastMessage.content ||
+                      (thread.lastMessage.attachments?.length
+                        ? 'Attachment'
+                        : thread.threadType === 'freelance_order'
+                          ? 'Freelance order chat ready'
+                          : 'Start the conversation');
+                  return (
+                    <button
+                      type="button"
+                      key={thread.threadId}
+                      className={['inbox-thread', active && 'is-active', unread && 'is-unread']
+                        .filter(Boolean)
+                        .join(' ')}
+                      aria-label={`Open conversation with ${thread.otherUser.name}${unread ? `, ${thread.unreadCount} unread` : ''}`}
+                      aria-current={active ? 'true' : undefined}
+                      onClick={() => handleThreadSelect(thread)}
+                    >
+                      <Avatar user={thread.otherUser} size={42} />
+                      <span className="inbox-thread-copy">
+                        <span className="inbox-thread-title">
+                          <strong>{thread.otherUser.name}</strong>
+                          <time dateTime={thread.lastMessage.createdAt}>
+                            {fmtConversationDate(thread.lastMessage.createdAt)}
+                          </time>
+                        </span>
+                        {thread.threadType === 'freelance_order' && thread.freelanceOrder && (
+                          <span className="inbox-thread-context">
+                            <BriefcaseBusiness size={12} />
+                            {thread.freelanceOrder.title}
+                          </span>
+                        )}
+                        <span className="inbox-thread-bottom">
+                          <span>
+                            {getMessageSenderId(thread.lastMessage) === currentUserId
+                              ? 'You: '
+                              : ''}
+                            {preview}
+                          </span>
+                          {unread && <b className="inbox-unread-count">{thread.unreadCount}</b>}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })
               )}
             </div>
-          </div>
+          </aside>
         )}
 
-        {/* ── RIGHT: Chat Window ── */}
         {showChatPanel && (
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              background: C.bg,
-              minWidth: 0,
-            }}
+          <section
+            className="inbox-chat"
+            aria-label={
+              selectedThread ? `Conversation with ${selectedThread.otherUser.name}` : 'Conversation'
+            }
           >
             {selectedThread ? (
               <>
-                {/* Chat Header */}
-                <div
-                  style={{
-                    padding: isMobileViewport ? '12px 14px' : '14px 24px',
-                    background: 'linear-gradient(135deg, #1e293b 0%, #2563eb 100%)',
-                    borderBottom: `1px solid rgba(255,255,255,0.08)`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: isMobileViewport ? 10 : 14,
-                  }}
-                >
+                <header className="inbox-chat-header">
                   {isMobileViewport && (
                     <button
+                      className="inbox-icon-button"
                       type="button"
-                      onClick={() => setMobilePane('list')}
-                      style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: 19,
-                        border: '1px solid rgba(255,255,255,0.18)',
-                        background: 'rgba(255,255,255,0.12)',
-                        color: C.white,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        flexShrink: 0,
-                      }}
                       aria-label="Back to conversations"
+                      onClick={() => {
+                        setMobilePane('list');
+                        requestAnimationFrame(() =>
+                          document
+                            .querySelector<HTMLButtonElement>('.inbox-thread.is-active')
+                            ?.focus()
+                        );
+                      }}
                     >
-                      <ArrowLeft size={18} />
+                      <ArrowLeft size={20} />
                     </button>
                   )}
-                  <Avatar user={selectedThread.otherUser} size={isMobileViewport ? 40 : 46} />
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div
-                      style={{
-                        fontWeight: 800,
-                        color: C.white,
-                        fontSize: isMobileViewport ? 15 : 16,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {selectedThread.otherUser.name}
+                  <Avatar user={selectedThread.otherUser} size={40} />
+                  <div className="inbox-participant">
+                    <h2>{selectedThread.otherUser.name}</h2>
+                    <p>
+                      {selectedThread.otherUser.role === 'employer'
+                        ? selectedThread.otherUser.companyName || 'Employer'
+                        : selectedThread.otherUser.role === 'alumni'
+                          ? 'Alumni mentor'
+                          : selectedThread.otherUser.role.replaceAll('_', ' ')}
+                    </p>
+                  </div>
+                  <span className="inbox-chat-category">
+                    {selectedThread.threadType === 'freelance_order'
+                      ? 'Freelance'
+                      : 'Direct message'}
+                  </span>
+                </header>
+                {selectedThread.threadType === 'freelance_order' &&
+                  selectedThread.freelanceOrder && (
+                    <div className="inbox-order-context">
+                      <BriefcaseBusiness size={16} />
+                      <strong>{selectedThread.freelanceOrder.title}</strong>
+                      <span>{selectedThread.freelanceOrder.status.replaceAll('_', ' ')}</span>
                     </div>
-                    {selectedThread.threadType === 'freelance_order' &&
-                    selectedThread.freelanceOrder ? (
-                      <>
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: 'rgba(255,255,255,0.95)',
-                            fontWeight: 700,
-                            marginTop: 2,
+                  )}
+
+                <div className="inbox-history-wrap">
+                  <div
+                    className="inbox-history"
+                    ref={messagesScrollerRef}
+                    aria-label="Message history"
+                    aria-busy={messagesLoading}
+                    onScroll={(event) => {
+                      const node = event.currentTarget;
+                      setShowLatest(node.scrollHeight - node.scrollTop - node.clientHeight > 100);
+                    }}
+                  >
+                    {messagesLoading ? (
+                      <div className="inbox-chat-loading">
+                        <BrandLoader variant="section" label="Loading messages" />
+                      </div>
+                    ) : messageLoadError ? (
+                      <div className="inbox-chat-loading" role="status">
+                        <CircleAlert size={25} />
+                        <strong>Messages couldn’t load</strong>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMessagesLoading(true);
+                            setMessageLoadError(false);
+                            setMessageRetry((value) => value + 1);
                           }}
                         >
-                          {selectedThread.freelanceOrder.title}
-                        </div>
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.82)' }}>
-                          Freelance order chat ·{' '}
-                          {selectedThread.freelanceOrder.status.replace(/_/g, ' ')}
-                        </div>
-                      </>
-                    ) : (
-                      <div style={{ fontSize: 12, color: C.white, textTransform: 'capitalize' }}>
-                        {selectedThread.otherUser.role === 'employer'
-                          ? selectedThread.otherUser.companyName || 'Employer'
-                          : selectedThread.otherUser.role}
+                          Try again
+                        </button>
                       </div>
+                    ) : messages.length === 0 ? (
+                      <div className="inbox-chat-loading">
+                        <MessageSquare size={30} />
+                        <h3>A conversation with potential</h3>
+                        <p>
+                          {selectedThreadReadOnly
+                            ? 'There are no messages in this conversation yet.'
+                            : 'Introduce yourself or pick up where you left off.'}
+                        </p>
+                      </div>
+                    ) : (
+                      messages.map((msg, index) => {
+                        const previous = messages[index - 1];
+                        const newDay =
+                          !previous ||
+                          new Date(previous.createdAt).toDateString() !==
+                            new Date(msg.createdAt).toDateString();
+                        const grouped =
+                          !newDay &&
+                          getMessageSenderId(previous) === getMessageSenderId(msg) &&
+                          new Date(msg.createdAt).getTime() -
+                            new Date(previous.createdAt).getTime() <
+                            5 * 60 * 1000;
+                        return (
+                          <React.Fragment key={msg._id || index}>
+                            {newDay && (
+                              <div className="inbox-date-divider">
+                                <span>{fmtMessageDate(msg.createdAt)}</span>
+                              </div>
+                            )}
+                            <MessageItem
+                              message={msg}
+                              isMe={getMessageSenderId(msg) === currentUserId}
+                              grouped={grouped}
+                              onForward={() => setForwardModal({ open: true, msg })}
+                              onDelete={() => setDeleteModal({ open: true, msg })}
+                              onEdit={() => {
+                                setEditingMsg(msg);
+                                setInputText(msg.content);
+                                requestAnimationFrame(() => composerRef.current?.focus());
+                              }}
+                            />
+                          </React.Fragment>
+                        );
+                      })
                     )}
                   </div>
+                  {showLatest && !messagesLoading && (
+                    <button className="inbox-jump-latest" type="button" onClick={scrollToBottom}>
+                      <ArrowDown size={14} /> Latest messages
+                    </button>
+                  )}
                 </div>
 
-                {/* Messages */}
-                <div
-                  style={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    padding: isMobileViewport ? '16px 14px' : '24px 28px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: isMobileViewport ? 14 : 18,
-                  }}
-                >
-                  {messages.map((msg, i) => {
-                    const sid = typeof msg.senderId === 'string' ? msg.senderId : msg.senderId._id;
-                    const isMe = sid === currentUserId;
-
-                    return (
-                      <div
-                        key={msg._id || i}
-                        onMouseEnter={() => setHoveredMsgId(msg._id)}
-                        onMouseLeave={() => setHoveredMsgId(null)}
-                        style={{
-                          alignSelf: isMe ? 'flex-end' : 'flex-start',
-                          maxWidth: isMobileViewport ? '84%' : '68%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: isMe ? 'flex-end' : 'flex-start',
-                        }}
-                      >
-                        {supportMessageTypeLabel(msg.messageType) ? (
-                          <div
-                            style={{
-                              marginBottom: 5,
-                              padding: '3px 8px',
-                              border: `1px solid ${C.border}`,
-                              borderRadius: 999,
-                              background: C.white,
-                              color: C.gray,
-                              fontSize: 10,
-                              fontWeight: 800,
-                              letterSpacing: '0.05em',
-                              textTransform: 'uppercase',
-                            }}
-                          >
-                            {supportMessageTypeLabel(msg.messageType)}
-                          </div>
-                        ) : null}
-                        {/* Forwarded label */}
-                        {msg.forwardedFromId && (
-                          <div
-                            style={{
-                              fontSize: 11,
-                              color: C.gray,
-                              marginBottom: 4,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 4,
-                            }}
-                          >
-                            <Forward size={11} /> Forwarded
-                          </div>
-                        )}
-
-                        <div
-                          style={{
-                            display: 'flex',
-                            gap: 8,
-                            alignItems: 'flex-end',
-                            flexDirection: isMe ? 'row-reverse' : 'row',
-                          }}
-                        >
-                          {/* Bubble */}
-                          {(() => {
-                            const hasText = !!msg.content?.trim();
-                            const isImageOnly =
-                              !hasText &&
-                              msg.attachments &&
-                              msg.attachments.length > 0 &&
-                              msg.attachments.every((a) => a.type.startsWith('image/'));
-
-                            return (
-                              <div
-                                style={{
-                                  background: isMe ? C.bubbleOut : C.bubbleIn,
-                                  color: isMe ? C.white : C.deep,
-                                  padding: isImageOnly ? '4px' : '12px 16px',
-                                  borderRadius: 20,
-                                  borderBottomRightRadius: isMe ? 4 : 20,
-                                  borderBottomLeftRadius: isMe ? 20 : 4,
-                                  fontSize: 14,
-                                  lineHeight: 1.55,
-                                  whiteSpace: 'pre-wrap',
-                                  boxShadow: isMe
-                                    ? '0 4px 14px rgba(37,99,235,0.25)'
-                                    : '0 2px 8px rgba(0,0,0,0.06)',
-                                  border: isMe ? 'none' : `1px solid ${C.border}`,
-                                }}
-                              >
-                                {msg.isDeletedForEveryone ? (
-                                  <span style={{ fontStyle: 'italic', opacity: 0.65 }}>
-                                    🗑 This message was deleted
-                                  </span>
-                                ) : (
-                                  hasText && <>{msg.content}</>
-                                )}
-
-                                {/* Attachments */}
-                                {msg.attachments &&
-                                  msg.attachments.length > 0 &&
-                                  !msg.isDeletedForEveryone && (
-                                    <div
-                                      style={{
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: 6,
-                                        marginTop: hasText ? 8 : 0,
-                                      }}
-                                    >
-                                      {msg.attachments.map((att, i) =>
-                                        att.type.startsWith('image/') ? (
-                                          <a
-                                            key={i}
-                                            href={att.url}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                          >
-                                            <img
-                                              src={att.url}
-                                              alt={att.name}
-                                              style={{
-                                                maxWidth: isMobileViewport ? 190 : 220,
-                                                maxHeight: isMobileViewport ? 190 : 220,
-                                                borderRadius: isImageOnly ? 16 : 12,
-                                                objectFit: 'cover',
-                                                display: 'block',
-                                                border: `1px solid ${
-                                                  isMe ? 'rgba(255,255,255,0.2)' : C.border
-                                                }`,
-                                              }}
-                                            />
-                                          </a>
-                                        ) : (
-                                          <a
-                                            key={i}
-                                            href={att.url}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            style={{
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              gap: 6,
-                                              padding: '8px 12px',
-                                              background: isMe ? 'rgba(255,255,255,0.15)' : C.bg,
-                                              borderRadius: 12,
-                                              color: isMe ? C.white : C.primary,
-                                              textDecoration: 'none',
-                                              fontSize: 13,
-                                              border: `1px solid ${isMe ? 'transparent' : C.border}`,
-                                            }}
-                                          >
-                                            <FileText size={16} />
-                                            <span
-                                              style={{
-                                                maxWidth: 160,
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
-                                              }}
-                                            >
-                                              {att.name}
-                                            </span>
-                                          </a>
-                                        )
-                                      )}
-                                    </div>
-                                  )}
-                              </div>
-                            );
-                          })()}
-
-                          {/* Hover actions */}
-                          {hoveredMsgId === msg._id && !msg.isDeletedForEveryone && (
-                            <div
-                              style={{
-                                display: 'flex',
-                                gap: 2,
-                                background: C.white,
-                                padding: '4px 6px',
-                                borderRadius: 20,
-                                boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-                                border: `1px solid ${C.border}`,
-                                alignItems: 'center',
-                              }}
-                            >
-                              <ActionBtn
-                                icon={<Forward size={13} />}
-                                label="Forward"
-                                onClick={() => setForwardModal({ open: true, msg })}
-                              />
-                              {isMe && (msg.editCount ?? 0) < 5 && (
-                                <ActionBtn
-                                  icon={<Edit2 size={13} />}
-                                  label="Edit"
-                                  onClick={() => {
-                                    setEditingMsg(msg);
-                                    setInputText(msg.content);
-                                  }}
-                                />
-                              )}
-                              <ActionBtn
-                                icon={<Trash2 size={13} />}
-                                label="Delete"
-                                color={C.danger}
-                                onClick={() => setDeleteModal({ open: true, msg })}
-                              />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Meta row */}
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: C.gray,
-                            marginTop: 4,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 5,
-                          }}
-                        >
-                          <span>{fmtTime(msg.createdAt)}</span>
-                          {(msg.editCount ?? 0) > 0 && <span>· Edited</span>}
-                          {isMe &&
-                            (msg.isRead ? (
-                              <CheckCheck size={14} color={C.primary} strokeWidth={2.5} />
-                            ) : (
-                              <Check size={14} color={C.gray} strokeWidth={2.5} />
-                            ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* Input Area */}
-                <div
-                  style={{
-                    padding: isMobileViewport
-                      ? '12px 12px calc(12px + env(safe-area-inset-bottom))'
-                      : '16px 24px',
-                    background: C.white,
-                    borderTop: `1px solid ${C.border}`,
-                  }}
-                >
-                  {/* Editing indicator */}
+                <div className="inbox-composer">
                   {editingMsg && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '8px 14px',
-                        background: '#FEF9C3',
-                        border: `1px solid #FDE68A`,
-                        borderRadius: 8,
-                        marginBottom: 10,
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: '#92400E',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div className="inbox-editing">
+                      <span>
                         <Edit2 size={14} /> Editing message
-                      </div>
-                      <X
-                        size={15}
-                        style={{ cursor: 'pointer' }}
+                      </span>
+                      <button
+                        className="inbox-icon-button"
+                        aria-label="Cancel editing"
+                        type="button"
                         onClick={() => {
                           setEditingMsg(null);
                           setInputText('');
                         }}
-                      />
+                      >
+                        <X size={16} />
+                      </button>
                     </div>
                   )}
-
-                  {/* Templates */}
                   {currentUserRole === 'employer' &&
                     selectedThread.threadType === 'direct' &&
                     !editingMsg && (
-                      <div style={{ marginBottom: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        {[
-                          {
-                            key: 'interview_invite',
-                            label: 'Interview Invite',
-                            bg: '#EFF6FF',
-                            border: '#BFDBFE',
-                            color: '#1E40AF',
-                          },
-                          {
-                            key: 'offer_letter',
-                            label: 'Offer Letter',
-                            bg: '#F0FDF4',
-                            border: '#BBF7D0',
-                            color: '#166534',
-                          },
-                          {
-                            key: 'rejection',
-                            label: 'Rejection',
-                            bg: '#FFF1F2',
-                            border: '#FECDD3',
-                            color: '#9F1239',
-                          },
-                        ].map((tmpl) => (
-                          <button
-                            key={tmpl.key}
-                            onClick={() => applyTemplate(tmpl.key)}
-                            style={{
-                              fontSize: 12,
-                              padding: '5px 14px',
-                              borderRadius: 99,
-                              background: tmpl.bg,
-                              border: `1px solid ${tmpl.border}`,
-                              cursor: 'pointer',
-                              color: tmpl.color,
-                              fontWeight: 700,
-                              transition: 'all 0.15s',
-                            }}
-                          >
-                            + {tmpl.label}
-                          </button>
-                        ))}
-                      </div>
+                      <details className="inbox-templates">
+                        <summary>
+                          <FileText size={14} /> Quick replies <ChevronDown size={13} />
+                        </summary>
+                        <div>
+                          {[
+                            { key: 'interview_invite', label: 'Interview invite' },
+                            { key: 'offer_letter', label: 'Offer letter' },
+                            { key: 'rejection', label: 'Rejection' },
+                          ].map((item) => (
+                            <button
+                              type="button"
+                              key={item.key}
+                              onClick={() => {
+                                applyTemplate(item.key);
+                                composerRef.current?.focus();
+                              }}
+                            >
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
+                      </details>
                     )}
-
                   {messagingLocked && (
-                    <div
-                      style={{
-                        marginBottom: 12,
-                        padding: '10px 14px',
-                        borderRadius: 12,
-                        background: '#FFF7ED',
-                        border: '1px solid #FED7AA',
-                        color: '#9A3412',
-                        fontSize: 12,
-                        fontWeight: 700,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                      }}
-                    >
-                      {selectedThread.otherUser.role === 'employer' ||
-                      currentUserRole === 'employer' ? (
-                        <>
-                          🔒 You can only reply once your application is{' '}
-                          <strong>&nbsp;Shortlisted</strong>,&nbsp;
-                          <strong>Assessment Sent</strong>,&nbsp;
-                          <strong>Interview Scheduled</strong>, or&nbsp;<strong>Hired</strong>. You
-                          can still read messages from the employer.
-                        </>
-                      ) : (
-                        <>
-                          🔒 You can only message each other if you have an accepted or scheduled
-                          mentorship session. Completed or pending sessions are read-only.
-                        </>
-                      )}
+                    <div className="inbox-readonly">
+                      <Lock size={15} />
+                      <p>
+                        {selectedThread.otherUser.role === 'employer' ||
+                        currentUserRole === 'employer'
+                          ? 'You can reply once your application is shortlisted, assessment sent, interview scheduled, or hired. You can still read this conversation.'
+                          : 'Messaging is available during an accepted or scheduled mentorship session. You can still read this conversation.'}
+                      </p>
                     </div>
                   )}
-
                   {!messagingLocked &&
                     selectedThreadReadOnly &&
-                    selectedThread?.threadType === 'freelance_order' && (
-                      <div
-                        style={{
-                          marginBottom: 12,
-                          padding: '10px 14px',
-                          borderRadius: 12,
-                          background: '#FFF7ED',
-                          border: '1px solid #FED7AA',
-                          color: '#9A3412',
-                          fontSize: 12,
-                          fontWeight: 700,
-                        }}
-                      >
-                        This freelance chat is now read-only because the order is closed.
+                    selectedThread.threadType === 'freelance_order' && (
+                      <div className="inbox-readonly">
+                        <Lock size={15} />
+                        <p>This freelance chat is read-only because the order is closed.</p>
                       </div>
                     )}
-
-                  {/* File Previews */}
                   {!editingMsg && inputFiles.length > 0 && (
-                    <div
-                      style={{ display: 'flex', gap: 10, flexWrap: 'wrap', padding: '0 10px 14px' }}
-                    >
-                      {inputFiles.map((file, idx) => (
-                        <div
-                          key={idx}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            background: '#EFF6FF',
-                            padding: '6px 12px',
-                            borderRadius: 99,
-                            fontSize: 12,
-                            color: '#1E40AF',
-                            border: `1px solid #BFDBFE`,
-                          }}
-                        >
+                    <div className="inbox-file-previews">
+                      {inputFiles.map((file, index) => (
+                        <div key={index}>
                           {file.type.startsWith('image/') ? (
-                            <ImageIcon size={14} />
+                            <ImageIcon size={16} />
                           ) : (
-                            <FileText size={14} />
+                            <FileText size={16} />
                           )}
-                          <span
-                            style={{
-                              maxWidth: 120,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              fontWeight: 600,
-                            }}
-                          >
-                            {file.name}
-                          </span>
-                          <X
-                            size={14}
-                            style={{ cursor: 'pointer', color: '#1E40AF', opacity: 0.6 }}
+                          <span>{file.name}</span>
+                          <button
+                            type="button"
+                            aria-label={`Remove ${file.name}`}
                             onClick={() =>
-                              setInputFiles((prev) => prev.filter((_, i) => i !== idx))
+                              setInputFiles((previous) => previous.filter((_, i) => i !== index))
                             }
-                          />
+                          >
+                            <X size={15} />
+                          </button>
                         </div>
                       ))}
                     </div>
                   )}
-
-                  {/* Input row */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: isMobileViewport ? 8 : 10,
-                      alignItems: 'flex-end',
-                      background: C.bg,
-                      padding: isMobileViewport ? '8px 8px 8px 12px' : '8px 8px 8px 14px',
-                      borderRadius: isMobileViewport ? 20 : 24,
-                      border: `1.5px solid ${C.border}`,
-                      transition: 'border-color 0.15s',
-                    }}
-                  >
-                    {/* Paperclip */}
+                  <div className="inbox-compose-row">
                     {!editingMsg && (
                       <>
                         <button
+                          type="button"
+                          className="inbox-icon-button inbox-attach"
                           title="Attach files (max 4, 8MB each)"
+                          aria-label="Attach files (up to 4 files, 8 MB each)"
                           onClick={() => fileInputRef.current?.click()}
                           disabled={
                             isSending ||
@@ -2011,23 +1566,6 @@ export default function Inbox({
                             inputFiles.length >= 4 ||
                             selectedThreadReadOnly
                           }
-                          style={{
-                            border: 'none',
-                            background: 'transparent',
-                            cursor:
-                              isSending ||
-                              isUploading ||
-                              inputFiles.length >= 4 ||
-                              selectedThreadReadOnly
-                                ? 'not-allowed'
-                                : 'pointer',
-                            color: C.gray,
-                            padding: '0 4px 6px 0',
-                            display: 'flex',
-                            alignItems: 'flex-end',
-                            alignSelf: 'stretch',
-                            opacity: inputFiles.length >= 4 || selectedThreadReadOnly ? 0.3 : 1,
-                          }}
                         >
                           <Paperclip size={20} />
                         </button>
@@ -2036,130 +1574,267 @@ export default function Inbox({
                           multiple
                           accept="image/*,application/pdf"
                           ref={fileInputRef}
-                          style={{ display: 'none' }}
-                          onChange={(e) => {
-                            if (e.target.files) {
-                              const incoming = Array.from(e.target.files);
-                              setInputFiles((prev) => [...prev, ...incoming].slice(0, 4));
+                          hidden
+                          onChange={(event) => {
+                            if (event.target.files) {
+                              const incoming = Array.from(event.target.files);
+                              setInputFiles((previous) => [...previous, ...incoming].slice(0, 4));
                               if (fileInputRef.current) fileInputRef.current.value = '';
                             }
                           }}
                         />
                       </>
                     )}
-
-                    {/* Textarea */}
                     <textarea
+                      ref={composerRef}
+                      aria-label={editingMsg ? 'Edit message' : 'Message'}
                       value={inputText}
-                      onChange={(e) => setInputText(e.target.value)}
+                      onChange={(event) => setInputText(event.target.value)}
                       placeholder={
                         selectedThreadReadOnly
-                          ? selectedThread?.threadType === 'freelance_order'
-                            ? 'This freelance order chat is closed.'
-                            : 'This chat is closed.'
+                          ? 'This conversation is read-only.'
                           : editingMsg
-                            ? 'Edit message…'
-                            : 'Type a message…'
+                            ? 'Edit your message…'
+                            : 'Write a message…'
                       }
                       disabled={isSending || isUploading || selectedThreadReadOnly}
-                      style={{
-                        flex: 1,
-                        minHeight: 24,
-                        maxHeight: 120,
-                        resize: 'none',
-                        padding: '8px 0',
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        fontSize: 14,
-                        fontFamily: 'inherit',
-                        color: C.deep,
-                        lineHeight: 1.5,
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
+                      rows={2}
+                      onKeyDown={(event) => {
+                        if (
+                          event.key === 'Enter' &&
+                          !event.shiftKey &&
+                          !event.nativeEvent.isComposing
+                        ) {
+                          event.preventDefault();
                           handleSendOrEdit();
                         }
                       }}
                     />
-
-                    {/* Send button */}
                     <button
+                      className="inbox-send"
+                      type="button"
+                      aria-label={editingMsg ? 'Save message' : 'Send message'}
                       onClick={handleSendOrEdit}
                       disabled={isSending || isUploading || !canSend}
-                      style={{
-                        width: isMobileViewport ? 40 : 42,
-                        height: isMobileViewport ? 40 : 42,
-                        borderRadius: isMobileViewport ? 20 : 21,
-                        flexShrink: 0,
-                        background: canSend ? C.bubbleOut : '#CBD5E1',
-                        color: C.white,
-                        border: 'none',
-                        cursor: canSend ? 'pointer' : 'not-allowed',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: canSend ? `0 4px 14px rgba(37,99,235,0.3)` : 'none',
-                        transition: 'all 0.2s',
-                      }}
                     >
                       {isSending || isUploading ? (
-                        <Loader2 className="animate-spin" size={18} />
+                        <Loader2 size={19} className="animate-spin" />
                       ) : (
-                        <Send size={17} style={{ marginLeft: 1 }} />
+                        <Send size={19} />
                       )}
                     </button>
+                  </div>
+                  <div className="inbox-composer-note">
+                    <span>
+                      {isUploading
+                        ? 'Uploading attachments…'
+                        : isSending
+                          ? 'Sending…'
+                          : 'Keep it thoughtful. Make it count.'}
+                    </span>
+                    <span>Enter to send · Shift + Enter for a new line</span>
                   </div>
                 </div>
               </>
             ) : (
-              /* Empty state */
-              <div
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 12,
-                }}
-              >
-                <div
-                  style={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: 36,
-                    background: 'linear-gradient(135deg, #2563eb, #22d3ee)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 8px 24px rgba(37,99,235,0.25)',
-                  }}
-                >
-                  <Send size={32} color={C.white} style={{ marginLeft: 3 }} />
+              <div className="inbox-welcome">
+                <span className="inbox-welcome-icon">
+                  <MessageSquare size={31} strokeWidth={1.4} />
+                </span>
+                <p className="inbox-welcome-eyebrow">Your career, in conversation</p>
+                <h2>
+                  Good things start
+                  <br />
+                  with a conversation.
+                </h2>
+                <p>
+                  Select a conversation to connect with the people supporting your next chapter.
+                </p>
+                <div>
+                  <BriefcaseBusiness size={15} /> Employers <span>·</span> Mentors <span>·</span>{' '}
+                  Your university
                 </div>
-                <p style={{ fontWeight: 700, fontSize: 17, color: C.deep, margin: 0 }}>
-                  Select a conversation
-                </p>
-                <p style={{ fontSize: 13, color: C.gray, margin: 0 }}>
-                  Pick a thread from the left to start chatting
-                </p>
+              </div>
+            )}
+          </section>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MessageItem({
+  message: msg,
+  isMe,
+  grouped,
+  onForward,
+  onEdit,
+  onDelete,
+}: {
+  message: Message;
+  isMe: boolean;
+  grouped: boolean;
+  onForward: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [menuBelow, setMenuBelow] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const outside = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('pointerdown', outside);
+      document.removeEventListener('keydown', escape);
+    };
+  }, [open]);
+  return (
+    <div
+      className={['inbox-message', isMe ? 'is-outgoing' : 'is-incoming', grouped && 'is-grouped']
+        .filter(Boolean)
+        .join(' ')}
+    >
+      {supportMessageTypeLabel(msg.messageType) && (
+        <span className="inbox-message-label">{supportMessageTypeLabel(msg.messageType)}</span>
+      )}
+      {msg.forwardedFromId && (
+        <span className="inbox-forwarded">
+          <Forward size={12} /> Forwarded
+        </span>
+      )}
+      <div className="inbox-message-line">
+        <div
+          className={['inbox-bubble', msg.isDeletedForEveryone && 'is-deleted']
+            .filter(Boolean)
+            .join(' ')}
+        >
+          {msg.isDeletedForEveryone ? (
+            <em>This message was deleted</em>
+          ) : msg.content?.trim() ? (
+            msg.content
+          ) : null}
+          {!msg.isDeletedForEveryone && !!msg.attachments?.length && (
+            <div className="inbox-attachments">
+              {msg.attachments.map((attachment, index) => (
+                <a
+                  key={index}
+                  href={attachment.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={
+                    attachment.type.startsWith('image/')
+                      ? 'inbox-image-attachment'
+                      : 'inbox-document-attachment'
+                  }
+                >
+                  {attachment.type.startsWith('image/') ? (
+                    <img src={attachment.url} alt={attachment.name} loading="lazy" />
+                  ) : (
+                    <>
+                      <FileText size={18} />
+                      <span>{attachment.name}</span>
+                    </>
+                  )}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+        {!msg.isDeletedForEveryone && (
+          <div
+            className="inbox-message-menu"
+            ref={menuRef}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node)) setOpen(false);
+            }}
+          >
+            <button
+              className="inbox-more"
+              ref={triggerRef}
+              type="button"
+              aria-label="Message actions"
+              aria-expanded={open}
+              onClick={() => {
+                const trigger = triggerRef.current;
+                const history = trigger?.closest('.inbox-history');
+                if (trigger && history)
+                  setMenuBelow(
+                    trigger.getBoundingClientRect().top - history.getBoundingClientRect().top < 140
+                  );
+                setOpen((value) => !value);
+              }}
+            >
+              <MoreHorizontal size={18} />
+            </button>
+            {open && (
+              <div
+                className="inbox-message-actions"
+                data-side={menuBelow ? 'below' : 'above'}
+                role="group"
+                aria-label="Message actions"
+              >
+                <ActionBtn
+                  icon={<Forward size={15} />}
+                  label="Forward"
+                  onClick={() => {
+                    setOpen(false);
+                    onForward();
+                  }}
+                />
+                {isMe && (msg.editCount ?? 0) < 5 && (
+                  <ActionBtn
+                    icon={<Edit2 size={15} />}
+                    label="Edit"
+                    onClick={() => {
+                      setOpen(false);
+                      onEdit();
+                    }}
+                  />
+                )}
+                <ActionBtn
+                  icon={<Trash2 size={15} />}
+                  label="Delete"
+                  color={C.danger}
+                  onClick={() => {
+                    setOpen(false);
+                    onDelete();
+                  }}
+                />
               </div>
             )}
           </div>
         )}
       </div>
-    </>
+      <div className="inbox-message-meta">
+        <time dateTime={msg.createdAt}>{fmtTime(msg.createdAt)}</time>
+        {(msg.editCount ?? 0) > 0 && <span>· Edited</span>}
+        {isMe && (
+          <span aria-label={msg.isRead ? 'Read' : 'Sent'}>
+            {msg.isRead ? <CheckCheck size={14} /> : <Check size={14} />}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }
 
-/* ─── Tiny action button ─────────────────────────────────────────── */
 function ActionBtn({
   icon,
   label,
   onClick,
-  color = '#64748b',
+  color = '#60717d',
 }: {
   icon: React.ReactNode;
   label: string;
@@ -2168,7 +1843,10 @@ function ActionBtn({
 }) {
   return (
     <button
+      type="button"
+      className="inbox-message-action"
       title={label}
+      aria-label={label}
       onClick={onClick}
       style={{
         border: 'none',
@@ -2181,10 +1859,11 @@ function ActionBtn({
         alignItems: 'center',
         transition: 'background 0.15s',
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = '#F1F5F9')}
+      onMouseEnter={(e) => (e.currentTarget.style.background = '#f6f8f9')}
       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
     >
       {icon}
+      <span>{label}</span>
     </button>
   );
 }

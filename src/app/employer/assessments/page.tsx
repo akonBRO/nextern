@@ -162,6 +162,7 @@ export default async function EmployerAssessmentsPage({
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"
@@ -196,7 +197,10 @@ export default async function EmployerAssessmentsPage({
                 border: '1px solid rgba(255,255,255,0.16)',
               }}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}
+                className="v2-page-grid"
+              >
                 {[
                   { label: 'Assessments', value: data.stats.totalAssessments, color: '#FFFFFF' },
                   { label: 'Live', value: data.stats.activeAssessments, color: '#BAE6FD' },
@@ -215,7 +219,7 @@ export default async function EmployerAssessmentsPage({
                     <div
                       style={{
                         fontSize: 24,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: stat.color,
                         fontFamily: 'var(--font-display)',
                         lineHeight: 1,
@@ -247,19 +251,19 @@ export default async function EmployerAssessmentsPage({
               label="Assigned candidates"
               value={formatCompactNumber(data.stats.assignedCandidates)}
               Icon={Users}
-              accent="#22D3EE"
+              accent="#178d80"
             />
             <StatCard
               label="Graded submissions"
               value={formatCompactNumber(data.stats.gradedSubmissions)}
               Icon={GraduationCap}
-              accent="#10B981"
+              accent="#168257"
             />
             <StatCard
               label="Jobs covered"
               value={formatCompactNumber(data.jobs.length)}
               Icon={FileText}
-              accent="#F59E0B"
+              accent="#a86714"
             />
           </div>
         </section>

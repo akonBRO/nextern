@@ -43,6 +43,7 @@ export default async function DeptCalendarPage() {
 
   return (
     <DashboardShell
+      embedded
       role="departmentHead"
       roleLabel="Department calendar"
       homeHref="/dept/dashboard"
@@ -56,7 +57,6 @@ export default async function DeptCalendarPage() {
           description="Navigate month by month and keep only your hosted event dates and registration deadlines visible from one planner."
           actions={
             <>
-              <ActionLink href="/dept/dashboard#calendar" label="Back to Dashboard" />
               <ActionLink
                 href="/dept/profile#calendar"
                 label={

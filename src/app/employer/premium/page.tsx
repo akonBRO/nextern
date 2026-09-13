@@ -20,6 +20,7 @@ export default async function EmployerPremiumPage() {
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer"
       homeHref="/employer/dashboard"
@@ -37,6 +38,7 @@ export default async function EmployerPremiumPage() {
     >
       <DashboardPage>
         <DashboardSection
+          headingLevel={1}
           title="Employer Premium"
           description="Unlock unlimited hiring tools, AI-powered shortlisting, and campus-wide campaigns."
         >

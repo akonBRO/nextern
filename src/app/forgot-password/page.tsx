@@ -1,23 +1,9 @@
 'use client';
-
-import { FormEvent, useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import Link from 'next/link';
-import { NexternLogo } from '@/components/brand/NexternLogo';
-
+import { KeyRound, CheckCircle2 } from 'lucide-react';
+import AuthShell from '@/components/site/AuthShell';
 type Step = 'request' | 'reset' | 'success';
-
-const inputStyle = {
-  width: '100%',
-  padding: '12px 14px',
-  border: '1.5px solid #E2E8F0',
-  borderRadius: 10,
-  fontSize: 15,
-  fontFamily: 'var(--font-body)',
-  color: '#0F172A',
-  outline: 'none',
-  boxSizing: 'border-box' as const,
-};
-
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState<Step>('request');
   const [email, setEmail] = useState('');
@@ -92,192 +78,112 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        padding: '32px 18px',
-        background: '#F8FAFC',
-      }}
-    >
-      <section
-        style={{
-          width: '100%',
-          maxWidth: 460,
-          minWidth: 0,
-          padding: '32px',
-          background: '#FFFFFF',
-          border: '1px solid #E2E8F0',
-          borderRadius: 18,
-          boxShadow: '0 18px 50px rgba(15, 23, 42, 0.10)',
-        }}
-      >
-        <Link href="/" aria-label="Nextern home" style={{ display: 'inline-flex' }}>
-          <NexternLogo textColor="#0F172A" />
-        </Link>
-
-        <div style={{ marginTop: 28, marginBottom: 24 }}>
-          <h1
-            style={{
-              margin: 0,
-              color: '#0F172A',
-              fontFamily: 'var(--font-display)',
-              fontSize: 26,
-              fontWeight: 900,
-            }}
-          >
-            {step === 'success' ? 'Password updated' : 'Reset your password'}
-          </h1>
-          <p style={{ margin: '8px 0 0', color: '#64748B', lineHeight: 1.65, fontSize: 14 }}>
-            {step === 'request'
-              ? 'Enter your account email and we will send you a six-digit security code.'
-              : step === 'reset'
-                ? `Enter the code sent to ${email} and choose a new password.`
-                : 'You can now sign in using your new password.'}
-          </p>
+    <AuthShell compact>
+      <div className="auth-v2-status-icon">
+        {step === 'success' ? <CheckCircle2 size={29} /> : <KeyRound size={27} />}
+      </div>
+      <h1>{step === 'success' ? 'Password updated' : 'Reset your password'}</h1>
+      <p className="auth-v2-intro">
+        {step === 'request'
+          ? 'Enter your account email and we will send you a six-digit reset code.'
+          : step === 'reset'
+            ? 'Enter the code sent to ' + email + ' and choose a new password.'
+            : 'You can now sign in using your new password.'}
+      </p>
+      {(error || message) && (
+        <div
+          role={error ? 'alert' : 'status'}
+          className={'auth-v2-notice' + (error ? ' auth-v2-error' : '')}
+        >
+          {error || message}
         </div>
-
-        {(error || message) && (
-          <div
-            role="status"
-            aria-live="polite"
-            style={{
-              marginBottom: 18,
-              padding: '11px 13px',
-              borderRadius: 10,
-              fontSize: 13,
-              lineHeight: 1.55,
-              color: error ? '#991B1B' : '#166534',
-              background: error ? '#FEF2F2' : '#F0FDF4',
-              border: `1px solid ${error ? '#FECACA' : '#BBF7D0'}`,
-            }}
-          >
-            {error || message}
+      )}
+      {step === 'request' && (
+        <form onSubmit={requestCode} className="auth-v2-fields">
+          <div className="auth-v2-field">
+            <label htmlFor="reset-email">Email address</label>
+            <input
+              id="reset-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@email.com"
+              autoComplete="email"
+              required
+            />
           </div>
-        )}
-
-        {step === 'request' && (
-          <form onSubmit={requestCode} style={{ display: 'grid', gap: 16 }}>
-            <label style={{ display: 'grid', gap: 7, color: '#374151', fontSize: 13 }}>
-              <span style={{ fontWeight: 700 }}>Email address</span>
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@email.com"
-                autoComplete="email"
-                required
-                style={inputStyle}
-              />
-            </label>
-            <SubmitButton loading={loading}>Send reset code</SubmitButton>
-          </form>
-        )}
-
-        {step === 'reset' && (
-          <form onSubmit={resetPassword} style={{ display: 'grid', gap: 16 }}>
-            <label style={{ display: 'grid', gap: 7, color: '#374151', fontSize: 13 }}>
-              <span style={{ fontWeight: 700 }}>Six-digit code</span>
-              <input
-                type="text"
-                value={otp}
-                onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="[0-9]{6}"
-                required
-                style={{ ...inputStyle, letterSpacing: 6, fontWeight: 800 }}
-              />
-            </label>
-            <label style={{ display: 'grid', gap: 7, color: '#374151', fontSize: 13 }}>
-              <span style={{ fontWeight: 700 }}>New password</span>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(event) => setNewPassword(event.target.value)}
-                autoComplete="new-password"
-                required
-                style={inputStyle}
-              />
-              <small style={{ color: '#64748B', lineHeight: 1.5 }}>
-                At least 8 characters with an uppercase letter, number, and symbol.
-              </small>
-            </label>
-            <label style={{ display: 'grid', gap: 7, color: '#374151', fontSize: 13 }}>
-              <span style={{ fontWeight: 700 }}>Confirm new password</span>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                autoComplete="new-password"
-                required
-                style={inputStyle}
-              />
-            </label>
-            <SubmitButton loading={loading}>Reset password</SubmitButton>
-            <button
-              type="button"
-              onClick={() => {
-                setStep('request');
-                setOtp('');
-                setMessage('');
-                setError('');
-              }}
-              style={{ border: 0, background: 'transparent', color: '#2563EB', cursor: 'pointer' }}
-            >
-              Use a different email
-            </button>
-          </form>
-        )}
-
-        {step === 'success' && (
-          <Link
-            href="/login"
-            style={{
-              display: 'block',
-              padding: '12px 16px',
-              borderRadius: 10,
-              background: '#2563EB',
-              color: '#FFFFFF',
-              fontWeight: 800,
-              textAlign: 'center',
-              textDecoration: 'none',
+          <button type="submit" className="public-button" disabled={loading}>
+            {loading ? 'Sending code…' : 'Send reset code'}
+          </button>
+        </form>
+      )}
+      {step === 'reset' && (
+        <form onSubmit={resetPassword} className="auth-v2-fields">
+          <div className="auth-v2-field">
+            <label htmlFor="reset-code">Six-digit code</label>
+            <input
+              id="reset-code"
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]{6}"
+              required
+            />
+          </div>
+          <div className="auth-v2-field">
+            <label htmlFor="new-password">New password</label>
+            <input
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              autoComplete="new-password"
+              required
+              aria-describedby="reset-rules"
+            />
+            <small id="reset-rules" className="auth-v2-help" style={{ margin: 0 }}>
+              At least 8 characters with an uppercase letter, a number, and a symbol.
+            </small>
+          </div>
+          <div className="auth-v2-field">
+            <label htmlFor="confirm-password">Confirm new password</label>
+            <input
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              autoComplete="new-password"
+              required
+            />
+          </div>
+          <button type="submit" className="public-button" disabled={loading}>
+            {loading ? 'Updating password…' : 'Reset password'}
+          </button>
+          <button
+            type="button"
+            className="auth-v2-link"
+            onClick={() => {
+              setStep('request');
+              setOtp('');
+              setMessage('');
+              setError('');
             }}
           >
-            Return to sign in
-          </Link>
-        )}
-
-        {step !== 'success' && (
-          <p style={{ margin: '22px 0 0', textAlign: 'center', color: '#64748B', fontSize: 13 }}>
-            Remembered your password?{' '}
-            <Link href="/login" style={{ color: '#2563EB', fontWeight: 700 }}>
-              Sign in
-            </Link>
-          </p>
-        )}
-      </section>
-    </main>
-  );
-}
-
-function SubmitButton({ loading, children }: { loading: boolean; children: string }) {
-  return (
-    <button
-      type="submit"
-      disabled={loading}
-      style={{
-        padding: '12px 16px',
-        border: 0,
-        borderRadius: 10,
-        background: loading ? '#93C5FD' : '#2563EB',
-        color: '#FFFFFF',
-        fontWeight: 800,
-        cursor: loading ? 'not-allowed' : 'pointer',
-      }}
-    >
-      {loading ? 'Please wait…' : children}
-    </button>
+            Use a different email
+          </button>
+        </form>
+      )}
+      {step === 'success' ? (
+        <Link className="public-button" href="/login" style={{ width: '100%' }}>
+          Return to sign in
+        </Link>
+      ) : (
+        <p className="auth-v2-footnote">
+          Remembered your password? <Link href="/login">Sign in</Link>
+        </p>
+      )}
+    </AuthShell>
   );
 }

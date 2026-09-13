@@ -26,9 +26,9 @@ const navItems = [
 ];
 
 const TYPE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
-  internship: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE' },
+  internship: { bg: '#edf7f3', color: '#087f72', border: '#bdddd5' },
   'part-time': { bg: '#ECFDF5', color: '#065F46', border: '#A7F3D0' },
-  'full-time': { bg: '#EDE9FE', color: '#7C3AED', border: '#DDD6FE' },
+  'full-time': { bg: '#e0f0eb', color: '#087f72', border: '#bdddd5' },
   'campus-drive': { bg: '#FFFBEB', color: '#92400E', border: '#FDE68A' },
   webinar: { bg: '#F0F9FF', color: '#0369A1', border: '#BAE6FD' },
   workshop: { bg: '#FEF2F2', color: '#BE123C', border: '#FECDD3' },
@@ -77,6 +77,7 @@ export default async function EmployerJobDetailPage({
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"
@@ -95,27 +96,15 @@ export default async function EmployerJobDetailPage({
         {/* Hero */}
         <div
           style={{
-            background: '#172033',
-            borderRadius: 28,
+            background: 'var(--surface-muted)',
+            borderRadius: 12,
             padding: '32px 36px',
-            boxShadow: '0 26px 60px rgba(15,23,42,0.16)',
+            boxShadow: 'var(--shadow-card)',
             position: 'relative',
             overflow: 'hidden',
           }}
+          className="v2-light-panel"
         >
-          <div
-            style={{
-              position: 'absolute',
-              top: -60,
-              right: -60,
-              width: 240,
-              height: 240,
-              background: 'rgba(37,99,235,0.11)',
-              borderRadius: '50%',
-              pointerEvents: 'none',
-            }}
-          />
-
           <div
             style={{
               display: 'flex',
@@ -144,9 +133,9 @@ export default async function EmployerJobDetailPage({
                 {job.isBatchHiring && (
                   <span
                     style={{
-                      background: '#EDE9FE',
-                      color: '#7C3AED',
-                      border: '1px solid #DDD6FE',
+                      background: '#e0f0eb',
+                      color: '#087f72',
+                      border: '1px solid #bdddd5',
                       padding: '4px 12px',
                       borderRadius: 999,
                       fontSize: 12,
@@ -161,9 +150,9 @@ export default async function EmployerJobDetailPage({
                     display: 'flex',
                     alignItems: 'center',
                     gap: 5,
-                    background: job.isActive ? '#ECFDF5' : '#F8FAFC',
-                    color: job.isActive ? '#065F46' : '#64748B',
-                    border: `1px solid ${job.isActive ? '#A7F3D0' : '#E2E8F0'}`,
+                    background: job.isActive ? '#ECFDF5' : '#f6f8f9',
+                    color: job.isActive ? '#065F46' : '#60717d',
+                    border: `1px solid ${job.isActive ? '#A7F3D0' : '#dfe6e9'}`,
                     padding: '4px 12px',
                     borderRadius: 999,
                     fontSize: 12,
@@ -175,7 +164,7 @@ export default async function EmployerJobDetailPage({
                       width: 6,
                       height: 6,
                       borderRadius: '50%',
-                      background: job.isActive ? '#10B981' : '#94A3B8',
+                      background: job.isActive ? '#168257' : '#60717d',
                       display: 'inline-block',
                     }}
                   />
@@ -201,8 +190,8 @@ export default async function EmployerJobDetailPage({
               <h1
                 style={{
                   fontSize: 30,
-                  fontWeight: 900,
-                  color: '#F8FAFC',
+                  fontWeight: 700,
+                  color: 'var(--deep)',
                   fontFamily: 'var(--font-display)',
                   margin: 0,
                   marginBottom: 6,
@@ -211,7 +200,7 @@ export default async function EmployerJobDetailPage({
               >
                 {job.title}
               </h1>
-              <div style={{ color: '#94A3B8', fontSize: 16, fontWeight: 600 }}>
+              <div style={{ color: '#60717d', fontSize: 16, fontWeight: 600 }}>
                 {job.companyName}
               </div>
 
@@ -223,7 +212,7 @@ export default async function EmployerJobDetailPage({
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,
-                      color: '#94A3B8',
+                      color: '#60717d',
                       fontSize: 14,
                     }}
                   >
@@ -237,7 +226,7 @@ export default async function EmployerJobDetailPage({
                       alignItems: 'center',
                       gap: 6,
                       fontSize: 14,
-                      color: isExpired ? '#EF4444' : daysLeft <= 3 ? '#F59E0B' : '#94A3B8',
+                      color: isExpired ? '#EF4444' : daysLeft <= 3 ? '#a86714' : '#60717d',
                       fontWeight: isExpired || daysLeft <= 3 ? 700 : 400,
                     }}
                   >
@@ -249,7 +238,7 @@ export default async function EmployerJobDetailPage({
                     display: 'flex',
                     alignItems: 'center',
                     gap: 6,
-                    color: '#94A3B8',
+                    color: '#60717d',
                     fontSize: 14,
                   }}
                 >
@@ -261,7 +250,7 @@ export default async function EmployerJobDetailPage({
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,
-                      color: '#10B981',
+                      color: '#168257',
                       fontSize: 14,
                       fontWeight: 700,
                     }}
@@ -281,7 +270,7 @@ export default async function EmployerJobDetailPage({
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 7,
-                  background: '#2563EB',
+                  background: '#087f72',
                   color: '#fff',
                   padding: '12px 20px',
                   borderRadius: 12,
@@ -289,7 +278,7 @@ export default async function EmployerJobDetailPage({
                   fontWeight: 700,
                   textDecoration: 'none',
                   fontFamily: 'var(--font-display)',
-                  boxShadow: '0 4px 14px rgba(37,99,235,0.4)',
+                  boxShadow: 'var(--shadow-card)',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -303,7 +292,7 @@ export default async function EmployerJobDetailPage({
                   justifyContent: 'center',
                   gap: 7,
                   background: 'rgba(255,255,255,0.08)',
-                  color: '#E2E8F0',
+                  color: 'var(--deep)',
                   padding: '12px 20px',
                   borderRadius: 12,
                   fontSize: 14,
@@ -318,7 +307,7 @@ export default async function EmployerJobDetailPage({
               <Link
                 href="/employer/jobs"
                 style={{
-                  color: '#64748B',
+                  color: '#60717d',
                   fontSize: 13,
                   textDecoration: 'none',
                   fontWeight: 500,
@@ -342,24 +331,24 @@ export default async function EmployerJobDetailPage({
             }}
           >
             {[
-              { label: 'Applications', value: job.applicationCount ?? 0, color: '#22D3EE' },
-              { label: 'Views', value: job.viewCount ?? 0, color: '#F59E0B' },
+              { label: 'Applications', value: job.applicationCount ?? 0, color: '#178d80' },
+              { label: 'Views', value: job.viewCount ?? 0, color: '#a86714' },
               {
                 label: 'Openings',
                 value: job.durationMonths ? `${job.durationMonths}mo` : '—',
-                color: '#10B981',
+                color: '#168257',
               },
               {
                 label: 'Posted',
                 value: formatShortDate(job.createdAt?.toISOString()),
-                color: '#94A3B8',
+                color: '#60717d',
               },
             ].map((s) => (
               <div key={s.label}>
                 <div
                   style={{
                     fontSize: 20,
-                    fontWeight: 900,
+                    fontWeight: 700,
                     color: s.color,
                     fontFamily: 'var(--font-display)',
                     lineHeight: 1,
@@ -367,7 +356,7 @@ export default async function EmployerJobDetailPage({
                 >
                   {s.value}
                 </div>
-                <div style={{ color: '#64748B', fontSize: 12, marginTop: 4, fontWeight: 600 }}>
+                <div style={{ color: '#60717d', fontSize: 12, marginTop: 4, fontWeight: 600 }}>
                   {s.label}
                 </div>
               </div>
@@ -378,7 +367,7 @@ export default async function EmployerJobDetailPage({
         {/* Content grid */}
         <div
           style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20, marginTop: 24 }}
-          className="job-detail-grid"
+          className="job-detail-grid v2-page-grid"
         >
           {/* Left */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -458,7 +447,7 @@ export default async function EmployerJobDetailPage({
                   .filter(Boolean)
                   .map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                      <div style={{ color: '#2563EB', marginTop: 1, flexShrink: 0 }}>
+                      <div style={{ color: '#087f72', marginTop: 1, flexShrink: 0 }}>
                         {item!.icon}
                       </div>
                       <div>
@@ -466,7 +455,7 @@ export default async function EmployerJobDetailPage({
                           style={{
                             fontSize: 11,
                             fontWeight: 700,
-                            color: '#94A3B8',
+                            color: '#60717d',
                             textTransform: 'uppercase',
                             letterSpacing: 0.8,
                           }}
@@ -474,7 +463,7 @@ export default async function EmployerJobDetailPage({
                           {item!.label}
                         </div>
                         <div
-                          style={{ fontSize: 14, color: '#0F172A', fontWeight: 600, marginTop: 2 }}
+                          style={{ fontSize: 14, color: '#182c39', fontWeight: 600, marginTop: 2 }}
                         >
                           {item!.value}
                         </div>
@@ -495,7 +484,7 @@ export default async function EmployerJobDetailPage({
                         style={{
                           fontSize: 12,
                           fontWeight: 700,
-                          color: '#64748B',
+                          color: '#60717d',
                           marginBottom: 8,
                           display: 'flex',
                           alignItems: 'center',
@@ -509,9 +498,9 @@ export default async function EmployerJobDetailPage({
                           <span
                             key={s}
                             style={{
-                              background: '#EFF6FF',
-                              color: '#2563EB',
-                              border: '1px solid #BFDBFE',
+                              background: '#edf7f3',
+                              color: '#087f72',
+                              border: '1px solid #bdddd5',
                               padding: '4px 10px',
                               borderRadius: 999,
                               fontSize: 12,
@@ -527,11 +516,11 @@ export default async function EmployerJobDetailPage({
                   {job.minimumCGPA && (
                     <div>
                       <div
-                        style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 4 }}
+                        style={{ fontSize: 12, fontWeight: 700, color: '#60717d', marginBottom: 4 }}
                       >
                         Minimum CGPA
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39' }}>
                         {job.minimumCGPA.toFixed(2)}
                       </div>
                     </div>
@@ -539,7 +528,7 @@ export default async function EmployerJobDetailPage({
                   {job.requiredCourses?.length > 0 && (
                     <div>
                       <div
-                        style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 8 }}
+                        style={{ fontSize: 12, fontWeight: 700, color: '#60717d', marginBottom: 8 }}
                       >
                         Required Courses
                       </div>
@@ -548,7 +537,7 @@ export default async function EmployerJobDetailPage({
                           <span
                             key={c}
                             style={{
-                              background: '#F1F5F9',
+                              background: '#f6f8f9',
                               color: '#475569',
                               padding: '3px 9px',
                               borderRadius: 999,
@@ -565,7 +554,7 @@ export default async function EmployerJobDetailPage({
                   {job.experienceExpectations && (
                     <div>
                       <div
-                        style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 4 }}
+                        style={{ fontSize: 12, fontWeight: 700, color: '#60717d', marginBottom: 4 }}
                       >
                         Experience
                       </div>
@@ -586,7 +575,7 @@ export default async function EmployerJobDetailPage({
                   {job.targetUniversities?.length > 0 && (
                     <div>
                       <div
-                        style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }}
+                        style={{ fontSize: 12, fontWeight: 700, color: '#60717d', marginBottom: 6 }}
                       >
                         Universities
                       </div>
@@ -600,7 +589,7 @@ export default async function EmployerJobDetailPage({
                   {job.targetDepartments?.length > 0 && (
                     <div>
                       <div
-                        style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }}
+                        style={{ fontSize: 12, fontWeight: 700, color: '#60717d', marginBottom: 6 }}
                       >
                         Departments
                       </div>
@@ -614,7 +603,7 @@ export default async function EmployerJobDetailPage({
                   {job.targetYears?.length > 0 && (
                     <div>
                       <div
-                        style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }}
+                        style={{ fontSize: 12, fontWeight: 700, color: '#60717d', marginBottom: 6 }}
                       >
                         Year of Study
                       </div>
@@ -628,7 +617,7 @@ export default async function EmployerJobDetailPage({
                   {job.isBatchHiring && job.batchUniversities?.length > 0 && (
                     <div>
                       <div
-                        style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }}
+                        style={{ fontSize: 12, fontWeight: 700, color: '#60717d', marginBottom: 6 }}
                       >
                         Batch Universities
                       </div>

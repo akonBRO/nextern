@@ -1,5 +1,7 @@
+import BrandLoader from '@/components/ui/BrandLoader';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use client';
+('use client');
+import BadgeIcon from '@/components/ui/BadgeIcon';
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
@@ -39,11 +41,7 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
   }, [mentorId]);
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: 80, color: '#94A3B8' }}>
-        Loading profile...
-      </div>
-    );
+    return <BrandLoader variant="section" label="Loading profile" />;
   }
 
   if (error || !mentor) {
@@ -55,7 +53,7 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
           textAlign: 'center',
           padding: 40,
           background: '#FEF2F2',
-          borderRadius: 20,
+          borderRadius: 12,
           color: '#DC2626',
         }}
       >
@@ -86,7 +84,7 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
           gap: 6,
           background: 'none',
           border: 'none',
-          color: '#64748B',
+          color: '#60717d',
           fontSize: 14,
           fontWeight: 600,
           cursor: 'pointer',
@@ -100,14 +98,17 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
       <div
         style={{
           background: '#FFFFFF',
-          borderRadius: 24,
-          border: '1px solid #E2E8F0',
+          borderRadius: 12,
+          border: '1px solid #dfe6e9',
           overflow: 'hidden',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.02)',
+          boxShadow: 'var(--shadow-card)',
         }}
       >
         {/* Header Cover */}
-        <div style={{ height: 160, background: 'linear-gradient(135deg, #1E293B, #0F172A)' }}></div>
+        <div
+          style={{ height: 160, background: 'var(--surface-muted)' }}
+          className="v2-light-panel"
+        ></div>
 
         <div style={{ padding: '0 32px 32px 32px', position: 'relative' }}>
           <div
@@ -131,7 +132,7 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
                     borderRadius: '50%',
                     objectFit: 'cover',
                     border: '4px solid #FFFFFF',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 />
               ) : (
@@ -140,15 +141,15 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
                     width: 120,
                     height: 120,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #3B82F6, #06B6D4)',
+                    background: '#edf7f3',
                     color: '#FFFFFF',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: 48,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     border: '4px solid #FFFFFF',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   {mentor.userId?.name?.charAt(0).toUpperCase() || 'M'}
@@ -165,9 +166,9 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
                   padding: '12px 24px',
                   borderRadius: 12,
                   background: mentor.isAvailable
-                    ? 'linear-gradient(135deg, #2563EB, #1D4ED8)'
-                    : '#E2E8F0',
-                  color: mentor.isAvailable ? '#FFFFFF' : '#94A3B8',
+                    ? 'linear-gradient(135deg, #087f72, #06665d)'
+                    : '#dfe6e9',
+                  color: mentor.isAvailable ? '#FFFFFF' : '#60717d',
                   fontWeight: 700,
                   fontSize: 15,
                   border: 'none',
@@ -186,8 +187,8 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
               style={{
                 margin: '0 0 8px 0',
                 fontSize: 28,
-                fontWeight: 900,
-                color: '#1E293B',
+                fontWeight: 700,
+                color: '#243e4a',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
@@ -202,7 +203,7 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
                     alignItems: 'center',
                     gap: 4,
                     fontSize: 13,
-                    color: '#10B981',
+                    color: '#168257',
                     background: '#D1FAE5',
                     padding: '4px 10px',
                     borderRadius: 999,
@@ -214,7 +215,7 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
             </h1>
             <p style={{ margin: '0 0 20px 0', fontSize: 18, color: '#475569', fontWeight: 500 }}>
               {mentor.currentRole} at{' '}
-              <span style={{ color: '#1E293B', fontWeight: 700 }}>{mentor.currentCompany}</span>
+              <span style={{ color: '#243e4a', fontWeight: 700 }}>{mentor.currentCompany}</span>
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 32 }}>
@@ -234,7 +235,7 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
                   }}
                 >
                   <Star size={20} color="#D97706" fill="#D97706" />
-                  <span style={{ fontWeight: 900, color: '#92400E' }}>
+                  <span style={{ fontWeight: 700, color: '#92400E' }}>
                     {mentor.averageRating > 0 ? mentor.averageRating.toFixed(1) : 'New'}
                   </span>
                   <span style={{ color: '#B45309', fontSize: 13, fontWeight: 600 }}>
@@ -242,7 +243,7 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
                   </span>
                 </div>
 
-                <div style={{ width: 1, height: 32, background: '#E2E8F0' }}></div>
+                <div style={{ width: 1, height: 32, background: '#dfe6e9' }}></div>
                 <div
                   style={{
                     display: 'flex',
@@ -252,10 +253,10 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
                     color: '#475569',
                   }}
                 >
-                  <Briefcase size={18} color="#64748B" />
+                  <Briefcase size={18} color="#60717d" />
                   {mentor.yearsOfExperience} yrs experience
                 </div>
-                <div style={{ width: 1, height: 32, background: '#E2E8F0' }}></div>
+                <div style={{ width: 1, height: 32, background: '#dfe6e9' }}></div>
                 <div
                   style={{
                     display: 'flex',
@@ -265,12 +266,12 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
                     color: '#475569',
                   }}
                 >
-                  <Building size={18} color="#64748B" />
+                  <Building size={18} color="#60717d" />
                   {mentor.industry}
                 </div>
                 {mentor.linkedinUrl && (
                   <>
-                    <div style={{ width: 1, height: 32, background: '#E2E8F0' }}></div>
+                    <div style={{ width: 1, height: 32, background: '#dfe6e9' }}></div>
                     <a
                       href={mentor.linkedinUrl as string}
                       target="_blank"
@@ -297,7 +298,7 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
                     style={{
                       fontSize: 13,
                       fontWeight: 700,
-                      color: '#64748B',
+                      color: '#60717d',
                       textTransform: 'uppercase',
                       letterSpacing: 0.5,
                     }}
@@ -316,14 +317,14 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
                               width: 32,
                               height: 32,
                               borderRadius: '50%',
-                              background: '#EFF6FF',
-                              border: '1px solid #BFDBFE',
+                              background: '#edf7f3',
+                              border: '1px solid #bdddd5',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               fontSize: 18,
                               cursor: 'help',
-                              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                              boxShadow: 'var(--shadow-card)',
                             }}
                           >
                             {isUploadthingUrl ? (
@@ -333,7 +334,9 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
                                 style={{ width: 20, height: 20, objectFit: 'contain' }}
                               />
                             ) : (
-                              <span>{badge.badgeIcon}</span>
+                              <span>
+                                <BadgeIcon value={badge.badgeIcon} label={badge.badgeName} />
+                              </span>
                             )}
                           </div>
                         );
@@ -344,10 +347,13 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 40 }}>
+            <div
+              style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 40 }}
+              className="v2-page-grid"
+            >
               <div>
                 <h3
-                  style={{ margin: '0 0 12px 0', fontSize: 18, fontWeight: 800, color: '#1E293B' }}
+                  style={{ margin: '0 0 12px 0', fontSize: 18, fontWeight: 700, color: '#243e4a' }}
                 >
                   About Me
                 </h3>
@@ -366,7 +372,7 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
 
               <div>
                 <h3
-                  style={{ margin: '0 0 12px 0', fontSize: 18, fontWeight: 800, color: '#1E293B' }}
+                  style={{ margin: '0 0 12px 0', fontSize: 18, fontWeight: 700, color: '#243e4a' }}
                 >
                   Areas of Expertise
                 </h3>
@@ -378,10 +384,10 @@ export default function MentorDetailPage({ params }: { params: Promise<{ mentorI
                         fontSize: 13,
                         padding: '6px 12px',
                         borderRadius: 8,
-                        background: '#F8FAFC',
+                        background: '#f6f8f9',
                         color: '#334155',
                         fontWeight: 600,
-                        border: '1px solid #E2E8F0',
+                        border: '1px solid #dfe6e9',
                       }}
                     >
                       {skill}

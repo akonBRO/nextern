@@ -76,7 +76,7 @@ export default function VideoSessionLauncher({ sessionId }: Props) {
           width: '100%',
           padding: '12px',
           borderRadius: 12,
-          background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+          background: '#087f72',
           color: '#FFFFFF',
           fontWeight: 700,
           fontSize: 14,
@@ -86,7 +86,7 @@ export default function VideoSessionLauncher({ sessionId }: Props) {
           alignItems: 'center',
           justifyContent: 'center',
           gap: 8,
-          boxShadow: '0 4px 12px rgba(37,99,235,0.2)',
+          boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
           opacity: loading ? 0.7 : 1,
         }}
       >

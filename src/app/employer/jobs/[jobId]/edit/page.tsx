@@ -1,4 +1,7 @@
 'use client';
+
+import BrandLoader from '@/components/ui/BrandLoader';
+import FormField from '@/components/ui/FormField';
 // src/app/employer/jobs/[jobId]/edit/page.tsx
 // Edit existing job — pre-fills form with current job data
 
@@ -9,26 +12,26 @@ import EmployerClientShell from '@/components/employer/EmployerClientShell';
 import { CheckCircle2, AlertCircle, ChevronLeft } from 'lucide-react';
 
 const C = {
-  blue: '#2563EB',
-  indigo: '#1E293B',
-  cyan: '#22D3EE',
-  bg: '#F1F5F9',
-  gray: '#64748B',
-  success: '#10B981',
-  warning: '#F59E0B',
+  blue: '#087f72',
+  indigo: '#243e4a',
+  cyan: '#178d80',
+  bg: '#f6f8f9',
+  gray: '#60717d',
+  success: '#168257',
+  warning: '#a86714',
   white: '#fff',
-  dark: '#0F172A',
-  border: '#E2E8F0',
-  text: '#0F172A',
+  dark: '#182c39',
+  border: '#dfe6e9',
+  text: '#182c39',
   muted: '#374151',
-  light: '#94A3B8',
+  light: '#60717d',
   danger: '#EF4444',
   dangerBg: '#FEF2F2',
   dangerBorder: '#FECACA',
   successBg: '#ECFDF5',
   successBorder: '#A7F3D0',
-  blueBg: '#EFF6FF',
-  blueBorder: '#BFDBFE',
+  blueBg: '#edf7f3',
+  blueBorder: '#bdddd5',
 };
 
 const BD_UNIS = [
@@ -89,30 +92,9 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <label
-        style={{ display: 'block', fontSize: 13, fontWeight: 700, color: C.muted, marginBottom: 7 }}
-      >
-        {label}
-        {required && <span style={{ color: C.danger, marginLeft: 2 }}>*</span>}
-      </label>
+    <FormField label={label} required={required} error={error}>
       {children}
-      {error && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            marginTop: 5,
-            color: C.danger,
-            fontSize: 12,
-          }}
-        >
-          <AlertCircle size={13} />
-          {error}
-        </div>
-      )}
-    </div>
+    </FormField>
   );
 }
 
@@ -459,32 +441,7 @@ export default function EditJobPage() {
   if (fetching) {
     return (
       <EmployerClientShell>
-        <div
-          style={{
-            minHeight: '50vh',
-            background: C.bg,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontFamily: 'var(--font-body)',
-          }}
-        >
-          <div style={{ textAlign: 'center', color: C.gray }}>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                border: `3px solid ${C.border}`,
-                borderTopColor: C.blue,
-                borderRadius: '50%',
-                margin: '0 auto 16px',
-                animation: 'spin 0.8s linear infinite',
-              }}
-            />
-            Loading job data...
-          </div>
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
+        <BrandLoader variant="page" label="Loading job data" />
       </EmployerClientShell>
     );
   }
@@ -495,10 +452,11 @@ export default function EditJobPage() {
         {/* Header */}
         <div
           style={{
-            background: C.dark,
+            background: 'var(--surface-muted)',
             padding: '24px 0 28px',
             borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
+          className="v2-light-panel"
         >
           <div style={{ maxWidth: 820, margin: '0 auto', padding: '0 24px' }}>
             <div style={{ marginBottom: 16 }}>
@@ -512,8 +470,8 @@ export default function EditJobPage() {
             <h1
               style={{
                 fontSize: 24,
-                fontWeight: 900,
-                color: '#F8FAFC',
+                fontWeight: 700,
+                color: 'var(--deep)',
                 fontFamily: 'var(--font-display)',
                 marginBottom: 4,
               }}
@@ -550,9 +508,9 @@ export default function EditJobPage() {
           <div
             style={{
               background: C.white,
-              borderRadius: 20,
+              borderRadius: 12,
               border: `1px solid ${C.border}`,
-              boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+              boxShadow: 'var(--shadow-card)',
               overflow: 'hidden',
             }}
           >
@@ -579,14 +537,15 @@ export default function EditJobPage() {
                   <Field label="Listing Type">
                     <div
                       style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}
+                      className="v2-form-grid"
                     >
                       {[
-                        { v: 'internship', l: '🎓 Internship' },
+                        { v: 'internship', l: 'Internship' },
                         { v: 'part-time', l: '⏰ Part-time' },
-                        { v: 'full-time', l: '💼 Full-time' },
-                        { v: 'campus-drive', l: '🏫 Campus Drive' },
-                        { v: 'webinar', l: '🌐 Webinar' },
-                        { v: 'workshop', l: '🔧 Workshop' },
+                        { v: 'full-time', l: 'Full-time' },
+                        { v: 'campus-drive', l: 'Campus Drive' },
+                        { v: 'webinar', l: 'Webinar' },
+                        { v: 'workshop', l: 'Workshop' },
                       ].map((t) => (
                         <button
                           key={t.v}
@@ -629,7 +588,10 @@ export default function EditJobPage() {
                     tags={form.responsibilities}
                     onChange={(v) => set('responsibilities', v)}
                   />
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div
+                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+                    className="v2-page-grid"
+                  >
                     <Field label="Work Mode">
                       <select
                         value={form.locationType}
@@ -650,7 +612,10 @@ export default function EditJobPage() {
                       />
                     </Field>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                  <div
+                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}
+                    className="v2-page-grid"
+                  >
                     <Field label="Stipend (BDT/mo)" required={false}>
                       <input
                         type="number"
@@ -679,7 +644,10 @@ export default function EditJobPage() {
                       />
                     </Field>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div
+                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+                    className="v2-page-grid"
+                  >
                     <Field label="Application Deadline" error={errors.applicationDeadline}>
                       <input
                         type="date"
@@ -785,7 +753,10 @@ export default function EditJobPage() {
                     tags={form.requiredSkills}
                     onChange={(v) => set('requiredSkills', v)}
                   />
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div
+                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+                    className="v2-page-grid"
+                  >
                     <Field label="CGPA (on scale of 4)" required={false} error={errors.minimumCGPA}>
                       <input
                         type="number"
@@ -823,7 +794,7 @@ export default function EditJobPage() {
               {/* Status toggle */}
               <div
                 style={{
-                  background: form.isActive ? C.successBg : '#F8FAFC',
+                  background: form.isActive ? C.successBg : '#f6f8f9',
                   border: `1.5px solid ${form.isActive ? C.successBorder : C.border}`,
                   borderRadius: 14,
                   padding: '16px 20px',
@@ -833,7 +804,7 @@ export default function EditJobPage() {
                 }}
               >
                 <div>
-                  <div style={{ fontWeight: 800, color: C.text, fontSize: 14 }}>Listing Status</div>
+                  <div style={{ fontWeight: 700, color: C.text, fontSize: 14 }}>Listing Status</div>
                   <div style={{ color: C.gray, fontSize: 13, marginTop: 2 }}>
                     {form.isActive
                       ? 'Active — visible to students'
@@ -865,7 +836,7 @@ export default function EditJobPage() {
                       top: 3,
                       left: form.isActive ? 25 : 3,
                       transition: 'left 0.2s',
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                      boxShadow: 'var(--shadow-card)',
                     }}
                   />
                 </button>

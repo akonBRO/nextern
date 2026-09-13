@@ -24,6 +24,7 @@ export default async function StudentMessagesPage({
 
   return (
     <DashboardShell
+      embedded
       role={isMentor ? 'alumni' : 'student'}
       roleLabel={isMentor ? 'Mentor dashboard' : 'Student dashboard'}
       homeHref={isMentor ? '/student/mentorship/dashboard' : '/student/dashboard'}
@@ -39,15 +40,7 @@ export default async function StudentMessagesPage({
       }}
       hideFooter
     >
-      <div
-        style={{
-          height: '100%',
-          padding: '16px 24px',
-          boxSizing: 'border-box',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <div className="messaging-page">
         <Inbox
           currentUserId={session.user.id}
           currentUserRole={session.user.role as 'student' | 'alumni'}

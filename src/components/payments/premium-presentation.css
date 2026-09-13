@@ -1,0 +1,329 @@
+.premium-workspace {
+  max-width: 1320px;
+  margin: auto;
+  padding: 30px 24px;
+}
+.premium-intro {
+  background: #e9edde;
+  border: 1px solid #d6dfc8;
+  border-radius: 12px;
+  padding: 35px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 25px;
+  align-items: center;
+  margin-bottom: 26px;
+}
+.premium-intro .workspace-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.premium-intro h1,
+.premium-intro h2 {
+  font-size: clamp(28px, 3.2vw, 41px);
+  letter-spacing: -0.05em;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 14px 0;
+}
+.premium-intro > div > p:last-child {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #617154;
+  max-width: 590px;
+}
+.premium-price {
+  padding-left: 30px;
+  border-left: 1px solid #c6d4ba;
+}
+.premium-price > span {
+  display: block;
+  font-size: 12px;
+  color: #68775b;
+}
+.premium-price > strong {
+  display: block;
+  font-size: 43px;
+  color: #294631;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+  margin: 8px 0;
+}
+.premium-price small {
+  font-size: 14px;
+  font-weight: 400;
+  color: #65765a;
+}
+.premium-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(310px, 1fr);
+  gap: 26px;
+  align-items: start;
+}
+.premium-benefits {
+  display: grid;
+  gap: 26px;
+  min-width: 0;
+}
+.premium-feature-panel {
+  padding: 30px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+}
+.premium-feature-panel h2 {
+  font-size: 24px;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+  margin: 12px 0 25px;
+}
+.premium-feature-panel ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 19px 24px;
+  list-style: none;
+}
+.premium-feature-panel li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: #56664e;
+  line-height: 1.7;
+}
+.premium-feature-panel li svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: #427840;
+}
+.premium-comparison h2 {
+  font-size: 21px;
+  margin: 0 0 16px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.premium-comparison table {
+  font-size: 12px;
+}
+.premium-comparison tbody th {
+  background: transparent !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  letter-spacing: 0;
+  font-size: 12px !important;
+}
+.premium-comparison td {
+  white-space: nowrap;
+}
+.premium-comparison td:last-child {
+  color: #28653c;
+  font-weight: 600;
+  background: #f2f7ee;
+}
+.premium-checkout {
+  position: sticky;
+  top: 138px;
+  background: #fff;
+  border: 1px solid #c9d9bd;
+  border-top: 4px solid #699353;
+  box-shadow: 0 6px 24px #2e4c2910;
+  padding: 26px;
+  border-radius: 11px;
+}
+.premium-checkout-title {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #3b6240;
+}
+.premium-checkout h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.premium-checkout > p {
+  color: #68745f;
+  font-size: 12px;
+  margin: 12px 0 20px;
+  line-height: 1.7;
+}
+.premium-checkout dl {
+  padding: 18px;
+  background: #f0f4e9;
+  border: 1px solid #dfe7d7;
+  border-radius: 7px;
+  margin-bottom: 23px;
+}
+.premium-checkout dl > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: #617158;
+}
+.premium-checkout dl > div:last-child {
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid #d5dfca;
+  font-size: 13px;
+  color: #324e36;
+}
+.premium-checkout dd {
+  font-weight: 650;
+  white-space: nowrap;
+}
+.premium-checkout fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 22px;
+}
+.premium-checkout legend {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.payment-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid #dde4d6;
+  border-radius: 7px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  min-height: 68px;
+}
+.payment-choice-active {
+  border-color: #6d9b55;
+  background: #f0f6e9;
+}
+.payment-choice input {
+  accent-color: #346d44;
+  width: 16px;
+  height: 16px;
+}
+.payment-choice strong {
+  font-size: 12px;
+  display: block;
+  font-weight: 600;
+}
+.payment-choice small {
+  font-size: 10px;
+  color: #66765b;
+}
+.premium-checkout > button {
+  width: 100%;
+  justify-content: center;
+  font-size: 13px;
+  min-height: 49px;
+}
+.premium-payment-note {
+  display: flex;
+  gap: 8px;
+  color: #65755b;
+  margin-top: 15px;
+  align-items: flex-start;
+}
+.premium-payment-note svg {
+  flex-shrink: 0;
+}
+.premium-payment-note p {
+  font-size: 11px;
+  line-height: 1.6;
+}
+.premium-checkout .premium-cancel-note {
+  font-size: 10px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e8db;
+  margin-bottom: 0;
+}
+.premium-alert {
+  background: #fff1ed;
+  color: #9b3529;
+  border: 1px solid #efc7bd;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  font-size: 13px;
+}
+.premium-active {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #e8f4e7;
+  border: 1px solid #c3ddba;
+  border-radius: 9px;
+  padding: 20px;
+  margin-bottom: 22px;
+  color: #306336;
+}
+.premium-active strong {
+  font-size: 14px;
+}
+.premium-active p {
+  font-size: 12px;
+  margin-top: 5px;
+}
+.premium-active a {
+  margin-left: auto;
+  color: #2c683a;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+}
+.dashboard-page > .premium-workspace {
+  padding: 0;
+}
+@media (max-width: 950px) {
+  .premium-layout {
+    grid-template-columns: 1fr;
+  }
+  .premium-checkout {
+    position: static;
+  }
+  .premium-intro {
+    padding: 25px;
+  }
+  .premium-feature-panel ul {
+    gap: 17px;
+  }
+}
+@media (max-width: 600px) {
+  .premium-workspace {
+    padding: 22px 16px;
+  }
+  .premium-intro {
+    grid-template-columns: 1fr;
+    padding: 23px;
+  }
+  .premium-price {
+    border-left: 0;
+    border-top: 1px solid #c6d4ba;
+    padding: 18px 0 0;
+  }
+  .premium-price > strong {
+    font-size: 37px;
+  }
+  .premium-feature-panel {
+    padding: 23px;
+  }
+  .premium-feature-panel ul {
+    grid-template-columns: 1fr;
+  }
+  .premium-checkout {
+    padding: 22px;
+  }
+  .premium-active {
+    flex-wrap: wrap;
+  }
+  .premium-active a {
+    margin-left: 30px;
+  }
+  .premium-comparison .v2-table-scroll :is(th, td) {
+    padding: 12px 9px;
+  }
+}

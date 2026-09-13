@@ -58,6 +58,7 @@ export default async function StudentSkillsPage() {
 
   return (
     <DashboardShell
+      embedded
       role="student"
       roleLabel="Student"
       homeHref="/student/dashboard"
@@ -75,8 +76,9 @@ export default async function StudentSkillsPage() {
     >
       <DashboardPage>
         <DashboardSection
-          title="AI Skill Lab"
-          description="Review your fit analyses, generate Premium training paths, and ask for targeted career advice."
+          headingLevel={1}
+          title="Skills & career"
+          description="Application feedback, learning plans, and career advice."
         >
           <SkillsHubClient analyses={analyses} usage={JSON.parse(JSON.stringify(usage))} />
         </DashboardSection>

@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import useDialog from '@/components/ui/useDialog';
 import PaginatedCollection from '@/components/ui/PaginatedCollection';
 import {
   BriefcaseBusiness,
@@ -45,10 +46,10 @@ const STATUS_CONFIG: Record<
 };
 
 const TONE_STYLES = {
-  info: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE' },
+  info: { bg: '#edf7f3', color: '#087f72', border: '#bdddd5' },
   success: { bg: '#ECFDF5', color: '#065F46', border: '#A7F3D0' },
   warning: { bg: '#FFFBEB', color: '#92400E', border: '#FDE68A' },
-  neutral: { bg: '#F8FAFC', color: '#64748B', border: '#E2E8F0' },
+  neutral: { bg: '#f6f8f9', color: '#60717d', border: '#dfe6e9' },
 };
 
 type AppItem = {
@@ -98,7 +99,7 @@ const RESPONSIVE_STYLES = `
   .app-card {
     background: #fff;
     border-radius: 14px;
-    border: 1px solid #E2E8F0;
+    border: 1px solid #dfe6e9;
     padding: 16px 18px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.04);
     transition: box-shadow 0.18s, transform 0.18s;
@@ -125,7 +126,7 @@ const RESPONSIVE_STYLES = `
   .app-card-title {
     font-size: 15px;
     font-weight: 800;
-    color: #0F172A;
+    color: #182c39;
     font-family: var(--font-display, system-ui);
     margin: 0;
     white-space: nowrap;
@@ -134,7 +135,7 @@ const RESPONSIVE_STYLES = `
     max-width: 100%;
   }
   .app-card-meta {
-    color: #64748B;
+    color: #60717d;
     font-size: 13px;
     display: flex;
     flex-wrap: wrap;
@@ -143,16 +144,16 @@ const RESPONSIVE_STYLES = `
     margin-top: 2px;
   }
   .app-card-meta-dot { color: #CBD5E1; }
-  .app-card-date { color: #94A3B8; font-size: 12px; }
+  .app-card-date { color: #60717d; font-size: 12px; }
   .app-card-cover {
-    background: #F8FAFC;
+    background: #f6f8f9;
     border-radius: 8px;
     padding: 7px 10px;
     margin-top: 10px;
     font-size: 12px;
-    color: #64748B;
+    color: #60717d;
     font-style: italic;
-    border-left: 2px solid #BFDBFE;
+    border-left: 2px solid #bdddd5;
     line-height: 1.6;
     overflow: hidden;
     display: -webkit-box;
@@ -165,7 +166,7 @@ const RESPONSIVE_STYLES = `
     gap: 4px;
     margin-top: 8px;
   }
-  .app-card-history-step { font-size: 11px; color: #94A3B8; }
+  .app-card-history-step { font-size: 11px; color: #60717d; }
   .app-card-actions {
     display: flex;
     flex-direction: column;
@@ -177,18 +178,18 @@ const RESPONSIVE_STYLES = `
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: #2563EB;
+    color: #087f72;
     font-size: 13px;
     font-weight: 600;
     text-decoration: none;
     padding: 6px 12px;
     border-radius: 8px;
-    border: 1px solid #BFDBFE;
-    background: #EFF6FF;
+    border: 1px solid #bdddd5;
+    background: #edf7f3;
     transition: background 0.15s, border-color 0.15s;
     white-space: nowrap;
   }
-  .app-card-link:hover { background: #DBEAFE; border-color: #93C5FD; }
+  .app-card-link:hover { background: #dbefea; border-color: #93C5FD; }
 
   /* Badge base */
   .badge {
@@ -206,7 +207,7 @@ const RESPONSIVE_STYLES = `
   /* Tab bar */
   .tabs-bar {
     display: flex;
-    border-bottom: 1px solid #E2E8F0;
+    border-bottom: 1px solid #dfe6e9;
     background: #FAFBFC;
     overflow-x: auto;
     scrollbar-width: none;
@@ -224,7 +225,7 @@ const RESPONSIVE_STYLES = `
     font-size: 14px;
     font-family: var(--font-body, system-ui);
     font-weight: 500;
-    color: #64748B;
+    color: #60717d;
     border-bottom: 2.5px solid transparent;
     transition: all 0.15s;
     white-space: nowrap;
@@ -232,10 +233,10 @@ const RESPONSIVE_STYLES = `
   }
   .tab-btn.active {
     font-weight: 700;
-    color: #2563EB;
-    border-bottom-color: #2563EB;
+    color: #087f72;
+    border-bottom-color: #087f72;
   }
-  .tab-btn:hover:not(.active) { color: #334155; background: #F1F5F9; }
+  .tab-btn:hover:not(.active) { color: #334155; background: #f6f8f9; }
 
   /* List */
   .cards-list { display: flex; flex-direction: column; gap: 10px; }
@@ -244,19 +245,19 @@ const RESPONSIVE_STYLES = `
   .empty-state {
     border-radius: 14px;
     border: 1.5px dashed #CBD5E1;
-    background: #F8FAFC;
+    background: #f6f8f9;
     padding: 44px 20px;
     text-align: center;
   }
   .empty-icon { color: #CBD5E1; margin-bottom: 14px; }
-  .empty-title { font-size: 15px; font-weight: 800; color: #0F172A; margin-bottom: 6px; }
-  .empty-desc { font-size: 13px; color: #64748B; line-height: 1.75; max-width: 340px; margin: 0 auto; }
+  .empty-title { font-size: 15px; font-weight: 800; color: #182c39; margin-bottom: 6px; }
+  .empty-desc { font-size: 13px; color: #60717d; line-height: 1.75; max-width: 340px; margin: 0 auto; }
   .empty-cta {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     margin-top: 18px;
-    background: #2563EB;
+    background: #087f72;
     color: #fff;
     padding: 10px 22px;
     border-radius: 10px;
@@ -266,13 +267,13 @@ const RESPONSIVE_STYLES = `
     font-family: var(--font-display, system-ui);
     transition: background 0.15s;
   }
-  .empty-cta:hover { background: #1D4ED8; }
+  .empty-cta:hover { background: #06665d; }
 
   /* Wrapper */
   .tabs-wrapper {
     background: #fff;
     border-radius: 20px;
-    border: 1px solid #E2E8F0;
+    border: 1px solid #dfe6e9;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
@@ -336,10 +337,10 @@ function AppCard({
     <div
       style={{
         background: '#fff',
-        borderRadius: 16,
-        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        border: '1px solid #dfe6e9',
         padding: '18px 22px',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+        boxShadow: 'var(--shadow-card)',
         transition: 'box-shadow 0.15s',
       }}
       onMouseOver={(e) => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)')}
@@ -367,8 +368,8 @@ function AppCard({
             <h3
               style={{
                 fontSize: 15,
-                fontWeight: 800,
-                color: '#0F172A',
+                fontWeight: 700,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
                 margin: 0,
               }}
@@ -395,11 +396,11 @@ function AppCard({
               <span
                 style={{
                   background:
-                    app.fitScore >= 70 ? '#ECFDF5' : app.fitScore >= 40 ? '#EFF6FF' : '#FFFBEB',
+                    app.fitScore >= 70 ? '#ECFDF5' : app.fitScore >= 40 ? '#edf7f3' : '#FFFBEB',
                   color:
-                    app.fitScore >= 70 ? '#065F46' : app.fitScore >= 40 ? '#2563EB' : '#92400E',
+                    app.fitScore >= 70 ? '#065F46' : app.fitScore >= 40 ? '#087f72' : '#92400E',
                   border: `1px solid ${
-                    app.fitScore >= 70 ? '#A7F3D0' : app.fitScore >= 40 ? '#BFDBFE' : '#FDE68A'
+                    app.fitScore >= 70 ? '#A7F3D0' : app.fitScore >= 40 ? '#bdddd5' : '#FDE68A'
                   }`,
                   padding: '3px 10px',
                   borderRadius: 999,
@@ -412,11 +413,11 @@ function AppCard({
             )}
           </div>
 
-          <div style={{ color: '#64748B', fontSize: 13 }}>
+          <div style={{ color: '#60717d', fontSize: 13 }}>
             {job?.companyName}
             {job?.city && ` · ${job.city}`}
             {job?.locationType && ` · ${formatStatusLabel(job.locationType)}`}
-            <span style={{ color: '#94A3B8', marginLeft: 8 }}>
+            <span style={{ color: '#60717d', marginLeft: 8 }}>
               {isEvent ? 'Registered' : 'Applied'} {formatShortDate(app.appliedAt)}
             </span>
           </div>
@@ -428,7 +429,7 @@ function AppCard({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                color: '#7C3AED',
+                color: '#087f72',
                 fontSize: 13,
                 fontWeight: 600,
               }}
@@ -440,14 +441,14 @@ function AppCard({
           {app.coverLetter && !isEvent && (
             <div
               style={{
-                background: '#F8FAFC',
+                background: '#f6f8f9',
                 borderRadius: 8,
                 padding: '7px 11px',
                 marginTop: 10,
                 fontSize: 12,
-                color: '#64748B',
+                color: '#60717d',
                 fontStyle: 'italic',
-                borderLeft: '2px solid #E2E8F0',
+                borderLeft: '2px solid #dfe6e9',
               }}
             >
               &quot;{app.coverLetter.slice(0, 160)}
@@ -458,7 +459,7 @@ function AppCard({
           {app.statusHistory && app.statusHistory.length > 1 && (
             <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {app.statusHistory.slice(-3).map((h, i) => (
-                <span key={i} style={{ fontSize: 11, color: '#94A3B8' }}>
+                <span key={i} style={{ fontSize: 11, color: '#60717d' }}>
                   {formatStatusLabel(h.status)} ({formatShortDate(h.changedAt)})
                   {i < Math.min(app.statusHistory.length, 3) - 1 && ' →'}
                 </span>
@@ -475,9 +476,9 @@ function AppCard({
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
-                    background: '#EFF6FF',
-                    color: '#2563EB',
-                    border: '1px solid #BFDBFE',
+                    background: '#edf7f3',
+                    color: '#087f72',
+                    border: '1px solid #bdddd5',
                     borderRadius: 999,
                     padding: '6px 10px',
                     fontSize: 12,
@@ -497,9 +498,9 @@ function AppCard({
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
-                    background: '#F5F3FF',
-                    color: '#7C3AED',
-                    border: '1px solid #DDD6FE',
+                    background: '#edf7f3',
+                    color: '#087f72',
+                    border: '1px solid #bdddd5',
                     borderRadius: 999,
                     padding: '6px 10px',
                     fontSize: 12,
@@ -530,7 +531,7 @@ function AppCard({
             <Link
               href={`/student/jobs/${job._id}`}
               style={{
-                color: '#2563EB',
+                color: '#087f72',
                 fontSize: 13,
                 fontWeight: 600,
                 textDecoration: 'none',
@@ -548,7 +549,7 @@ function AppCard({
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 5,
-                  color: '#7C3AED',
+                  color: '#087f72',
                   fontSize: 13,
                   fontWeight: 600,
                   textDecoration: 'none',
@@ -565,7 +566,7 @@ function AppCard({
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 5,
-                  color: '#94A3B8',
+                  color: '#60717d',
                   fontSize: 13,
                   fontWeight: 600,
                   background: 'none',
@@ -593,6 +594,7 @@ export default function ApplicationsTabs({
 }) {
   const [activeTab, setActiveTab] = useState<'applications' | 'events'>('applications');
   const [showWarning, setShowWarning] = useState(false);
+  const warningRef = useDialog(showWarning, () => setShowWarning(false));
 
   const tabs = [
     {
@@ -616,10 +618,10 @@ export default function ApplicationsTabs({
     <div
       style={{
         background: '#fff',
-        borderRadius: 20,
-        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        border: '1px solid #dfe6e9',
         overflow: 'hidden',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       {/* Inject responsive styles once */}
@@ -627,10 +629,16 @@ export default function ApplicationsTabs({
 
       <div className="tabs-wrapper">
         {/* Tab bar */}
-        <div style={{ display: 'flex', borderBottom: '1px solid #E2E8F0', background: '#FAFBFC' }}>
+        <div
+          className="tabs-bar"
+          aria-label="Application categories"
+          style={{ display: 'flex', borderBottom: '1px solid #dfe6e9', background: '#FAFBFC' }}
+        >
           {tabs.map((tab) => (
             <button
               key={tab.key}
+              className="tab-btn"
+              aria-pressed={activeTab === tab.key}
               onClick={() => setActiveTab(tab.key)}
               style={{
                 display: 'flex',
@@ -642,21 +650,21 @@ export default function ApplicationsTabs({
                 cursor: 'pointer',
                 fontSize: 14,
                 fontWeight: activeTab === tab.key ? 700 : 500,
-                color: activeTab === tab.key ? '#2563EB' : '#64748B',
-                borderBottom: `2px solid ${activeTab === tab.key ? '#2563EB' : 'transparent'}`,
+                color: activeTab === tab.key ? '#087f72' : '#60717d',
+                borderBottom: `2px solid ${activeTab === tab.key ? '#087f72' : 'transparent'}`,
                 transition: 'all 0.15s',
                 fontFamily: 'var(--font-body)',
               }}
             >
-              <span style={{ color: activeTab === tab.key ? '#2563EB' : '#94A3B8' }}>
+              <span style={{ color: activeTab === tab.key ? '#087f72' : '#60717d' }}>
                 {tab.icon}
               </span>
               {tab.label}
               <span
                 style={{
-                  background: activeTab === tab.key ? '#EFF6FF' : '#F1F5F9',
-                  color: activeTab === tab.key ? '#2563EB' : '#64748B',
-                  border: `1px solid ${activeTab === tab.key ? '#BFDBFE' : '#E2E8F0'}`,
+                  background: activeTab === tab.key ? '#edf7f3' : '#f6f8f9',
+                  color: activeTab === tab.key ? '#087f72' : '#60717d',
+                  border: `1px solid ${activeTab === tab.key ? '#bdddd5' : '#dfe6e9'}`,
                   padding: '2px 8px',
                   borderRadius: 999,
                   fontSize: 11,
@@ -670,24 +678,24 @@ export default function ApplicationsTabs({
         </div>
 
         {/* Content */}
-        <div style={{ padding: '20px 22px' }}>
+        <div className="tabs-content" style={{ padding: '20px 22px' }}>
           {activeItems.length === 0 ? (
             <div
               style={{
                 borderRadius: 14,
                 border: '1px dashed #CBD5E1',
-                background: '#F8FAFC',
+                background: '#f6f8f9',
                 padding: '40px 20px',
                 textAlign: 'center',
               }}
             >
-              <div style={{ marginBottom: 12, color: '#94A3B8' }}>
+              <div style={{ marginBottom: 12, color: '#60717d' }}>
                 {isEvent ? <CalendarDays size={36} /> : <BriefcaseBusiness size={36} />}
               </div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#182c39', marginBottom: 6 }}>
                 {isEvent ? 'No events registered yet' : 'No applications yet'}
               </div>
-              <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
+              <div style={{ fontSize: 13, color: '#60717d', lineHeight: 1.7 }}>
                 {isEvent
                   ? 'Register for webinars and workshops from the job feed to see them here.'
                   : 'Apply to jobs and internships from the job feed to track them here.'}
@@ -699,7 +707,7 @@ export default function ApplicationsTabs({
                   alignItems: 'center',
                   gap: 7,
                   marginTop: 16,
-                  background: '#2563EB',
+                  background: '#087f72',
                   color: '#fff',
                   padding: '10px 20px',
                   borderRadius: 10,
@@ -742,19 +750,25 @@ export default function ApplicationsTabs({
             alignItems: 'center',
             justifyContent: 'center',
             background: 'rgba(15,23,42,0.5)',
-            backdropFilter: 'blur(6px)',
+            backdropFilter: 'none',
           }}
           onClick={() => setShowWarning(false)}
+          className="v2-dialog-overlay"
         >
           <div
             onClick={(e) => e.stopPropagation()}
+            ref={warningRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Review eligibility"
+            tabIndex={-1}
             style={{
               background: '#fff',
-              borderRadius: 24,
+              borderRadius: 12,
               padding: '32px 36px',
               maxWidth: 420,
               width: '90vw',
-              boxShadow: '0 32px 80px rgba(15,23,42,0.22)',
+              boxShadow: 'var(--shadow-card)',
               textAlign: 'center',
               position: 'relative',
             }}
@@ -766,7 +780,7 @@ export default function ApplicationsTabs({
                 position: 'absolute',
                 top: 14,
                 right: 14,
-                background: '#F1F5F9',
+                background: '#f6f8f9',
                 border: 'none',
                 borderRadius: 8,
                 width: 30,
@@ -775,7 +789,7 @@ export default function ApplicationsTabs({
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                color: '#64748B',
+                color: '#60717d',
               }}
             >
               <X size={16} />
@@ -784,8 +798,8 @@ export default function ApplicationsTabs({
               style={{
                 width: 56,
                 height: 56,
-                borderRadius: 16,
-                background: 'linear-gradient(135deg, #FEF3C7, #FFFBEB)',
+                borderRadius: 12,
+                background: '#fffbeb',
                 border: '1px solid #FDE68A',
                 display: 'flex',
                 alignItems: 'center',
@@ -799,26 +813,26 @@ export default function ApplicationsTabs({
             <h3
               style={{
                 fontSize: 18,
-                fontWeight: 900,
-                color: '#0F172A',
+                fontWeight: 700,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
                 margin: '0 0 8px',
               }}
             >
               Not eligible to message yet
             </h3>
-            <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7, margin: '0 0 20px' }}>
+            <p style={{ fontSize: 14, color: '#60717d', lineHeight: 1.7, margin: '0 0 20px' }}>
               You can message the employer once your application status reaches{' '}
-              <strong style={{ color: '#0F172A' }}>Shortlisted</strong>,{' '}
-              <strong style={{ color: '#0F172A' }}>Assessment Sent</strong>,{' '}
-              <strong style={{ color: '#0F172A' }}>Interview Scheduled</strong>, or{' '}
-              <strong style={{ color: '#0F172A' }}>Hired</strong>.
+              <strong style={{ color: '#182c39' }}>Shortlisted</strong>,{' '}
+              <strong style={{ color: '#182c39' }}>Assessment Sent</strong>,{' '}
+              <strong style={{ color: '#182c39' }}>Interview Scheduled</strong>, or{' '}
+              <strong style={{ color: '#182c39' }}>Hired</strong>.
             </p>
             <button
               type="button"
               onClick={() => setShowWarning(false)}
               style={{
-                background: '#0F172A',
+                background: '#182c39',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 12,

@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import {
@@ -18,6 +18,7 @@ import {
   Crown,
   LifeBuoy,
   LoaderCircle,
+  LogOut,
   Mail,
   MessageSquareWarning,
   PencilLine,
@@ -640,17 +641,6 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
   }, [financeData]);
 
   const sectionMeta = SECTION_META[activeSection];
-
-  const heroHighlights = useMemo(() => {
-    if (!overview?.summary) return [];
-    return [
-      `${overview.summary.totalUsers} users`,
-      `${overview.summary.activeJobs} active jobs`,
-      `${formatMoney(overview.summary.totalRevenueBDT)} subscription revenue`,
-      `${formatMoney(overview.summary.freelanceGMVBDT ?? 0)} freelance GMV`,
-      `${overview.summary.verifiedFreelancers ?? 0} verified freelancers`,
-    ];
-  }, [overview]);
 
   function showNotice(tone: 'success' | 'error', text: string) {
     setNotice({ tone, text });
@@ -1302,6 +1292,7 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
         key={key}
         className={`${styles.navButton} ${activeSection === key ? styles.navButtonActive : ''}`}
         onClick={() => setActiveSection(key)}
+        aria-current={activeSection === key ? 'page' : undefined}
         type="button"
       >
         <span className={styles.navButtonInner}>
@@ -1323,17 +1314,56 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
   return (
     <div className={styles.page}>
       <div className={styles.shell}>
-        <aside className={styles.sidebar}>
+        <div className={styles.mobileBar}>
+          <div className={styles.mobileBrand}>
+            <NexternLogoMark size={30} radius={7} />
+            Administration
+          </div>
+          <label className={styles.mobileSection} htmlFor="admin-section">
+            Workspace
+            <select
+              id="admin-section"
+              aria-label="Admin workspace section"
+              value={activeSection}
+              onChange={(event) => setActiveSection(event.target.value as SectionKey)}
+            >
+              {NAV_GROUPS.map((group) => (
+                <optgroup label={group.label} key={group.label}>
+                  {group.items.map((key) => (
+                    <option key={key} value={key}>
+                      {SECTION_META[key].label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
+          <div className={styles.mobileShortcuts}>
+            <Link
+              href="/admin/dept-heads"
+              className={styles.secondaryButton}
+              aria-label="Manage department heads"
+            >
+              <UserCog size={17} />
+            </Link>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => void signOut({ callbackUrl: '/' })}
+              aria-label="Sign out"
+            >
+              <LogOut size={17} />
+            </button>
+          </div>
+        </div>
+        <header className={styles.sidebar}>
           <div className={styles.brandBlock}>
-            <NexternLogoMark size={42} radius={14} priority />
+            <NexternLogoMark size={36} radius={8} priority />
             <div>
-              <div className={styles.brandEyebrow}>Nextern Control</div>
-              <div className={styles.brandTitle}>Superadmin Workspace</div>
+              <div className={styles.brandEyebrow}>Nextern</div>
+              <div className={styles.brandTitle}>Administration</div>
             </div>
           </div>
-          <p className={styles.sidebarCopy}>
-            Manage people, operations, and support from one secure workspace.
-          </p>
           <nav className={styles.nav} aria-label="Admin navigation">
             {navItems}
           </nav>
@@ -1361,16 +1391,16 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
               onClick={() => void signOut({ callbackUrl: '/' })}
               type="button"
             >
-              <X size={14} />
+              <LogOut size={14} />
               Sign out
             </button>
           </div>
-        </aside>
+        </header>
 
         <main className={styles.main}>
           <header className={styles.topbar}>
             <div>
-              <div className={styles.heroEyebrow}>Superadmin access</div>
+              <div className={styles.heroEyebrow}>Administration</div>
               <h1 className={styles.heroTitle}>{sectionMeta.label}</h1>
               <p className={styles.heroDescription}>{sectionMeta.description}</p>
             </div>
@@ -1397,6 +1427,7 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
 
           {notice ? (
             <div
+              role={notice.tone === 'error' ? 'alert' : 'status'}
               className={`${styles.notice} ${
                 notice.tone === 'success' ? styles.noticeSuccess : styles.noticeError
               }`}
@@ -1405,23 +1436,6 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
               <span>{notice.text}</span>
             </div>
           ) : null}
-
-          <section className={styles.heroPanel}>
-            <div>
-              <div className={styles.heroPanelTitle}>Platform command center</div>
-              <p className={styles.heroPanelText}>
-                Full superadmin coverage for verification, CRUD control, finance, premium access,
-                analytics, and support moderation.
-              </p>
-            </div>
-            <div className={styles.heroChips}>
-              {heroHighlights.map((item) => (
-                <span key={item} className={styles.heroChip}>
-                  {item}
-                </span>
-              ))}
-            </div>
-          </section>
 
           {activeSection === 'overview' ? (
             <section className={styles.section}>
@@ -1801,7 +1815,12 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                     <LoaderCircle className={styles.spin} size={20} />
                   </div>
                 ) : verificationData?.users?.length ? (
-                  <div className={styles.tableWrap}>
+                  <div
+                    className={styles.tableWrap}
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Scrollable data table"
+                  >
                     <table className={styles.table}>
                       <thead>
                         <tr>
@@ -1974,7 +1993,12 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                     <LoaderCircle className={styles.spin} size={20} />
                   </div>
                 ) : usersData?.users?.length ? (
-                  <div className={styles.tableWrap}>
+                  <div
+                    className={styles.tableWrap}
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Scrollable data table"
+                  >
                     <table className={styles.table}>
                       <thead>
                         <tr>
@@ -2381,7 +2405,12 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                     <LoaderCircle className={styles.spin} size={20} />
                   </div>
                 ) : jobsData?.jobs?.length ? (
-                  <div className={styles.tableWrap}>
+                  <div
+                    className={styles.tableWrap}
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Scrollable data table"
+                  >
                     <table className={styles.table}>
                       <thead>
                         <tr>
@@ -2698,7 +2727,12 @@ export default function SuperAdminConsole({ currentUser }: { currentUser: Curren
                     <LoaderCircle className={styles.spin} size={20} />
                   </div>
                 ) : applicationsData?.applications?.length ? (
-                  <div className={styles.tableWrap}>
+                  <div
+                    className={styles.tableWrap}
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Scrollable data table"
+                  >
                     <table className={styles.table}>
                       <thead>
                         <tr>

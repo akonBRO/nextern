@@ -33,9 +33,9 @@ type Props = {
 function cardStyle(accent: string) {
   return {
     background: '#fff',
-    borderRadius: 20,
+    borderRadius: 12,
     border: `1px solid ${accent}33`,
-    boxShadow: '0 18px 36px rgba(15,23,42,0.06)',
+    boxShadow: 'var(--shadow-card)',
     overflow: 'hidden',
   } as const;
 }
@@ -46,7 +46,7 @@ const fieldStyle = {
   borderRadius: 12,
   border: '1px solid #D9E2EC',
   background: '#FFFFFF',
-  color: '#0F172A',
+  color: '#182c39',
   fontSize: 13,
   outline: 'none',
 } as const;
@@ -194,15 +194,15 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
 
   return (
     <section
-      className="hiring-suite-batch-grid"
+      className="hiring-suite-batch-grid v2-form-grid"
       style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}
     >
-      <div style={cardStyle('#2563EB')}>
+      <div style={cardStyle('#087f72')}>
         <div
           style={{
             padding: '18px 20px',
-            borderBottom: '1px solid #DBEAFE',
-            background: '#EFF6FF',
+            borderBottom: '1px solid #dbefea',
+            background: '#edf7f3',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -211,7 +211,7 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
                 width: 42,
                 height: 42,
                 borderRadius: 14,
-                background: '#2563EB',
+                background: '#087f72',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -224,14 +224,14 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
               <div
                 style={{
                   fontSize: 17,
-                  fontWeight: 900,
-                  color: '#0F172A',
+                  fontWeight: 700,
+                  color: '#182c39',
                   fontFamily: 'var(--font-display)',
                 }}
               >
                 Assessment dispatch
               </div>
-              <div style={{ marginTop: 3, fontSize: 12, color: '#64748B' }}>{selectionLabel}</div>
+              <div style={{ marginTop: 3, fontSize: 12, color: '#60717d' }}>{selectionLabel}</div>
             </div>
           </div>
         </div>
@@ -257,7 +257,7 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
                 background: '#FEF3C7',
                 color: '#92400E',
                 border: '1px solid #FDE68A',
-                fontWeight: 800,
+                fontWeight: 700,
               }}
             >
               <Crown size={13} />
@@ -310,17 +310,17 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
                 gap: 8,
                 background:
                   !assessmentId || selectedIds.length === 0 || assessmentLoading
-                    ? '#E2E8F0'
-                    : '#2563EB',
+                    ? '#dfe6e9'
+                    : '#087f72',
                 color:
                   !assessmentId || selectedIds.length === 0 || assessmentLoading
-                    ? '#64748B'
+                    ? '#60717d'
                     : '#FFFFFF',
                 border: 'none',
                 borderRadius: 14,
                 padding: '11px 15px',
                 fontSize: 13,
-                fontWeight: 800,
+                fontWeight: 700,
                 cursor:
                   !assessmentId || selectedIds.length === 0 || assessmentLoading
                     ? 'not-allowed'
@@ -338,12 +338,12 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
                 alignItems: 'center',
                 gap: 8,
                 background: '#FFFFFF',
-                color: '#2563EB',
-                border: '1px solid #BFDBFE',
+                color: '#087f72',
+                border: '1px solid #bdddd5',
                 borderRadius: 14,
                 padding: '11px 15px',
                 fontSize: 13,
-                fontWeight: 800,
+                fontWeight: 700,
                 textDecoration: 'none',
               }}
             >
@@ -356,7 +356,7 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
             <div
               style={{
                 borderRadius: 14,
-                border: '1px dashed #BFDBFE',
+                border: '1px dashed #bdddd5',
                 background: '#F8FBFF',
                 padding: '12px 14px',
                 color: '#475569',
@@ -371,12 +371,12 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
         </div>
       </div>
 
-      <div style={cardStyle('#7C3AED')}>
+      <div style={cardStyle('#087f72')}>
         <div
           style={{
             padding: '18px 20px',
             borderBottom: '1px solid #E9D5FF',
-            background: '#F5F3FF',
+            background: '#edf7f3',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -385,7 +385,7 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
                 width: 42,
                 height: 42,
                 borderRadius: 14,
-                background: '#7C3AED',
+                background: '#087f72',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -398,14 +398,14 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
               <div
                 style={{
                   fontSize: 17,
-                  fontWeight: 900,
-                  color: '#0F172A',
+                  fontWeight: 700,
+                  color: '#182c39',
                   fontFamily: 'var(--font-display)',
                 }}
               >
                 Interview scheduling
               </div>
-              <div style={{ marginTop: 3, fontSize: 12, color: '#64748B' }}>
+              <div style={{ marginTop: 3, fontSize: 12, color: '#60717d' }}>
                 Schedule 1:1 or panel interviews and push them into the student calendar
                 automatically.
               </div>
@@ -438,7 +438,10 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
             </label>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px', gap: 12 }}>
+          <div
+            style={{ display: 'grid', gridTemplateColumns: '1fr 180px', gap: 12 }}
+            className="v2-page-grid"
+          >
             <label style={{ display: 'grid', gap: 7 }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: '#334155' }}>Date and time</span>
               <input
@@ -500,17 +503,17 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
                 gap: 8,
                 background:
                   !scheduledAt || selectedIds.length === 0 || interviewLoading
-                    ? '#E2E8F0'
-                    : '#7C3AED',
+                    ? '#dfe6e9'
+                    : '#087f72',
                 color:
                   !scheduledAt || selectedIds.length === 0 || interviewLoading
-                    ? '#64748B'
+                    ? '#60717d'
                     : '#FFFFFF',
                 border: 'none',
                 borderRadius: 14,
                 padding: '11px 15px',
                 fontSize: 13,
-                fontWeight: 800,
+                fontWeight: 700,
                 cursor:
                   !scheduledAt || selectedIds.length === 0 || interviewLoading
                     ? 'not-allowed'
@@ -532,12 +535,12 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
                 alignItems: 'center',
                 gap: 8,
                 background: '#FFFFFF',
-                color: '#7C3AED',
-                border: '1px solid #DDD6FE',
+                color: '#087f72',
+                border: '1px solid #bdddd5',
                 borderRadius: 14,
                 padding: '11px 15px',
                 fontSize: 13,
-                fontWeight: 800,
+                fontWeight: 700,
                 textDecoration: 'none',
               }}
             >
@@ -552,7 +555,7 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
         <div
           style={{
             gridColumn: '1 / -1',
-            borderRadius: 16,
+            borderRadius: 12,
             padding: '12px 16px',
             background: notice.tone === 'success' ? '#ECFDF5' : '#FEF2F2',
             color: notice.tone === 'success' ? '#065F46' : '#991B1B',
@@ -585,7 +588,7 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
               padding: '6px 10px',
               background: '#FFFFFF',
               color: '#334155',
-              border: '1px solid #E2E8F0',
+              border: '1px solid #dfe6e9',
               fontSize: 12,
               fontWeight: 700,
             }}
@@ -595,7 +598,7 @@ export default function HiringSuiteBatchActions({ jobId, selectedApplications }:
           </span>
         ))}
         {selectedApplications.length > 6 ? (
-          <span style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>
+          <span style={{ fontSize: 12, color: '#60717d', fontWeight: 700 }}>
             +{selectedApplications.length - 6} more selected
           </span>
         ) : null}

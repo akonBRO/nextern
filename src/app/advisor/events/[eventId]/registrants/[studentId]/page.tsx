@@ -1,3 +1,4 @@
+import ContextIcon from '@/components/ui/ContextIcon';
 // src/app/advisor/events/[eventId]/registrants/[studentId]/page.tsx
 // Advisor view of a specific student's full application + profile
 
@@ -47,19 +48,19 @@ const STATUS_CFG: Record<
   string,
   { bg: string; color: string; border: string; dot: string; label: string }
 > = {
-  applied: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE', dot: '#2563EB', label: 'Applied' },
+  applied: { bg: '#edf7f3', color: '#087f72', border: '#bdddd5', dot: '#087f72', label: 'Applied' },
   under_review: {
     bg: '#FFFBEB',
     color: '#92400E',
     border: '#FDE68A',
-    dot: '#F59E0B',
+    dot: '#a86714',
     label: 'Under Review',
   },
   shortlisted: {
     bg: '#ECFDF5',
     color: '#065F46',
     border: '#A7F3D0',
-    dot: '#10B981',
+    dot: '#168257',
     label: 'Shortlisted',
   },
   assessment_sent: {
@@ -70,10 +71,10 @@ const STATUS_CFG: Record<
     label: 'Assessment Sent',
   },
   interview_scheduled: {
-    bg: '#EDE9FE',
-    color: '#7C3AED',
-    border: '#DDD6FE',
-    dot: '#7C3AED',
+    bg: '#e0f0eb',
+    color: '#087f72',
+    border: '#bdddd5',
+    dot: '#087f72',
     label: 'Interview Scheduled',
   },
   hired: { bg: '#DCFCE7', color: '#065F46', border: '#BBF7D0', dot: '#22C55E', label: 'Hired' },
@@ -85,10 +86,10 @@ const STATUS_CFG: Record<
     label: 'Not Selected',
   },
   withdrawn: {
-    bg: '#F8FAFC',
-    color: '#64748B',
-    border: '#E2E8F0',
-    dot: '#94A3B8',
+    bg: '#f6f8f9',
+    color: '#60717d',
+    border: '#dfe6e9',
+    dot: '#60717d',
     label: 'Withdrawn',
   },
 };
@@ -137,12 +138,13 @@ function SideCard({
 }) {
   return (
     <div
+      className="nx-surface"
       style={{
         background: '#fff',
-        borderRadius: 20,
-        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        border: '1px solid #dfe6e9',
         padding: '20px 22px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
@@ -150,8 +152,8 @@ function SideCard({
         <h3
           style={{
             fontSize: 14,
-            fontWeight: 800,
-            color: '#0F172A',
+            fontWeight: 700,
+            color: '#182c39',
             fontFamily: 'var(--font-display)',
             margin: 0,
           }}
@@ -211,7 +213,7 @@ export default async function StudentApplicationPage({
   const { advisor, event, application, student, chrome } = data;
   const statusCfg = STATUS_CFG[application.status] ?? STATUS_CFG['applied'];
   const fitScore = application.fitScore ?? 0;
-  const fitColor = fitScore >= 70 ? '#10B981' : fitScore >= 40 ? '#F59E0B' : '#EF4444';
+  const fitColor = fitScore >= 70 ? '#168257' : fitScore >= 40 ? '#a86714' : '#EF4444';
   const fitBg = fitScore >= 70 ? '#DCFCE7' : fitScore >= 40 ? '#FFFBEB' : '#FEF2F2';
   const fitBorder = fitScore >= 70 ? '#BBF7D0' : fitScore >= 40 ? '#FDE68A' : '#FECACA';
   const resumeUrl = (student as { resumeUrl?: string }).resumeUrl ?? null;
@@ -225,6 +227,7 @@ export default async function StudentApplicationPage({
 
   return (
     <DashboardShell
+      embedded
       role={isDeptHead ? 'departmentHead' : 'advisor'}
       roleLabel={isDeptHead ? 'Department dashboard' : 'Advisor dashboard'}
       homeHref={isDeptHead ? '/dept/dashboard' : '/advisor/dashboard'}
@@ -250,7 +253,7 @@ export default async function StudentApplicationPage({
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              color: '#64748B',
+              color: '#60717d',
               fontSize: 13,
               fontWeight: 600,
               textDecoration: 'none',
@@ -263,26 +266,15 @@ export default async function StudentApplicationPage({
           {/* ── Hero ── */}
           <div
             style={{
-              background: 'linear-gradient(145deg, #0F172A, #1E293B)',
-              borderRadius: 24,
+              background: 'var(--surface-muted)',
+              borderRadius: 12,
               padding: '28px 32px',
               marginBottom: 20,
               position: 'relative',
               overflow: 'hidden',
             }}
+            className="v2-light-panel"
           >
-            <div
-              style={{
-                position: 'absolute',
-                top: -50,
-                right: -50,
-                width: 200,
-                height: 200,
-                background: 'radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%)',
-                borderRadius: '50%',
-                pointerEvents: 'none',
-              }}
-            />
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
               {/* Avatar */}
               <div
@@ -290,13 +282,13 @@ export default async function StudentApplicationPage({
                   width: 72,
                   height: 72,
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #7C3AED, #2563EB)',
+                  background: 'var(--primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#fff',
                   fontSize: 26,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   flexShrink: 0,
                   overflow: 'hidden',
                   border: '3px solid rgba(255,255,255,0.15)',
@@ -328,8 +320,8 @@ export default async function StudentApplicationPage({
                   <h1
                     style={{
                       fontSize: 24,
-                      fontWeight: 900,
-                      color: '#F8FAFC',
+                      fontWeight: 700,
+                      color: 'var(--deep)',
                       fontFamily: 'var(--font-display)',
                       margin: 0,
                     }}
@@ -368,7 +360,7 @@ export default async function StudentApplicationPage({
                     display: 'flex',
                     flexWrap: 'wrap',
                     gap: 14,
-                    color: '#94A3B8',
+                    color: '#60717d',
                     fontSize: 13,
                   }}
                 >
@@ -401,7 +393,7 @@ export default async function StudentApplicationPage({
                   <p
                     style={{
                       fontSize: 13,
-                      color: '#94A3B8',
+                      color: '#60717d',
                       marginTop: 10,
                       lineHeight: 1.6,
                       fontStyle: 'italic',
@@ -418,12 +410,12 @@ export default async function StudentApplicationPage({
                     {
                       label: 'Applied',
                       value: formatShortDate(application.appliedAt?.toISOString()),
-                      color: '#F8FAFC',
+                      color: 'var(--deep)',
                     },
                     {
                       label: 'CGPA',
                       value: student.cgpa ? student.cgpa.toFixed(2) : '—',
-                      color: '#22D3EE',
+                      color: '#178d80',
                     },
                     {
                       label: 'Fit Score',
@@ -433,19 +425,19 @@ export default async function StudentApplicationPage({
                     {
                       label: 'Profile',
                       value: student.profileCompleteness ? `${student.profileCompleteness}%` : '—',
-                      color: '#A78BFA',
+                      color: 'var(--deep)',
                     },
                     {
                       label: 'Opp. Score',
                       value: student.opportunityScore ? `${student.opportunityScore}` : '—',
-                      color: '#F59E0B',
+                      color: '#a86714',
                     },
                   ].map((s) => (
                     <div key={s.label}>
                       <div
                         style={{
                           fontSize: 18,
-                          fontWeight: 900,
+                          fontWeight: 700,
                           color: s.color,
                           fontFamily: 'var(--font-display)',
                           lineHeight: 1,
@@ -454,7 +446,7 @@ export default async function StudentApplicationPage({
                         {s.value}
                       </div>
                       <div
-                        style={{ fontSize: 11, color: '#64748B', marginTop: 3, fontWeight: 600 }}
+                        style={{ fontSize: 11, color: '#60717d', marginTop: 3, fontWeight: 600 }}
                       >
                         {s.label}
                       </div>
@@ -473,18 +465,19 @@ export default async function StudentApplicationPage({
               gap: 16,
               alignItems: 'start',
             }}
-            className="app-detail-grid"
+            className="app-detail-grid v2-page-grid"
           >
             {/* ── LEFT: Application + Profile details ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Cover Letter */}
               <div
+                className="nx-surface"
                 style={{
                   background: '#fff',
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
+                  borderRadius: 12,
+                  border: '1px solid #dfe6e9',
                   padding: '24px 28px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  boxShadow: 'var(--shadow-card)',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -493,11 +486,11 @@ export default async function StudentApplicationPage({
                       width: 34,
                       height: 34,
                       borderRadius: 10,
-                      background: '#EFF6FF',
+                      background: '#edf7f3',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: '#2563EB',
+                      color: '#087f72',
                     }}
                   >
                     <FileText size={16} />
@@ -505,8 +498,8 @@ export default async function StudentApplicationPage({
                   <h2
                     style={{
                       fontSize: 16,
-                      fontWeight: 800,
-                      color: '#0F172A',
+                      fontWeight: 700,
+                      color: '#182c39',
                       fontFamily: 'var(--font-display)',
                       margin: 0,
                     }}
@@ -527,7 +520,7 @@ export default async function StudentApplicationPage({
                     {application.coverLetter}
                   </p>
                 ) : (
-                  <p style={{ fontSize: 14, color: '#94A3B8', fontStyle: 'italic', margin: 0 }}>
+                  <p style={{ fontSize: 14, color: '#60717d', fontStyle: 'italic', margin: 0 }}>
                     No cover letter submitted.
                   </p>
                 )}
@@ -536,12 +529,13 @@ export default async function StudentApplicationPage({
               {/* Projects */}
               {student.projects && student.projects.length > 0 && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 28px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
@@ -562,8 +556,8 @@ export default async function StudentApplicationPage({
                     <h2
                       style={{
                         fontSize: 16,
-                        fontWeight: 800,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                         margin: 0,
                       }}
@@ -602,7 +596,7 @@ export default async function StudentApplicationPage({
                           style={{
                             background: '#FAFBFC',
                             borderRadius: 14,
-                            border: '1px solid #E2E8F0',
+                            border: '1px solid #dfe6e9',
                             padding: '16px 18px',
                           }}
                         >
@@ -615,7 +609,7 @@ export default async function StudentApplicationPage({
                               marginBottom: 8,
                             }}
                           >
-                            <div style={{ fontSize: 15, fontWeight: 700, color: '#0F172A' }}>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: '#182c39' }}>
                               {proj.title}
                             </div>
                             <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -628,9 +622,9 @@ export default async function StudentApplicationPage({
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     gap: 4,
-                                    background: '#EFF6FF',
-                                    color: '#2563EB',
-                                    border: '1px solid #BFDBFE',
+                                    background: '#edf7f3',
+                                    color: '#087f72',
+                                    border: '1px solid #bdddd5',
                                     padding: '3px 9px',
                                     borderRadius: 7,
                                     fontSize: 11,
@@ -650,9 +644,9 @@ export default async function StudentApplicationPage({
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     gap: 4,
-                                    background: '#F1F5F9',
+                                    background: '#f6f8f9',
                                     color: '#475569',
-                                    border: '1px solid #E2E8F0',
+                                    border: '1px solid #dfe6e9',
                                     padding: '3px 9px',
                                     borderRadius: 7,
                                     fontSize: 11,
@@ -669,7 +663,7 @@ export default async function StudentApplicationPage({
                             <p
                               style={{
                                 fontSize: 13,
-                                color: '#64748B',
+                                color: '#60717d',
                                 lineHeight: 1.65,
                                 margin: '0 0 10px',
                               }}
@@ -683,9 +677,9 @@ export default async function StudentApplicationPage({
                                 <span
                                   key={t}
                                   style={{
-                                    background: '#EDE9FE',
-                                    color: '#7C3AED',
-                                    border: '1px solid #DDD6FE',
+                                    background: '#e0f0eb',
+                                    color: '#087f72',
+                                    border: '1px solid #bdddd5',
                                     padding: '2px 8px',
                                     borderRadius: 999,
                                     fontSize: 11,
@@ -707,12 +701,13 @@ export default async function StudentApplicationPage({
               {/* Certifications */}
               {student.certifications && student.certifications.length > 0 && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 28px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
@@ -725,7 +720,7 @@ export default async function StudentApplicationPage({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#10B981',
+                        color: '#168257',
                       }}
                     >
                       <Award size={16} />
@@ -733,8 +728,8 @@ export default async function StudentApplicationPage({
                     <h2
                       style={{
                         fontSize: 16,
-                        fontWeight: 800,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                         margin: 0,
                       }}
@@ -816,12 +811,13 @@ export default async function StudentApplicationPage({
               {/* AI Fit Analysis */}
               {fitScore > 0 && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 28px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <div
@@ -851,8 +847,8 @@ export default async function StudentApplicationPage({
                       <h2
                         style={{
                           fontSize: 16,
-                          fontWeight: 800,
-                          color: '#0F172A',
+                          fontWeight: 700,
+                          color: '#182c39',
                           fontFamily: 'var(--font-display)',
                           margin: 0,
                         }}
@@ -864,7 +860,7 @@ export default async function StudentApplicationPage({
                       <div
                         style={{
                           fontSize: 28,
-                          fontWeight: 900,
+                          fontWeight: 700,
                           color: fitColor,
                           fontFamily: 'var(--font-display)',
                           lineHeight: 1,
@@ -872,7 +868,7 @@ export default async function StudentApplicationPage({
                       >
                         {fitScore}%
                       </div>
-                      <div style={{ fontSize: 12, color: '#64748B', fontWeight: 600 }}>
+                      <div style={{ fontSize: 12, color: '#60717d', fontWeight: 600 }}>
                         fit score
                       </div>
                     </div>
@@ -880,7 +876,7 @@ export default async function StudentApplicationPage({
                   <div
                     style={{
                       height: 10,
-                      background: '#F1F5F9',
+                      background: '#f6f8f9',
                       borderRadius: 999,
                       overflow: 'hidden',
                       marginBottom: 20,
@@ -896,7 +892,10 @@ export default async function StudentApplicationPage({
                       }}
                     />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <div
+                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}
+                    className="v2-page-grid"
+                  >
                     {application.hardGaps?.length > 0 && (
                       <div
                         style={{
@@ -964,7 +963,7 @@ export default async function StudentApplicationPage({
                             marginBottom: 10,
                           }}
                         >
-                          <AlertTriangle size={14} color="#F59E0B" />
+                          <AlertTriangle size={14} color="#a86714" />
                           <span
                             style={{
                               fontSize: 12,
@@ -983,7 +982,7 @@ export default async function StudentApplicationPage({
                               key={g}
                               style={{
                                 background: '#fff',
-                                color: '#F59E0B',
+                                color: '#a86714',
                                 border: '1px solid #FDE68A',
                                 padding: '2px 8px',
                                 borderRadius: 999,
@@ -1002,21 +1001,21 @@ export default async function StudentApplicationPage({
                     <div
                       style={{
                         marginTop: 14,
-                        background: '#F5F3FF',
+                        background: '#edf7f3',
                         borderRadius: 14,
                         padding: '14px 16px',
-                        border: '1px solid #DDD6FE',
+                        border: '1px solid #bdddd5',
                       }}
                     >
                       <div
                         style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}
                       >
-                        <Lightbulb size={14} color="#7C3AED" />
+                        <Lightbulb size={14} color="#087f72" />
                         <span
                           style={{
                             fontSize: 12,
                             fontWeight: 700,
-                            color: '#7C3AED',
+                            color: '#087f72',
                             textTransform: 'uppercase',
                             letterSpacing: 0.6,
                           }}
@@ -1048,12 +1047,13 @@ export default async function StudentApplicationPage({
               {(application.assessmentScore !== undefined ||
                 application.assessmentPassed !== undefined) && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 28px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -1066,7 +1066,7 @@ export default async function StudentApplicationPage({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#10B981',
+                        color: '#168257',
                       }}
                     >
                       <CheckCircle2 size={16} />
@@ -1074,8 +1074,8 @@ export default async function StudentApplicationPage({
                     <h2
                       style={{
                         fontSize: 16,
-                        fontWeight: 800,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                         margin: 0,
                       }}
@@ -1087,18 +1087,18 @@ export default async function StudentApplicationPage({
                     {application.assessmentScore !== undefined && (
                       <div
                         style={{
-                          background: '#F8FAFC',
+                          background: '#f6f8f9',
                           borderRadius: 12,
                           padding: '14px 20px',
-                          border: '1px solid #E2E8F0',
+                          border: '1px solid #dfe6e9',
                           textAlign: 'center',
                         }}
                       >
                         <div
                           style={{
                             fontSize: 28,
-                            fontWeight: 900,
-                            color: '#0F172A',
+                            fontWeight: 700,
+                            color: '#182c39',
                             fontFamily: 'var(--font-display)',
                             lineHeight: 1,
                           }}
@@ -1106,7 +1106,7 @@ export default async function StudentApplicationPage({
                           {application.assessmentScore}%
                         </div>
                         <div
-                          style={{ fontSize: 12, color: '#64748B', marginTop: 4, fontWeight: 600 }}
+                          style={{ fontSize: 12, color: '#60717d', marginTop: 4, fontWeight: 600 }}
                         >
                           Score
                         </div>
@@ -1123,7 +1123,11 @@ export default async function StudentApplicationPage({
                         }}
                       >
                         <div style={{ fontSize: 22, lineHeight: 1 }}>
-                          {application.assessmentPassed ? '✅' : '❌'}
+                          {application.assessmentPassed ? (
+                            <ContextIcon name="check" />
+                          ) : (
+                            <ContextIcon name="warning" />
+                          )}
                         </div>
                         <div
                           style={{
@@ -1144,12 +1148,13 @@ export default async function StudentApplicationPage({
               {/* Interview */}
               {application.interviewScheduledAt && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 28px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -1158,11 +1163,11 @@ export default async function StudentApplicationPage({
                         width: 34,
                         height: 34,
                         borderRadius: 10,
-                        background: '#EDE9FE',
+                        background: '#e0f0eb',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#7C3AED',
+                        color: '#087f72',
                       }}
                     >
                       <Calendar size={16} />
@@ -1170,8 +1175,8 @@ export default async function StudentApplicationPage({
                     <h2
                       style={{
                         fontSize: 16,
-                        fontWeight: 800,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                         margin: 0,
                       }}
@@ -1180,7 +1185,7 @@ export default async function StudentApplicationPage({
                     </h2>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Clock size={14} color="#7C3AED" />
+                    <Clock size={14} color="#087f72" />
                     <span style={{ fontSize: 14, color: '#5B21B6', fontWeight: 600 }}>
                       Scheduled for{' '}
                       {new Date(application.interviewScheduledAt).toLocaleString('en-BD', {
@@ -1199,12 +1204,13 @@ export default async function StudentApplicationPage({
               {/* Status history */}
               {application.statusHistory?.length > 0 && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 28px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -1213,11 +1219,11 @@ export default async function StudentApplicationPage({
                         width: 34,
                         height: 34,
                         borderRadius: 10,
-                        background: '#F8FAFC',
+                        background: '#f6f8f9',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#64748B',
+                        color: '#60717d',
                       }}
                     >
                       <Clock size={16} />
@@ -1225,8 +1231,8 @@ export default async function StudentApplicationPage({
                     <h2
                       style={{
                         fontSize: 16,
-                        fontWeight: 800,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                         margin: 0,
                       }}
@@ -1270,7 +1276,7 @@ export default async function StudentApplicationPage({
                                   >
                                     {cfg.label}
                                   </span>
-                                  <span style={{ fontSize: 12, color: '#94A3B8' }}>
+                                  <span style={{ fontSize: 12, color: '#60717d' }}>
                                     {formatShortDate(entry.changedAt?.toISOString())}
                                   </span>
                                 </div>
@@ -1278,7 +1284,7 @@ export default async function StudentApplicationPage({
                                   <p
                                     style={{
                                       fontSize: 13,
-                                      color: '#64748B',
+                                      color: '#60717d',
                                       margin: '4px 0 0',
                                       lineHeight: 1.6,
                                     }}
@@ -1303,7 +1309,7 @@ export default async function StudentApplicationPage({
                 <SideCard
                   title="Resume"
                   icon={
-                    <SideIconBox bg="#ECFDF5" color="#10B981">
+                    <SideIconBox bg="#ECFDF5" color="#168257">
                       <FileText size={14} />
                     </SideIconBox>
                   }
@@ -1355,7 +1361,7 @@ export default async function StudentApplicationPage({
               <SideCard
                 title="Academic Profile"
                 icon={
-                  <SideIconBox bg="#EDE9FE" color="#7C3AED">
+                  <SideIconBox bg="#e0f0eb" color="#087f72">
                     <GraduationCap size={14} />
                   </SideIconBox>
                 }
@@ -1373,7 +1379,7 @@ export default async function StudentApplicationPage({
                     { label: 'CGPA', value: student.cgpa ? student.cgpa.toFixed(2) : undefined },
                     {
                       label: 'STATUS',
-                      value: student.isGraduated ? '🎓 Graduated' : 'Currently Enrolled',
+                      value: student.isGraduated ? 'Graduated' : 'Currently Enrolled',
                     },
                   ]
                     .filter((item) => item.value)
@@ -1383,7 +1389,7 @@ export default async function StudentApplicationPage({
                           style={{
                             fontSize: 10,
                             fontWeight: 700,
-                            color: '#94A3B8',
+                            color: '#60717d',
                             textTransform: 'uppercase',
                             letterSpacing: 0.8,
                             marginBottom: 1,
@@ -1391,7 +1397,7 @@ export default async function StudentApplicationPage({
                         >
                           {item.label}
                         </div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#182c39' }}>
                           {item.value}
                         </div>
                       </div>
@@ -1404,7 +1410,7 @@ export default async function StudentApplicationPage({
                 <SideCard
                   title="Skills"
                   icon={
-                    <SideIconBox bg="#EFF6FF" color="#2563EB">
+                    <SideIconBox bg="#edf7f3" color="#087f72">
                       <Code2 size={14} />
                     </SideIconBox>
                   }
@@ -1414,9 +1420,9 @@ export default async function StudentApplicationPage({
                       <span
                         key={skill}
                         style={{
-                          background: '#EFF6FF',
-                          color: '#2563EB',
-                          border: '1px solid #BFDBFE',
+                          background: '#edf7f3',
+                          color: '#087f72',
+                          border: '1px solid #bdddd5',
                           padding: '3px 9px',
                           borderRadius: 999,
                           fontSize: 11,
@@ -1466,7 +1472,7 @@ export default async function StudentApplicationPage({
                 <SideCard
                   title="Links"
                   icon={
-                    <SideIconBox bg="#F8FAFC" color="#64748B">
+                    <SideIconBox bg="#f6f8f9" color="#60717d">
                       <Link2 size={14} />
                     </SideIconBox>
                   }
@@ -1481,9 +1487,9 @@ export default async function StudentApplicationPage({
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 7,
-                          background: '#EFF6FF',
-                          color: '#2563EB',
-                          border: '1px solid #BFDBFE',
+                          background: '#edf7f3',
+                          color: '#087f72',
+                          border: '1px solid #bdddd5',
                           padding: '7px 12px',
                           borderRadius: 9,
                           fontSize: 12,
@@ -1491,7 +1497,7 @@ export default async function StudentApplicationPage({
                           textDecoration: 'none',
                         }}
                       >
-                        🔗 LinkedIn Profile
+                        <ContextIcon name="link" /> LinkedIn Profile
                       </a>
                     )}
                     {student.githubUrl && (
@@ -1503,9 +1509,9 @@ export default async function StudentApplicationPage({
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 7,
-                          background: '#F1F5F9',
-                          color: '#0F172A',
-                          border: '1px solid #E2E8F0',
+                          background: '#f6f8f9',
+                          color: '#182c39',
+                          border: '1px solid #dfe6e9',
                           padding: '7px 12px',
                           borderRadius: 9,
                           fontSize: 12,
@@ -1513,7 +1519,7 @@ export default async function StudentApplicationPage({
                           textDecoration: 'none',
                         }}
                       >
-                        💻 GitHub Profile
+                        <ContextIcon name="laptop" /> GitHub Profile
                       </a>
                     )}
                     {student.portfolioUrl && (
@@ -1525,9 +1531,9 @@ export default async function StudentApplicationPage({
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 7,
-                          background: '#F5F3FF',
-                          color: '#7C3AED',
-                          border: '1px solid #DDD6FE',
+                          background: '#edf7f3',
+                          color: '#087f72',
+                          border: '1px solid #bdddd5',
                           padding: '7px 12px',
                           borderRadius: 9,
                           fontSize: 12,
@@ -1535,7 +1541,7 @@ export default async function StudentApplicationPage({
                           textDecoration: 'none',
                         }}
                       >
-                        🌐 Portfolio
+                        <ContextIcon name="globe" /> Portfolio
                       </a>
                     )}
                   </div>
@@ -1545,17 +1551,17 @@ export default async function StudentApplicationPage({
               {/* Event info */}
               <div
                 style={{
-                  background: '#F8FAFC',
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
+                  background: '#f6f8f9',
+                  borderRadius: 12,
+                  border: '1px solid #dfe6e9',
                   padding: '20px 22px',
                 }}
               >
                 <h3
                   style={{
                     fontSize: 12,
-                    fontWeight: 800,
-                    color: '#94A3B8',
+                    fontWeight: 700,
+                    color: '#60717d',
                     fontFamily: 'var(--font-display)',
                     margin: '0 0 10px',
                     textTransform: 'uppercase',
@@ -1564,14 +1570,14 @@ export default async function StudentApplicationPage({
                 >
                   Event
                 </h3>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', marginBottom: 5 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39', marginBottom: 5 }}>
                   {event.title}
                 </div>
-                <div style={{ fontSize: 12, color: '#64748B' }}>
+                <div style={{ fontSize: 12, color: '#60717d' }}>
                   {formatStatusLabel(event.type)} · {formatStatusLabel(event.locationType)}
                 </div>
                 {event.applicationDeadline && (
-                  <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
+                  <div style={{ fontSize: 11, color: '#60717d', marginTop: 4 }}>
                     Deadline: {formatShortDate(event.applicationDeadline?.toISOString())}
                   </div>
                 )}

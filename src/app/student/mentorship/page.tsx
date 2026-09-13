@@ -1,5 +1,6 @@
+import BrandLoader from '@/components/ui/BrandLoader';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use client';
+('use client');
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -48,7 +49,7 @@ export default function BrowseMentorsPage() {
 
   return (
     <div
-      className="mobile-page-frame"
+      className="mobile-page-frame nx-page-width"
       style={{ maxWidth: 1320, margin: '0 auto', padding: '40px 24px' }}
     >
       <div
@@ -67,18 +68,18 @@ export default function BrowseMentorsPage() {
             className="mobile-page-header-title"
             style={{
               fontSize: 32,
-              fontWeight: 900,
-              color: '#1E293B',
+              fontWeight: 700,
+              color: '#243e4a',
               margin: '0 0 8px 0',
               display: 'flex',
               alignItems: 'center',
               gap: 12,
             }}
           >
-            <Users size={32} color="#2563EB" />
+            <Users size={32} color="#087f72" />
             Alumni Mentorship Network
           </h1>
-          <p style={{ fontSize: 16, color: '#64748B', margin: 0, maxWidth: 600 }}>
+          <p style={{ fontSize: 16, color: '#60717d', margin: 0, maxWidth: 600 }}>
             Connect with experienced alumni and industry professionals. Book 1:1 video sessions for
             career guidance, interview prep, and technical help.
           </p>
@@ -96,9 +97,9 @@ export default function BrowseMentorsPage() {
               color: '#475569',
               fontWeight: 700,
               fontSize: 14,
-              border: '1px solid #E2E8F0',
+              border: '1px solid #dfe6e9',
               textDecoration: 'none',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <CalendarDays size={18} />
@@ -111,16 +112,12 @@ export default function BrowseMentorsPage() {
         <MentorFilterSidebar onFilterChange={setFilters} />
         <div>
           {loading ? (
-            <div
-              style={{ display: 'flex', justifyContent: 'center', padding: 80, color: '#94A3B8' }}
-            >
-              Loading mentors...
-            </div>
+            <BrandLoader variant="section" label="Loading mentors" />
           ) : mentors.length > 0 ? (
             <PaginatedCollection
               itemLabel="mentors"
               resetKey={`${filters.industry}|${filters.expertise}|${filters.mentorType}`}
-              className="mobile-page-grid-mentor mobile-page-list-scroll"
+              className="mobile-page-grid-mentor mobile-page-list-scroll v2-page-grid"
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
@@ -139,24 +136,24 @@ export default function BrowseMentorsPage() {
           ) : (
             <div
               style={{
-                background: '#F8FAFC',
-                borderRadius: 20,
-                border: '2px dashed #E2E8F0',
+                background: '#f6f8f9',
+                borderRadius: 12,
+                border: '2px dashed #dfe6e9',
                 padding: 60,
                 textAlign: 'center',
               }}
             >
               <Users
                 size={48}
-                color="#94A3B8"
+                color="#60717d"
                 style={{ margin: '0 auto 16px auto', display: 'block' }}
               />
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1E293B', margin: '0 0 8px 0' }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#243e4a', margin: '0 0 8px 0' }}>
                 No mentors found
               </h3>
               <p
                 style={{
-                  color: '#64748B',
+                  color: '#60717d',
                   margin: 0,
                   maxWidth: 300,
                   marginLeft: 'auto',

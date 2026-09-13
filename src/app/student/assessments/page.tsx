@@ -110,6 +110,7 @@ export default async function StudentAssessmentsPage() {
 
   return (
     <DashboardShell
+      embedded
       role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
@@ -145,7 +146,10 @@ export default async function StudentAssessmentsPage() {
                 border: '1px solid rgba(255,255,255,0.16)',
               }}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}
+                className="v2-page-grid"
+              >
                 {[
                   { label: 'Total', value: data.stats.total, color: '#FFFFFF' },
                   { label: 'Pending', value: data.stats.pending, color: '#BAE6FD' },
@@ -164,7 +168,7 @@ export default async function StudentAssessmentsPage() {
                     <div
                       style={{
                         fontSize: 24,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: stat.color,
                         fontFamily: 'var(--font-display)',
                         lineHeight: 1,
@@ -196,19 +200,19 @@ export default async function StudentAssessmentsPage() {
               label="Open now"
               value={formatCompactNumber(data.stats.pending)}
               Icon={Clock3}
-              accent="#22D3EE"
+              accent="#178d80"
             />
             <StatCard
               label="Submitted"
               value={formatCompactNumber(data.stats.submitted)}
               Icon={FileText}
-              accent="#F59E0B"
+              accent="#a86714"
             />
             <StatCard
               label="Results ready"
               value={formatCompactNumber(data.stats.graded)}
               Icon={Trophy}
-              accent="#10B981"
+              accent="#168257"
             />
           </div>
         </section>
@@ -221,11 +225,11 @@ export default async function StudentAssessmentsPage() {
             {data.assignments.length === 0 ? (
               <div
                 style={{
-                  borderRadius: 20,
+                  borderRadius: 12,
                   border: '1px dashed #CBD5E1',
-                  background: '#F8FAFC',
+                  background: '#f6f8f9',
                   padding: '32px 28px',
-                  color: '#64748B',
+                  color: '#60717d',
                   fontSize: 14,
                   lineHeight: 1.7,
                 }}
@@ -241,9 +245,9 @@ export default async function StudentAssessmentsPage() {
                     key={assignment._id}
                     style={{
                       background: '#FFFFFF',
-                      borderRadius: 20,
+                      borderRadius: 12,
                       border: '1px solid #D9E2EC',
-                      boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
+                      boxShadow: 'var(--shadow-card)',
                       padding: 18,
                       display: 'grid',
                       gap: 10,
@@ -262,14 +266,14 @@ export default async function StudentAssessmentsPage() {
                         <div
                           style={{
                             fontSize: 17,
-                            fontWeight: 900,
-                            color: '#0F172A',
+                            fontWeight: 700,
+                            color: '#182c39',
                             fontFamily: 'var(--font-display)',
                           }}
                         >
                           {assignment.assessment?.title ?? 'Assessment'}
                         </div>
-                        <div style={{ marginTop: 4, fontSize: 13, color: '#64748B' }}>
+                        <div style={{ marginTop: 4, fontSize: 13, color: '#60717d' }}>
                           {assignment.job?.title ?? 'Role'} •{' '}
                           {assignment.job?.companyName ?? 'Employer'}
                         </div>
@@ -278,11 +282,11 @@ export default async function StudentAssessmentsPage() {
                         style={{
                           borderRadius: 999,
                           padding: '6px 10px',
-                          background: '#EFF6FF',
-                          border: '1px solid #BFDBFE',
-                          color: '#2563EB',
+                          background: '#edf7f3',
+                          border: '1px solid #bdddd5',
+                          color: '#087f72',
                           fontSize: 12,
-                          fontWeight: 800,
+                          fontWeight: 700,
                         }}
                       >
                         {formatAssessmentAssignmentStatus(assignment.status)}
@@ -295,7 +299,7 @@ export default async function StudentAssessmentsPage() {
                         gap: 18,
                         flexWrap: 'wrap',
                         fontSize: 12,
-                        color: '#64748B',
+                        color: '#60717d',
                       }}
                     >
                       <span>Due: {formatDhakaDateTime(assignment.dueAt)}</span>
@@ -315,12 +319,12 @@ export default async function StudentAssessmentsPage() {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 8,
-                          background: '#0F172A',
+                          background: '#182c39',
                           color: '#FFFFFF',
                           borderRadius: 12,
                           padding: '10px 14px',
                           fontSize: 12,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           textDecoration: 'none',
                         }}
                       >
@@ -335,12 +339,12 @@ export default async function StudentAssessmentsPage() {
                           alignItems: 'center',
                           gap: 8,
                           background: '#FFFFFF',
-                          color: '#2563EB',
-                          border: '1px solid #BFDBFE',
+                          color: '#087f72',
+                          border: '1px solid #bdddd5',
                           borderRadius: 12,
                           padding: '10px 14px',
                           fontSize: 12,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           textDecoration: 'none',
                         }}
                       >

@@ -38,13 +38,13 @@ type TrainingStep = {
 };
 
 const C = {
-  blue: '#2563EB',
-  border: '#E2E8F0',
-  text: '#0F172A',
-  muted: '#64748B',
-  bg: '#F8FAFC',
-  success: '#10B981',
-  warning: '#F59E0B',
+  blue: '#087f72',
+  border: '#dfe6e9',
+  text: '#182c39',
+  muted: '#60717d',
+  bg: '#f6f8f9',
+  success: '#168257',
+  warning: '#a86714',
 };
 
 const ANALYSIS_EVENT_NAME = 'student-job-ai-analysis-updated';
@@ -57,10 +57,10 @@ function Badge({
   tone?: 'neutral' | 'success' | 'warning' | 'info';
 }) {
   const palette = {
-    neutral: { bg: '#F8FAFC', color: '#475569', border: '#E2E8F0' },
+    neutral: { bg: '#f6f8f9', color: '#475569', border: '#dfe6e9' },
     success: { bg: '#ECFDF5', color: '#166534', border: '#A7F3D0' },
     warning: { bg: '#FFFBEB', color: '#92400E', border: '#FDE68A' },
-    info: { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
+    info: { bg: '#edf7f3', color: '#06665d', border: '#bdddd5' },
   } as const;
 
   const colors = palette[tone];
@@ -88,10 +88,10 @@ function StatusNotice({ meta }: { meta: AIExecutionMeta }) {
   const info = describeAIExecutionMeta(meta);
   const palette =
     meta.mode === 'ai'
-      ? { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' }
+      ? { bg: '#edf7f3', color: '#06665d', border: '#bdddd5' }
       : meta.mode === 'fallback'
         ? { bg: '#FFFBEB', color: '#92400E', border: '#FDE68A' }
-        : { bg: '#F8FAFC', color: '#475569', border: '#E2E8F0' };
+        : { bg: '#f6f8f9', color: '#475569', border: '#dfe6e9' };
 
   return (
     <div
@@ -209,17 +209,18 @@ export default function AISkillAnalysisCard({
     <section
       style={{
         background: '#FFFFFF',
-        borderRadius: 28,
+        borderRadius: 12,
         border: `1px solid ${C.border}`,
-        boxShadow: '0 18px 40px rgba(15,23,42,0.08)',
+        boxShadow: 'var(--shadow-card)',
         overflow: 'hidden',
       }}
     >
       <div
         style={{
           padding: 24,
-          background: '#172033',
+          background: 'var(--surface-muted)',
         }}
+        className="v2-light-panel"
       >
         <div
           style={{
@@ -240,7 +241,7 @@ export default function AISkillAnalysisCard({
                 borderRadius: 999,
                 border: '1px solid rgba(255,255,255,0.14)',
                 background: 'rgba(255,255,255,0.08)',
-                color: '#DCEBFF',
+                color: 'var(--deep)',
                 fontSize: 12,
                 fontWeight: 700,
                 textTransform: 'uppercase',
@@ -252,15 +253,15 @@ export default function AISkillAnalysisCard({
             <h2
               style={{
                 margin: '14px 0 0',
-                color: '#FFFFFF',
+                color: 'var(--deep)',
                 fontSize: 28,
-                fontWeight: 900,
+                fontWeight: 700,
                 fontFamily: 'var(--font-display)',
               }}
             >
               See how ready you are for {jobTitle}
             </h2>
-            <p style={{ margin: '10px 0 0', color: '#D6E4FF', fontSize: 14, lineHeight: 1.7 }}>
+            <p style={{ margin: '10px 0 0', color: 'var(--deep)', fontSize: 14, lineHeight: 1.7 }}>
               Nextern AI compares your profile with this role and highlights missing skills,
               strengths, and next steps. If Nextern AI is unavailable, the card now shows that
               clearly and falls back to local backup logic.
@@ -271,26 +272,26 @@ export default function AISkillAnalysisCard({
             <div
               style={{
                 background: 'rgba(255,255,255,0.08)',
-                borderRadius: 16,
+                borderRadius: 12,
                 border: '1px solid rgba(255,255,255,0.12)',
                 padding: '14px 16px',
               }}
             >
-              <div style={{ color: '#9FB4D0', fontSize: 12, fontWeight: 700 }}>
+              <div style={{ color: 'var(--deep)', fontSize: 12, fontWeight: 700 }}>
                 Analyses this month
               </div>
               <div
                 style={{
-                  color: '#FFFFFF',
+                  color: 'var(--deep)',
                   fontSize: 28,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   fontFamily: 'var(--font-display)',
                   marginTop: 4,
                 }}
               >
                 {usage.counts.skillGapAnalysis}
               </div>
-              <div style={{ color: '#D6E4FF', fontSize: 12, marginTop: 4 }}>
+              <div style={{ color: 'var(--deep)', fontSize: 12, marginTop: 4 }}>
                 {usage.isPremium
                   ? 'Unlimited on Premium'
                   : `${usage.remaining.skillGapAnalysis ?? 0} free analyses left`}
@@ -312,7 +313,7 @@ export default function AISkillAnalysisCard({
                   background: loading ? '#93C5FD' : '#FFFFFF',
                   color: loading ? '#FFFFFF' : C.blue,
                   fontSize: 14,
-                  fontWeight: 800,
+                  fontWeight: 700,
                   fontFamily: 'var(--font-display)',
                   cursor: loading ? 'not-allowed' : 'pointer',
                   minWidth: 180,
@@ -332,7 +333,7 @@ export default function AISkillAnalysisCard({
                   padding: '12px 16px',
                   borderRadius: 14,
                   border: '1px solid rgba(255,255,255,0.16)',
-                  color: '#FFFFFF',
+                  color: 'var(--deep)',
                   textDecoration: 'none',
                   fontSize: 14,
                   fontWeight: 700,
@@ -356,14 +357,14 @@ export default function AISkillAnalysisCard({
               border: '1px solid rgba(245,158,11,0.3)',
               borderRadius: 999,
               padding: '8px 14px',
-              color: '#FDE68A',
+              color: 'var(--deep)',
               fontSize: 12,
               fontWeight: 700,
             }}
           >
             <Crown size={14} />
             Premium unlocks unlimited analyses and personalized training plans.
-            <Link href="/student/premium" style={{ color: '#FFFFFF', textDecoration: 'none' }}>
+            <Link href="/student/premium" style={{ color: 'var(--deep)', textDecoration: 'none' }}>
               Upgrade
             </Link>
           </div>
@@ -394,7 +395,7 @@ export default function AISkillAnalysisCard({
             <div
               style={{
                 background: C.bg,
-                borderRadius: 20,
+                borderRadius: 12,
                 border: `1px solid ${C.border}`,
                 padding: 20,
               }}
@@ -416,7 +417,7 @@ export default function AISkillAnalysisCard({
                   <div
                     style={{
                       fontSize: 38,
-                      fontWeight: 900,
+                      fontWeight: 700,
                       color: fitScoreColor,
                       fontFamily: 'var(--font-display)',
                       lineHeight: 1,
@@ -454,10 +455,10 @@ export default function AISkillAnalysisCard({
                   style={{
                     marginTop: 14,
                     borderRadius: 14,
-                    background: '#EFF6FF',
-                    border: '1px solid #BFDBFE',
+                    background: '#edf7f3',
+                    border: '1px solid #bdddd5',
                     padding: '12px 14px',
-                    color: '#1D4ED8',
+                    color: '#06665d',
                     fontSize: 13,
                     lineHeight: 1.7,
                   }}
@@ -542,13 +543,13 @@ export default function AISkillAnalysisCard({
                               width: 22,
                               height: 22,
                               borderRadius: 7,
-                              background: '#EFF6FF',
+                              background: '#edf7f3',
                               color: C.blue,
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               fontSize: 11,
-                              fontWeight: 800,
+                              fontWeight: 700,
                               flexShrink: 0,
                             }}
                           >
@@ -566,12 +567,13 @@ export default function AISkillAnalysisCard({
             </div>
 
             <div
+              className="nx-surface"
               style={{
                 background: '#FFFFFF',
-                borderRadius: 20,
+                borderRadius: 12,
                 border: `1px solid ${C.border}`,
                 padding: 20,
-                boxShadow: '0 12px 24px rgba(15,23,42,0.04)',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
               <div style={{ marginBottom: 14 }}>
@@ -579,7 +581,7 @@ export default function AISkillAnalysisCard({
                   style={{
                     margin: 0,
                     fontSize: 18,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     color: C.text,
                     fontFamily: 'var(--font-display)',
                   }}
@@ -640,13 +642,13 @@ export default function AISkillAnalysisCard({
                       key={`${selectedSkill}-${step.order}`}
                       style={{
                         padding: 14,
-                        borderRadius: 16,
+                        borderRadius: 12,
                         border: `1px solid ${C.border}`,
                         background: C.bg,
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
                           {step.action}
                         </div>
                         <Badge label={`${step.estimatedDays}d`} tone="info" />
@@ -677,7 +679,7 @@ export default function AISkillAnalysisCard({
               ) : (
                 <div
                   style={{
-                    borderRadius: 16,
+                    borderRadius: 12,
                     border: `1px dashed ${C.border}`,
                     background: C.bg,
                     padding: '18px 16px',
@@ -694,7 +696,7 @@ export default function AISkillAnalysisCard({
         ) : (
           <div
             style={{
-              borderRadius: 20,
+              borderRadius: 12,
               border: '1px dashed #CBD5E1',
               background: C.bg,
               padding: '26px 22px',
@@ -702,7 +704,7 @@ export default function AISkillAnalysisCard({
             }}
           >
             <Brain size={28} color={C.blue} style={{ marginBottom: 12 }} />
-            <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>No AI analysis yet</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: C.text }}>No AI analysis yet</div>
             <p
               style={{
                 margin: '8px auto 18px',
@@ -728,7 +730,7 @@ export default function AISkillAnalysisCard({
                 borderRadius: 12,
                 padding: '12px 18px',
                 fontSize: 14,
-                fontWeight: 800,
+                fontWeight: 700,
                 fontFamily: 'var(--font-display)',
                 cursor: loading ? 'not-allowed' : 'pointer',
               }}

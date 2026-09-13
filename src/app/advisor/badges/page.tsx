@@ -57,6 +57,7 @@ export default async function AdvisorBadgesPage() {
 
   return (
     <DashboardShell
+      embedded
       role="advisor"
       roleLabel="Advisor workspace"
       homeHref="/advisor/dashboard"
@@ -87,11 +88,11 @@ export default async function AdvisorBadgesPage() {
                 minHeight: 172,
               }}
             >
-              <Trophy size={32} color="#22D3EE" style={{ marginBottom: 14 }} />
+              <Trophy size={32} color="#178d80" style={{ marginBottom: 14 }} />
               <div
                 style={{
                   fontSize: 32,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   color: '#FFFFFF',
                   fontFamily: 'var(--font-display)',
                   lineHeight: 1,
@@ -123,12 +124,13 @@ export default async function AdvisorBadgesPage() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
               gap: 16,
             }}
+            className="v2-page-grid"
           >
             {progressList.map(
               ({ definition: def, currentCount, threshold, isEarned, progressPercentage }) => {
                 const bg = isEarned ? '#ECFDF5' : '#FFFFFF';
-                const border = isEarned ? '#34D399' : '#E2E8F0';
-                const titleColor = isEarned ? '#065F46' : '#1E293B';
+                const border = isEarned ? '#34D399' : '#dfe6e9';
+                const titleColor = isEarned ? '#065F46' : '#243e4a';
 
                 return (
                   <div
@@ -136,7 +138,7 @@ export default async function AdvisorBadgesPage() {
                     style={{
                       background: bg,
                       border: `2px solid ${border}`,
-                      borderRadius: 18,
+                      borderRadius: 12,
                       padding: 20,
                       position: 'relative',
                       overflow: 'hidden',
@@ -149,10 +151,10 @@ export default async function AdvisorBadgesPage() {
                           top: 0,
                           right: 0,
                           padding: '6px 14px',
-                          background: '#10B981',
+                          background: '#168257',
                           color: '#FFF',
                           fontSize: 11,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           borderBottomLeftRadius: 14,
                         }}
                       >
@@ -165,8 +167,8 @@ export default async function AdvisorBadgesPage() {
                         style={{
                           width: 64,
                           height: 64,
-                          borderRadius: 16,
-                          background: isEarned ? '#D1FAE5' : '#F1F5F9',
+                          borderRadius: 12,
+                          background: isEarned ? '#D1FAE5' : '#f6f8f9',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -182,7 +184,7 @@ export default async function AdvisorBadgesPage() {
                         <div
                           style={{
                             fontSize: 16,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             color: titleColor,
                           }}
                         >
@@ -191,7 +193,7 @@ export default async function AdvisorBadgesPage() {
                         <div
                           style={{
                             fontSize: 13,
-                            color: '#64748B',
+                            color: '#60717d',
                             marginTop: 4,
                             lineHeight: 1.4,
                           }}
@@ -209,7 +211,7 @@ export default async function AdvisorBadgesPage() {
                           marginBottom: 8,
                           fontSize: 12,
                           fontWeight: 700,
-                          color: isEarned ? '#059669' : '#94A3B8',
+                          color: isEarned ? '#059669' : '#60717d',
                         }}
                       >
                         <span>{def.criteria}</span>
@@ -220,7 +222,7 @@ export default async function AdvisorBadgesPage() {
                       <div
                         style={{
                           height: 8,
-                          background: isEarned ? '#A7F3D0' : '#F1F5F9',
+                          background: isEarned ? '#A7F3D0' : '#f6f8f9',
                           borderRadius: 999,
                           overflow: 'hidden',
                         }}

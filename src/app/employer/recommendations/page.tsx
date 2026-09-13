@@ -26,6 +26,7 @@ export default async function EmployerRecommendationsPage() {
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"

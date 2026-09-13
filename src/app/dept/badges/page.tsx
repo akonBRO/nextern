@@ -57,6 +57,7 @@ export default async function DeptBadgesPage() {
 
   return (
     <DashboardShell
+      embedded
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
@@ -91,7 +92,7 @@ export default async function DeptBadgesPage() {
               <div
                 style={{
                   fontSize: 32,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   color: '#FFFFFF',
                   fontFamily: 'var(--font-display)',
                   lineHeight: 1,
@@ -123,12 +124,13 @@ export default async function DeptBadgesPage() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
               gap: 16,
             }}
+            className="v2-page-grid"
           >
             {progressList.map(
               ({ definition: def, currentCount, threshold, isEarned, progressPercentage }) => {
-                const bg = isEarned ? '#F5F3FF' : '#FFFFFF';
-                const border = isEarned ? '#A78BFA' : '#E2E8F0';
-                const titleColor = isEarned ? '#4C1D95' : '#1E293B';
+                const bg = isEarned ? '#edf7f3' : '#FFFFFF';
+                const border = isEarned ? '#A78BFA' : '#dfe6e9';
+                const titleColor = isEarned ? '#4C1D95' : '#243e4a';
 
                 return (
                   <div
@@ -136,7 +138,7 @@ export default async function DeptBadgesPage() {
                     style={{
                       background: bg,
                       border: `2px solid ${border}`,
-                      borderRadius: 18,
+                      borderRadius: 12,
                       padding: 20,
                       position: 'relative',
                       overflow: 'hidden',
@@ -149,10 +151,10 @@ export default async function DeptBadgesPage() {
                           top: 0,
                           right: 0,
                           padding: '6px 14px',
-                          background: '#7C3AED',
+                          background: '#087f72',
                           color: '#FFF',
                           fontSize: 11,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           borderBottomLeftRadius: 14,
                         }}
                       >
@@ -165,8 +167,8 @@ export default async function DeptBadgesPage() {
                         style={{
                           width: 64,
                           height: 64,
-                          borderRadius: 16,
-                          background: isEarned ? '#EDE9FE' : '#F1F5F9',
+                          borderRadius: 12,
+                          background: isEarned ? '#e0f0eb' : '#f6f8f9',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -182,7 +184,7 @@ export default async function DeptBadgesPage() {
                         <div
                           style={{
                             fontSize: 16,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             color: titleColor,
                           }}
                         >
@@ -191,7 +193,7 @@ export default async function DeptBadgesPage() {
                         <div
                           style={{
                             fontSize: 13,
-                            color: '#64748B',
+                            color: '#60717d',
                             marginTop: 4,
                             lineHeight: 1.4,
                           }}
@@ -209,7 +211,7 @@ export default async function DeptBadgesPage() {
                           marginBottom: 8,
                           fontSize: 12,
                           fontWeight: 700,
-                          color: isEarned ? '#7C3AED' : '#94A3B8',
+                          color: isEarned ? '#087f72' : '#60717d',
                         }}
                       >
                         <span>{def.criteria}</span>
@@ -220,7 +222,7 @@ export default async function DeptBadgesPage() {
                       <div
                         style={{
                           height: 8,
-                          background: isEarned ? '#DDD6FE' : '#F1F5F9',
+                          background: isEarned ? '#bdddd5' : '#f6f8f9',
                           borderRadius: 999,
                           overflow: 'hidden',
                         }}
@@ -229,7 +231,7 @@ export default async function DeptBadgesPage() {
                           style={{
                             height: '100%',
                             width: `${progressPercentage}%`,
-                            background: isEarned ? '#7C3AED' : '#CBD5E1',
+                            background: isEarned ? '#087f72' : '#CBD5E1',
                             borderRadius: 999,
                             transition: 'width 0.6s ease',
                           }}

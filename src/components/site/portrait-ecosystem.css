@@ -1,0 +1,94 @@
+﻿/* The existing search surface frames the portraits on wide screens. On stacked
+   layouts, the same crop meets the hero's actual lower section boundary. */
+.chapter-hero-grid {
+  /* Match the existing grid gap without moving either the copy or search. */
+  --portrait-row-gap: 35px;
+}
+.portrait-ecosystem {
+  position: relative;
+  isolation: isolate;
+  align-self: end;
+  min-width: 0;
+  height: calc(440px + var(--portrait-row-gap));
+  margin: 0 0 calc(-1 * var(--portrait-row-gap));
+  overflow: clip;
+}
+.ecosystem-portrait {
+  position: absolute;
+  /* Carry the source edge beyond the composition's crop, below the hands. */
+  bottom: -8px;
+}
+.ecosystem-portrait img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.portrait-academic {
+  z-index: 1;
+  left: -3%;
+  width: 49%;
+  bottom: -4px;
+}
+.portrait-recruiter {
+  z-index: 2;
+  right: -2%;
+  width: 52%;
+  bottom: -6px;
+}
+.portrait-student {
+  z-index: 3;
+  left: 22%;
+  width: 57%;
+}
+.portrait-ecosystem figcaption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.chapter-search {
+  position: relative;
+  z-index: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ecosystem-portrait {
+    animation: portrait-intro 550ms ease both;
+  }
+  .portrait-recruiter {
+    animation-delay: 80ms;
+  }
+  .portrait-student {
+    animation-delay: 140ms;
+  }
+}
+@keyframes portrait-intro {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (min-width: 801px) and (max-width: 1100px) {
+  .portrait-ecosystem {
+    height: calc(360px + var(--portrait-row-gap));
+  }
+}
+@media (max-width: 1080px) {
+  .chapter-hero-grid {
+    --portrait-row-gap: 30px;
+  }
+}
+@media (max-width: 800px) {
+  .chapter-hero:has(.portrait-ecosystem) {
+    padding-bottom: 0;
+  }
+  .portrait-ecosystem {
+    order: 3;
+    width: min(530px, 100%);
+    height: auto;
+    aspect-ratio: 1.22;
+    margin: 0 auto;
+  }
+}

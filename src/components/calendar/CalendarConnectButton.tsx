@@ -70,9 +70,9 @@ export default function CalendarConnectButton({
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '14px 18px',
-          background: 'linear-gradient(135deg, #ECFDF5, #F0FDF4)',
+          background: '#ECFDF5',
           border: '1.5px solid #A7F3D0',
-          borderRadius: 14,
+          borderRadius: 12,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -81,12 +81,12 @@ export default function CalendarConnectButton({
               width: 36,
               height: 36,
               borderRadius: 10,
-              background: 'linear-gradient(135deg, #10B981, #059669)',
+              background: '#10B981',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#fff',
-              boxShadow: '0 4px 10px rgba(16,185,129,0.3)',
+              boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
             }}
           >
             <CalendarCheck size={16} />
@@ -152,9 +152,9 @@ export default function CalendarConnectButton({
     <div
       style={{
         padding: '20px 18px',
-        background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)',
-        border: '1.5px dashed #BFDBFE',
-        borderRadius: 14,
+        background: '#eef7f5',
+        border: '1.5px dashed #c8e3dc',
+        borderRadius: 12,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -167,21 +167,21 @@ export default function CalendarConnectButton({
             width: 40,
             height: 40,
             borderRadius: 12,
-            background: 'linear-gradient(135deg, #2563EB, #7C3AED)',
+            background: '#087f72',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#fff',
-            boxShadow: '0 4px 12px rgba(37,99,235,0.3)',
+            boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
           }}
         >
           <Calendar size={18} />
         </div>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#1E293B' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39' }}>
             Connect Google Calendar
           </div>
-          <div style={{ fontSize: 12, color: '#64748B', marginTop: 2, maxWidth: 320 }}>
+          <div style={{ fontSize: 12, color: '#60717d', marginTop: 2, maxWidth: 320 }}>
             {description}
           </div>
         </div>
@@ -194,14 +194,14 @@ export default function CalendarConnectButton({
           alignItems: 'center',
           gap: 7,
           padding: '10px 18px',
-          background: loading ? '#93C5FD' : 'linear-gradient(135deg, #2563EB, #7C3AED)',
+          background: loading ? '#93C5FD' : '#087f72',
           color: '#fff',
           border: 'none',
           borderRadius: 11,
           fontSize: 13,
           fontWeight: 700,
           cursor: loading ? 'not-allowed' : 'pointer',
-          boxShadow: loading ? 'none' : '0 4px 14px rgba(37,99,235,0.35)',
+          boxShadow: loading ? 'none' : '0 4px 14px rgba(8,127,114,0.35)',
           whiteSpace: 'nowrap',
           flexShrink: 0,
         }}

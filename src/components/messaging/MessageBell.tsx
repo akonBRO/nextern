@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Mail } from 'lucide-react';
 import Pusher from 'pusher-js';
+import styles from '@/components/dashboard/HeaderActions.module.css';
 
 interface MessageBellProps {
   userId: string;
@@ -61,56 +62,14 @@ export default function MessageBell({
   }, [userId]);
 
   return (
-    <Link href={href} style={{ textDecoration: 'none' }}>
-      <div
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: compact ? 0 : 8,
-          justifyContent: 'center',
-          minWidth: compact ? 40 : undefined,
-          minHeight: compact ? 40 : undefined,
-          padding: compact ? '0' : '9px 12px',
-          borderRadius: 999,
-          border: '1px solid rgba(255,255,255,0.08)',
-          background: 'rgba(255,255,255,0.05)',
-          color: '#D8E3F1',
-          fontSize: 12,
-          fontWeight: 700,
-          cursor: 'pointer',
-          transition: 'background 0.2s',
-          position: 'relative',
-        }}
-        aria-label="Messages"
-      >
-        <span style={{ display: 'inline-flex', color: '#22D3EE' }}>
-          <Mail size={14} strokeWidth={2} />
-        </span>
-        {!compact && <span>Messages</span>}
-        {unread > 0 && (
-          <span
-            style={{
-              background: '#3B82F6',
-              color: '#fff',
-              fontSize: 10,
-              fontWeight: 800,
-              padding: compact ? '0 5px' : '1px 6px',
-              borderRadius: 99,
-              minWidth: 18,
-              height: compact ? 18 : undefined,
-              textAlign: 'center',
-              position: compact ? 'absolute' : 'static',
-              top: compact ? -2 : undefined,
-              right: compact ? -2 : undefined,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {unread > 99 ? '99+' : unread}
-          </span>
-        )}
-      </div>
+    <Link
+      href={href}
+      className={`${styles.headerButton} ${compact ? styles.compact : ''}`}
+      aria-label={`Messages${unread ? `, ${unread} unread` : ''}`}
+    >
+      <Mail size={18} strokeWidth={1.8} aria-hidden="true" />
+      {!compact && <span>Messages</span>}
+      {unread > 0 && <span className={styles.count}>{unread > 99 ? '99+' : unread}</span>}
     </Link>
   );
 }

@@ -103,6 +103,7 @@ export default async function StudentCalendarPage() {
 
   return (
     <DashboardShell
+      embedded
       role="student"
       roleLabel="Student calendar"
       homeHref="/student/dashboard"
@@ -120,11 +121,10 @@ export default async function StudentCalendarPage() {
       <DashboardPage>
         <HeroCard
           eyebrow="Calendar planner"
-          title="Career calendar with deadlines, interviews, and event milestones"
-          description="Track saved job deadlines, interview schedules, and registered event dates in one professional timeline. Use this page to spot urgent actions, confirm Google sync coverage, and review what is coming next."
+          title="Your calendar"
+          description="Keep track of application deadlines, interviews, and campus events."
           actions={
             <>
-              <ActionLink href="/student/dashboard#calendar" label="Back to Dashboard" />
               <ActionLink
                 href="/student/profile#calendar"
                 label={isCalendarConnected ? 'Manage Calendar Sync' : 'Connect Google Calendar'}
@@ -134,8 +134,7 @@ export default async function StudentCalendarPage() {
           }
           aside={
             <Panel
-              title="Planner snapshot"
-              description="A compact summary of what is already loaded into your student calendar."
+              title="Coming up"
               style={{
                 background: 'rgba(255,255,255,0.12)',
                 border: '1px solid rgba(255,255,255,0.16)',
@@ -164,6 +163,7 @@ export default async function StudentCalendarPage() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
             gap: 16,
           }}
+          className="calendar-summary-grid"
         >
           {[
             {
@@ -171,7 +171,7 @@ export default async function StudentCalendarPage() {
               value: deadlineCount,
               detail: 'Saved jobs and active applications',
               Icon: CalendarDays,
-              accent: '#F59E0B',
+              accent: '#a86714',
               bg: '#FFFBEB',
               border: '#FDE68A',
             },
@@ -200,9 +200,9 @@ export default async function StudentCalendarPage() {
                 ? 'Items already mirrored to Google Calendar'
                 : 'Connect Google to sync everything automatically',
               Icon: CheckCircle2,
-              accent: isCalendarConnected ? '#059669' : '#64748B',
-              bg: isCalendarConnected ? '#ECFDF5' : '#F8FAFC',
-              border: isCalendarConnected ? '#A7F3D0' : '#E2E8F0',
+              accent: isCalendarConnected ? '#059669' : '#60717d',
+              bg: isCalendarConnected ? '#ECFDF5' : '#f6f8f9',
+              border: isCalendarConnected ? '#A7F3D0' : '#dfe6e9',
             },
           ].map((item) => (
             <div
@@ -210,9 +210,9 @@ export default async function StudentCalendarPage() {
               style={{
                 background: '#FFFFFF',
                 border: `1px solid ${item.border}`,
-                borderRadius: 18,
+                borderRadius: 12,
                 padding: '18px 20px',
-                boxShadow: '0 10px 24px rgba(15,23,42,0.05)',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
               <div
@@ -231,20 +231,20 @@ export default async function StudentCalendarPage() {
               >
                 <item.Icon size={18} />
               </div>
-              <div style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>{item.label}</div>
+              <div style={{ fontSize: 12, color: '#60717d', fontWeight: 700 }}>{item.label}</div>
               <div
                 style={{
                   fontSize: 28,
                   lineHeight: 1.1,
-                  fontWeight: 900,
-                  color: '#0F172A',
+                  fontWeight: 700,
+                  color: '#182c39',
                   fontFamily: 'var(--font-display)',
                   marginTop: 8,
                 }}
               >
                 {item.value}
               </div>
-              <div style={{ marginTop: 6, fontSize: 13, color: '#64748B', lineHeight: 1.55 }}>
+              <div style={{ marginTop: 6, fontSize: 13, color: '#60717d', lineHeight: 1.55 }}>
                 {item.detail}
               </div>
             </div>
@@ -254,7 +254,7 @@ export default async function StudentCalendarPage() {
         <DashboardSection
           id="calendar"
           title="Monthly calendar"
-          description="Navigate month by month, inspect every milestone in detail, and review sync status, readiness urgency, and opportunity context for each job or event."
+          description="Select a day to see its schedule."
         >
           <CalendarBoard
             events={calendarEvents}
@@ -270,6 +270,7 @@ export default async function StudentCalendarPage() {
             gridTemplateColumns: 'minmax(0, 1.15fr) minmax(280px, 0.85fr)',
             gap: 16,
           }}
+          className="v2-page-grid"
         >
           <Panel
             title="How to use this calendar"
@@ -286,8 +287,8 @@ export default async function StudentCalendarPage() {
                   key={tip}
                   style={{
                     borderRadius: 12,
-                    border: '1px solid #E2E8F0',
-                    background: '#F8FAFC',
+                    border: '1px solid #dfe6e9',
+                    background: '#f6f8f9',
                     padding: '12px 14px',
                     fontSize: 13,
                     color: '#334155',
@@ -307,15 +308,15 @@ export default async function StudentCalendarPage() {
             {nextEvent ? (
               <div
                 style={{
-                  borderRadius: 16,
-                  border: '1px solid #DBEAFE',
+                  borderRadius: 12,
+                  border: '1px solid #dbefea',
                   background:
                     'linear-gradient(145deg, rgba(239,246,255,0.98), rgba(248,250,252,0.98))',
                   padding: 18,
                 }}
               >
                 <div
-                  style={{ fontSize: 11, fontWeight: 800, color: '#2563EB', letterSpacing: 0.6 }}
+                  style={{ fontSize: 11, fontWeight: 700, color: '#087f72', letterSpacing: 0.6 }}
                 >
                   {nextEvent.type === 'deadline'
                     ? 'DEADLINE'
@@ -327,8 +328,8 @@ export default async function StudentCalendarPage() {
                   style={{
                     marginTop: 8,
                     fontSize: 20,
-                    fontWeight: 900,
-                    color: '#0F172A',
+                    fontWeight: 700,
+                    color: '#182c39',
                     fontFamily: 'var(--font-display)',
                   }}
                 >
@@ -356,7 +357,7 @@ export default async function StudentCalendarPage() {
                 </div>
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
+              <div style={{ fontSize: 13, color: '#60717d', lineHeight: 1.7 }}>
                 No upcoming milestones are loaded yet. Save jobs, apply to opportunities, or
                 register for events to build your planning timeline.
               </div>

@@ -41,14 +41,14 @@ export default function JobFitScoreCard({
   const score = overrideScore ?? aiFitScore ?? estimatedFitScore;
   const isAiScore = hasLiveAiScore || aiFitScore !== null;
   const color =
-    score === null ? '#94A3B8' : score >= 70 ? '#10B981' : score >= 40 ? '#2563EB' : '#F59E0B';
+    score === null ? '#60717d' : score >= 70 ? '#168257' : score >= 40 ? '#087f72' : '#a86714';
 
   return (
     <div
       style={{
         background: 'rgba(255,255,255,0.08)',
         border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: 16,
+        borderRadius: 12,
         padding: '14px 20px',
         textAlign: 'center',
         minWidth: 120,
@@ -57,7 +57,7 @@ export default function JobFitScoreCard({
       <div
         style={{
           fontSize: 32,
-          fontWeight: 900,
+          fontWeight: 700,
           color,
           fontFamily: 'var(--font-display)',
           lineHeight: 1,

@@ -1,3 +1,4 @@
+import ContextIcon from '@/components/ui/ContextIcon';
 // src/app/dept/dashboard/page.tsx
 // Department Head dashboard — readiness distribution, skill heatmap,
 // industry alignment, semester trend, top students, pipeline
@@ -5,7 +6,7 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
-import { getDepartmentNavItems } from '@/lib/academic-navigation';
+
 import {
   DashboardPage,
   DashboardSection,
@@ -150,6 +151,7 @@ export default async function DeptDashboard() {
 
   return (
     <DashboardShell
+      embedded
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
@@ -157,17 +159,18 @@ export default async function DeptDashboard() {
       user={{ ...data.chromeUser, userId: session.user.id }}
     >
       <DashboardPage>
-        {/* ── Hero ── */}
-        {/* ── Hero ── */}
         <HeroCard
           eyebrow="Department Head workspace"
           title={deptHead?.name ?? data.chromeUser.name}
-          description={deptHead?.bio || 'No bio added yet — go to My Profile to write one.'}
+          description={
+            deptHead?.bio ||
+            'Understand career readiness across your cohort and help students move forward.'
+          }
           subtitle={
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               {deptHead?.city && (
-                <span style={{ fontSize: 13, color: '#94A3B8', fontWeight: 500 }}>
-                  📍 {deptHead.city}
+                <span style={{ fontSize: 13, color: '#60717d', fontWeight: 500 }}>
+                  <ContextIcon name="location" /> {deptHead.city}
                 </span>
               )}
               {deptHead?.city && deptHead?.institutionName && (
@@ -183,7 +186,7 @@ export default async function DeptDashboard() {
                     borderRadius: 999,
                     padding: '5px 14px',
                     fontSize: 13,
-                    color: '#E2E8F0',
+                    color: '#dfe6e9',
                     fontWeight: 600,
                   }}
                 >
@@ -195,12 +198,12 @@ export default async function DeptDashboard() {
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    background: '#EFF6FF',
-                    border: '1px solid #BFDBFE',
+                    background: '#edf7f3',
+                    border: '1px solid #bdddd5',
                     borderRadius: 999,
                     padding: '5px 14px',
                     fontSize: 13,
-                    color: '#2563EB',
+                    color: '#087f72',
                     fontWeight: 700,
                   }}
                 >
@@ -224,7 +227,7 @@ export default async function DeptDashboard() {
                     textDecoration: 'none',
                   }}
                 >
-                  🔗 LinkedIn
+                  <ContextIcon name="link" /> LinkedIn
                 </Link>
               )}
             </div>
@@ -253,19 +256,22 @@ export default async function DeptDashboard() {
                     <Tag label="Benchmark not set" tone="warning" />
                   )}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div
+                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}
+                  className="v2-page-grid"
+                >
                   {[
-                    { label: 'Dept students', value: data.stats.deptStudents, color: '#22D3EE' },
+                    { label: 'Dept students', value: data.stats.deptStudents, color: '#178d80' },
                     {
                       label: 'University total',
                       value: data.stats.totalStudents,
                       color: '#A78BFA',
                     },
-                    { label: 'Events posted', value: totalEvents, color: '#10B981' },
+                    { label: 'Events posted', value: totalEvents, color: '#168257' },
                     {
                       label: 'Avg score',
                       value: `${data.stats.avgOpportunityScore}%`,
-                      color: '#F59E0B',
+                      color: '#a86714',
                     },
                   ].map((s) => (
                     <div
@@ -280,7 +286,7 @@ export default async function DeptDashboard() {
                       <div
                         style={{
                           fontSize: 20,
-                          fontWeight: 900,
+                          fontWeight: 700,
                           color: s.color,
                           fontFamily: 'var(--font-display)',
                           lineHeight: 1,
@@ -304,7 +310,7 @@ export default async function DeptDashboard() {
                     gap: 14,
                     alignItems: 'center',
                     padding: 12,
-                    borderRadius: 16,
+                    borderRadius: 12,
                     background: 'rgba(15,23,42,0.22)',
                     border: '1px solid rgba(255,255,255,0.12)',
                   }}
@@ -315,7 +321,7 @@ export default async function DeptDashboard() {
                       width: 88,
                       height: 88,
                       borderRadius: '50%',
-                      background: `conic-gradient(#10B981 0 ${readinessRing.ready}%, #F59E0B ${readinessRing.ready}% ${
+                      background: `conic-gradient(#168257 0 ${readinessRing.ready}%, #a86714 ${readinessRing.ready}% ${
                         readinessRing.ready + readinessRing.partial
                       }%, #EF4444 ${readinessRing.ready + readinessRing.partial}% 100%)`,
                       display: 'grid',
@@ -327,22 +333,23 @@ export default async function DeptDashboard() {
                         width: 56,
                         height: 56,
                         borderRadius: '50%',
-                        background: '#0F172A',
+                        background: 'var(--surface-muted)',
                         display: 'grid',
                         placeItems: 'center',
-                        color: '#F8FAFC',
+                        color: 'var(--deep)',
                         fontSize: 18,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         fontFamily: 'var(--font-display)',
                       }}
+                      className="v2-light-panel"
                     >
                       {readinessRing.ready}%
                     </div>
                   </div>
                   <div style={{ display: 'grid', gap: 7 }}>
                     {[
-                      { label: 'Ready', value: readinessRing.ready, color: '#10B981' },
-                      { label: 'Partial', value: readinessRing.partial, color: '#F59E0B' },
+                      { label: 'Ready', value: readinessRing.ready, color: '#168257' },
+                      { label: 'Partial', value: readinessRing.partial, color: '#a86714' },
                       { label: 'Not ready', value: readinessRing.notReady, color: '#EF4444' },
                     ].map((item) => (
                       <div
@@ -379,7 +386,7 @@ export default async function DeptDashboard() {
                           style={{
                             color: item.color,
                             fontSize: 11,
-                            fontWeight: 900,
+                            fontWeight: 700,
                             textAlign: 'right',
                           }}
                         >
@@ -393,8 +400,6 @@ export default async function DeptDashboard() {
             </Panel>
           }
         />
-
-        {/* ── Stat cards ── */}
         <section style={{ marginTop: 22 }}>
           <div
             style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 16 }}
@@ -409,53 +414,34 @@ export default async function DeptDashboard() {
               label="Openings"
               value={formatCompactNumber(data.stats.activeOpenings)}
               Icon={BriefcaseBusiness}
-              accent="#22D3EE"
+              accent="#178d80"
             />
             <StatCard
               label="Applications"
               value={formatCompactNumber(data.stats.totalApplications)}
               Icon={LineChart}
-              accent="#2563EB"
+              accent="#087f72"
             />
             <StatCard
               label="Hired"
               value={formatCompactNumber(data.stats.hiredStudents)}
               Icon={Sparkles}
-              accent="#10B981"
+              accent="#168257"
             />
             <StatCard
               label="Avg score"
               value={`${data.stats.avgOpportunityScore}%`}
               Icon={Target}
-              accent="#F59E0B"
+              accent="#a86714"
             />
             <StatCard
               label="Avg CGPA"
               value={data.stats.avgCGPA ? data.stats.avgCGPA.toFixed(2) : '0.00'}
               Icon={GraduationCap}
-              accent="#10B981"
+              accent="#168257"
             />
           </div>
         </section>
-
-        {/* ── Readiness Distribution ── */}
-        <DashboardSection
-          id="calendar"
-          title="Calendar"
-          description="Track only your own posted department events, including registration deadlines and event dates."
-        >
-          <CalendarBoard
-            events={calendarEvents}
-            isCalendarConnected={deptHead?.googleCalendarConnected ?? false}
-            boardTitle="Calendar"
-            boardSubtitle="Keep only your hosted department sessions and registration cutoffs on one board."
-            fullCalendarHref="/dept/calendar"
-            manageCalendarHref="/dept/profile#calendar"
-            eventHrefTemplate="/dept/events/:jobId/registrants"
-            emptyNextEventMessage="No hosted department events are coming up yet. Post a workshop or webinar to populate this planner."
-          />
-        </DashboardSection>
-
         <DashboardSection
           id="readiness"
           title="Readiness distribution"
@@ -463,7 +449,7 @@ export default async function DeptDashboard() {
         >
           <div
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
-            className="dashboard-grid-two"
+            className="dashboard-grid-two v2-page-grid"
           >
             <Panel
               title="Cohort readiness breakdown"
@@ -476,7 +462,7 @@ export default async function DeptDashboard() {
                     sublabel: 'Score ≥ 70',
                     count: readinessDistribution.ready.count,
                     pct: readinessDistribution.ready.pct,
-                    color: '#10B981',
+                    color: '#168257',
                     bg: '#ECFDF5',
                     border: '#A7F3D0',
                   },
@@ -485,7 +471,7 @@ export default async function DeptDashboard() {
                     sublabel: 'Score 40–69',
                     count: readinessDistribution.partial.count,
                     pct: readinessDistribution.partial.pct,
-                    color: '#F59E0B',
+                    color: '#a86714',
                     bg: '#FFFBEB',
                     border: '#FDE68A',
                   },
@@ -522,13 +508,13 @@ export default async function DeptDashboard() {
                         >
                           {tier.label}
                         </span>
-                        <span style={{ fontSize: 12, color: '#94A3B8' }}>{tier.sublabel}</span>
+                        <span style={{ fontSize: 12, color: '#60717d' }}>{tier.sublabel}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 13, fontWeight: 700, color: tier.color }}>
                           {tier.pct}%
                         </span>
-                        <span style={{ fontSize: 12, color: '#94A3B8' }}>
+                        <span style={{ fontSize: 12, color: '#60717d' }}>
                           ({tier.count} students)
                         </span>
                       </div>
@@ -536,7 +522,7 @@ export default async function DeptDashboard() {
                     <div
                       style={{
                         height: 10,
-                        background: '#F1F5F9',
+                        background: '#f6f8f9',
                         borderRadius: 999,
                         overflow: 'hidden',
                       }}
@@ -562,14 +548,14 @@ export default async function DeptDashboard() {
                     <div
                       style={{
                         width: `${readinessDistribution.ready.pct}%`,
-                        background: '#10B981',
+                        background: '#168257',
                         transition: 'width 0.4s',
                       }}
                     />
                     <div
                       style={{
                         width: `${readinessDistribution.partial.pct}%`,
-                        background: '#F59E0B',
+                        background: '#a86714',
                         transition: 'width 0.4s',
                       }}
                     />
@@ -587,13 +573,13 @@ export default async function DeptDashboard() {
                       justifyContent: 'space-between',
                       marginTop: 6,
                       fontSize: 11,
-                      color: '#94A3B8',
+                      color: '#60717d',
                     }}
                   >
-                    <span style={{ color: '#10B981', fontWeight: 600 }}>
+                    <span style={{ color: '#168257', fontWeight: 600 }}>
                       Ready {readinessDistribution.ready.pct}%
                     </span>
-                    <span style={{ color: '#F59E0B', fontWeight: 600 }}>
+                    <span style={{ color: '#a86714', fontWeight: 600 }}>
                       Partial {readinessDistribution.partial.pct}%
                     </span>
                     <span style={{ color: '#EF4444', fontWeight: 600 }}>
@@ -617,21 +603,21 @@ export default async function DeptDashboard() {
                       style={{
                         padding: '12px 16px',
                         borderRadius: 14,
-                        border: '1px solid #E2E8F0',
-                        background: '#F8FAFC',
+                        border: '1px solid #dfe6e9',
+                        background: '#f6f8f9',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                       }}
                     >
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#1E293B' }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#243e4a' }}>
                         {stage.label}
                       </div>
                       <div
                         style={{
                           fontSize: 24,
-                          fontWeight: 900,
-                          color: '#2563EB',
+                          fontWeight: 700,
+                          color: '#087f72',
                           fontFamily: 'var(--font-display)',
                         }}
                       >
@@ -644,101 +630,6 @@ export default async function DeptDashboard() {
             </div>
           </div>
         </DashboardSection>
-
-        {/* ── Skill Heatmap ── */}
-        <DashboardSection
-          id="heatmap"
-          title="Skill heatmap"
-          description="The most commonly held skills across your department cohort — thicker bars mean higher penetration."
-        >
-          <Panel
-            title="Department skill coverage"
-            description="Sorted by how many students in your department have each skill."
-          >
-            {skillHeatmap.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {skillHeatmap.map((item, i) => (
-                  <div key={item.skill}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: 5,
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div
-                          style={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 6,
-                            background: '#EFF6FF',
-                            color: '#2563EB',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: 10,
-                            fontWeight: 800,
-                          }}
-                        >
-                          {i + 1}
-                        </div>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
-                          {item.skill}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontSize: 12, color: '#64748B' }}>
-                          {item.count} students
-                        </span>
-                        <span
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 800,
-                            color:
-                              item.pct >= 60 ? '#10B981' : item.pct >= 30 ? '#F59E0B' : '#94A3B8',
-                          }}
-                        >
-                          {item.pct}%
-                        </span>
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        height: 8,
-                        background: '#F1F5F9',
-                        borderRadius: 999,
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${item.pct}%`,
-                          height: '100%',
-                          borderRadius: 999,
-                          background:
-                            item.pct >= 60
-                              ? 'linear-gradient(90deg, #10B981, #34D399)'
-                              : item.pct >= 30
-                                ? 'linear-gradient(90deg, #F59E0B, #FBBF24)'
-                                : 'linear-gradient(90deg, #94A3B8, #CBD5E1)',
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="No skill data yet"
-                description="Skills will appear once students complete their profiles."
-              />
-            )}
-          </Panel>
-        </DashboardSection>
-
-        {/* ── Industry Alignment ── */}
         <DashboardSection
           id="alignment"
           title="Industry demand alignment"
@@ -758,6 +649,7 @@ export default async function DeptDashboard() {
                     padding: '8px 12px',
                     marginBottom: 4,
                   }}
+                  className="v2-page-grid"
                 >
                   {['Skill', 'Student supply', 'Employer demand', 'Gap'].map((h) => (
                     <div
@@ -765,7 +657,7 @@ export default async function DeptDashboard() {
                       style={{
                         fontSize: 11,
                         fontWeight: 700,
-                        color: '#94A3B8',
+                        color: '#60717d',
                         textTransform: 'uppercase',
                         letterSpacing: 0.8,
                       }}
@@ -783,25 +675,26 @@ export default async function DeptDashboard() {
                       gap: 12,
                       padding: '12px',
                       borderRadius: 12,
-                      background: i % 2 === 0 ? '#F8FAFC' : '#fff',
-                      border: '1px solid #E2E8F0',
+                      background: i % 2 === 0 ? '#f6f8f9' : '#fff',
+                      border: '1px solid #dfe6e9',
                       marginBottom: 6,
                       alignItems: 'center',
                     }}
+                    className="v2-page-grid"
                   >
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39' }}>
                       {item.skill}
                     </div>
                     <div>
                       <div
-                        style={{ fontSize: 12, color: '#2563EB', fontWeight: 700, marginBottom: 4 }}
+                        style={{ fontSize: 12, color: '#087f72', fontWeight: 700, marginBottom: 4 }}
                       >
                         {item.supplyPct}%
                       </div>
                       <div
                         style={{
                           height: 6,
-                          background: '#E2E8F0',
+                          background: '#dfe6e9',
                           borderRadius: 999,
                           overflow: 'hidden',
                         }}
@@ -810,7 +703,7 @@ export default async function DeptDashboard() {
                           style={{
                             width: `${item.supplyPct}%`,
                             height: '100%',
-                            background: '#2563EB',
+                            background: '#087f72',
                             borderRadius: 999,
                           }}
                         />
@@ -818,14 +711,14 @@ export default async function DeptDashboard() {
                     </div>
                     <div>
                       <div
-                        style={{ fontSize: 12, color: '#7C3AED', fontWeight: 700, marginBottom: 4 }}
+                        style={{ fontSize: 12, color: '#087f72', fontWeight: 700, marginBottom: 4 }}
                       >
                         {item.demandPct}%
                       </div>
                       <div
                         style={{
                           height: 6,
-                          background: '#E2E8F0',
+                          background: '#dfe6e9',
                           borderRadius: 999,
                           overflow: 'hidden',
                         }}
@@ -834,7 +727,7 @@ export default async function DeptDashboard() {
                           style={{
                             width: `${item.demandPct}%`,
                             height: '100%',
-                            background: '#7C3AED',
+                            background: '#087f72',
                             borderRadius: 999,
                           }}
                         />
@@ -859,7 +752,7 @@ export default async function DeptDashboard() {
                         <span
                           style={{
                             background: '#ECFDF5',
-                            color: '#10B981',
+                            color: '#168257',
                             border: '1px solid #A7F3D0',
                             padding: '3px 8px',
                             borderRadius: 999,
@@ -876,15 +769,15 @@ export default async function DeptDashboard() {
                 <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <div
-                      style={{ width: 12, height: 12, borderRadius: 3, background: '#2563EB' }}
+                      style={{ width: 12, height: 12, borderRadius: 3, background: '#087f72' }}
                     />
-                    <span style={{ fontSize: 12, color: '#64748B' }}>Student supply</span>
+                    <span style={{ fontSize: 12, color: '#60717d' }}>Student supply</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <div
-                      style={{ width: 12, height: 12, borderRadius: 3, background: '#7C3AED' }}
+                      style={{ width: 12, height: 12, borderRadius: 3, background: '#087f72' }}
                     />
-                    <span style={{ fontSize: 12, color: '#64748B' }}>Employer demand</span>
+                    <span style={{ fontSize: 12, color: '#60717d' }}>Employer demand</span>
                   </div>
                 </div>
               </div>
@@ -896,229 +789,164 @@ export default async function DeptDashboard() {
             )}
           </Panel>
         </DashboardSection>
-
-        {/* ── Semester Trend ── */}
-        <DashboardSection
-          id="trend"
-          title="Semester-over-semester trend"
-          description="How cohort readiness and academic performance have changed across semesters."
-        >
-          <Panel
-            title="Readiness trajectory by semester"
-            description="Average opportunity score and CGPA per semester group."
+        <div className="dashboard-composition">
+          <DashboardSection
+            id="heatmap"
+            title="Skill heatmap"
+            description="The most commonly held skills across your department cohort — thicker bars mean higher penetration."
           >
-            {semesterTrend.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {semesterTrend.map((sem, i) => (
-                  <div
-                    key={sem.semester}
-                    style={{
-                      padding: '16px 18px',
-                      borderRadius: 16,
-                      border: '1px solid #E2E8F0',
-                      background: i === semesterTrend.length - 1 ? '#F0F9FF' : '#fff',
-                    }}
-                  >
+            <Panel
+              title="Department skill coverage"
+              description="Sorted by how many students in your department have each skill."
+            >
+              {skillHeatmap.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {skillHeatmap.map((item, i) => (
+                    <div key={item.skill}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: 5,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div
+                            style={{
+                              width: 22,
+                              height: 22,
+                              borderRadius: 6,
+                              background: '#edf7f3',
+                              color: '#087f72',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 10,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {i + 1}
+                          </div>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: '#182c39' }}>
+                            {item.skill}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ fontSize: 12, color: '#60717d' }}>
+                            {item.count} students
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color:
+                                item.pct >= 60 ? '#168257' : item.pct >= 30 ? '#a86714' : '#60717d',
+                            }}
+                          >
+                            {item.pct}%
+                          </span>
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          height: 8,
+                          background: '#f6f8f9',
+                          borderRadius: 999,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${item.pct}%`,
+                            height: '100%',
+                            borderRadius: 999,
+                            background:
+                              item.pct >= 60
+                                ? 'linear-gradient(90deg, #168257, #34D399)'
+                                : item.pct >= 30
+                                  ? 'linear-gradient(90deg, #a86714, #FBBF24)'
+                                  : 'linear-gradient(90deg, #60717d, #CBD5E1)',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="No skill data yet"
+                  description="Skills will appear once students complete their profiles."
+                />
+              )}
+            </Panel>
+          </DashboardSection>
+          <DashboardSection
+            id="benchmarks"
+            title="Benchmark posture"
+            description="Departmental thresholds used to assess whether the cohort is on track."
+          >
+            <Panel
+              title="Benchmark thresholds"
+              description="The active cohort baseline for readiness, fit, and academic strength."
+            >
+              {benchmark ? (
+                <div style={{ display: 'grid', gap: 16 }}>
+                  <ProgressBar
+                    value={benchmark.minReadinessScore}
+                    label="Minimum readiness score"
+                  />
+                  <ProgressBar
+                    value={benchmark.minFitScore}
+                    label="Minimum fit score"
+                    tone="warning"
+                  />
+                  <div>
                     <div
                       style={{
                         display: 'flex',
-                        alignItems: 'flex-start',
+                        alignItems: 'center',
                         justifyContent: 'space-between',
-                        marginBottom: 12,
-                        flexWrap: 'wrap',
-                        gap: 8,
+                        marginBottom: 8,
                       }}
                     >
-                      <div>
-                        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
-                          {sem.semester}
-                        </div>
-                        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>
-                          {sem.studentCount} students
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 16 }}>
-                        <div style={{ textAlign: 'right' }}>
-                          <div
-                            style={{
-                              fontSize: 20,
-                              fontWeight: 900,
-                              color:
-                                sem.avgScore >= 70
-                                  ? '#10B981'
-                                  : sem.avgScore >= 40
-                                    ? '#F59E0B'
-                                    : '#EF4444',
-                              fontFamily: 'var(--font-display)',
-                              lineHeight: 1,
-                            }}
-                          >
-                            {sem.avgScore}%
-                          </div>
-                          <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>
-                            Avg score
-                          </div>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div
-                            style={{
-                              fontSize: 20,
-                              fontWeight: 900,
-                              color: '#22D3EE',
-                              fontFamily: 'var(--font-display)',
-                              lineHeight: 1,
-                            }}
-                          >
-                            {sem.avgCGPA.toFixed(2)}
-                          </div>
-                          <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>
-                            Avg CGPA
-                          </div>
-                        </div>
-                      </div>
+                      <span style={{ fontSize: 13, color: '#243e4a', fontWeight: 700 }}>
+                        Minimum CGPA
+                      </span>
+                      <span style={{ fontSize: 12, color: '#60717d', fontWeight: 700 }}>
+                        {benchmark.minCGPA.toFixed(2)}
+                      </span>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: '#94A3B8',
-                            marginBottom: 4,
-                            fontWeight: 600,
-                          }}
-                        >
-                          Opportunity Score
-                        </div>
-                        <div
-                          style={{
-                            height: 8,
-                            background: '#F1F5F9',
-                            borderRadius: 999,
-                            overflow: 'hidden',
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: `${sem.avgScore}%`,
-                              height: '100%',
-                              background:
-                                sem.avgScore >= 70
-                                  ? '#10B981'
-                                  : sem.avgScore >= 40
-                                    ? '#F59E0B'
-                                    : '#EF4444',
-                              borderRadius: 999,
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: '#94A3B8',
-                            marginBottom: 4,
-                            fontWeight: 600,
-                          }}
-                        >
-                          CGPA (out of 4.0)
-                        </div>
-                        <div
-                          style={{
-                            height: 8,
-                            background: '#F1F5F9',
-                            borderRadius: 999,
-                            overflow: 'hidden',
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: `${Math.min((sem.avgCGPA / 4) * 100, 100)}%`,
-                              height: '100%',
-                              background: 'linear-gradient(90deg, #22D3EE, #2563EB)',
-                              borderRadius: 999,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="No semester data yet"
-                description="Trends will appear once students fill in their current semester fields."
-              />
-            )}
-          </Panel>
-        </DashboardSection>
-
-        {/* ── Benchmarks ── */}
-        <DashboardSection
-          id="benchmarks"
-          title="Benchmark posture"
-          description="Departmental thresholds used to assess whether the cohort is on track."
-        >
-          <Panel
-            title="Benchmark thresholds"
-            description="The active cohort baseline for readiness, fit, and academic strength."
-          >
-            {benchmark ? (
-              <div style={{ display: 'grid', gap: 16 }}>
-                <ProgressBar value={benchmark.minReadinessScore} label="Minimum readiness score" />
-                <ProgressBar
-                  value={benchmark.minFitScore}
-                  label="Minimum fit score"
-                  tone="warning"
-                />
-                <div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginBottom: 8,
-                    }}
-                  >
-                    <span style={{ fontSize: 13, color: '#1E293B', fontWeight: 700 }}>
-                      Minimum CGPA
-                    </span>
-                    <span style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>
-                      {benchmark.minCGPA.toFixed(2)}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      height: 10,
-                      borderRadius: 999,
-                      background: '#E2E8F0',
-                      overflow: 'hidden',
-                    }}
-                  >
                     <div
                       style={{
-                        width: `${Math.min((benchmark.minCGPA / 4) * 100, 100)}%`,
-                        height: '100%',
+                        height: 10,
                         borderRadius: 999,
-                        background: 'linear-gradient(90deg, #10B981, #22D3EE)',
+                        background: '#dfe6e9',
+                        overflow: 'hidden',
                       }}
-                    />
+                    >
+                      <div
+                        style={{
+                          width: `${Math.min((benchmark.minCGPA / 4) * 100, 100)}%`,
+                          height: '100%',
+                          borderRadius: 999,
+                          background: '#edf7f3',
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div style={{ padding: '20px 0' }}>
-                <EmptyState
-                  title="No active benchmark"
-                  description="Set a department benchmark to compare cohort health against your desired threshold."
-                />
-              </div>
-            )}
-          </Panel>
-        </DashboardSection>
-
-        {/* ── Top Students ── */}
+              ) : (
+                <div style={{ padding: '20px 0' }}>
+                  <EmptyState
+                    title="No active benchmark"
+                    description="Set a department benchmark to compare cohort health against your desired threshold."
+                  />
+                </div>
+              )}
+            </Panel>
+          </DashboardSection>
+        </div>
         <DashboardSection
           id="students"
           title="Top students"
@@ -1135,15 +963,15 @@ export default async function DeptDashboard() {
                   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
                   gap: 14,
                 }}
-                className="dashboard-grid-two"
+                className="dashboard-grid-two v2-form-grid"
               >
                 {data.topStudents.map((student, i) => (
                   <div
                     key={student.id}
                     style={{
                       padding: 18,
-                      borderRadius: 18,
-                      border: '1px solid #E2E8F0',
+                      borderRadius: 12,
+                      border: '1px solid #dfe6e9',
                       background: '#fff',
                     }}
                   >
@@ -1162,22 +990,22 @@ export default async function DeptDashboard() {
                             height: 36,
                             borderRadius: 12,
                             background:
-                              i < 3 ? 'linear-gradient(135deg, #F59E0B, #FBBF24)' : '#EFF6FF',
-                            color: i < 3 ? '#fff' : '#2563EB',
+                              i < 3 ? 'linear-gradient(135deg, #a86714, #FBBF24)' : '#edf7f3',
+                            color: i < 3 ? '#fff' : '#087f72',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontSize: 14,
-                            fontWeight: 900,
+                            fontWeight: 700,
                           }}
                         >
                           {i + 1}
                         </div>
                         <div>
-                          <div style={{ fontSize: 15, fontWeight: 800, color: '#1E293B' }}>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#243e4a' }}>
                             {student.name}
                           </div>
-                          <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                          <div style={{ fontSize: 12, color: '#60717d', marginTop: 2 }}>
                             {student.department ?? 'Dept unknown'}
                             {student.yearOfStudy ? ` · Year ${student.yearOfStudy}` : ''}
                           </div>
@@ -1187,12 +1015,12 @@ export default async function DeptDashboard() {
                         <div
                           style={{
                             fontSize: 18,
-                            fontWeight: 900,
+                            fontWeight: 700,
                             color:
                               student.opportunityScore >= 70
-                                ? '#10B981'
+                                ? '#168257'
                                 : student.opportunityScore >= 40
-                                  ? '#F59E0B'
+                                  ? '#a86714'
                                   : '#EF4444',
                             fontFamily: 'var(--font-display)',
                             lineHeight: 1,
@@ -1200,7 +1028,7 @@ export default async function DeptDashboard() {
                         >
                           {student.opportunityScore}
                         </div>
-                        <div style={{ fontSize: 10, color: '#94A3B8', fontWeight: 600 }}>score</div>
+                        <div style={{ fontSize: 10, color: '#60717d', fontWeight: 600 }}>score</div>
                       </div>
                     </div>
                     <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
@@ -1214,8 +1042,8 @@ export default async function DeptDashboard() {
                         <div
                           style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}
                         >
-                          <span style={{ color: '#64748B', fontWeight: 600 }}>CGPA</span>
-                          <span style={{ color: '#0F172A', fontWeight: 800 }}>
+                          <span style={{ color: '#60717d', fontWeight: 600 }}>CGPA</span>
+                          <span style={{ color: '#182c39', fontWeight: 800 }}>
                             {student.cgpa.toFixed(2)}
                           </span>
                         </div>
@@ -1232,8 +1060,6 @@ export default async function DeptDashboard() {
             )}
           </Panel>
         </DashboardSection>
-
-        {/* ── Openings + Skill Snapshot ── */}
         <DashboardSection
           id="openings"
           title="Relevant openings"
@@ -1241,7 +1067,7 @@ export default async function DeptDashboard() {
         >
           <div
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
-            className="dashboard-grid-two"
+            className="dashboard-grid-two v2-page-grid"
           >
             <Panel title="Upcoming openings" description="Open roles sorted by closing date.">
               {data.upcomingOpenings.length > 0 ? (
@@ -1251,8 +1077,8 @@ export default async function DeptDashboard() {
                       key={opening.id}
                       style={{
                         padding: 16,
-                        borderRadius: 16,
-                        border: '1px solid #E2E8F0',
+                        borderRadius: 12,
+                        border: '1px solid #dfe6e9',
                         background: '#fff',
                       }}
                     >
@@ -1265,10 +1091,10 @@ export default async function DeptDashboard() {
                         }}
                       >
                         <div>
-                          <div style={{ fontSize: 15, fontWeight: 800, color: '#1E293B' }}>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#243e4a' }}>
                             {opening.title}
                           </div>
-                          <div style={{ marginTop: 3, fontSize: 13, color: '#64748B' }}>
+                          <div style={{ marginTop: 3, fontSize: 13, color: '#60717d' }}>
                             {opening.companyName}
                           </div>
                         </div>
@@ -1281,7 +1107,7 @@ export default async function DeptDashboard() {
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           fontSize: 12,
-                          color: '#64748B',
+                          color: '#60717d',
                         }}
                       >
                         <span>{formatCompactNumber(opening.applicationCount)} applicants</span>
@@ -1317,7 +1143,179 @@ export default async function DeptDashboard() {
             </Panel>
           </div>
         </DashboardSection>
-
+        <div className="dashboard-composition">
+          <DashboardSection
+            id="trend"
+            title="Semester-over-semester trend"
+            description="How cohort readiness and academic performance have changed across semesters."
+          >
+            <Panel
+              title="Readiness trajectory by semester"
+              description="Average opportunity score and CGPA per semester group."
+            >
+              {semesterTrend.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {semesterTrend.map((sem, i) => (
+                    <div
+                      key={sem.semester}
+                      style={{
+                        padding: '16px 18px',
+                        borderRadius: 12,
+                        border: '1px solid #dfe6e9',
+                        background: i === semesterTrend.length - 1 ? '#F0F9FF' : '#fff',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          justifyContent: 'space-between',
+                          marginBottom: 12,
+                          flexWrap: 'wrap',
+                          gap: 8,
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#182c39' }}>
+                            {sem.semester}
+                          </div>
+                          <div style={{ fontSize: 12, color: '#60717d', marginTop: 2 }}>
+                            {sem.studentCount} students
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 16 }}>
+                          <div style={{ textAlign: 'right' }}>
+                            <div
+                              style={{
+                                fontSize: 20,
+                                fontWeight: 700,
+                                color:
+                                  sem.avgScore >= 70
+                                    ? '#168257'
+                                    : sem.avgScore >= 40
+                                      ? '#a86714'
+                                      : '#EF4444',
+                                fontFamily: 'var(--font-display)',
+                                lineHeight: 1,
+                              }}
+                            >
+                              {sem.avgScore}%
+                            </div>
+                            <div style={{ fontSize: 11, color: '#60717d', fontWeight: 600 }}>
+                              Avg score
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div
+                              style={{
+                                fontSize: 20,
+                                fontWeight: 700,
+                                color: '#178d80',
+                                fontFamily: 'var(--font-display)',
+                                lineHeight: 1,
+                              }}
+                            >
+                              {sem.avgCGPA.toFixed(2)}
+                            </div>
+                            <div style={{ fontSize: 11, color: '#60717d', fontWeight: 600 }}>
+                              Avg CGPA
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: '#60717d',
+                              marginBottom: 4,
+                              fontWeight: 600,
+                            }}
+                          >
+                            Opportunity Score
+                          </div>
+                          <div
+                            style={{
+                              height: 8,
+                              background: '#f6f8f9',
+                              borderRadius: 999,
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${sem.avgScore}%`,
+                                height: '100%',
+                                background:
+                                  sem.avgScore >= 70
+                                    ? '#168257'
+                                    : sem.avgScore >= 40
+                                      ? '#a86714'
+                                      : '#EF4444',
+                                borderRadius: 999,
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: '#60717d',
+                              marginBottom: 4,
+                              fontWeight: 600,
+                            }}
+                          >
+                            CGPA (out of 4.0)
+                          </div>
+                          <div
+                            style={{
+                              height: 8,
+                              background: '#f6f8f9',
+                              borderRadius: 999,
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${Math.min((sem.avgCGPA / 4) * 100, 100)}%`,
+                                height: '100%',
+                                background: 'var(--primary)',
+                                borderRadius: 999,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="No semester data yet"
+                  description="Trends will appear once students fill in their current semester fields."
+                />
+              )}
+            </Panel>
+          </DashboardSection>
+          <DashboardSection
+            id="calendar"
+            title="Calendar"
+            description="Track only your own posted department events, including registration deadlines and event dates."
+          >
+            <CalendarBoard
+              events={calendarEvents}
+              isCalendarConnected={deptHead?.googleCalendarConnected ?? false}
+              boardTitle="Calendar"
+              boardSubtitle="Keep only your hosted department sessions and registration cutoffs on one board."
+              fullCalendarHref="/dept/calendar"
+              manageCalendarHref="/dept/profile#calendar"
+              eventHrefTemplate="/dept/events/:jobId/registrants"
+              emptyNextEventMessage="No hosted department events are coming up yet. Post a workshop or webinar to populate this planner."
+            />
+          </DashboardSection>
+        </div>
         <style>{`
           @media (max-width: 1200px) {
             .dashboard-stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }

@@ -1,4 +1,7 @@
 'use client';
+
+import BrandLoader from '@/components/ui/BrandLoader';
+import ContextIcon from '@/components/ui/ContextIcon';
 // src/app/student/ger/page.tsx
 // Graduation Evaluation Report — live preview + download + save to profile
 
@@ -6,7 +9,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Download,
-  FileText,
   Loader2,
   AlertCircle,
   CheckCircle2,
@@ -21,7 +23,6 @@ import {
   TrendingUp,
   ExternalLink,
   Layers,
-  BookOpen,
   Zap,
 } from 'lucide-react';
 import { useUploadThing } from '@/lib/uploadthing';
@@ -29,24 +30,24 @@ import type { GERData, GERCategory } from '@/lib/ger-pdf';
 
 // ── Palette ────────────────────────────────────────────────────────────────
 const C = {
-  blue: '#2563EB',
-  blueDark: '#1D4ED8',
+  blue: '#087f72',
+  blueDark: '#06665d',
   teal: '#0D9488',
-  violet: '#7C3AED',
+  violet: '#087f72',
   emerald: '#059669',
   amber: '#D97706',
   pink: '#DB2777',
   sky: '#0EA5E9',
   indigo: '#6366F1',
-  dark: '#0F172A',
-  navyMid: '#1E293B',
-  bg: '#F1F5F9',
+  dark: '#182c39',
+  navyMid: '#243e4a',
+  bg: '#f6f8f9',
   white: '#fff',
-  border: '#E2E8F0',
-  text: '#0F172A',
-  gray: '#64748B',
-  light: '#94A3B8',
-  success: '#10B981',
+  border: '#dfe6e9',
+  text: '#182c39',
+  gray: '#60717d',
+  light: '#60717d',
+  success: '#168257',
   danger: '#EF4444',
   dangerBg: '#FEF2F2',
   dangerBorder: '#FECACA',
@@ -104,10 +105,10 @@ function CategoryCard({
     <div
       style={{
         background: C.white,
-        borderRadius: 16,
+        borderRadius: 12,
         border: `1px solid ${C.border}`,
         overflow: 'hidden',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+        boxShadow: 'var(--shadow-card)',
         transition: 'box-shadow 0.15s',
         cursor: 'pointer',
       }}
@@ -145,7 +146,7 @@ function CategoryCard({
               {icon}
             </div>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: C.text }}>{cat.label}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{cat.label}</div>
               <div style={{ fontSize: 10, color: C.light, marginTop: 1 }}>
                 Weight: {cat.weight}%
               </div>
@@ -153,7 +154,7 @@ function CategoryCard({
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <div
-              style={{ fontSize: 20, fontWeight: 900, color, fontFamily: 'var(--font-display)' }}
+              style={{ fontSize: 20, fontWeight: 700, color, fontFamily: 'var(--font-display)' }}
             >
               {cat.weightedScore.toFixed(1)}
             </div>
@@ -246,7 +247,7 @@ function StatPill({
         textAlign: 'center',
       }}
     >
-      <div style={{ fontSize: 20, fontWeight: 900, color, fontFamily: 'var(--font-display)' }}>
+      <div style={{ fontSize: 20, fontWeight: 700, color, fontFamily: 'var(--font-display)' }}>
         {value}
       </div>
       <div style={{ fontSize: 11, color: C.gray, marginTop: 3 }}>{label}</div>
@@ -264,7 +265,7 @@ function ScoreRing({ score, grade }: { score: number; grade: string }) {
   return (
     <div style={{ position: 'relative', width: 180, height: 180, margin: '0 auto' }}>
       <svg width={180} height={180} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={90} cy={90} r={r} fill="none" stroke="#E2E8F0" strokeWidth={12} />
+        <circle cx={90} cy={90} r={r} fill="none" stroke="#dfe6e9" strokeWidth={12} />
         <circle
           cx={90}
           cy={90}
@@ -290,7 +291,7 @@ function ScoreRing({ score, grade }: { score: number; grade: string }) {
         <div
           style={{
             fontSize: 36,
-            fontWeight: 900,
+            fontWeight: 700,
             color: gc,
             fontFamily: 'var(--font-display)',
             lineHeight: 1,
@@ -307,7 +308,7 @@ function ScoreRing({ score, grade }: { score: number; grade: string }) {
             padding: '3px 12px',
             borderRadius: 999,
             fontSize: 13,
-            fontWeight: 800,
+            fontWeight: 700,
           }}
         >
           {grade}
@@ -406,23 +407,7 @@ export default function GERPage() {
   }
 
   if (fetching) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: C.bg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: 'var(--font-body)',
-          color: C.gray,
-        }}
-      >
-        <Loader2 size={22} style={{ animation: 'spin 0.8s linear infinite', marginRight: 10 }} />
-        Loading your Graduation Report…
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      </div>
-    );
+    return <BrandLoader variant="page" label="Loading your Graduation Report" />;
   }
 
   const btnDisabled = generating || saving;
@@ -432,18 +417,12 @@ export default function GERPage() {
       {/* ── Header ── */}
       <div
         style={{
-          background: `linear-gradient(145deg, ${C.dark}, ${C.navyMid})`,
+          background: 'var(--surface-muted)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
+        className="v2-light-panel"
       >
         <div style={{ maxWidth: 1060, margin: '0 auto', padding: '20px 24px' }}>
-          <Link
-            href="/student/dashboard"
-            style={{ color: C.gray, fontSize: 13, textDecoration: 'none', fontWeight: 500 }}
-          >
-            ← Back to Dashboard
-          </Link>
-
           <div
             style={{
               display: 'flex',
@@ -461,7 +440,7 @@ export default function GERPage() {
                     width: 38,
                     height: 38,
                     borderRadius: 10,
-                    background: 'linear-gradient(135deg, #7C3AED, #2563EB)',
+                    background: 'var(--primary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -473,8 +452,8 @@ export default function GERPage() {
                 <h1
                   style={{
                     fontSize: 22,
-                    fontWeight: 900,
-                    color: '#F8FAFC',
+                    fontWeight: 700,
+                    color: 'var(--deep)',
                     fontFamily: 'var(--font-display)',
                     margin: 0,
                   }}
@@ -500,7 +479,7 @@ export default function GERPage() {
                     padding: '11px 20px',
                     background: generating
                       ? 'rgba(37,99,235,0.5)'
-                      : 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+                      : 'linear-gradient(135deg, #087f72, #06665d)',
                     color: '#fff',
                     border: 'none',
                     borderRadius: 11,
@@ -533,7 +512,7 @@ export default function GERPage() {
                     padding: '11px 20px',
                     background: saving
                       ? 'rgba(124,58,237,0.5)'
-                      : 'linear-gradient(135deg, #7C3AED, #6D28D9)',
+                      : 'linear-gradient(135deg, #087f72, #06665d)',
                     color: '#fff',
                     border: 'none',
                     borderRadius: 11,
@@ -608,12 +587,12 @@ export default function GERPage() {
           <div
             style={{
               background: C.white,
-              borderRadius: 20,
+              borderRadius: 12,
               border: `1px solid ${C.border}`,
               padding: '60px 40px',
               textAlign: 'center',
               marginBottom: 24,
-              boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <div
@@ -621,7 +600,7 @@ export default function GERPage() {
                 width: 72,
                 height: 72,
                 borderRadius: '50%',
-                background: '#F8FAFC',
+                background: '#f6f8f9',
                 border: `2px solid ${C.border}`,
                 display: 'flex',
                 alignItems: 'center',
@@ -635,7 +614,7 @@ export default function GERPage() {
             <div
               style={{
                 fontSize: 20,
-                fontWeight: 900,
+                fontWeight: 700,
                 color: C.text,
                 fontFamily: 'var(--font-display)',
                 marginBottom: 10,
@@ -736,39 +715,16 @@ export default function GERPage() {
               {/* Score hero card */}
               <div
                 style={{
-                  background: `linear-gradient(135deg, ${C.dark}, ${C.navyMid})`,
-                  borderRadius: 20,
+                  background: 'var(--surface-muted)',
+                  borderRadius: 12,
                   padding: '32px 32px 28px',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
+                  boxShadow: 'var(--shadow-card)',
                   position: 'relative',
                   overflow: 'hidden',
                 }}
+                className="v2-light-panel"
               >
                 {/* Decorative */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: -20,
-                    right: -20,
-                    width: 180,
-                    height: 180,
-                    borderRadius: '50%',
-                    background:
-                      'radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)',
-                  }}
-                />
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: -30,
-                    left: -10,
-                    width: 140,
-                    height: 140,
-                    borderRadius: '50%',
-                    background:
-                      'radial-gradient(circle, rgba(13,148,136,0.10) 0%, transparent 70%)',
-                  }}
-                />
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 40, flexWrap: 'wrap' }}>
                   <ScoreRing score={gerData.totalScore} grade={gerData.grade} />
@@ -789,8 +745,8 @@ export default function GERPage() {
                     <div
                       style={{
                         fontSize: 22,
-                        fontWeight: 900,
-                        color: '#F8FAFC',
+                        fontWeight: 700,
+                        color: 'var(--deep)',
                         fontFamily: 'var(--font-display)',
                         marginBottom: 4,
                       }}
@@ -798,7 +754,7 @@ export default function GERPage() {
                       {gerData.name}
                     </div>
                     {(gerData.department || gerData.university) && (
-                      <div style={{ fontSize: 12, color: '#93C5FD', marginBottom: 8 }}>
+                      <div style={{ fontSize: 12, color: 'var(--deep)', marginBottom: 8 }}>
                         {[gerData.department, gerData.university].filter(Boolean).join('  ·  ')}
                       </div>
                     )}
@@ -826,7 +782,7 @@ export default function GERPage() {
                           key={cat.key}
                           style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                         >
-                          <div style={{ fontSize: 9, color: '#64748B', width: 110, flexShrink: 0 }}>
+                          <div style={{ fontSize: 9, color: '#60717d', width: 110, flexShrink: 0 }}>
                             {cat.label}
                           </div>
                           <div
@@ -867,18 +823,19 @@ export default function GERPage() {
 
               {/* Platform activity stats */}
               <div
+                className="nx-surface"
                 style={{
                   background: C.white,
-                  borderRadius: 18,
+                  borderRadius: 12,
                   border: `1px solid ${C.border}`,
                   padding: '20px 22px',
-                  boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+                  boxShadow: 'var(--shadow-card)',
                 }}
               >
                 <div
                   style={{
                     fontSize: 13,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     color: C.text,
                     marginBottom: 16,
                     fontFamily: 'var(--font-display)',
@@ -886,7 +843,10 @@ export default function GERPage() {
                 >
                   Platform Activity Summary
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                <div
+                  style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}
+                  className="v2-form-grid"
+                >
                   <StatPill
                     label="Job Applications"
                     value={stats.applications ?? 0}
@@ -905,7 +865,7 @@ export default function GERPage() {
                 <div
                   style={{
                     fontSize: 13,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     color: C.text,
                     marginBottom: 14,
                     fontFamily: 'var(--font-display)',
@@ -916,7 +876,10 @@ export default function GERPage() {
                     — click any card to see evidence
                   </span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div
+                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+                  className="v2-page-grid"
+                >
                   {gerData.categories.map((cat, i) => (
                     <CategoryCard
                       key={cat.key}
@@ -960,12 +923,13 @@ export default function GERPage() {
             {/* ── Right: sticky sidebar ── */}
             <div style={{ width: 256, flexShrink: 0 }} className="ger-sidebar">
               <div
+                className="nx-surface"
                 style={{
                   background: C.white,
-                  borderRadius: 18,
+                  borderRadius: 12,
                   border: `1px solid ${C.border}`,
                   padding: '20px',
-                  boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+                  boxShadow: 'var(--shadow-card)',
                   position: 'sticky',
                   top: 24,
                   display: 'flex',
@@ -978,7 +942,7 @@ export default function GERPage() {
                   <div
                     style={{
                       fontSize: 13,
-                      fontWeight: 800,
+                      fontWeight: 700,
                       color: C.text,
                       marginBottom: 14,
                       fontFamily: 'var(--font-display)',
@@ -988,16 +952,17 @@ export default function GERPage() {
                   </div>
                   <div
                     style={{
-                      background: `linear-gradient(135deg, ${C.dark}, ${C.navyMid})`,
+                      background: 'var(--surface-muted)',
                       borderRadius: 14,
                       padding: '18px',
                       textAlign: 'center',
                     }}
+                    className="v2-light-panel"
                   >
                     <div
                       style={{
                         fontSize: 36,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: gradeColor(gerData.grade),
                         fontFamily: 'var(--font-display)',
                       }}
@@ -1010,11 +975,11 @@ export default function GERPage() {
                         display: 'inline-block',
                         marginTop: 8,
                         background: gradeColor(gerData.grade),
-                        color: '#fff',
+                        color: 'var(--deep)',
                         padding: '4px 16px',
                         borderRadius: 999,
                         fontSize: 14,
-                        fontWeight: 800,
+                        fontWeight: 700,
                       }}
                     >
                       {gerData.grade}
@@ -1048,7 +1013,7 @@ export default function GERPage() {
                         <span style={{ fontSize: 11, color: C.gray, fontWeight: 600 }}>
                           {cat.label}
                         </span>
-                        <span style={{ fontSize: 11, fontWeight: 800, color: CAT_COLORS[i] }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: CAT_COLORS[i] }}>
                           {cat.weightedScore.toFixed(1)}
                           <span style={{ color: C.light, fontWeight: 400 }}>/{cat.weight}</span>
                         </span>
@@ -1228,7 +1193,7 @@ export default function GERPage() {
                     }}
                   >
                     <div style={{ fontSize: 12, fontWeight: 700, color: C.amber, marginBottom: 4 }}>
-                      🎓 Preview Mode
+                      <ContextIcon name="graduation" /> Preview Mode
                     </div>
                     <div style={{ fontSize: 11, color: C.gray, lineHeight: 1.6 }}>
                       Mark yourself as graduated on your profile to unlock the official GER and PDF

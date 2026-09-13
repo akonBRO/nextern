@@ -18,6 +18,7 @@ export default async function DepartmentHeadShell({ children }: { children: Reac
 
   return (
     <DashboardShell
+      embedded
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"

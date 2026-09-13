@@ -27,6 +27,7 @@ export default async function DeptAdvisorsPage() {
 
   return (
     <DashboardShell
+      embedded
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
@@ -57,7 +58,7 @@ export default async function DeptAdvisorsPage() {
               }}
             >
               <div style={{ display: 'grid', gap: 10 }}>
-                <div style={{ color: '#E2E8F0', fontSize: 14, lineHeight: 1.7 }}>
+                <div style={{ color: '#dfe6e9', fontSize: 14, lineHeight: 1.7 }}>
                   University: <strong>{institutionName}</strong>
                 </div>
                 <div style={{ color: '#9FB4D0', fontSize: 13, lineHeight: 1.7 }}>

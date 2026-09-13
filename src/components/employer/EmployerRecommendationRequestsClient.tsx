@@ -17,7 +17,7 @@ function statusTone(status: StatusKey) {
   if (status === 'accepted') return { bg: '#ECFDF5', border: '#A7F3D0', color: '#166534' };
   if (status === 'rejected') return { bg: '#FEF2F2', border: '#FECACA', color: '#B91C1C' };
   if (status === 'hold') return { bg: '#FFF7ED', border: '#FED7AA', color: '#9A3412' };
-  return { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' };
+  return { bg: '#edf7f3', border: '#bdddd5', color: '#06665d' };
 }
 
 function formatStatus(status: StatusKey) {
@@ -47,8 +47,8 @@ function StatPill({
   return (
     <div
       style={{
-        borderRadius: 18,
-        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        border: '1px solid #dfe6e9',
         background: '#FFFFFF',
         padding: '14px 16px',
         display: 'grid',
@@ -69,7 +69,7 @@ function StatPill({
       >
         <Icon size={18} />
       </div>
-      <div style={{ fontSize: 30, fontWeight: 900, color: '#0F172A', lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 30, fontWeight: 700, color: '#182c39', lineHeight: 1 }}>{value}</div>
       <div style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>{label}</div>
     </div>
   );
@@ -124,7 +124,10 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
   }
 
   return (
-    <div style={{ display: 'grid', gap: 18 }}>
+    <div
+      className="employer-recommendation-workspace"
+      style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 18 }}
+    >
       {/* ── Stats row ── */}
       {!compact && (
         <div
@@ -135,7 +138,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
           }}
           className="employer-recommendation-stats"
         >
-          <StatPill label="Pending" value={summary.pending} Icon={SendToBack} accent="#2563EB" />
+          <StatPill label="Pending" value={summary.pending} Icon={SendToBack} accent="#087f72" />
           <StatPill
             label="Accepted"
             value={summary.accepted}
@@ -151,7 +154,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
       {actionError && (
         <div
           style={{
-            borderRadius: 16,
+            borderRadius: 12,
             border: '1px solid #FECACA',
             background: '#FEF2F2',
             color: '#B91C1C',
@@ -168,9 +171,9 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
       {requests.length === 0 ? (
         <div
           style={{
-            borderRadius: 22,
+            borderRadius: 12,
             border: '1px dashed #CBD5E1',
-            background: '#F8FAFC',
+            background: '#f6f8f9',
             padding: '32px 24px',
             textAlign: 'center',
           }}
@@ -179,9 +182,9 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
             style={{
               width: 58,
               height: 58,
-              borderRadius: 18,
-              background: '#EFF6FF',
-              color: '#2563EB',
+              borderRadius: 12,
+              background: '#edf7f3',
+              color: '#087f72',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -190,10 +193,10 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
           >
             <ShieldCheck size={24} />
           </div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A' }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#182c39' }}>
             No recommendation requests yet
           </div>
-          <div style={{ marginTop: 8, fontSize: 14, lineHeight: 1.7, color: '#64748B' }}>
+          <div style={{ marginTop: 8, fontSize: 14, lineHeight: 1.7, color: '#60717d' }}>
             Advisor and department-head recommendations for your jobs will appear here as they
             arrive.
           </div>
@@ -206,9 +209,10 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
 
             return (
               <div
+                className="nx-surface"
                 key={request.id}
                 style={{
-                  borderRadius: 24,
+                  borderRadius: 12,
                   border: '1px solid #D9E2EC',
                   background: '#FFFFFF',
                   boxShadow: '0 18px 34px rgba(15,23,42,0.06)',
@@ -240,7 +244,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                           color: tone.color,
                           padding: '6px 11px',
                           fontSize: 11,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           textTransform: 'uppercase',
                         }}
                       >
@@ -256,8 +260,8 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                     <div
                       style={{
                         fontSize: 22,
-                        fontWeight: 900,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                       }}
                     >
@@ -265,7 +269,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                     </div>
 
                     {/* Recommender line */}
-                    <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
+                    <div style={{ fontSize: 13, color: '#60717d', lineHeight: 1.7 }}>
                       Requested by {request.recommender.name}
                       {request.recommender.designation
                         ? ` · ${request.recommender.designation}`
@@ -311,8 +315,8 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                       flexWrap: 'wrap',
                       gap: 10,
                       borderRadius: 14,
-                      border: '1px solid #BFDBFE',
-                      background: '#EFF6FF',
+                      border: '1px solid #bdddd5',
+                      background: '#edf7f3',
                       padding: '11px 14px',
                     }}
                   >
@@ -323,13 +327,13 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                           width: 32,
                           height: 32,
                           borderRadius: '50%',
-                          background: '#2563EB',
+                          background: '#087f72',
                           color: '#FFFFFF',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontSize: 12,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           flexShrink: 0,
                         }}
                       >
@@ -344,7 +348,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                         <div style={{ fontSize: 13, fontWeight: 700, color: '#1E40AF' }}>
                           {request.student.name}
                         </div>
-                        <div style={{ fontSize: 12, color: '#3B82F6' }}>
+                        <div style={{ fontSize: 12, color: '#139b8c' }}>
                           {[request.student.university, request.student.department]
                             .filter(Boolean)
                             .join(' · ') || 'Student'}
@@ -361,7 +365,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                         borderRadius: 10,
                         border: '1px solid #93C5FD',
                         background: '#FFFFFF',
-                        color: '#1D4ED8',
+                        color: '#06665d',
                         padding: '8px 14px',
                         fontSize: 13,
                         fontWeight: 700,
@@ -383,22 +387,22 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                     gridTemplateColumns: compact ? '1fr' : 'minmax(0, 1fr) minmax(280px, 0.8fr)',
                     gap: 16,
                   }}
-                  className="employer-recommendation-detail-grid"
+                  className="employer-recommendation-detail-grid v2-page-grid"
                 >
                   {/* Left — recommendation body */}
                   <div style={{ display: 'grid', gap: 14 }}>
                     <div
                       style={{
-                        borderRadius: 18,
-                        border: '1px solid #E2E8F0',
-                        background: '#F8FAFC',
+                        borderRadius: 12,
+                        border: '1px solid #dfe6e9',
+                        background: '#f6f8f9',
                         padding: '14px 16px',
                       }}
                     >
                       <div
                         style={{
                           fontSize: 11,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           color: '#475569',
                           textTransform: 'uppercase',
                           letterSpacing: 0.7,
@@ -427,15 +431,15 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                   {/* Right — decision panel */}
                   <div
                     style={{
-                      borderRadius: 18,
-                      border: '1px solid #E2E8F0',
+                      borderRadius: 12,
+                      border: '1px solid #dfe6e9',
                       background: '#FFFFFF',
                       padding: '16px',
                       display: 'grid',
                       gap: 12,
                     }}
                   >
-                    <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#182c39' }}>
                       Employer decision
                     </div>
                     <textarea
@@ -453,7 +457,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                         padding: '12px 13px',
                         resize: 'vertical',
                         fontSize: 13,
-                        color: '#0F172A',
+                        color: '#182c39',
                         background: '#FFFFFF',
                         fontFamily: 'inherit',
                       }}
@@ -465,6 +469,7 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                         gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
                         gap: 10,
                       }}
+                      className="v2-form-grid"
                     >
                       <ActionButton
                         label="Accept"
@@ -487,11 +492,11 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
                     </div>
 
                     {request.respondedAt ? (
-                      <div style={{ fontSize: 12, color: '#64748B' }}>
+                      <div style={{ fontSize: 12, color: '#60717d' }}>
                         Last updated {timeLabel(request.respondedAt)}
                       </div>
                     ) : (
-                      <div style={{ fontSize: 12, color: '#64748B' }}>
+                      <div style={{ fontSize: 12, color: '#60717d' }}>
                         Use one of the actions above to update the academic team.
                       </div>
                     )}
@@ -504,8 +509,14 @@ export default function EmployerRecommendationRequestsClient({ requests, compact
       )}
 
       <style>{`
+        .employer-recommendation-workspace, .employer-recommendation-workspace div { min-width: 0 !important; overflow-wrap: anywhere; }
+        .employer-recommendation-detail-grid > * { min-width: 0; overflow-wrap: anywhere; }
+        .employer-recommendation-stats { min-width: 0; }
+        .employer-recommendation-stats > * { min-width: 0; }
+        @media (max-width: 640px) {
+          .employer-recommendation-stats { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        }
         @media (max-width: 980px) {
-          .employer-recommendation-stats,
           .employer-recommendation-detail-grid {
             grid-template-columns: 1fr !important;
           }
@@ -540,7 +551,7 @@ function ActionButton({
         color: accent,
         padding: '11px 12px',
         fontSize: 13,
-        fontWeight: 800,
+        fontWeight: 700,
         cursor: disabled ? 'wait' : 'pointer',
       }}
     >
@@ -558,13 +569,13 @@ function MetaLine({ label, value }: { label: string; value: string }) {
         justifyContent: 'space-between',
         gap: 12,
         borderRadius: 14,
-        border: '1px solid #E2E8F0',
-        background: '#F8FAFC',
+        border: '1px solid #dfe6e9',
+        background: '#f6f8f9',
         padding: '10px 12px',
       }}
     >
-      <span style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>{label}</span>
-      <span style={{ fontSize: 13, color: '#0F172A', fontWeight: 800, textAlign: 'right' }}>
+      <span style={{ fontSize: 12, color: '#60717d', fontWeight: 700 }}>{label}</span>
+      <span style={{ fontSize: 13, color: '#182c39', fontWeight: 700, textAlign: 'right' }}>
         {value}
       </span>
     </div>
@@ -577,7 +588,7 @@ function MiniTag({ label, tone }: { label: string; tone: 'neutral' | 'success' |
       ? { bg: '#ECFDF5', border: '#A7F3D0', color: '#166534' }
       : tone === 'warning'
         ? { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' }
-        : { bg: '#F8FAFC', border: '#E2E8F0', color: '#334155' };
+        : { bg: '#f6f8f9', border: '#dfe6e9', color: '#334155' };
 
   return (
     <span

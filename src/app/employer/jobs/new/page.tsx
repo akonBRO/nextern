@@ -1,4 +1,6 @@
 'use client';
+import FormField from '@/components/ui/FormField';
+import ContextIcon from '@/components/ui/ContextIcon';
 // src/app/employer/jobs/new/page.tsx
 // Multi-step job creation form — 4 steps, uses brand colors
 
@@ -21,19 +23,19 @@ import {
 } from 'lucide-react';
 
 const C = {
-  blue: '#2563EB',
-  indigo: '#1E293B',
-  cyan: '#22D3EE',
-  bg: '#F1F5F9',
-  gray: '#64748B',
-  success: '#10B981',
-  warning: '#F59E0B',
+  blue: '#087f72',
+  indigo: '#243e4a',
+  cyan: '#178d80',
+  bg: '#f6f8f9',
+  gray: '#60717d',
+  success: '#168257',
+  warning: '#a86714',
   white: '#fff',
-  dark: '#0F172A',
-  border: '#E2E8F0',
-  text: '#0F172A',
+  dark: '#182c39',
+  border: '#dfe6e9',
+  text: '#182c39',
   muted: '#374151',
-  light: '#94A3B8',
+  light: '#60717d',
   danger: '#EF4444',
   dangerBg: '#FEF2F2',
   dangerBorder: '#FECACA',
@@ -41,8 +43,8 @@ const C = {
   successBorder: '#A7F3D0',
   warnBg: '#FFFBEB',
   warnBorder: '#FDE68A',
-  blueBg: '#EFF6FF',
-  blueBorder: '#BFDBFE',
+  blueBg: '#edf7f3',
+  blueBorder: '#bdddd5',
 };
 
 const BD_UNIS = [
@@ -104,30 +106,9 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <label
-        style={{ display: 'block', fontSize: 13, fontWeight: 700, color: C.muted, marginBottom: 7 }}
-      >
-        {label}
-        {required && <span style={{ color: C.danger, marginLeft: 2 }}>*</span>}
-      </label>
+    <FormField label={label} required={required} error={error}>
       {children}
-      {error && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            marginTop: 5,
-            color: C.danger,
-            fontSize: 12,
-          }}
-        >
-          <AlertCircle size={13} />
-          {error}
-        </div>
-      )}
-    </div>
+    </FormField>
   );
 }
 
@@ -343,9 +324,9 @@ function ModeCard({
       style={{
         width: '100%',
         textAlign: 'left',
-        borderRadius: 18,
+        borderRadius: 12,
         border: `1.5px solid ${active ? C.blueBorder : C.border}`,
-        background: active ? '#EFF6FF' : '#FFFFFF',
+        background: active ? '#edf7f3' : '#FFFFFF',
         padding: '18px 18px 16px',
         cursor: 'pointer',
         boxShadow: active ? '0 16px 28px rgba(37,99,235,0.12)' : '0 6px 14px rgba(15,23,42,0.04)',
@@ -366,7 +347,7 @@ function ModeCard({
             width: 42,
             height: 42,
             borderRadius: 14,
-            background: active ? '#2563EB' : '#F1F5F9',
+            background: active ? '#087f72' : '#f6f8f9',
             color: active ? '#fff' : '#475569',
             display: 'flex',
             alignItems: 'center',
@@ -381,18 +362,18 @@ function ModeCard({
             minWidth: 0,
             padding: '5px 10px',
             borderRadius: 999,
-            background: active ? '#DBEAFE' : '#F8FAFC',
-            border: `1px solid ${active ? '#BFDBFE' : '#E2E8F0'}`,
-            color: active ? '#1D4ED8' : '#64748B',
+            background: active ? '#dbefea' : '#f6f8f9',
+            border: `1px solid ${active ? '#bdddd5' : '#dfe6e9'}`,
+            color: active ? '#06665d' : '#60717d',
             fontSize: 11,
-            fontWeight: 800,
+            fontWeight: 700,
             letterSpacing: 0.2,
           }}
         >
           {active ? 'Selected' : 'Available'}
         </div>
       </div>
-      <div style={{ fontSize: 16, fontWeight: 900, color: C.text, marginBottom: 6 }}>{title}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 6 }}>{title}</div>
       <div style={{ fontSize: 13, lineHeight: 1.55, color: C.gray, marginBottom: 12 }}>
         {description}
       </div>
@@ -419,7 +400,7 @@ function MetricTile({
   tone?: 'blue' | 'cyan' | 'green' | 'amber';
 }) {
   const toneMap = {
-    blue: { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' },
+    blue: { bg: '#edf7f3', border: '#bdddd5', color: '#06665d' },
     cyan: { bg: '#ECFEFF', border: '#A5F3FC', color: '#0F766E' },
     green: { bg: '#ECFDF5', border: '#A7F3D0', color: '#047857' },
     amber: { bg: '#FFFBEB', border: '#FDE68A', color: '#B45309' },
@@ -428,19 +409,19 @@ function MetricTile({
   return (
     <div
       style={{
-        borderRadius: 16,
+        borderRadius: 12,
         border: `1px solid ${toneMap.border}`,
         background: toneMap.bg,
         padding: '14px 15px',
       }}
     >
-      <div style={{ fontSize: 11, fontWeight: 800, color: C.gray, textTransform: 'uppercase' }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase' }}>
         {label}
       </div>
       <div
         style={{
           fontSize: 18,
-          fontWeight: 900,
+          fontWeight: 700,
           color: toneMap.color,
           marginTop: 6,
           fontFamily: 'var(--font-display)',
@@ -713,10 +694,11 @@ export default function NewJobPage() {
         {/* Header */}
         <div
           style={{
-            background: C.dark,
+            background: 'var(--surface-muted)',
             padding: '24px 0 0',
             borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
+          className="v2-light-panel"
         >
           <div style={{ maxWidth: 820, margin: '0 auto', padding: '0 24px' }}>
             <div style={{ marginBottom: 20 }}>
@@ -730,8 +712,8 @@ export default function NewJobPage() {
             <h1
               style={{
                 fontSize: 24,
-                fontWeight: 900,
-                color: '#F8FAFC',
+                fontWeight: 700,
+                color: 'var(--deep)',
                 fontFamily: 'var(--font-display)',
                 marginBottom: 4,
               }}
@@ -767,10 +749,10 @@ export default function NewJobPage() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: 13,
-                        fontWeight: 800,
+                        fontWeight: 700,
                         background:
                           s.n < step ? C.success : s.n === step ? C.blue : 'rgba(255,255,255,0.1)',
-                        color: s.n <= step ? '#fff' : C.gray,
+                        color: s.n <= step ? 'var(--deep)' : C.gray,
                         boxShadow: s.n === step ? `0 0 0 4px rgba(37,99,235,0.3)` : 'none',
                         transition: 'all 0.2s',
                       }}
@@ -781,7 +763,7 @@ export default function NewJobPage() {
                       style={{
                         fontSize: 11,
                         fontWeight: 600,
-                        color: s.n === step ? '#E2E8F0' : C.gray,
+                        color: s.n === step ? 'var(--deep)' : C.gray,
                         whiteSpace: 'nowrap',
                       }}
                     >
@@ -832,9 +814,9 @@ export default function NewJobPage() {
           <div
             style={{
               background: C.white,
-              borderRadius: 20,
+              borderRadius: 12,
               border: `1px solid ${C.border}`,
-              boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+              boxShadow: 'var(--shadow-card)',
               overflow: 'hidden',
             }}
           >
@@ -846,14 +828,15 @@ export default function NewJobPage() {
                   <Field label="Listing Type">
                     <div
                       style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}
+                      className="v2-form-grid"
                     >
                       {[
-                        { v: 'internship', l: '🎓 Internship' },
+                        { v: 'internship', l: 'Internship' },
                         { v: 'part-time', l: '⏰ Part-time' },
-                        { v: 'full-time', l: '💼 Full-time' },
-                        { v: 'campus-drive', l: '🏫 Campus Drive' },
-                        { v: 'webinar', l: '🌐 Webinar' },
-                        { v: 'workshop', l: '🔧 Workshop' },
+                        { v: 'full-time', l: 'Full-time' },
+                        { v: 'campus-drive', l: 'Campus Drive' },
+                        { v: 'webinar', l: 'Webinar' },
+                        { v: 'workshop', l: 'Workshop' },
                       ].map((t) => (
                         <button
                           key={t.v}
@@ -911,7 +894,10 @@ export default function NewJobPage() {
                     placeholder="Add a responsibility and press Enter"
                   />
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div
+                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+                    className="v2-page-grid"
+                  >
                     <Field label="Work Mode">
                       <select
                         value={form.locationType}
@@ -935,7 +921,10 @@ export default function NewJobPage() {
                   </div>
 
                   {!isEvent && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                    <div
+                      style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}
+                      className="v2-page-grid"
+                    >
                       <Field label="Stipend (BDT/month)" required={false}>
                         <input
                           type="number"
@@ -969,7 +958,10 @@ export default function NewJobPage() {
                     </div>
                   )}
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div
+                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+                    className="v2-page-grid"
+                  >
                     <Field label="Application Deadline" error={errors.applicationDeadline}>
                       <input
                         type="date"
@@ -1052,13 +1044,13 @@ export default function NewJobPage() {
                       <div>
                         <div
                           style={{
-                            fontWeight: 800,
+                            fontWeight: 700,
                             color: C.text,
                             fontSize: 14,
                             fontFamily: 'var(--font-display)',
                           }}
                         >
-                          🏭 Batch Hiring Mode
+                          <ContextIcon name="briefcase" /> Batch Hiring Mode
                         </div>
                         <div style={{ color: C.gray, fontSize: 13, marginTop: 2 }}>
                           Distribute this role across multiple universities simultaneously
@@ -1089,7 +1081,7 @@ export default function NewJobPage() {
                             top: 3,
                             left: form.isBatchHiring ? 25 : 3,
                             transition: 'left 0.2s',
-                            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                            boxShadow: 'var(--shadow-card)',
                           }}
                         />
                       </button>
@@ -1119,6 +1111,7 @@ export default function NewJobPage() {
                       gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
                       gap: 14,
                     }}
+                    className="v2-page-grid"
                   >
                     <ModeCard
                       active={!form.isBatchHiring}
@@ -1149,14 +1142,14 @@ export default function NewJobPage() {
                   {form.isBatchHiring ? (
                     <div
                       style={{
-                        borderRadius: 20,
+                        borderRadius: 12,
                         border: `1px solid ${C.blueBorder}`,
-                        background: '#EFF6FF',
+                        background: '#edf7f3',
                         padding: 22,
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 18,
-                        boxShadow: '0 18px 32px rgba(37,99,235,0.08)',
+                        boxShadow: 'var(--shadow-card)',
                       }}
                     >
                       <div
@@ -1175,12 +1168,12 @@ export default function NewJobPage() {
                               alignItems: 'center',
                               gap: 8,
                               borderRadius: 999,
-                              background: '#DBEAFE',
-                              color: '#1D4ED8',
-                              border: '1px solid #BFDBFE',
+                              background: '#dbefea',
+                              color: '#06665d',
+                              border: '1px solid #bdddd5',
                               padding: '6px 12px',
                               fontSize: 12,
-                              fontWeight: 800,
+                              fontWeight: 700,
                               marginBottom: 12,
                             }}
                           >
@@ -1191,7 +1184,7 @@ export default function NewJobPage() {
                             style={{
                               fontSize: 24,
                               lineHeight: 1.15,
-                              fontWeight: 900,
+                              fontWeight: 700,
                               color: C.text,
                               fontFamily: 'var(--font-display)',
                               marginBottom: 8,
@@ -1229,6 +1222,7 @@ export default function NewJobPage() {
                           gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
                           gap: 12,
                         }}
+                        className="v2-page-grid"
                       >
                         <MetricTile
                           label="Campuses"
@@ -1258,7 +1252,7 @@ export default function NewJobPage() {
 
                       <div
                         style={{
-                          borderRadius: 16,
+                          borderRadius: 12,
                           border: `1px solid ${errors.batchUniversities ? C.dangerBorder : C.border}`,
                           background: C.white,
                           padding: 18,
@@ -1281,7 +1275,7 @@ export default function NewJobPage() {
                                 alignItems: 'center',
                                 gap: 8,
                                 fontSize: 15,
-                                fontWeight: 800,
+                                fontWeight: 700,
                                 color: C.text,
                               }}
                             >
@@ -1299,7 +1293,7 @@ export default function NewJobPage() {
                               onClick={() => set('batchUniversities', BD_UNIS)}
                               style={{
                                 border: `1px solid ${C.border}`,
-                                background: '#F8FAFC',
+                                background: '#f6f8f9',
                                 color: C.gray,
                                 borderRadius: 999,
                                 padding: '8px 12px',
@@ -1354,6 +1348,7 @@ export default function NewJobPage() {
                             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                             gap: 10,
                           }}
+                          className="v2-page-grid"
                         >
                           {BD_UNIS.map((uni, index) => {
                             const selected = form.batchUniversities.includes(uni);
@@ -1370,9 +1365,9 @@ export default function NewJobPage() {
                                   )
                                 }
                                 style={{
-                                  borderRadius: 16,
+                                  borderRadius: 12,
                                   border: `1.5px solid ${selected ? C.blueBorder : C.border}`,
-                                  background: selected ? '#EFF6FF' : '#FFFFFF',
+                                  background: selected ? '#edf7f3' : '#FFFFFF',
                                   padding: '14px 14px 13px',
                                   textAlign: 'left',
                                   cursor: 'pointer',
@@ -1395,13 +1390,13 @@ export default function NewJobPage() {
                                       width: 26,
                                       height: 26,
                                       borderRadius: 9,
-                                      background: selected ? C.blue : '#F1F5F9',
-                                      color: selected ? '#fff' : '#64748B',
+                                      background: selected ? C.blue : '#f6f8f9',
+                                      color: selected ? '#fff' : '#60717d',
                                       display: 'flex',
                                       alignItems: 'center',
                                       justifyContent: 'center',
                                       fontSize: 12,
-                                      fontWeight: 800,
+                                      fontWeight: 700,
                                       flexShrink: 0,
                                     }}
                                   >
@@ -1410,8 +1405,8 @@ export default function NewJobPage() {
                                   <div
                                     style={{
                                       fontSize: 11,
-                                      fontWeight: 800,
-                                      color: selected ? C.blue : '#94A3B8',
+                                      fontWeight: 700,
+                                      color: selected ? C.blue : '#60717d',
                                       textTransform: 'uppercase',
                                     }}
                                   >
@@ -1453,7 +1448,7 @@ export default function NewJobPage() {
 
                       <div
                         style={{
-                          borderRadius: 18,
+                          borderRadius: 12,
                           border: `1px solid ${C.border}`,
                           background: '#FFFFFF',
                           padding: 18,
@@ -1471,7 +1466,7 @@ export default function NewJobPage() {
                           }}
                         >
                           <div>
-                            <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>
                               Campaign delivery preview
                             </div>
                             <div style={{ color: C.gray, fontSize: 13, marginTop: 3 }}>
@@ -1481,11 +1476,11 @@ export default function NewJobPage() {
                           <div
                             style={{
                               borderRadius: 999,
-                              border: '1px solid #BFDBFE',
-                              background: '#EFF6FF',
-                              color: '#1D4ED8',
+                              border: '1px solid #bdddd5',
+                              background: '#edf7f3',
+                              color: '#06665d',
                               fontSize: 12,
-                              fontWeight: 800,
+                              fontWeight: 700,
                               padding: '7px 12px',
                             }}
                           >
@@ -1501,12 +1496,13 @@ export default function NewJobPage() {
                             gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
                             gap: 12,
                           }}
+                          className="v2-page-grid"
                         >
                           <div
                             style={{
                               borderRadius: 15,
-                              background: '#F8FAFC',
-                              border: '1px solid #E2E8F0',
+                              background: '#f6f8f9',
+                              border: '1px solid #dfe6e9',
                               padding: 14,
                             }}
                           >
@@ -1515,9 +1511,9 @@ export default function NewJobPage() {
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 8,
-                                color: '#0F172A',
+                                color: '#182c39',
                                 fontSize: 13,
-                                fontWeight: 800,
+                                fontWeight: 700,
                                 marginBottom: 6,
                               }}
                             >
@@ -1534,8 +1530,8 @@ export default function NewJobPage() {
                           <div
                             style={{
                               borderRadius: 15,
-                              background: '#F8FAFC',
-                              border: '1px solid #E2E8F0',
+                              background: '#f6f8f9',
+                              border: '1px solid #dfe6e9',
                               padding: 14,
                             }}
                           >
@@ -1544,9 +1540,9 @@ export default function NewJobPage() {
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 8,
-                                color: '#0F172A',
+                                color: '#182c39',
                                 fontSize: 13,
-                                fontWeight: 800,
+                                fontWeight: 700,
                                 marginBottom: 6,
                               }}
                             >
@@ -1560,8 +1556,8 @@ export default function NewJobPage() {
                           <div
                             style={{
                               borderRadius: 15,
-                              background: '#F8FAFC',
-                              border: '1px solid #E2E8F0',
+                              background: '#f6f8f9',
+                              border: '1px solid #dfe6e9',
                               padding: 14,
                             }}
                           >
@@ -1570,9 +1566,9 @@ export default function NewJobPage() {
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 8,
-                                color: '#0F172A',
+                                color: '#182c39',
                                 fontSize: 13,
-                                fontWeight: 800,
+                                fontWeight: 700,
                                 marginBottom: 6,
                               }}
                             >
@@ -1589,8 +1585,9 @@ export default function NewJobPage() {
                     </div>
                   ) : (
                     <div
+                      className="nx-surface"
                       style={{
-                        borderRadius: 20,
+                        borderRadius: 12,
                         border: `1px solid ${C.border}`,
                         background: '#FFFFFF',
                         padding: 22,
@@ -1611,7 +1608,7 @@ export default function NewJobPage() {
                           <div
                             style={{
                               fontSize: 18,
-                              fontWeight: 900,
+                              fontWeight: 700,
                               color: C.text,
                               fontFamily: 'var(--font-display)',
                               marginBottom: 6,
@@ -1627,11 +1624,11 @@ export default function NewJobPage() {
                         <div
                           style={{
                             borderRadius: 999,
-                            background: '#F8FAFC',
-                            border: '1px solid #E2E8F0',
+                            background: '#f6f8f9',
+                            border: '1px solid #dfe6e9',
                             color: C.gray,
                             fontSize: 12,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             padding: '8px 12px',
                           }}
                         >
@@ -1650,9 +1647,9 @@ export default function NewJobPage() {
 
                       <div
                         style={{
-                          borderRadius: 16,
-                          background: '#F8FAFC',
-                          border: '1px solid #E2E8F0',
+                          borderRadius: 12,
+                          background: '#f6f8f9',
+                          border: '1px solid #dfe6e9',
                           padding: 16,
                         }}
                       >
@@ -1662,7 +1659,7 @@ export default function NewJobPage() {
                             alignItems: 'center',
                             gap: 8,
                             fontSize: 13,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             color: C.text,
                             marginBottom: 6,
                           }}
@@ -1740,8 +1737,8 @@ export default function NewJobPage() {
                   }}
                 >
                   <p style={{ color: C.blue, fontSize: 13, margin: 0, fontWeight: 600 }}>
-                    💡 This data feeds directly into Sabbir&apos;s AI Skill Gap & Fit Scoring engine
-                    (Module 2).
+                    <ContextIcon name="target" /> Add the skills and experience candidates need.
+                    These requirements help students understand their fit for the role.
                   </p>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -1752,7 +1749,10 @@ export default function NewJobPage() {
                     placeholder="e.g. React.js, Python — press Enter"
                   />
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div
+                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+                    className="v2-page-grid"
+                  >
                     <Field label="CGPA (on scale of 4)" required={false} error={errors.minimumCGPA}>
                       <input
                         type="number"
@@ -1802,12 +1802,13 @@ export default function NewJobPage() {
                 <SectionLabel label="Review & Publish" />
                 <div
                   style={{
-                    borderRadius: 18,
+                    borderRadius: 12,
                     border: `1px solid ${form.isBatchHiring ? C.blueBorder : C.border}`,
-                    background: form.isBatchHiring ? '#172033' : '#FFFFFF',
+                    background: 'var(--surface-muted)',
                     padding: '20px 22px',
                     marginBottom: 22,
                   }}
+                  className="v2-light-panel"
                 >
                   <div
                     style={{
@@ -1822,10 +1823,10 @@ export default function NewJobPage() {
                       <div
                         style={{
                           fontSize: 12,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           letterSpacing: 0.8,
                           textTransform: 'uppercase',
-                          color: form.isBatchHiring ? '#93C5FD' : '#64748B',
+                          color: form.isBatchHiring ? 'var(--deep)' : '#60717d',
                           marginBottom: 8,
                         }}
                       >
@@ -1835,9 +1836,9 @@ export default function NewJobPage() {
                         style={{
                           fontSize: 24,
                           lineHeight: 1.15,
-                          fontWeight: 900,
+                          fontWeight: 700,
                           fontFamily: 'var(--font-display)',
-                          color: form.isBatchHiring ? '#FFFFFF' : C.text,
+                          color: form.isBatchHiring ? 'var(--deep)' : C.text,
                           marginBottom: 8,
                         }}
                       >
@@ -1849,7 +1850,7 @@ export default function NewJobPage() {
                         style={{
                           fontSize: 14,
                           lineHeight: 1.6,
-                          color: form.isBatchHiring ? '#DBEAFE' : C.gray,
+                          color: form.isBatchHiring ? 'var(--deep)' : C.gray,
                           maxWidth: 560,
                         }}
                       >
@@ -1866,22 +1867,23 @@ export default function NewJobPage() {
                         width: '100%',
                         maxWidth: 360,
                       }}
+                      className="v2-page-grid"
                     >
                       <div
                         style={{
                           borderRadius: 14,
                           padding: '12px 14px',
-                          background: form.isBatchHiring ? 'rgba(255,255,255,0.1)' : '#EFF6FF',
+                          background: form.isBatchHiring ? 'rgba(255,255,255,0.1)' : '#edf7f3',
                           border: form.isBatchHiring
                             ? '1px solid rgba(255,255,255,0.14)'
-                            : '1px solid #BFDBFE',
+                            : '1px solid #bdddd5',
                         }}
                       >
                         <div
                           style={{
                             fontSize: 11,
-                            fontWeight: 800,
-                            color: form.isBatchHiring ? '#BFDBFE' : '#64748B',
+                            fontWeight: 700,
+                            color: form.isBatchHiring ? 'var(--deep)' : '#60717d',
                             textTransform: 'uppercase',
                           }}
                         >
@@ -1891,8 +1893,8 @@ export default function NewJobPage() {
                           style={{
                             marginTop: 5,
                             fontSize: 18,
-                            fontWeight: 900,
-                            color: form.isBatchHiring ? '#FFFFFF' : '#1D4ED8',
+                            fontWeight: 700,
+                            color: form.isBatchHiring ? 'var(--deep)' : '#06665d',
                           }}
                         >
                           {selectedUniversityCount > 0 ? selectedUniversityCount : 'All'}
@@ -1911,8 +1913,8 @@ export default function NewJobPage() {
                         <div
                           style={{
                             fontSize: 11,
-                            fontWeight: 800,
-                            color: form.isBatchHiring ? '#BFDBFE' : '#64748B',
+                            fontWeight: 700,
+                            color: form.isBatchHiring ? 'var(--deep)' : '#60717d',
                             textTransform: 'uppercase',
                           }}
                         >
@@ -1922,8 +1924,8 @@ export default function NewJobPage() {
                           style={{
                             marginTop: 5,
                             fontSize: 18,
-                            fontWeight: 900,
-                            color: form.isBatchHiring ? '#FFFFFF' : '#047857',
+                            fontWeight: 700,
+                            color: form.isBatchHiring ? 'var(--deep)' : '#047857',
                           }}
                         >
                           {form.targetDepartments.length > 0
@@ -2082,7 +2084,7 @@ export default function NewJobPage() {
                       fontSize: 14,
                       fontWeight: 700,
                       fontFamily: 'var(--font-display)',
-                      boxShadow: '0 4px 12px rgba(37,99,235,0.35)',
+                      boxShadow: 'var(--shadow-card)',
                     }}
                   >
                     Next <ChevronRight size={15} />

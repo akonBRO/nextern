@@ -41,9 +41,9 @@ import StudentReviewForm from '@/components/reviews/StudentReviewForm';
 import ReputationHistory from '@/components/reviews/ReputationHistory';
 
 const TYPE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
-  internship: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE' },
+  internship: { bg: '#edf7f3', color: '#087f72', border: '#bdddd5' },
   'part-time': { bg: '#ECFDF5', color: '#065F46', border: '#A7F3D0' },
-  'full-time': { bg: '#EDE9FE', color: '#7C3AED', border: '#DDD6FE' },
+  'full-time': { bg: '#e0f0eb', color: '#087f72', border: '#bdddd5' },
   'campus-drive': { bg: '#FFFBEB', color: '#92400E', border: '#FDE68A' },
   webinar: { bg: '#F0F9FF', color: '#0369A1', border: '#BAE6FD' },
   workshop: { bg: '#FEF2F2', color: '#BE123C', border: '#FECDD3' },
@@ -159,6 +159,7 @@ export default async function StudentJobDetailPage({
 
   return (
     <DashboardShell
+      embedded
       role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
@@ -179,41 +180,29 @@ export default async function StudentJobDetailPage({
         {/* Hero */}
         <div
           style={{
-            background: '#172033',
-            borderRadius: 28,
+            background: 'var(--surface-muted)',
+            borderRadius: 12,
             padding: '32px 36px',
-            boxShadow: '0 26px 60px rgba(15,23,42,0.16)',
+            boxShadow: 'var(--shadow-card)',
             position: 'relative',
             overflow: 'hidden',
           }}
+          className="v2-light-panel"
         >
-          <div
-            style={{
-              position: 'absolute',
-              top: -60,
-              right: -60,
-              width: 240,
-              height: 240,
-              background: 'rgba(37,99,235,0.11)',
-              borderRadius: '50%',
-              pointerEvents: 'none',
-            }}
-          />
-
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
             {/* Company logo */}
             <div
               style={{
                 width: 64,
                 height: 64,
-                borderRadius: 16,
+                borderRadius: 12,
                 background: '#334155',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#fff',
+                color: 'var(--deep)',
                 fontSize: 24,
-                fontWeight: 900,
+                fontWeight: 700,
                 flexShrink: 0,
                 fontFamily: 'var(--font-display)',
               }}
@@ -222,7 +211,7 @@ export default async function StudentJobDetailPage({
                 <img
                   src={job.companyLogo}
                   alt=""
-                  style={{ width: 64, height: 64, borderRadius: 16, objectFit: 'cover' }}
+                  style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover' }}
                 />
               ) : (
                 job.companyName.charAt(0)
@@ -248,9 +237,9 @@ export default async function StudentJobDetailPage({
                 {job.isBatchHiring && (
                   <span
                     style={{
-                      background: '#EDE9FE',
-                      color: '#7C3AED',
-                      border: '1px solid #DDD6FE',
+                      background: '#e0f0eb',
+                      color: '#087f72',
+                      border: '1px solid #bdddd5',
                       padding: '4px 12px',
                       borderRadius: 999,
                       fontSize: 12,
@@ -295,8 +284,8 @@ export default async function StudentJobDetailPage({
               <h1
                 style={{
                   fontSize: 30,
-                  fontWeight: 900,
-                  color: '#F8FAFC',
+                  fontWeight: 700,
+                  color: 'var(--deep)',
                   fontFamily: 'var(--font-display)',
                   margin: 0,
                   marginBottom: 6,
@@ -305,7 +294,7 @@ export default async function StudentJobDetailPage({
               >
                 {job.title}
               </h1>
-              <div style={{ color: '#94A3B8', fontSize: 16, fontWeight: 600 }}>
+              <div style={{ color: '#60717d', fontSize: 16, fontWeight: 600 }}>
                 {job.companyName}
               </div>
 
@@ -317,7 +306,7 @@ export default async function StudentJobDetailPage({
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,
-                      color: '#94A3B8',
+                      color: '#60717d',
                       fontSize: 14,
                     }}
                   >
@@ -331,7 +320,7 @@ export default async function StudentJobDetailPage({
                       alignItems: 'center',
                       gap: 6,
                       fontSize: 14,
-                      color: isExpired ? '#EF4444' : daysLeft <= 3 ? '#F59E0B' : '#94A3B8',
+                      color: isExpired ? '#EF4444' : daysLeft <= 3 ? '#a86714' : '#60717d',
                       fontWeight: isExpired || daysLeft <= 3 ? 700 : 400,
                     }}
                   >
@@ -343,7 +332,7 @@ export default async function StudentJobDetailPage({
                     display: 'flex',
                     alignItems: 'center',
                     gap: 6,
-                    color: '#94A3B8',
+                    color: '#60717d',
                     fontSize: 14,
                   }}
                 >
@@ -355,7 +344,7 @@ export default async function StudentJobDetailPage({
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,
-                      color: '#10B981',
+                      color: '#168257',
                       fontSize: 14,
                       fontWeight: 700,
                     }}
@@ -365,7 +354,7 @@ export default async function StudentJobDetailPage({
                   </span>
                 )}
                 {!job.stipendBDT && job.isStipendNegotiable && (
-                  <span style={{ color: '#94A3B8', fontSize: 14 }}>Negotiable stipend</span>
+                  <span style={{ color: '#60717d', fontSize: 14 }}>Negotiable stipend</span>
                 )}
                 {job.durationMonths && (
                   <span
@@ -373,7 +362,7 @@ export default async function StudentJobDetailPage({
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,
-                      color: '#94A3B8',
+                      color: '#60717d',
                       fontSize: 14,
                     }}
                   >
@@ -416,7 +405,7 @@ export default async function StudentJobDetailPage({
               {/* ✅ Fixed: <a> → <Link> for internal navigation */}
               <Link
                 href="/student/jobs"
-                style={{ color: '#64748B', fontSize: 13, textDecoration: 'none', fontWeight: 500 }}
+                style={{ color: '#60717d', fontSize: 13, textDecoration: 'none', fontWeight: 500 }}
               >
                 ← Back to jobs
               </Link>
@@ -437,7 +426,7 @@ export default async function StudentJobDetailPage({
         {/* Content grid */}
         <div
           style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20, marginTop: 24 }}
-          className="job-detail-grid"
+          className="job-detail-grid v2-page-grid"
         >
           {/* Left column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -537,7 +526,7 @@ export default async function StudentJobDetailPage({
                   .filter(Boolean)
                   .map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                      <div style={{ color: '#2563EB', marginTop: 1, flexShrink: 0 }}>
+                      <div style={{ color: '#087f72', marginTop: 1, flexShrink: 0 }}>
                         {item!.icon}
                       </div>
                       <div>
@@ -545,7 +534,7 @@ export default async function StudentJobDetailPage({
                           style={{
                             fontSize: 11,
                             fontWeight: 700,
-                            color: '#94A3B8',
+                            color: '#60717d',
                             textTransform: 'uppercase',
                             letterSpacing: 0.8,
                           }}
@@ -553,7 +542,7 @@ export default async function StudentJobDetailPage({
                           {item!.label}
                         </div>
                         <div
-                          style={{ fontSize: 14, color: '#0F172A', fontWeight: 600, marginTop: 2 }}
+                          style={{ fontSize: 14, color: '#182c39', fontWeight: 600, marginTop: 2 }}
                         >
                           {item!.value}
                         </div>
@@ -575,7 +564,7 @@ export default async function StudentJobDetailPage({
                         style={{
                           fontSize: 12,
                           fontWeight: 700,
-                          color: '#64748B',
+                          color: '#60717d',
                           marginBottom: 8,
                           display: 'flex',
                           alignItems: 'center',
@@ -614,7 +603,7 @@ export default async function StudentJobDetailPage({
                   {job.minimumCGPA && (
                     <div>
                       <div
-                        style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }}
+                        style={{ fontSize: 12, fontWeight: 700, color: '#60717d', marginBottom: 6 }}
                       >
                         Minimum CGPA
                       </div>
@@ -624,13 +613,13 @@ export default async function StudentJobDetailPage({
                           fontWeight: 700,
                           color:
                             student?.cgpa && student.cgpa >= job.minimumCGPA
-                              ? '#10B981'
+                              ? '#168257'
                               : '#EF4444',
                         }}
                       >
                         {job.minimumCGPA.toFixed(2)}
                         {student?.cgpa && (
-                          <span style={{ color: '#64748B', fontWeight: 400 }}>
+                          <span style={{ color: '#60717d', fontWeight: 400 }}>
                             {' '}
                             (yours: {student.cgpa.toFixed(2)})
                           </span>
@@ -642,7 +631,7 @@ export default async function StudentJobDetailPage({
                   {job.requiredCourses?.length > 0 && (
                     <div>
                       <div
-                        style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 8 }}
+                        style={{ fontSize: 12, fontWeight: 700, color: '#60717d', marginBottom: 8 }}
                       >
                         Required Courses
                       </div>
@@ -651,7 +640,7 @@ export default async function StudentJobDetailPage({
                           <span
                             key={c}
                             style={{
-                              background: '#F1F5F9',
+                              background: '#f6f8f9',
                               color: '#475569',
                               padding: '3px 9px',
                               borderRadius: 999,
@@ -669,7 +658,7 @@ export default async function StudentJobDetailPage({
                   {job.experienceExpectations && (
                     <div>
                       <div
-                        style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 4 }}
+                        style={{ fontSize: 12, fontWeight: 700, color: '#60717d', marginBottom: 4 }}
                       >
                         Experience
                       </div>
@@ -689,7 +678,7 @@ export default async function StudentJobDetailPage({
                   {job.targetUniversities?.length > 0 && (
                     <div>
                       <div
-                        style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }}
+                        style={{ fontSize: 12, fontWeight: 700, color: '#60717d', marginBottom: 6 }}
                       >
                         Universities
                       </div>
@@ -703,7 +692,7 @@ export default async function StudentJobDetailPage({
                   {job.targetDepartments?.length > 0 && (
                     <div>
                       <div
-                        style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }}
+                        style={{ fontSize: 12, fontWeight: 700, color: '#60717d', marginBottom: 6 }}
                       >
                         Departments
                       </div>

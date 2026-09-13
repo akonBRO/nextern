@@ -1,4 +1,5 @@
 'use client';
+import ContextIcon from '@/components/ui/ContextIcon';
 // src/app/employer/jobs/[jobId]/applicants/ApplicantActions.tsx
 
 import { useState } from 'react';
@@ -14,11 +15,11 @@ const STATUSES = [
 ];
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; border: string }> = {
-  applied: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE' },
+  applied: { bg: '#edf7f3', color: '#087f72', border: '#bdddd5' },
   under_review: { bg: '#FFFBEB', color: '#92400E', border: '#FDE68A' },
   shortlisted: { bg: '#ECFDF5', color: '#065F46', border: '#A7F3D0' },
   assessment_sent: { bg: '#F0F9FF', color: '#0369A1', border: '#BAE6FD' },
-  interview_scheduled: { bg: '#EDE9FE', color: '#7C3AED', border: '#DDD6FE' },
+  interview_scheduled: { bg: '#e0f0eb', color: '#087f72', border: '#bdddd5' },
   hired: { bg: '#ECFDF5', color: '#065F46', border: '#A7F3D0' },
   rejected: { bg: '#FEF2F2', color: '#991B1B', border: '#FECACA' },
 };
@@ -83,13 +84,13 @@ export default function ApplicantActions({
                 background: '#ECFDF5',
               }}
             >
-              📄
+              <ContextIcon name="file" />
               <span style={{ flex: 1 }}>Resume</span>
               <span
                 style={{
                   fontSize: 10,
                   fontWeight: 700,
-                  color: '#10B981',
+                  color: '#168257',
                   background: '#D1FAE5',
                   border: '1px solid #A7F3D0',
                   padding: '1px 6px',
@@ -113,23 +114,24 @@ export default function ApplicantActions({
                 alignItems: 'center',
                 gap: 6,
                 padding: '7px 12px',
-                border: '1.5px solid #BFDBFE',
+                border: '1.5px solid #bdddd5',
                 borderRadius: 8,
-                color: '#1D4ED8',
+                color: '#06665d',
                 fontSize: 12,
                 fontWeight: 600,
                 textDecoration: 'none',
-                background: '#EFF6FF',
+                background: '#edf7f3',
               }}
             >
-              ⚡<span style={{ flex: 1 }}>In-Platform Resume</span>
+              <ContextIcon name="zap" />
+              <span style={{ flex: 1 }}>In-Platform Resume</span>
               <span
                 style={{
                   fontSize: 10,
                   fontWeight: 700,
-                  color: '#2563EB',
-                  background: '#DBEAFE',
-                  border: '1px solid #BFDBFE',
+                  color: '#087f72',
+                  background: '#dbefea',
+                  border: '1px solid #bdddd5',
                   padding: '1px 6px',
                   borderRadius: 999,
                 }}
@@ -166,11 +168,11 @@ export default function ApplicantActions({
       </select>
 
       {saved && (
-        <div style={{ fontSize: 11, color: '#10B981', fontWeight: 700, textAlign: 'center' }}>
+        <div style={{ fontSize: 11, color: '#168257', fontWeight: 700, textAlign: 'center' }}>
           ✓ Saved
         </div>
       )}
-      {saving && <div style={{ fontSize: 11, color: '#64748B', textAlign: 'center' }}>Saving…</div>}
+      {saving && <div style={{ fontSize: 11, color: '#60717d', textAlign: 'center' }}>Saving…</div>}
     </div>
   );
 }

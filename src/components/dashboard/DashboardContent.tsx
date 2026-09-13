@@ -1,78 +1,27 @@
-import type { CSSProperties, ReactNode } from 'react';
+﻿import type { CSSProperties, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
+import { Inbox } from 'lucide-react';
+import styles from './DashboardContent.module.css';
 
 const palette = {
-  primary: '#2563EB',
-  indigo: '#172033',
-  cyan: '#0891B2',
-  text: '#172033',
-  muted: '#52657A',
-  success: '#059669',
-  warning: '#F59E0B',
-  border: '#D9E2EC',
+  primary: '#087f72',
+  indigo: '#182c39',
+  cyan: '#087f72',
+  text: '#182c39',
+  muted: '#60717d',
+  success: '#19805c',
+  warning: '#a36b17',
+  border: '#dfe6e9',
 };
-
-const heroAsideSurface: CSSProperties = {
-  position: 'relative',
-  overflow: 'hidden',
-  borderRadius: 20,
-  padding: 22,
-  background: 'rgba(255,255,255,0.08)',
-  border: '1px solid rgba(255,255,255,0.16)',
-  boxShadow: '0 14px 32px rgba(15,23,42,0.14)',
-};
-
 function clamp(value: number, min = 0, max = 100) {
   return Math.min(max, Math.max(min, value));
 }
-
 function isHeroAsideStyle(style?: CSSProperties) {
   return (
     typeof style?.background === 'string' &&
     style.background.includes('rgba(255,255,255') &&
     typeof style?.border === 'string' &&
     style.border.includes('rgba(255,255,255')
-  );
-}
-
-function HeroAsideDecorations() {
-  return (
-    <>
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: '0 auto 0 0',
-          width: 8,
-          background: 'rgba(125,211,252,0.72)',
-          pointerEvents: 'none',
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: 84,
-          height: 84,
-          borderRadius: '0 0 0 84px',
-          background: 'rgba(125,211,252,0.12)',
-          pointerEvents: 'none',
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 'auto 0 0 auto',
-          width: 120,
-          height: 5,
-          background: 'rgba(255,255,255,0.16)',
-          pointerEvents: 'none',
-        }}
-      />
-    </>
   );
 }
 
@@ -86,92 +35,45 @@ export function HeroAsideCard({
   contentStyle?: CSSProperties;
 }) {
   return (
-    <div
-      style={{
-        ...heroAsideSurface,
-        ...style,
-      }}
-    >
-      <HeroAsideDecorations />
-      <div style={{ position: 'relative', ...contentStyle }}>{children}</div>
+    <div className={styles.heroAside} style={style}>
+      <div style={contentStyle}>{children}</div>
     </div>
   );
 }
-
 export function DashboardPage({ children }: { children: ReactNode }) {
-  return (
-    <div
-      className="dashboard-page"
-      style={{ maxWidth: 1320, margin: '0 auto', padding: '32px 24px 0' }}
-    >
-      {children}
-    </div>
-  );
+  return <div className={`dashboard-page ${styles.page}`}>{children}</div>;
 }
-
 export function DashboardSection({
   id,
   title,
   description,
   action,
   children,
+  headingLevel = 2,
 }: {
   id?: string;
   title: string;
   description?: string;
   action?: ReactNode;
   children: ReactNode;
+  headingLevel?: 1 | 2;
 }) {
+  const Heading = headingLevel === 1 ? 'h1' : 'h2';
   return (
-    <section id={id} className="dashboard-section" style={{ marginTop: 28, scrollMarginTop: 148 }}>
-      <div
-        className="dashboard-section-header"
-        style={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          justifyContent: 'space-between',
-          gap: 16,
-          marginBottom: 16,
-          flexWrap: 'wrap',
-        }}
-      >
+    <section id={id} className={`dashboard-section ${styles.section}`}>
+      <div className={`dashboard-section-header ${styles.sectionHeader}`}>
         <div className="dashboard-section-copy">
-          <h2
-            className="dashboard-section-title"
-            style={{
-              margin: 0,
-              fontSize: 24,
-              lineHeight: 1.15,
-              color: palette.text,
-              fontWeight: 800,
-              fontFamily: 'var(--font-display)',
-              letterSpacing: '-0.03em',
-            }}
-          >
-            {title}
-          </h2>
-          {description ? (
-            <p
-              className="dashboard-section-description"
-              style={{
-                margin: '8px 0 0',
-                fontSize: 14,
-                lineHeight: 1.6,
-                color: palette.muted,
-                maxWidth: 720,
-              }}
-            >
-              {description}
-            </p>
-          ) : null}
+          <Heading className={`dashboard-section-title ${styles.sectionTitle}`}>{title}</Heading>
+          {description && (
+            <p className={`dashboard-section-description ${styles.description}`}>{description}</p>
+          )}
         </div>
-        {action ? <div>{action}</div> : null}
+        {action && <div className={styles.sectionAction}>{action}</div>}
       </div>
       {children}
     </section>
   );
 }
-
 export function HeroCard({
   eyebrow,
   title,
@@ -188,110 +90,24 @@ export function HeroCard({
   aside?: ReactNode;
 }) {
   return (
-    <div
-      className="dashboard-hero-card"
-      style={{
-        position: 'relative',
-        overflow: 'hidden',
-        borderRadius: 24,
-        padding: 28,
-        background: '#234A8A',
-        boxShadow: '0 20px 48px rgba(15,23,42,0.14)',
-      }}
-    >
+    <div className={`dashboard-hero-card ${styles.hero}`}>
       <div
-        style={{
-          position: 'absolute',
-          inset: 'auto -80px -110px auto',
-          width: 260,
-          height: 260,
-          borderRadius: '50%',
-          background: 'rgba(125,211,252,0.12)',
-        }}
-      />
-      <div
-        style={{
-          position: 'relative',
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1.75fr) minmax(300px, 1fr)',
-          gap: 20,
-        }}
-        className="dashboard-hero-grid"
+        className={`dashboard-hero-grid ${styles.heroGrid} ${!aside ? styles.heroWithoutAside : ''}`}
       >
-        <div>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '8px 12px',
-              borderRadius: 999,
-              border: '1px solid rgba(255,255,255,0.14)',
-              background: 'rgba(255,255,255,0.08)',
-              color: '#DCEBFF',
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}
-          >
-            {eyebrow}
-          </div>
-
-          <h1
-            className="dashboard-hero-title"
-            style={{
-              margin: '18px 0 0',
-              fontSize: 38,
-              lineHeight: 1.06,
-              color: '#FFFFFF',
-              fontWeight: 900,
-              letterSpacing: '-0.05em',
-              fontFamily: 'var(--font-display)',
-              maxWidth: 700,
-            }}
-          >
-            {title}
-          </h1>
-
-          {/* ── Subtitle — shown under name, above description ── */}
-          {subtitle ? (
-            <div
-              className="dashboard-hero-subtitle"
-              style={{ marginTop: 12, color: '#DCEBFF', fontSize: 14, fontWeight: 700 }}
-            >
-              {subtitle}
-            </div>
-          ) : null}
-
-          <p
-            className="dashboard-hero-description"
-            style={{
-              margin: '14px 0 0',
-              color: '#D6E4FF',
-              fontSize: 15,
-              lineHeight: 1.7,
-              maxWidth: 720,
-            }}
-          >
-            {description}
-          </p>
-
-          {actions ? (
-            <div
-              className="dashboard-hero-actions"
-              style={{ marginTop: 22, display: 'flex', gap: 12, flexWrap: 'wrap' }}
-            >
-              {actions}
-            </div>
-          ) : null}
+        <div className={styles.heroCopy}>
+          <span className={styles.eyebrow}>{eyebrow}</span>
+          <h1 className={`dashboard-hero-title ${styles.heroTitle}`}>{title}</h1>
+          {subtitle && <div className={styles.subtitle}>{subtitle}</div>}
+          <p className={`dashboard-hero-description ${styles.heroDescription}`}>{description}</p>
+          {actions && (
+            <div className={`dashboard-hero-actions ${styles.heroActions}`}>{actions}</div>
+          )}
         </div>
-        {aside ? <div>{aside}</div> : null}
+        {aside && <div className={styles.heroAsideWrap}>{aside}</div>}
       </div>
     </div>
   );
 }
-
 export function ActionLink({
   href,
   label,
@@ -301,32 +117,15 @@ export function ActionLink({
   label: string;
   tone?: 'primary' | 'ghost';
 }) {
-  const isPrimary = tone === 'primary';
   return (
     <a
-      className="dashboard-action-link"
       href={href}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '12px 16px',
-        minHeight: 44,
-        borderRadius: 12,
-        textDecoration: 'none',
-        fontSize: 14,
-        fontWeight: 700,
-        background: isPrimary ? '#FFFFFF' : 'rgba(255,255,255,0.08)',
-        color: isPrimary ? palette.primary : '#FFFFFF',
-        border: isPrimary ? '1px solid rgba(255,255,255,0.28)' : '1px solid rgba(255,255,255,0.14)',
-        boxShadow: isPrimary ? '0 10px 20px rgba(15,23,42,0.12)' : 'none',
-      }}
+      className={`dashboard-action-link ${styles.actionLink} ${tone === 'ghost' ? styles.actionSecondary : ''}`}
     >
       {label}
     </a>
   );
 }
-
 export function StatCard({
   label,
   value,
@@ -343,74 +142,20 @@ export function StatCard({
   showIcon?: boolean;
 }) {
   return (
-    <div
-      className="dashboard-stat-card"
-      style={{
-        borderRadius: 18,
-        background: '#FFFFFF',
-        border: `1px solid ${palette.border}`,
-        padding: 20,
-        boxShadow: '0 10px 28px rgba(15,23,42,0.055)',
-      }}
-    >
-      {showIcon ? (
-        <div
-          className="dashboard-stat-icon"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 16,
-              background: `${accent}14`,
-              color: accent,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Icon size={20} strokeWidth={2} />
-          </div>
-        </div>
-      ) : null}
-      <div
-        className="dashboard-stat-value"
-        style={{
-          marginTop: showIcon ? 18 : 0,
-          fontSize: 32,
-          lineHeight: 1,
-          color: palette.text,
-          fontWeight: 900,
-          letterSpacing: '-0.04em',
-          fontFamily: 'var(--font-display)',
-        }}
-      >
-        {value}
+    <div className={`dashboard-stat-card ${styles.stat}`}>
+      <div className={styles.statHeader}>
+        <span className={`dashboard-stat-label ${styles.statLabel}`}>{label}</span>
+        {showIcon && (
+          <span className={`dashboard-stat-icon ${styles.statIcon}`} style={{ color: accent }}>
+            <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+          </span>
+        )}
       </div>
-      <div
-        className="dashboard-stat-label"
-        style={{ marginTop: 8, fontSize: 14, fontWeight: 700, color: palette.text }}
-      >
-        {label}
-      </div>
-      {hint ? (
-        <div
-          className="dashboard-stat-hint"
-          style={{ marginTop: 6, fontSize: 12, lineHeight: 1.6, color: palette.muted }}
-        >
-          {hint}
-        </div>
-      ) : null}
+      <div className={`dashboard-stat-value ${styles.statValue}`}>{value}</div>
+      {hint && <p className={`dashboard-stat-hint ${styles.statHint}`}>{hint}</p>}
     </div>
   );
 }
-
 export function Panel({
   title,
   description,
@@ -424,71 +169,24 @@ export function Panel({
   children: ReactNode;
   style?: CSSProperties;
 }) {
-  const isHeroAside = isHeroAsideStyle(style);
-
   return (
     <div
-      className="dashboard-panel"
-      style={{
-        borderRadius: 20,
-        background: '#FFFFFF',
-        border: `1px solid ${palette.border}`,
-        padding: 22,
-        boxShadow: '0 10px 28px rgba(15,23,42,0.055)',
-        ...style,
-        ...(isHeroAside ? heroAsideSurface : {}),
-      }}
+      className={`dashboard-panel ${styles.panel} ${isHeroAsideStyle(style) ? styles.heroAside : ''}`}
+      style={style}
     >
-      {isHeroAside ? <HeroAsideDecorations /> : null}
-      <div style={isHeroAside ? { position: 'relative' } : undefined}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: 14,
-            marginBottom: 18,
-            flexWrap: 'wrap',
-          }}
-        >
-          <div>
-            <h3
-              className="dashboard-panel-title"
-              style={{
-                margin: 0,
-                fontSize: isHeroAside ? 18 : 19,
-                lineHeight: 1.2,
-                fontWeight: 800,
-                color: isHeroAside ? '#FFFFFF' : palette.text,
-                fontFamily: 'var(--font-display)',
-                letterSpacing: isHeroAside ? 0 : undefined,
-              }}
-            >
-              {title}
-            </h3>
-            {description ? (
-              <p
-                className="dashboard-panel-description"
-                style={{
-                  margin: '8px 0 0',
-                  fontSize: 13,
-                  lineHeight: 1.6,
-                  color: isHeroAside ? '#DCEBFF' : palette.muted,
-                  fontWeight: isHeroAside ? 500 : undefined,
-                }}
-              >
-                {description}
-              </p>
-            ) : null}
-          </div>
-          {action ? <div>{action}</div> : null}
+      <div className={styles.panelHeader}>
+        <div>
+          <h3 className={`dashboard-panel-title ${styles.panelTitle}`}>{title}</h3>
+          {description && (
+            <p className={`dashboard-panel-description ${styles.description}`}>{description}</p>
+          )}
         </div>
-        {children}
+        {action && <div>{action}</div>}
       </div>
+      {children}
     </div>
   );
 }
-
 export function Tag({
   label,
   tone = 'info',
@@ -496,35 +194,8 @@ export function Tag({
   label: string;
   tone?: 'info' | 'success' | 'warning' | 'neutral';
 }) {
-  const tones = {
-    info: { background: '#EFF6FF', color: palette.primary, border: '#BFDBFE' },
-    success: { background: '#ECFDF5', color: palette.success, border: '#A7F3D0' },
-    warning: { background: '#FFFBEB', color: palette.warning, border: '#FDE68A' },
-    neutral: { background: '#F8FAFC', color: palette.muted, border: '#E2E8F0' },
-  };
-  const colors = tones[tone];
-
-  return (
-    <span
-      className="dashboard-tag"
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: '7px 10px',
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 700,
-        background: colors.background,
-        color: colors.color,
-        border: `1px solid ${colors.border}`,
-      }}
-    >
-      {label}
-    </span>
-  );
+  return <span className={`dashboard-tag ${styles.tag} ${styles[`tag_${tone}`]}`}>{label}</span>;
 }
-
 export function ProgressBar({
   value,
   label,
@@ -534,76 +205,34 @@ export function ProgressBar({
   label?: string;
   tone?: 'primary' | 'success' | 'warning';
 }) {
-  const colors = {
-    primary: '#2563EB',
-    success: '#059669',
-    warning: '#D97706',
-  };
-
+  const colors = { primary: palette.primary, success: palette.success, warning: palette.warning };
   return (
-    <div>
-      {label ? (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            marginBottom: 8,
-          }}
-        >
-          <span style={{ fontSize: 13, color: palette.text, fontWeight: 700 }}>{label}</span>
-          <span style={{ fontSize: 12, color: palette.muted, fontWeight: 700 }}>
-            {clamp(value)}%
-          </span>
+    <div className={styles.progress}>
+      {label && (
+        <div className={styles.progressLabel}>
+          <span>{label}</span>
+          <span>{clamp(value)}%</span>
         </div>
-      ) : null}
+      )}
       <div
-        style={{
-          width: '100%',
-          height: 10,
-          borderRadius: 999,
-          background: '#E2E8F0',
-          overflow: 'hidden',
-        }}
+        className={styles.progressTrack}
+        role="progressbar"
+        aria-label={label ?? 'Progress'}
+        aria-valuenow={clamp(value)}
+        aria-valuemin={0}
+        aria-valuemax={100}
       >
-        <div
-          style={{
-            width: `${clamp(value)}%`,
-            height: '100%',
-            borderRadius: 999,
-            background: colors[tone],
-          }}
-        />
+        <div style={{ width: `${clamp(value)}%`, background: colors[tone] }} />
       </div>
     </div>
   );
 }
-
 export function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <div
-      className="dashboard-empty-state"
-      style={{
-        borderRadius: 20,
-        border: '1px dashed #CBD5E1',
-        background: '#F8FAFC',
-        padding: '28px 18px',
-        textAlign: 'center',
-      }}
-    >
-      <div
-        className="dashboard-empty-state-title"
-        style={{ fontSize: 15, fontWeight: 800, color: palette.text }}
-      >
-        {title}
-      </div>
-      <div
-        className="dashboard-empty-state-description"
-        style={{ marginTop: 8, fontSize: 13, lineHeight: 1.7, color: palette.muted }}
-      >
-        {description}
-      </div>
+    <div className={`dashboard-empty-state ${styles.emptyState}`}>
+      <Inbox size={26} strokeWidth={1.5} aria-hidden="true" />
+      <div className={`dashboard-empty-state-title ${styles.emptyTitle}`}>{title}</div>
+      <p className={`dashboard-empty-state-description ${styles.description}`}>{description}</p>
     </div>
   );
 }

@@ -52,13 +52,13 @@ type TrainingStep = {
 };
 
 const C = {
-  blue: '#2563EB',
-  border: '#E2E8F0',
-  text: '#0F172A',
-  muted: '#64748B',
-  bg: '#F1F5F9',
-  success: '#10B981',
-  warning: '#F59E0B',
+  blue: '#087f72',
+  border: '#dfe6e9',
+  text: '#182c39',
+  muted: '#60717d',
+  bg: '#f6f8f9',
+  success: '#168257',
+  warning: '#a86714',
 };
 
 function Badge({
@@ -69,10 +69,10 @@ function Badge({
   tone?: 'neutral' | 'warning' | 'success' | 'info';
 }) {
   const palette = {
-    neutral: { bg: '#F8FAFC', color: '#475569', border: '#E2E8F0' },
+    neutral: { bg: '#f6f8f9', color: '#475569', border: '#dfe6e9' },
     warning: { bg: '#FFFBEB', color: '#92400E', border: '#FDE68A' },
     success: { bg: '#ECFDF5', color: '#166534', border: '#A7F3D0' },
-    info: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE' },
+    info: { bg: '#edf7f3', color: '#087f72', border: '#bdddd5' },
   } as const;
 
   const colors = palette[tone];
@@ -100,10 +100,10 @@ function StatusNotice({ meta }: { meta: AIExecutionMeta }) {
   const info = describeAIExecutionMeta(meta);
   const palette =
     meta.mode === 'ai'
-      ? { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' }
+      ? { bg: '#edf7f3', color: '#06665d', border: '#bdddd5' }
       : meta.mode === 'fallback'
         ? { bg: '#FFFBEB', color: '#92400E', border: '#FDE68A' }
-        : { bg: '#F8FAFC', color: '#475569', border: '#E2E8F0' };
+        : { bg: '#f6f8f9', color: '#475569', border: '#dfe6e9' };
 
   return (
     <div
@@ -210,12 +210,13 @@ export default function SkillsHubClient({
   return (
     <div style={{ display: 'grid', gap: 18 }}>
       <div
+        className="skills-overview nx-surface"
         style={{
-          borderRadius: 24,
+          borderRadius: 12,
           padding: 24,
           background: '#FFFFFF',
           border: `1px solid ${C.border}`,
-          boxShadow: '0 26px 60px rgba(15,23,42,0.16)',
+          boxShadow: 'var(--shadow-card)',
         }}
       >
         <div
@@ -233,10 +234,7 @@ export default function SkillsHubClient({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
-                padding: '8px 12px',
-                borderRadius: 999,
-                border: '1px solid #BFDBFE',
-                background: '#EFF6FF',
+                padding: '0',
                 color: C.blue,
                 fontSize: 12,
                 fontWeight: 700,
@@ -244,7 +242,7 @@ export default function SkillsHubClient({
               }}
             >
               <Sparkles size={14} />
-              Nextern AI workspace
+              Career development
             </div>
             <h2
               style={{
@@ -252,11 +250,11 @@ export default function SkillsHubClient({
                 fontSize: 30,
                 lineHeight: 1.08,
                 color: C.text,
-                fontWeight: 900,
+                fontWeight: 700,
                 fontFamily: 'var(--font-display)',
               }}
             >
-              Understand your gaps, then close them fast
+              Build the skills for your next role
             </h2>
             <p
               style={{
@@ -267,16 +265,16 @@ export default function SkillsHubClient({
                 lineHeight: 1.7,
               }}
             >
-              Every AI feature now shows when Nextern AI generated the result directly and when
-              fallback-generated logic was used instead.
+              Review your application feedback, find skills to work on, and turn your next steps
+              into a learning plan.
             </p>
           </div>
 
-          <div style={{ display: 'grid', gap: 10, minWidth: 260 }}>
+          <div className="skills-usage" style={{ display: 'grid', gap: 10, minWidth: 260 }}>
             <div
               style={{
                 background: C.bg,
-                borderRadius: 16,
+                borderRadius: 12,
                 border: `1px solid ${C.border}`,
                 padding: '14px 16px',
               }}
@@ -288,7 +286,7 @@ export default function SkillsHubClient({
                 style={{
                   color: C.text,
                   fontSize: 28,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   fontFamily: 'var(--font-display)',
                   marginTop: 4,
                 }}
@@ -305,7 +303,7 @@ export default function SkillsHubClient({
             <div
               style={{
                 background: C.bg,
-                borderRadius: 16,
+                borderRadius: 12,
                 border: `1px solid ${C.border}`,
                 padding: '14px 16px',
               }}
@@ -315,7 +313,7 @@ export default function SkillsHubClient({
                 style={{
                   color: C.text,
                   fontSize: 28,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   fontFamily: 'var(--font-display)',
                   marginTop: 4,
                 }}
@@ -364,11 +362,12 @@ export default function SkillsHubClient({
         className="skills-grid"
       >
         <div
+          className="nx-surface"
           style={{
             background: '#FFFFFF',
-            borderRadius: 24,
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
-            boxShadow: '0 16px 34px rgba(15,23,42,0.06)',
+            boxShadow: 'var(--shadow-card)',
             padding: 22,
           }}
         >
@@ -377,7 +376,7 @@ export default function SkillsHubClient({
               style={{
                 margin: 0,
                 fontSize: 20,
-                fontWeight: 800,
+                fontWeight: 700,
                 color: C.text,
                 fontFamily: 'var(--font-display)',
               }}
@@ -399,9 +398,9 @@ export default function SkillsHubClient({
                     key={analysis.applicationId}
                     style={{
                       padding: 18,
-                      borderRadius: 18,
-                      border: '1px solid #E2E8F0',
-                      background: '#F8FAFC',
+                      borderRadius: 12,
+                      border: '1px solid #dfe6e9',
+                      background: '#f6f8f9',
                     }}
                   >
                     <div
@@ -413,7 +412,7 @@ export default function SkillsHubClient({
                       }}
                     >
                       <div>
-                        <div style={{ fontSize: 16, fontWeight: 800, color: C.text }}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>
                           {analysis.jobTitle}
                         </div>
                         <div style={{ marginTop: 4, color: C.muted, fontSize: 13 }}>
@@ -433,7 +432,7 @@ export default function SkillsHubClient({
                         <div
                           style={{
                             fontSize: 30,
-                            fontWeight: 900,
+                            fontWeight: 700,
                             color:
                               analysis.fitScore >= 75
                                 ? C.success
@@ -543,13 +542,13 @@ export default function SkillsHubClient({
                                     width: 22,
                                     height: 22,
                                     borderRadius: 7,
-                                    background: '#EFF6FF',
+                                    background: '#edf7f3',
                                     color: C.blue,
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     fontSize: 11,
-                                    fontWeight: 800,
+                                    fontWeight: 700,
                                     flexShrink: 0,
                                   }}
                                 >
@@ -571,15 +570,15 @@ export default function SkillsHubClient({
           ) : (
             <div
               style={{
-                borderRadius: 20,
+                borderRadius: 12,
                 border: '1px dashed #CBD5E1',
-                background: '#F8FAFC',
+                background: '#f6f8f9',
                 padding: '28px 18px',
                 textAlign: 'center',
               }}
             >
               <Brain size={28} color={C.blue} style={{ marginBottom: 12 }} />
-              <div style={{ fontSize: 16, fontWeight: 800, color: C.text }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>
                 No saved analyses yet
               </div>
               <p
@@ -618,11 +617,12 @@ export default function SkillsHubClient({
 
         <div style={{ display: 'grid', gap: 18 }}>
           <div
+            className="nx-surface"
             style={{
               background: '#FFFFFF',
-              borderRadius: 24,
+              borderRadius: 12,
               border: `1px solid ${C.border}`,
-              boxShadow: '0 16px 34px rgba(15,23,42,0.06)',
+              boxShadow: 'var(--shadow-card)',
               padding: 22,
             }}
           >
@@ -631,7 +631,7 @@ export default function SkillsHubClient({
                 style={{
                   margin: 0,
                   fontSize: 19,
-                  fontWeight: 800,
+                  fontWeight: 700,
                   color: C.text,
                   fontFamily: 'var(--font-display)',
                 }}
@@ -692,13 +692,13 @@ export default function SkillsHubClient({
                     key={`${selectedSkill}-${step.order}`}
                     style={{
                       padding: 14,
-                      borderRadius: 16,
-                      border: '1px solid #E2E8F0',
-                      background: '#F8FAFC',
+                      borderRadius: 12,
+                      border: '1px solid #dfe6e9',
+                      background: '#f6f8f9',
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
                         {step.action}
                       </div>
                       <Badge label={`${step.estimatedDays}d`} tone="info" />
@@ -734,11 +734,12 @@ export default function SkillsHubClient({
           </div>
 
           <div
+            className="nx-surface"
             style={{
               background: '#FFFFFF',
-              borderRadius: 24,
+              borderRadius: 12,
               border: `1px solid ${C.border}`,
-              boxShadow: '0 16px 34px rgba(15,23,42,0.06)',
+              boxShadow: 'var(--shadow-card)',
               padding: 22,
             }}
           >
@@ -747,7 +748,7 @@ export default function SkillsHubClient({
                 style={{
                   margin: 0,
                   fontSize: 19,
-                  fontWeight: 800,
+                  fontWeight: 700,
                   color: C.text,
                   fontFamily: 'var(--font-display)',
                 }}
@@ -825,9 +826,9 @@ export default function SkillsHubClient({
               <div
                 style={{
                   marginTop: 16,
-                  borderRadius: 18,
-                  border: '1px solid #BFDBFE',
-                  background: '#EFF6FF',
+                  borderRadius: 12,
+                  border: '1px solid #bdddd5',
+                  background: '#edf7f3',
                   padding: 16,
                 }}
               >

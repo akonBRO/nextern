@@ -65,6 +65,7 @@ export default async function StudentBadgesPage() {
 
   return (
     <DashboardShell
+      embedded
       role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
@@ -99,7 +100,7 @@ export default async function StudentBadgesPage() {
               <div
                 style={{
                   fontSize: 32,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   color: '#FFFFFF',
                   fontFamily: 'var(--font-display)',
                   lineHeight: 1,
@@ -131,12 +132,13 @@ export default async function StudentBadgesPage() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
               gap: 16,
             }}
+            className="v2-page-grid"
           >
             {progressList.map(
               ({ definition: def, currentCount, threshold, isEarned, progressPercentage }) => {
-                const bg = isEarned ? '#EFF6FF' : '#FFFFFF';
-                const border = isEarned ? '#60A5FA' : '#E2E8F0';
-                const titleColor = isEarned ? '#1E3A8A' : '#1E293B';
+                const bg = isEarned ? '#edf7f3' : '#FFFFFF';
+                const border = isEarned ? '#60A5FA' : '#dfe6e9';
+                const titleColor = isEarned ? '#1E3A8A' : '#243e4a';
 
                 return (
                   <div
@@ -144,7 +146,7 @@ export default async function StudentBadgesPage() {
                     style={{
                       background: bg,
                       border: `2px solid ${border}`,
-                      borderRadius: 18,
+                      borderRadius: 12,
                       padding: 20,
                       position: 'relative',
                       overflow: 'hidden',
@@ -157,10 +159,10 @@ export default async function StudentBadgesPage() {
                           top: 0,
                           right: 0,
                           padding: '6px 14px',
-                          background: '#3B82F6',
+                          background: '#139b8c',
                           color: '#FFF',
                           fontSize: 11,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           borderBottomLeftRadius: 14,
                         }}
                       >
@@ -173,8 +175,8 @@ export default async function StudentBadgesPage() {
                         style={{
                           width: 64,
                           height: 64,
-                          borderRadius: 16,
-                          background: isEarned ? '#DBEAFE' : '#F1F5F9',
+                          borderRadius: 12,
+                          background: isEarned ? '#dbefea' : '#f6f8f9',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -187,11 +189,11 @@ export default async function StudentBadgesPage() {
                       </div>
 
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 16, fontWeight: 800, color: titleColor }}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: titleColor }}>
                           {def.name}
                         </div>
                         <div
-                          style={{ fontSize: 13, color: '#64748B', marginTop: 4, lineHeight: 1.4 }}
+                          style={{ fontSize: 13, color: '#60717d', marginTop: 4, lineHeight: 1.4 }}
                         >
                           {def.description}
                         </div>
@@ -205,8 +207,8 @@ export default async function StudentBadgesPage() {
                           fontWeight: 700,
                           padding: '4px 10px',
                           borderRadius: 999,
-                          background: isEarned ? '#DBEAFE' : '#F1F5F9',
-                          color: isEarned ? '#1E40AF' : '#64748B',
+                          background: isEarned ? '#dbefea' : '#f6f8f9',
+                          color: isEarned ? '#1E40AF' : '#60717d',
                         }}
                       >
                         +{def.marksReward || 0} pts
@@ -217,8 +219,8 @@ export default async function StudentBadgesPage() {
                           fontWeight: 700,
                           padding: '4px 10px',
                           borderRadius: 999,
-                          background: isEarned ? '#DCFCE7' : '#F1F5F9',
-                          color: isEarned ? '#166534' : '#64748B',
+                          background: isEarned ? '#DCFCE7' : '#f6f8f9',
+                          color: isEarned ? '#166534' : '#60717d',
                         }}
                       >
                         Boosts AI Match by {def.aiWeightBoost}x
@@ -233,7 +235,7 @@ export default async function StudentBadgesPage() {
                           marginBottom: 8,
                           fontSize: 12,
                           fontWeight: 700,
-                          color: isEarned ? '#3B82F6' : '#94A3B8',
+                          color: isEarned ? '#139b8c' : '#60717d',
                         }}
                       >
                         <span>{def.criteria}</span>
@@ -244,7 +246,7 @@ export default async function StudentBadgesPage() {
                       <div
                         style={{
                           height: 8,
-                          background: isEarned ? '#BFDBFE' : '#F1F5F9',
+                          background: isEarned ? '#bdddd5' : '#f6f8f9',
                           borderRadius: 999,
                           overflow: 'hidden',
                         }}
@@ -253,7 +255,7 @@ export default async function StudentBadgesPage() {
                           style={{
                             height: '100%',
                             width: `${progressPercentage}%`,
-                            background: isEarned ? '#2563EB' : '#CBD5E1',
+                            background: isEarned ? '#087f72' : '#CBD5E1',
                             borderRadius: 999,
                             transition: 'width 0.6s ease',
                           }}

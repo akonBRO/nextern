@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {
+  AlertCircle,
   Star,
   Award,
   CheckCircle2,
@@ -134,9 +135,9 @@ export default function EmployerReviewForm({
     return (
       <div
         style={{
-          background: rating > 0 ? 'rgba(37, 99, 235, 0.04)' : '#FAFBFC',
-          border: `1.5px solid ${rating > 0 ? 'rgba(37, 99, 235, 0.15)' : '#E8ECF1'}`,
-          borderRadius: 14,
+          background: rating > 0 ? 'rgba(8, 127, 114, 0.04)' : '#FAFBFC',
+          border: `1.5px solid ${rating > 0 ? 'rgba(8, 127, 114, 0.15)' : '#E8ECF1'}`,
+          borderRadius: 12,
           padding: '16px 18px',
           transition: 'all 0.3s ease',
         }}
@@ -147,11 +148,11 @@ export default function EmployerReviewForm({
               width: 28,
               height: 28,
               borderRadius: 8,
-              background: rating > 0 ? 'linear-gradient(135deg, #2563EB, #3B82F6)' : '#F1F5F9',
+              background: rating > 0 ? '#087f72' : '#f6f8f9',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: rating > 0 ? '#fff' : '#94A3B8',
+              color: rating > 0 ? '#fff' : '#6e7f89',
               transition: 'all 0.3s ease',
             }}
           >
@@ -161,7 +162,7 @@ export default function EmployerReviewForm({
             style={{
               fontSize: 13,
               fontWeight: 700,
-              color: rating > 0 ? '#1E293B' : '#64748B',
+              color: rating > 0 ? '#182c39' : '#60717d',
               transition: 'color 0.3s ease',
             }}
           >
@@ -172,11 +173,11 @@ export default function EmployerReviewForm({
               style={{
                 marginLeft: 'auto',
                 fontSize: 12,
-                fontWeight: 800,
-                color: '#2563EB',
-                background: '#EFF6FF',
+                fontWeight: 700,
+                color: '#087f72',
+                background: '#eef7f5',
                 padding: '2px 8px',
-                borderRadius: 999,
+                borderRadius: 6,
               }}
             >
               {rating}/5
@@ -188,6 +189,8 @@ export default function EmployerReviewForm({
             <button
               key={star}
               type="button"
+              aria-label={`${label}: ${star} out of 5`}
+              aria-pressed={star === rating}
               onClick={() => setRating(star)}
               onMouseEnter={() => setHoveredStar((prev) => ({ ...prev, [key]: star }))}
               onMouseLeave={() => setHoveredStar((prev) => ({ ...prev, [key]: 0 }))}
@@ -217,18 +220,18 @@ export default function EmployerReviewForm({
     return (
       <div
         style={{
-          background: 'linear-gradient(145deg, #FAFBFF, #F0F4FF)',
-          borderRadius: 20,
+          background: '#FAFBFF',
+          borderRadius: 12,
           padding: 32,
-          border: '1px solid rgba(37, 99, 235, 0.08)',
+          border: '1px solid rgba(8, 127, 114, 0.08)',
         }}
       >
         <div
           style={{
             width: '100%',
             height: 200,
-            borderRadius: 14,
-            background: 'linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%)',
+            borderRadius: 12,
+            background: 'linear-gradient(90deg, #f6f8f9 25%, #dfe6e9 50%, #f6f8f9 75%)',
             backgroundSize: '200% 100%',
             animation: 'shimmer 1.5s infinite',
           }}
@@ -242,10 +245,10 @@ export default function EmployerReviewForm({
     return (
       <div
         style={{
-          background: 'linear-gradient(145deg, #F0F9FF, #EFF6FF)',
-          borderRadius: 20,
+          background: '#F0F9FF',
+          borderRadius: 12,
           padding: '36px 32px',
-          border: '1px solid rgba(37, 99, 235, 0.12)',
+          border: '1px solid rgba(8, 127, 114, 0.12)',
           textAlign: 'center',
           position: 'relative',
           overflow: 'hidden',
@@ -259,7 +262,7 @@ export default function EmployerReviewForm({
             right: -30,
             width: 120,
             height: 120,
-            background: 'radial-gradient(circle, rgba(37, 99, 235, 0.06) 0%, transparent 70%)',
+            background: 'transparent',
             borderRadius: '50%',
           }}
         />
@@ -270,7 +273,7 @@ export default function EmployerReviewForm({
             left: -20,
             width: 80,
             height: 80,
-            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%)',
+            background: 'transparent',
             borderRadius: '50%',
           }}
         />
@@ -279,13 +282,13 @@ export default function EmployerReviewForm({
           style={{
             width: 64,
             height: 64,
-            borderRadius: 16,
-            background: 'linear-gradient(135deg, #2563EB, #3B82F6)',
+            borderRadius: 12,
+            background: '#087f72',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 16px',
-            boxShadow: '0 8px 24px rgba(37, 99, 235, 0.25)',
+            boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
           }}
         >
           <CheckCircle2 size={32} color="#fff" />
@@ -293,8 +296,8 @@ export default function EmployerReviewForm({
         <h3
           style={{
             fontSize: 20,
-            fontWeight: 900,
-            color: '#0F172A',
+            fontWeight: 750,
+            color: '#182c39',
             fontFamily: 'var(--font-display)',
             margin: '0 0 8px',
           }}
@@ -304,7 +307,7 @@ export default function EmployerReviewForm({
         <p
           style={{
             fontSize: 14,
-            color: '#64748B',
+            color: '#60717d',
             margin: 0,
             lineHeight: 1.6,
             maxWidth: 340,
@@ -333,7 +336,7 @@ export default function EmployerReviewForm({
               color: '#065F46',
               border: '1px solid #A7F3D0',
               padding: '5px 12px',
-              borderRadius: 999,
+              borderRadius: 6,
               fontSize: 12,
               fontWeight: 600,
             }}
@@ -345,11 +348,11 @@ export default function EmployerReviewForm({
               display: 'inline-flex',
               alignItems: 'center',
               gap: 5,
-              background: '#EFF6FF',
-              color: '#1D4ED8',
-              border: '1px solid #BFDBFE',
+              background: '#eef7f5',
+              color: '#06665d',
+              border: '1px solid #c8e3dc',
               padding: '5px 12px',
-              borderRadius: 999,
+              borderRadius: 6,
               fontSize: 12,
               fontWeight: 600,
             }}
@@ -367,7 +370,7 @@ export default function EmployerReviewForm({
           style={{
             marginTop: 24,
             padding: '10px 24px',
-            background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+            background: '#087f72',
             color: '#fff',
             border: 'none',
             borderRadius: 12,
@@ -375,7 +378,7 @@ export default function EmployerReviewForm({
             fontWeight: 700,
             cursor: 'pointer',
             fontFamily: 'var(--font-display)',
-            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+            boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
             transition: 'all 0.2s ease',
           }}
         >
@@ -396,17 +399,17 @@ export default function EmployerReviewForm({
   return (
     <div
       style={{
-        background: 'linear-gradient(145deg, #FAFBFF, #F8FAFF)',
-        borderRadius: 20,
-        border: '1px solid rgba(37, 99, 235, 0.08)',
+        background: '#FAFBFF',
+        borderRadius: 12,
+        border: '1px solid rgba(8, 127, 114, 0.08)',
         overflow: 'hidden',
-        boxShadow: '0 4px 24px rgba(15, 23, 42, 0.06)',
+        boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
       }}
     >
       {/* Header */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #0F172A, #1E293B)',
+          background: '#f6f8f9',
           padding: '24px 28px',
           position: 'relative',
           overflow: 'hidden',
@@ -419,7 +422,7 @@ export default function EmployerReviewForm({
             right: -40,
             width: 160,
             height: 160,
-            background: 'radial-gradient(circle, rgba(37, 99, 235, 0.2) 0%, transparent 70%)',
+            background: 'transparent',
             borderRadius: '50%',
           }}
         />
@@ -429,11 +432,11 @@ export default function EmployerReviewForm({
               width: 42,
               height: 42,
               borderRadius: 12,
-              background: 'linear-gradient(135deg, #2563EB, #3B82F6)',
+              background: '#087f72',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
+              boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
             }}
           >
             <Award size={20} color="#fff" />
@@ -442,8 +445,8 @@ export default function EmployerReviewForm({
             <h2
               style={{
                 fontSize: 18,
-                fontWeight: 900,
-                color: '#F8FAFC',
+                fontWeight: 750,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
                 margin: 0,
                 letterSpacing: '-0.3px',
@@ -451,7 +454,7 @@ export default function EmployerReviewForm({
             >
               Evaluate Student Performance
             </h2>
-            <p style={{ fontSize: 12, color: '#94A3B8', margin: '3px 0 0' }}>
+            <p style={{ fontSize: 12, color: '#6e7f89', margin: '3px 0 0' }}>
               Your verified evaluation appears on the student&apos;s profile
             </p>
           </div>
@@ -465,7 +468,7 @@ export default function EmployerReviewForm({
               justifyContent: 'space-between',
               fontSize: 11,
               fontWeight: 600,
-              color: '#64748B',
+              color: '#60717d',
               marginBottom: 6,
             }}
           >
@@ -476,7 +479,7 @@ export default function EmployerReviewForm({
             style={{
               height: 4,
               borderRadius: 99,
-              background: 'rgba(255,255,255,0.1)',
+              background: '#dfe6e9',
               overflow: 'hidden',
             }}
           >
@@ -484,10 +487,7 @@ export default function EmployerReviewForm({
               style={{
                 height: '100%',
                 borderRadius: 99,
-                background:
-                  progressPct === 100
-                    ? 'linear-gradient(90deg, #10B981, #34D399)'
-                    : 'linear-gradient(90deg, #2563EB, #3B82F6)',
+                background: progressPct === 100 ? '#10B981' : '#087f72',
                 width: `${progressPct}%`,
                 transition: 'width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
               }}
@@ -501,7 +501,7 @@ export default function EmployerReviewForm({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
             gap: 14,
           }}
         >
@@ -531,7 +531,7 @@ export default function EmployerReviewForm({
           style={{
             marginTop: 20,
             paddingTop: 20,
-            borderTop: '1px solid rgba(37, 99, 235, 0.08)',
+            borderTop: '1px solid rgba(8, 127, 114, 0.08)',
           }}
         >
           <label
@@ -541,9 +541,9 @@ export default function EmployerReviewForm({
               gap: 14,
               cursor: 'pointer',
               padding: '16px 18px',
-              background: isRecommended ? 'rgba(37, 99, 235, 0.04)' : '#FAFBFC',
-              border: `1.5px solid ${isRecommended ? 'rgba(37, 99, 235, 0.2)' : '#E8ECF1'}`,
-              borderRadius: 14,
+              background: isRecommended ? 'rgba(8, 127, 114, 0.04)' : '#FAFBFC',
+              border: `1.5px solid ${isRecommended ? 'rgba(8, 127, 114, 0.2)' : '#E8ECF1'}`,
+              borderRadius: 12,
               transition: 'all 0.3s ease',
             }}
           >
@@ -552,8 +552,8 @@ export default function EmployerReviewForm({
                 width: 24,
                 height: 24,
                 borderRadius: 7,
-                border: `2px solid ${isRecommended ? '#2563EB' : '#CBD5E1'}`,
-                background: isRecommended ? '#2563EB' : 'transparent',
+                border: `2px solid ${isRecommended ? '#087f72' : '#CBD5E1'}`,
+                background: isRecommended ? '#087f72' : 'transparent',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -572,8 +572,8 @@ export default function EmployerReviewForm({
             <div>
               <p
                 style={{
-                  fontWeight: 800,
-                  color: '#0F172A',
+                  fontWeight: 700,
+                  color: '#182c39',
                   fontSize: 14,
                   fontFamily: 'var(--font-display)',
                   margin: 0,
@@ -581,13 +581,13 @@ export default function EmployerReviewForm({
               >
                 Formal Recommendation
               </p>
-              <p style={{ fontSize: 12, color: '#64748B', margin: '2px 0 0' }}>
+              <p style={{ fontSize: 12, color: '#60717d', margin: '2px 0 0' }}>
                 Provide a written endorsement that appears publicly on the student&apos;s profile
               </p>
             </div>
             <Award
               size={20}
-              color={isRecommended ? '#2563EB' : '#CBD5E1'}
+              color={isRecommended ? '#087f72' : '#CBD5E1'}
               style={{ marginLeft: 'auto', flexShrink: 0 }}
             />
           </label>
@@ -599,7 +599,7 @@ export default function EmployerReviewForm({
                   display: 'block',
                   fontSize: 12,
                   fontWeight: 700,
-                  color: '#475569',
+                  color: '#435663',
                   marginBottom: 8,
                   textTransform: 'uppercase',
                   letterSpacing: 0.6,
@@ -613,11 +613,11 @@ export default function EmployerReviewForm({
                   boxSizing: 'border-box',
                   padding: '14px 16px',
                   borderRadius: 12,
-                  border: '1.5px solid rgba(37, 99, 235, 0.15)',
+                  border: '1.5px solid rgba(8, 127, 114, 0.15)',
                   background: '#FAFBFF',
                   fontSize: 14,
                   fontFamily: 'var(--font-body)',
-                  color: '#0F172A',
+                  color: '#182c39',
                   outline: 'none',
                   minHeight: 120,
                   resize: 'vertical',
@@ -647,7 +647,11 @@ export default function EmployerReviewForm({
               fontWeight: 600,
             }}
           >
-            ⚠️ {error}
+            <AlertCircle
+              size={16}
+              style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }}
+            />{' '}
+            {error}
           </div>
         )}
 
@@ -658,15 +662,15 @@ export default function EmployerReviewForm({
             width: '100%',
             marginTop: 20,
             padding: '14px 20px',
-            background: filledCount === 4 ? 'linear-gradient(135deg, #2563EB, #1D4ED8)' : '#E2E8F0',
-            color: filledCount === 4 ? '#fff' : '#94A3B8',
+            background: filledCount === 4 ? '#087f72' : '#dfe6e9',
+            color: filledCount === 4 ? '#fff' : '#6e7f89',
             border: 'none',
-            borderRadius: 14,
+            borderRadius: 12,
             fontSize: 15,
-            fontWeight: 800,
+            fontWeight: 700,
             fontFamily: 'var(--font-display)',
             cursor: filledCount === 4 && !isSubmitting ? 'pointer' : 'not-allowed',
-            boxShadow: filledCount === 4 ? '0 6px 20px rgba(37, 99, 235, 0.3)' : 'none',
+            boxShadow: filledCount === 4 ? '0 6px 20px rgba(8, 127, 114, 0.3)' : 'none',
             transition: 'all 0.3s ease',
             display: 'flex',
             alignItems: 'center',

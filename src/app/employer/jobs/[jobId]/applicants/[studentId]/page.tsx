@@ -1,3 +1,4 @@
+import ContextIcon from '@/components/ui/ContextIcon';
 // src/app/employer/jobs/[jobId]/applicants/[studentId]/page.tsx
 // Employer view of a specific applicant's full application + profile
 
@@ -60,19 +61,19 @@ const STATUS_CFG: Record<
   string,
   { bg: string; color: string; border: string; dot: string; label: string }
 > = {
-  applied: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE', dot: '#2563EB', label: 'Applied' },
+  applied: { bg: '#edf7f3', color: '#087f72', border: '#bdddd5', dot: '#087f72', label: 'Applied' },
   under_review: {
     bg: '#FFFBEB',
     color: '#92400E',
     border: '#FDE68A',
-    dot: '#F59E0B',
+    dot: '#a86714',
     label: 'Under Review',
   },
   shortlisted: {
     bg: '#ECFDF5',
     color: '#065F46',
     border: '#A7F3D0',
-    dot: '#10B981',
+    dot: '#168257',
     label: 'Shortlisted',
   },
   assessment_sent: {
@@ -83,10 +84,10 @@ const STATUS_CFG: Record<
     label: 'Assessment Sent',
   },
   interview_scheduled: {
-    bg: '#EDE9FE',
-    color: '#7C3AED',
-    border: '#DDD6FE',
-    dot: '#7C3AED',
+    bg: '#e0f0eb',
+    color: '#087f72',
+    border: '#bdddd5',
+    dot: '#087f72',
     label: 'Interview Scheduled',
   },
   hired: { bg: '#DCFCE7', color: '#065F46', border: '#BBF7D0', dot: '#22C55E', label: 'Hired' },
@@ -98,10 +99,10 @@ const STATUS_CFG: Record<
     label: 'Not Selected',
   },
   withdrawn: {
-    bg: '#F8FAFC',
-    color: '#64748B',
-    border: '#E2E8F0',
-    dot: '#94A3B8',
+    bg: '#f6f8f9',
+    color: '#60717d',
+    border: '#dfe6e9',
+    dot: '#60717d',
     label: 'Withdrawn',
   },
 };
@@ -147,12 +148,13 @@ function SideCard({
 }) {
   return (
     <div
+      className="nx-surface"
       style={{
         background: '#fff',
-        borderRadius: 20,
-        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        border: '1px solid #dfe6e9',
         padding: '20px 22px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
@@ -160,8 +162,8 @@ function SideCard({
         <h3
           style={{
             fontSize: 14,
-            fontWeight: 800,
-            color: '#0F172A',
+            fontWeight: 700,
+            color: '#182c39',
             fontFamily: 'var(--font-display)',
             margin: 0,
           }}
@@ -208,10 +210,10 @@ function PremiumAiGlassLockCard({ fitScore, fitColor }: { fitScore: number; fitC
       style={{
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: 28,
+        borderRadius: 12,
         padding: '1px',
         background: 'rgba(255,255,255,0.82)',
-        boxShadow: '0 24px 70px rgba(15,23,42,0.14), inset 0 1px 0 rgba(255,255,255,0.8)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       <div
@@ -228,7 +230,7 @@ function PremiumAiGlassLockCard({ fitScore, fitColor }: { fitScore: number; fitC
           borderRadius: 27,
           padding: '28px 30px',
           background: 'rgba(255,255,255,0.62)',
-          backdropFilter: 'blur(26px) saturate(160%)',
+          backdropFilter: 'none',
           border: '1px solid rgba(255,255,255,0.66)',
         }}
       >
@@ -237,14 +239,14 @@ function PremiumAiGlassLockCard({ fitScore, fitColor }: { fitScore: number; fitC
             style={{
               width: 58,
               height: 58,
-              borderRadius: 20,
+              borderRadius: 12,
               background: 'rgba(255,255,255,0.86)',
               border: '1px solid rgba(255,255,255,0.78)',
-              color: '#0F172A',
+              color: '#182c39',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 14px 26px rgba(15,23,42,0.12)',
+              boxShadow: 'var(--shadow-card)',
               flexShrink: 0,
             }}
           >
@@ -271,8 +273,8 @@ function PremiumAiGlassLockCard({ fitScore, fitColor }: { fitScore: number; fitC
                   borderRadius: 999,
                   padding: '5px 10px',
                   fontSize: 11,
-                  fontWeight: 900,
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85)',
+                  fontWeight: 700,
+                  boxShadow: 'var(--shadow-card)',
                 }}
               >
                 <Crown size={12} /> Premium insight
@@ -289,7 +291,7 @@ function PremiumAiGlassLockCard({ fitScore, fitColor }: { fitScore: number; fitC
                     borderRadius: 999,
                     padding: '5px 10px',
                     fontSize: 11,
-                    fontWeight: 900,
+                    fontWeight: 700,
                   }}
                 >
                   {fitScore}% fit score ready
@@ -299,10 +301,10 @@ function PremiumAiGlassLockCard({ fitScore, fitColor }: { fitScore: number; fitC
             <h2
               style={{
                 margin: '0 0 8px',
-                color: '#0F172A',
+                color: '#182c39',
                 fontSize: 22,
                 lineHeight: 1.18,
-                fontWeight: 900,
+                fontWeight: 700,
                 fontFamily: 'var(--font-display)',
               }}
             >
@@ -327,8 +329,8 @@ function PremiumAiGlassLockCard({ fitScore, fitColor }: { fitScore: number; fitC
               padding: '12px 16px',
               textDecoration: 'none',
               fontSize: 13,
-              fontWeight: 900,
-              boxShadow: '0 16px 30px rgba(15,23,42,0.22), inset 0 1px 0 rgba(255,255,255,0.18)',
+              fontWeight: 700,
+              boxShadow: 'var(--shadow-card)',
               flexShrink: 0,
             }}
           >
@@ -342,18 +344,18 @@ function PremiumAiGlassLockCard({ fitScore, fitColor }: { fitScore: number; fitC
             gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
             gap: 10,
           }}
-          className="premium-glass-preview"
+          className="premium-glass-preview v2-form-grid"
         >
           {['Automated summary', 'AI fit gaps', 'Suggested prep path'].map((label) => (
             <div
               key={label}
               style={{
                 minHeight: 76,
-                borderRadius: 18,
+                borderRadius: 12,
                 background: 'rgba(255,255,255,0.36)',
                 border: '1px solid rgba(255,255,255,0.58)',
                 padding: 14,
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.62)',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
               <div
@@ -410,7 +412,7 @@ export default async function EmployerApplicantDetailPage({
   const canViewAiInsights = premiumStatus.isPremium;
   const statusCfg = STATUS_CFG[application.status] ?? STATUS_CFG['applied'];
   const fitScore = application.fitScore ?? 0;
-  const fitColor = fitScore >= 70 ? '#10B981' : fitScore >= 40 ? '#F59E0B' : '#EF4444';
+  const fitColor = fitScore >= 70 ? '#168257' : fitScore >= 40 ? '#a86714' : '#EF4444';
   const fitBg = fitScore >= 70 ? '#DCFCE7' : fitScore >= 40 ? '#FFFBEB' : '#FEF2F2';
   const fitBorder = fitScore >= 70 ? '#BBF7D0' : fitScore >= 40 ? '#FDE68A' : '#FECACA';
   const resumeUrl = (student as { resumeUrl?: string }).resumeUrl ?? null;
@@ -441,6 +443,7 @@ export default async function EmployerApplicantDetailPage({
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"
@@ -465,7 +468,7 @@ export default async function EmployerApplicantDetailPage({
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              color: '#64748B',
+              color: '#60717d',
               fontSize: 13,
               fontWeight: 600,
               textDecoration: 'none',
@@ -478,27 +481,15 @@ export default async function EmployerApplicantDetailPage({
           {/* ── Hero ── */}
           <div
             style={{
-              background: '#172033',
-              borderRadius: 24,
+              background: 'var(--surface-muted)',
+              borderRadius: 12,
               padding: '28px 32px',
               marginBottom: 20,
               position: 'relative',
               overflow: 'hidden',
             }}
+            className="v2-light-panel"
           >
-            <div
-              style={{
-                position: 'absolute',
-                top: -50,
-                right: -50,
-                width: 200,
-                height: 200,
-                background: 'rgba(37,99,235,0.14)',
-                borderRadius: '50%',
-                pointerEvents: 'none',
-              }}
-            />
-
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
               {/* Avatar */}
               <div
@@ -506,13 +497,13 @@ export default async function EmployerApplicantDetailPage({
                   width: 72,
                   height: 72,
                   borderRadius: '50%',
-                  background: '#2563EB',
+                  background: '#087f72',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#fff',
                   fontSize: 26,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   flexShrink: 0,
                   overflow: 'hidden',
                   border: '3px solid rgba(255,255,255,0.15)',
@@ -545,8 +536,8 @@ export default async function EmployerApplicantDetailPage({
                   <h1
                     style={{
                       fontSize: 24,
-                      fontWeight: 900,
-                      color: '#F8FAFC',
+                      fontWeight: 700,
+                      color: 'var(--deep)',
                       fontFamily: 'var(--font-display)',
                       margin: 0,
                     }}
@@ -585,7 +576,7 @@ export default async function EmployerApplicantDetailPage({
                     display: 'flex',
                     flexWrap: 'wrap',
                     gap: 14,
-                    color: '#94A3B8',
+                    color: '#60717d',
                     fontSize: 13,
                   }}
                 >
@@ -617,7 +608,7 @@ export default async function EmployerApplicantDetailPage({
                   <p
                     style={{
                       fontSize: 13,
-                      color: '#94A3B8',
+                      color: '#60717d',
                       marginTop: 10,
                       lineHeight: 1.6,
                       fontStyle: 'italic',
@@ -634,12 +625,12 @@ export default async function EmployerApplicantDetailPage({
                     {
                       label: 'Applied',
                       value: formatShortDate(application.appliedAt?.toISOString()),
-                      color: '#F8FAFC',
+                      color: 'var(--deep)',
                     },
                     {
                       label: 'CGPA',
                       value: student.cgpa ? student.cgpa.toFixed(2) : '—',
-                      color: '#22D3EE',
+                      color: '#178d80',
                     },
                     {
                       label: 'Fit Score',
@@ -649,19 +640,19 @@ export default async function EmployerApplicantDetailPage({
                     {
                       label: 'Profile',
                       value: student.profileCompleteness ? `${student.profileCompleteness}%` : '—',
-                      color: '#A78BFA',
+                      color: 'var(--deep)',
                     },
                     {
                       label: 'Opp. Score',
                       value: student.opportunityScore ? `${student.opportunityScore}` : '—',
-                      color: '#F59E0B',
+                      color: '#a86714',
                     },
                   ].map((s) => (
                     <div key={s.label}>
                       <div
                         style={{
                           fontSize: 18,
-                          fontWeight: 900,
+                          fontWeight: 700,
                           color: s.color,
                           fontFamily: 'var(--font-display)',
                           lineHeight: 1,
@@ -670,7 +661,7 @@ export default async function EmployerApplicantDetailPage({
                         {s.value}
                       </div>
                       <div
-                        style={{ fontSize: 11, color: '#64748B', marginTop: 3, fontWeight: 600 }}
+                        style={{ fontSize: 11, color: '#60717d', marginTop: 3, fontWeight: 600 }}
                       >
                         {s.label}
                       </div>
@@ -692,7 +683,7 @@ export default async function EmployerApplicantDetailPage({
                   <div
                     style={{
                       fontSize: 11,
-                      color: '#64748B',
+                      color: '#60717d',
                       fontWeight: 600,
                       marginBottom: 8,
                       textTransform: 'uppercase',
@@ -721,7 +712,7 @@ export default async function EmployerApplicantDetailPage({
                     <div
                       style={{
                         fontSize: 11,
-                        color: '#64748B',
+                        color: '#60717d',
                         fontWeight: 600,
                         textTransform: 'uppercase',
                         letterSpacing: 0.6,
@@ -736,7 +727,7 @@ export default async function EmployerApplicantDetailPage({
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 6,
-                          color: '#67E8F9',
+                          color: 'var(--deep)',
                           fontSize: 12,
                           fontWeight: 700,
                           textDecoration: 'none',
@@ -752,7 +743,7 @@ export default async function EmployerApplicantDetailPage({
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 6,
-                          color: '#C4B5FD',
+                          color: 'var(--deep)',
                           fontSize: 12,
                           fontWeight: 700,
                           textDecoration: 'none',
@@ -770,7 +761,7 @@ export default async function EmployerApplicantDetailPage({
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 7,
-                    background: '#7C3AED',
+                    background: '#087f72',
                     color: '#fff',
                     padding: '10px 18px',
                     borderRadius: 12,
@@ -778,7 +769,7 @@ export default async function EmployerApplicantDetailPage({
                     fontWeight: 700,
                     textDecoration: 'none',
                     border: '1px solid rgba(124,58,237,0.3)',
-                    boxShadow: '0 4px 14px rgba(124,58,237,0.25)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <MessageCircle size={14} /> Message Student
@@ -795,18 +786,19 @@ export default async function EmployerApplicantDetailPage({
               gap: 16,
               alignItems: 'start',
             }}
-            className="app-detail-grid"
+            className="app-detail-grid v2-page-grid"
           >
             {/* ── LEFT ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Cover Letter */}
               <div
+                className="nx-surface"
                 style={{
                   background: '#fff',
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
+                  borderRadius: 12,
+                  border: '1px solid #dfe6e9',
                   padding: '24px 28px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  boxShadow: 'var(--shadow-card)',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -815,11 +807,11 @@ export default async function EmployerApplicantDetailPage({
                       width: 34,
                       height: 34,
                       borderRadius: 10,
-                      background: '#EFF6FF',
+                      background: '#edf7f3',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: '#2563EB',
+                      color: '#087f72',
                     }}
                   >
                     <FileText size={16} />
@@ -827,8 +819,8 @@ export default async function EmployerApplicantDetailPage({
                   <h2
                     style={{
                       fontSize: 16,
-                      fontWeight: 800,
-                      color: '#0F172A',
+                      fontWeight: 700,
+                      color: '#182c39',
                       fontFamily: 'var(--font-display)',
                       margin: 0,
                     }}
@@ -849,7 +841,7 @@ export default async function EmployerApplicantDetailPage({
                     {application.coverLetter}
                   </p>
                 ) : (
-                  <p style={{ fontSize: 14, color: '#94A3B8', fontStyle: 'italic', margin: 0 }}>
+                  <p style={{ fontSize: 14, color: '#60717d', fontStyle: 'italic', margin: 0 }}>
                     No cover letter submitted.
                   </p>
                 )}
@@ -858,12 +850,13 @@ export default async function EmployerApplicantDetailPage({
               {/* Projects */}
               {student.projects && student.projects.length > 0 && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 28px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
@@ -884,8 +877,8 @@ export default async function EmployerApplicantDetailPage({
                     <h2
                       style={{
                         fontSize: 16,
-                        fontWeight: 800,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                         margin: 0,
                       }}
@@ -923,7 +916,7 @@ export default async function EmployerApplicantDetailPage({
                           style={{
                             background: '#FAFBFC',
                             borderRadius: 14,
-                            border: '1px solid #E2E8F0',
+                            border: '1px solid #dfe6e9',
                             padding: '16px 18px',
                           }}
                         >
@@ -936,7 +929,7 @@ export default async function EmployerApplicantDetailPage({
                               marginBottom: 8,
                             }}
                           >
-                            <div style={{ fontSize: 15, fontWeight: 700, color: '#0F172A' }}>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: '#182c39' }}>
                               {proj.title}
                             </div>
                             <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -949,9 +942,9 @@ export default async function EmployerApplicantDetailPage({
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     gap: 4,
-                                    background: '#EFF6FF',
-                                    color: '#2563EB',
-                                    border: '1px solid #BFDBFE',
+                                    background: '#edf7f3',
+                                    color: '#087f72',
+                                    border: '1px solid #bdddd5',
                                     padding: '3px 9px',
                                     borderRadius: 7,
                                     fontSize: 11,
@@ -971,9 +964,9 @@ export default async function EmployerApplicantDetailPage({
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     gap: 4,
-                                    background: '#F1F5F9',
+                                    background: '#f6f8f9',
                                     color: '#475569',
-                                    border: '1px solid #E2E8F0',
+                                    border: '1px solid #dfe6e9',
                                     padding: '3px 9px',
                                     borderRadius: 7,
                                     fontSize: 11,
@@ -990,7 +983,7 @@ export default async function EmployerApplicantDetailPage({
                             <p
                               style={{
                                 fontSize: 13,
-                                color: '#64748B',
+                                color: '#60717d',
                                 lineHeight: 1.65,
                                 margin: '0 0 10px',
                               }}
@@ -1004,9 +997,9 @@ export default async function EmployerApplicantDetailPage({
                                 <span
                                   key={t}
                                   style={{
-                                    background: '#EDE9FE',
-                                    color: '#7C3AED',
-                                    border: '1px solid #DDD6FE',
+                                    background: '#e0f0eb',
+                                    color: '#087f72',
+                                    border: '1px solid #bdddd5',
                                     padding: '2px 8px',
                                     borderRadius: 999,
                                     fontSize: 11,
@@ -1028,12 +1021,13 @@ export default async function EmployerApplicantDetailPage({
               {/* Certifications */}
               {student.certifications && student.certifications.length > 0 && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 28px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
@@ -1046,7 +1040,7 @@ export default async function EmployerApplicantDetailPage({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#10B981',
+                        color: '#168257',
                       }}
                     >
                       <Award size={16} />
@@ -1054,8 +1048,8 @@ export default async function EmployerApplicantDetailPage({
                     <h2
                       style={{
                         fontSize: 16,
-                        fontWeight: 800,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                         margin: 0,
                       }}
@@ -1141,12 +1135,13 @@ export default async function EmployerApplicantDetailPage({
               {/* Automated Fit Summary */}
               {hasAiFitAnalysis && canViewAiInsights && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 28px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                     position: 'relative',
                     overflow: 'hidden',
                   }}
@@ -1166,12 +1161,12 @@ export default async function EmployerApplicantDetailPage({
                           width: 34,
                           height: 34,
                           borderRadius: 10,
-                          background: '#EFF6FF',
-                          border: '1px solid #BFDBFE',
+                          background: '#edf7f3',
+                          border: '1px solid #bdddd5',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: '#2563EB',
+                          color: '#087f72',
                         }}
                       >
                         <Sparkles size={16} />
@@ -1180,8 +1175,8 @@ export default async function EmployerApplicantDetailPage({
                         <h2
                           style={{
                             fontSize: 16,
-                            fontWeight: 800,
-                            color: '#0F172A',
+                            fontWeight: 700,
+                            color: '#182c39',
                             fontFamily: 'var(--font-display)',
                             margin: 0,
                           }}
@@ -1192,7 +1187,7 @@ export default async function EmployerApplicantDetailPage({
                           <div
                             style={{
                               fontSize: 12,
-                              color: '#64748B',
+                              color: '#60717d',
                               marginTop: 3,
                               fontWeight: 600,
                             }}
@@ -1208,13 +1203,13 @@ export default async function EmployerApplicantDetailPage({
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 6,
-                        background: canViewAiInsights ? '#FEF3C7' : '#F1F5F9',
+                        background: canViewAiInsights ? '#FEF3C7' : '#f6f8f9',
                         color: canViewAiInsights ? '#92400E' : '#475569',
-                        border: `1px solid ${canViewAiInsights ? '#FDE68A' : '#E2E8F0'}`,
+                        border: `1px solid ${canViewAiInsights ? '#FDE68A' : '#dfe6e9'}`,
                         borderRadius: 999,
                         padding: '5px 10px',
                         fontSize: 11,
-                        fontWeight: 800,
+                        fontWeight: 700,
                         flexShrink: 0,
                       }}
                     >
@@ -1239,12 +1234,13 @@ export default async function EmployerApplicantDetailPage({
               {/* AI Fit Analysis */}
               {hasAiFitAnalysis && canViewAiInsights && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 28px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                     position: 'relative',
                     overflow: 'hidden',
                   }}
@@ -1276,8 +1272,8 @@ export default async function EmployerApplicantDetailPage({
                       <h2
                         style={{
                           fontSize: 16,
-                          fontWeight: 800,
-                          color: '#0F172A',
+                          fontWeight: 700,
+                          color: '#182c39',
                           fontFamily: 'var(--font-display)',
                           margin: 0,
                         }}
@@ -1289,7 +1285,7 @@ export default async function EmployerApplicantDetailPage({
                       <div
                         style={{
                           fontSize: 28,
-                          fontWeight: 900,
+                          fontWeight: 700,
                           color: fitColor,
                           fontFamily: 'var(--font-display)',
                           lineHeight: 1,
@@ -1297,7 +1293,7 @@ export default async function EmployerApplicantDetailPage({
                       >
                         {fitScore}%
                       </div>
-                      <div style={{ fontSize: 12, color: '#64748B', fontWeight: 600 }}>
+                      <div style={{ fontSize: 12, color: '#60717d', fontWeight: 600 }}>
                         fit score
                       </div>
                     </div>
@@ -1305,7 +1301,7 @@ export default async function EmployerApplicantDetailPage({
                   <div
                     style={{
                       height: 10,
-                      background: '#F1F5F9',
+                      background: '#f6f8f9',
                       borderRadius: 999,
                       overflow: 'hidden',
                       marginBottom: 20,
@@ -1322,7 +1318,7 @@ export default async function EmployerApplicantDetailPage({
                   </div>
                   <div
                     style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}
-                    className="ai-fit-grid"
+                    className="ai-fit-grid v2-page-grid"
                   >
                     {metRequirements.length > 0 && (
                       <div
@@ -1341,7 +1337,7 @@ export default async function EmployerApplicantDetailPage({
                             marginBottom: 10,
                           }}
                         >
-                          <CheckCircle2 size={14} color="#10B981" />
+                          <CheckCircle2 size={14} color="#168257" />
                           <span
                             style={{
                               fontSize: 12,
@@ -1441,7 +1437,7 @@ export default async function EmployerApplicantDetailPage({
                             marginBottom: 10,
                           }}
                         >
-                          <AlertTriangle size={14} color="#F59E0B" />
+                          <AlertTriangle size={14} color="#a86714" />
                           <span
                             style={{
                               fontSize: 12,
@@ -1460,7 +1456,7 @@ export default async function EmployerApplicantDetailPage({
                               key={g}
                               style={{
                                 background: '#fff',
-                                color: '#F59E0B',
+                                color: '#a86714',
                                 border: '1px solid #FDE68A',
                                 padding: '2px 8px',
                                 borderRadius: 999,
@@ -1479,21 +1475,21 @@ export default async function EmployerApplicantDetailPage({
                     <div
                       style={{
                         marginTop: 14,
-                        background: '#F5F3FF',
+                        background: '#edf7f3',
                         borderRadius: 14,
                         padding: '14px 16px',
-                        border: '1px solid #DDD6FE',
+                        border: '1px solid #bdddd5',
                       }}
                     >
                       <div
                         style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}
                       >
-                        <Lightbulb size={14} color="#7C3AED" />
+                        <Lightbulb size={14} color="#087f72" />
                         <span
                           style={{
                             fontSize: 12,
                             fontWeight: 700,
-                            color: '#7C3AED',
+                            color: '#087f72',
                             textTransform: 'uppercase',
                             letterSpacing: 0.6,
                           }}
@@ -1526,12 +1522,13 @@ export default async function EmployerApplicantDetailPage({
                 application.assessmentScore !== undefined ||
                 application.assessmentPassed !== undefined) && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 28px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -1544,7 +1541,7 @@ export default async function EmployerApplicantDetailPage({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#10B981',
+                        color: '#168257',
                       }}
                     >
                       <CheckCircle2 size={16} />
@@ -1552,8 +1549,8 @@ export default async function EmployerApplicantDetailPage({
                     <h2
                       style={{
                         fontSize: 16,
-                        fontWeight: 800,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                         margin: 0,
                       }}
@@ -1571,7 +1568,7 @@ export default async function EmployerApplicantDetailPage({
                           gap: 7,
                           color: '#0369A1',
                           fontSize: 13,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           textDecoration: 'none',
                         }}
                       >
@@ -1583,18 +1580,18 @@ export default async function EmployerApplicantDetailPage({
                     {application.assessmentScore !== undefined && (
                       <div
                         style={{
-                          background: '#F8FAFC',
+                          background: '#f6f8f9',
                           borderRadius: 12,
                           padding: '14px 20px',
-                          border: '1px solid #E2E8F0',
+                          border: '1px solid #dfe6e9',
                           textAlign: 'center',
                         }}
                       >
                         <div
                           style={{
                             fontSize: 28,
-                            fontWeight: 900,
-                            color: '#0F172A',
+                            fontWeight: 700,
+                            color: '#182c39',
                             fontFamily: 'var(--font-display)',
                             lineHeight: 1,
                           }}
@@ -1602,7 +1599,7 @@ export default async function EmployerApplicantDetailPage({
                           {application.assessmentScore}%
                         </div>
                         <div
-                          style={{ fontSize: 12, color: '#64748B', marginTop: 4, fontWeight: 600 }}
+                          style={{ fontSize: 12, color: '#60717d', marginTop: 4, fontWeight: 600 }}
                         >
                           Score
                         </div>
@@ -1619,7 +1616,11 @@ export default async function EmployerApplicantDetailPage({
                         }}
                       >
                         <div style={{ fontSize: 22, lineHeight: 1 }}>
-                          {application.assessmentPassed ? '✅' : '❌'}
+                          {application.assessmentPassed ? (
+                            <ContextIcon name="check" />
+                          ) : (
+                            <ContextIcon name="warning" />
+                          )}
                         </div>
                         <div
                           style={{
@@ -1640,12 +1641,13 @@ export default async function EmployerApplicantDetailPage({
               {/* Interview */}
               {(application.interviewScheduledAt || application.interviewSessionId) && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 28px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -1654,11 +1656,11 @@ export default async function EmployerApplicantDetailPage({
                         width: 34,
                         height: 34,
                         borderRadius: 10,
-                        background: '#EDE9FE',
+                        background: '#e0f0eb',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#7C3AED',
+                        color: '#087f72',
                       }}
                     >
                       <Calendar size={16} />
@@ -1666,8 +1668,8 @@ export default async function EmployerApplicantDetailPage({
                     <h2
                       style={{
                         fontSize: 16,
-                        fontWeight: 800,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                         margin: 0,
                       }}
@@ -1676,7 +1678,7 @@ export default async function EmployerApplicantDetailPage({
                     </h2>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Clock size={14} color="#7C3AED" />
+                    <Clock size={14} color="#087f72" />
                     <span style={{ fontSize: 14, color: '#5B21B6', fontWeight: 600 }}>
                       {application.interviewScheduledAt
                         ? `Scheduled for ${new Date(
@@ -1700,9 +1702,9 @@ export default async function EmployerApplicantDetailPage({
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 7,
-                          color: '#6D28D9',
+                          color: '#06665d',
                           fontSize: 13,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           textDecoration: 'none',
                         }}
                       >
@@ -1716,12 +1718,13 @@ export default async function EmployerApplicantDetailPage({
               {/* Status History */}
               {application.statusHistory?.length > 0 && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 28px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -1730,11 +1733,11 @@ export default async function EmployerApplicantDetailPage({
                         width: 34,
                         height: 34,
                         borderRadius: 10,
-                        background: '#F8FAFC',
+                        background: '#f6f8f9',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#64748B',
+                        color: '#60717d',
                       }}
                     >
                       <Clock size={16} />
@@ -1742,8 +1745,8 @@ export default async function EmployerApplicantDetailPage({
                     <h2
                       style={{
                         fontSize: 16,
-                        fontWeight: 800,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                         margin: 0,
                       }}
@@ -1787,7 +1790,7 @@ export default async function EmployerApplicantDetailPage({
                                   >
                                     {cfg.label}
                                   </span>
-                                  <span style={{ fontSize: 12, color: '#94A3B8' }}>
+                                  <span style={{ fontSize: 12, color: '#60717d' }}>
                                     {formatShortDate(entry.changedAt?.toISOString())}
                                   </span>
                                 </div>
@@ -1795,7 +1798,7 @@ export default async function EmployerApplicantDetailPage({
                                   <p
                                     style={{
                                       fontSize: 13,
-                                      color: '#64748B',
+                                      color: '#60717d',
                                       margin: '4px 0 0',
                                       lineHeight: 1.6,
                                     }}
@@ -1833,7 +1836,7 @@ export default async function EmployerApplicantDetailPage({
               <SideCard
                 title="Resume"
                 icon={
-                  <SideIconBox bg="#ECFDF5" color="#10B981">
+                  <SideIconBox bg="#ECFDF5" color="#168257">
                     <FileText size={14} />
                   </SideIconBox>
                 }
@@ -1883,8 +1886,8 @@ export default async function EmployerApplicantDetailPage({
                       display: 'flex',
                       alignItems: 'center',
                       gap: 10,
-                      background: '#F8FAFC',
-                      border: '1px solid #E2E8F0',
+                      background: '#f6f8f9',
+                      border: '1px solid #dfe6e9',
                       borderRadius: 12,
                       padding: '12px 14px',
                     }}
@@ -1894,21 +1897,21 @@ export default async function EmployerApplicantDetailPage({
                         width: 36,
                         height: 36,
                         borderRadius: 9,
-                        background: '#F1F5F9',
+                        background: '#f6f8f9',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#94A3B8',
+                        color: '#60717d',
                         flexShrink: 0,
                       }}
                     >
                       <FileText size={16} />
                     </div>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#64748B' }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#60717d' }}>
                         No resume uploaded
                       </div>
-                      <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
+                      <div style={{ fontSize: 11, color: '#60717d', marginTop: 2 }}>
                         Student hasn&apos;t uploaded a resume yet
                       </div>
                     </div>
@@ -1921,7 +1924,7 @@ export default async function EmployerApplicantDetailPage({
                 <SideCard
                   title="In-Platform Resume"
                   icon={
-                    <SideIconBox bg="#EFF6FF" color="#2563EB">
+                    <SideIconBox bg="#edf7f3" color="#087f72">
                       <FileText size={14} />
                     </SideIconBox>
                   }
@@ -1934,8 +1937,8 @@ export default async function EmployerApplicantDetailPage({
                       display: 'flex',
                       alignItems: 'center',
                       gap: 12,
-                      background: '#EFF6FF',
-                      border: '1px solid #BFDBFE',
+                      background: '#edf7f3',
+                      border: '1px solid #bdddd5',
                       borderRadius: 12,
                       padding: '12px 14px',
                       textDecoration: 'none',
@@ -1946,24 +1949,24 @@ export default async function EmployerApplicantDetailPage({
                         width: 36,
                         height: 36,
                         borderRadius: 9,
-                        background: '#DBEAFE',
+                        background: '#dbefea',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#1D4ED8',
+                        color: '#06665d',
                         flexShrink: 0,
                       }}
                     >
                       <FileText size={16} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#1D4ED8' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#06665d' }}>
                         {' '}
                         View In-Platform Resume
                       </div>
-                      <div style={{ fontSize: 11, color: '#3B82F6', marginTop: 2 }}>PDF</div>
+                      <div style={{ fontSize: 11, color: '#139b8c', marginTop: 2 }}>PDF</div>
                     </div>
-                    <ExternalLink size={14} color="#1D4ED8" />
+                    <ExternalLink size={14} color="#06665d" />
                   </a>
                 </SideCard>
               )}
@@ -1972,7 +1975,7 @@ export default async function EmployerApplicantDetailPage({
               <SideCard
                 title="Academic Profile"
                 icon={
-                  <SideIconBox bg="#EDE9FE" color="#7C3AED">
+                  <SideIconBox bg="#e0f0eb" color="#087f72">
                     <GraduationCap size={14} />
                   </SideIconBox>
                 }
@@ -1990,7 +1993,7 @@ export default async function EmployerApplicantDetailPage({
                     { label: 'CGPA', value: student.cgpa ? student.cgpa.toFixed(2) : undefined },
                     {
                       label: 'STATUS',
-                      value: student.isGraduated ? '🎓 Graduated' : 'Currently Enrolled',
+                      value: student.isGraduated ? 'Graduated' : 'Currently Enrolled',
                     },
                   ]
                     .filter((item) => item.value)
@@ -2000,7 +2003,7 @@ export default async function EmployerApplicantDetailPage({
                           style={{
                             fontSize: 10,
                             fontWeight: 700,
-                            color: '#94A3B8',
+                            color: '#60717d',
                             textTransform: 'uppercase',
                             letterSpacing: 0.8,
                             marginBottom: 1,
@@ -2008,7 +2011,7 @@ export default async function EmployerApplicantDetailPage({
                         >
                           {item.label}
                         </div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#182c39' }}>
                           {item.value}
                         </div>
                       </div>
@@ -2021,7 +2024,7 @@ export default async function EmployerApplicantDetailPage({
                 <SideCard
                   title="Skills"
                   icon={
-                    <SideIconBox bg="#EFF6FF" color="#2563EB">
+                    <SideIconBox bg="#edf7f3" color="#087f72">
                       <Code2 size={14} />
                     </SideIconBox>
                   }
@@ -2031,9 +2034,9 @@ export default async function EmployerApplicantDetailPage({
                       <span
                         key={skill}
                         style={{
-                          background: '#EFF6FF',
-                          color: '#2563EB',
-                          border: '1px solid #BFDBFE',
+                          background: '#edf7f3',
+                          color: '#087f72',
+                          border: '1px solid #bdddd5',
                           padding: '3px 9px',
                           borderRadius: 999,
                           fontSize: 11,
@@ -2083,7 +2086,7 @@ export default async function EmployerApplicantDetailPage({
                 <SideCard
                   title="Links"
                   icon={
-                    <SideIconBox bg="#F8FAFC" color="#64748B">
+                    <SideIconBox bg="#f6f8f9" color="#60717d">
                       <Link2 size={14} />
                     </SideIconBox>
                   }
@@ -2098,9 +2101,9 @@ export default async function EmployerApplicantDetailPage({
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 7,
-                          background: '#EFF6FF',
-                          color: '#2563EB',
-                          border: '1px solid #BFDBFE',
+                          background: '#edf7f3',
+                          color: '#087f72',
+                          border: '1px solid #bdddd5',
                           padding: '7px 12px',
                           borderRadius: 9,
                           fontSize: 12,
@@ -2108,7 +2111,7 @@ export default async function EmployerApplicantDetailPage({
                           textDecoration: 'none',
                         }}
                       >
-                        🔗 LinkedIn Profile
+                        <ContextIcon name="link" /> LinkedIn Profile
                       </a>
                     )}
                     {student.githubUrl && (
@@ -2120,9 +2123,9 @@ export default async function EmployerApplicantDetailPage({
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 7,
-                          background: '#F1F5F9',
-                          color: '#0F172A',
-                          border: '1px solid #E2E8F0',
+                          background: '#f6f8f9',
+                          color: '#182c39',
+                          border: '1px solid #dfe6e9',
                           padding: '7px 12px',
                           borderRadius: 9,
                           fontSize: 12,
@@ -2130,7 +2133,7 @@ export default async function EmployerApplicantDetailPage({
                           textDecoration: 'none',
                         }}
                       >
-                        💻 GitHub Profile
+                        <ContextIcon name="laptop" /> GitHub Profile
                       </a>
                     )}
                     {student.portfolioUrl && (
@@ -2142,9 +2145,9 @@ export default async function EmployerApplicantDetailPage({
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 7,
-                          background: '#F5F3FF',
-                          color: '#7C3AED',
-                          border: '1px solid #DDD6FE',
+                          background: '#edf7f3',
+                          color: '#087f72',
+                          border: '1px solid #bdddd5',
                           padding: '7px 12px',
                           borderRadius: 9,
                           fontSize: 12,
@@ -2152,7 +2155,7 @@ export default async function EmployerApplicantDetailPage({
                           textDecoration: 'none',
                         }}
                       >
-                        🌐 Portfolio
+                        <ContextIcon name="globe" /> Portfolio
                       </a>
                     )}
                   </div>
@@ -2162,17 +2165,17 @@ export default async function EmployerApplicantDetailPage({
               {/* Job info */}
               <div
                 style={{
-                  background: '#F8FAFC',
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
+                  background: '#f6f8f9',
+                  borderRadius: 12,
+                  border: '1px solid #dfe6e9',
                   padding: '20px 22px',
                 }}
               >
                 <h3
                   style={{
                     fontSize: 12,
-                    fontWeight: 800,
-                    color: '#94A3B8',
+                    fontWeight: 700,
+                    color: '#60717d',
                     fontFamily: 'var(--font-display)',
                     margin: '0 0 10px',
                     textTransform: 'uppercase',
@@ -2181,14 +2184,14 @@ export default async function EmployerApplicantDetailPage({
                 >
                   Applied For
                 </h3>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', marginBottom: 5 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39', marginBottom: 5 }}>
                   {job.title}
                 </div>
-                <div style={{ fontSize: 12, color: '#64748B' }}>
+                <div style={{ fontSize: 12, color: '#60717d' }}>
                   {job.companyName} · {formatStatusLabel(job.locationType)}
                 </div>
                 {job.applicationDeadline && (
-                  <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
+                  <div style={{ fontSize: 11, color: '#60717d', marginTop: 4 }}>
                     Deadline: {formatShortDate(job.applicationDeadline?.toISOString())}
                   </div>
                 )}

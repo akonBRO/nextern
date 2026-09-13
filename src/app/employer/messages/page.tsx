@@ -24,6 +24,7 @@ export default async function EmployerMessagesPage({
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Company overview"
       homeHref="/employer/dashboard"
@@ -34,15 +35,7 @@ export default async function EmployerMessagesPage({
       }}
       hideFooter
     >
-      <div
-        style={{
-          height: '100%',
-          padding: '16px 24px',
-          boxSizing: 'border-box',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <div className="messaging-page">
         <Inbox
           currentUserId={session.user.id}
           currentUserRole="employer"

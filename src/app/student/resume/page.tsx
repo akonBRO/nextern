@@ -1,4 +1,7 @@
 'use client';
+
+import BrandLoader from '@/components/ui/BrandLoader';
+import ContextIcon from '@/components/ui/ContextIcon';
 // src/app/student/resume/page.tsx
 // REDESIGNED — same logic, professional UI, consolidated action buttons
 
@@ -37,28 +40,28 @@ import { useUploadThing } from '@/lib/uploadthing';
 
 // ── Palette ────────────────────────────────────────────────────────────────
 const C = {
-  blue: '#2563EB',
-  blueDark: '#1D4ED8',
-  blueLight: '#EFF6FF',
-  blueBorder: '#BFDBFE',
+  blue: '#087f72',
+  blueDark: '#06665d',
+  blueLight: '#edf7f3',
+  blueBorder: '#bdddd5',
   teal: '#0D9488',
   tealDark: '#0F766E',
   tealBg: '#F0FDFA',
   tealBorder: '#99F6E4',
-  indigo: '#1E293B',
-  indigoDeep: '#0F172A',
-  bg: '#F8FAFC',
+  indigo: '#243e4a',
+  indigoDeep: '#182c39',
+  bg: '#f6f8f9',
   card: '#FFFFFF',
-  border: '#E2E8F0',
+  border: '#dfe6e9',
   borderStrong: '#CBD5E1',
-  text: '#0F172A',
+  text: '#182c39',
   textMid: '#334155',
-  textMuted: '#64748B',
-  textLight: '#94A3B8',
-  success: '#10B981',
+  textMuted: '#60717d',
+  textLight: '#60717d',
+  success: '#168257',
   successBg: '#ECFDF5',
   successBorder: '#A7F3D0',
-  warning: '#F59E0B',
+  warning: '#a86714',
   danger: '#EF4444',
   dangerBg: '#FEF2F2',
   dangerBorder: '#FECACA',
@@ -203,7 +206,7 @@ const SBSection = ({ title, children }: { title: string; children: React.ReactNo
     <div
       style={{
         fontSize: 7.5,
-        fontWeight: 800,
+        fontWeight: 700,
         letterSpacing: 2,
         color: 'rgba(147,197,253,0.8)',
         textTransform: 'uppercase',
@@ -242,7 +245,7 @@ const Section = ({ title, color = C.teal }: { title: string; color?: string }) =
     <div
       style={{
         fontSize: 8.5,
-        fontWeight: 800,
+        fontWeight: 700,
         color,
         letterSpacing: 1.3,
         textTransform: 'uppercase',
@@ -277,7 +280,7 @@ function ResumePreviewModal({
         inset: 0,
         zIndex: 9999,
         background: 'rgba(9,14,30,0.82)',
-        backdropFilter: 'blur(8px)',
+        backdropFilter: 'none',
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'center',
@@ -285,14 +288,15 @@ function ResumePreviewModal({
         overflowY: 'auto',
       }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      className="v2-dialog-overlay"
     >
       <div
         style={{
           width: '100%',
           maxWidth: 840,
           background: C.white,
-          borderRadius: 22,
-          boxShadow: '0 48px 120px rgba(0,0,0,0.5)',
+          borderRadius: 12,
+          boxShadow: 'var(--shadow-card)',
           overflow: 'hidden',
           fontFamily: 'Georgia, "Times New Roman", serif',
           border: '1px solid rgba(255,255,255,0.08)',
@@ -305,10 +309,11 @@ function ResumePreviewModal({
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '14px 22px',
-            background: C.indigoDeep,
+            background: 'var(--surface-muted)',
             borderBottom: '1px solid rgba(255,255,255,0.06)',
             fontFamily: 'var(--font-body)',
           }}
+          className="v2-light-panel"
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div
@@ -325,7 +330,7 @@ function ResumePreviewModal({
             >
               <FileText size={13} color={C.teal} />
             </div>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#F1F5F9' }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--deep)' }}>
               In-Platform Resume
             </span>
             <span style={{ fontSize: 11, color: C.textLight, marginLeft: 2 }}>
@@ -344,7 +349,7 @@ function ResumePreviewModal({
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#94A3B8',
+              color: '#60717d',
               transition: 'all 0.15s',
             }}
           >
@@ -360,7 +365,7 @@ function ResumePreviewModal({
                 width: 74,
                 height: 74,
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #2563EB, #0D9488)',
+                background: 'var(--primary)',
                 margin: '0 auto 18px',
                 overflow: 'hidden',
                 border: '2.5px solid rgba(255,255,255,0.1)',
@@ -368,7 +373,7 @@ function ResumePreviewModal({
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: 28,
-                fontWeight: 900,
+                fontWeight: 700,
                 color: '#fff',
                 fontFamily: 'var(--font-display)',
               }}
@@ -417,7 +422,7 @@ function ResumePreviewModal({
 
             <SBSection title="Education">
               {profile.university && (
-                <div style={{ fontSize: 9, fontWeight: 700, color: '#F1F5F9', marginBottom: 3 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#f6f8f9', marginBottom: 3 }}>
                   {profile.university}
                 </div>
               )}
@@ -443,7 +448,7 @@ function ResumePreviewModal({
                     borderRadius: 6,
                     padding: '5px 10px',
                     fontSize: 9,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     color: '#fff',
                     textAlign: 'center',
                     marginBottom: 4,
@@ -492,7 +497,7 @@ function ResumePreviewModal({
                         flexShrink: 0,
                       }}
                     />
-                    <span style={{ fontSize: 8, color: '#94A3B8' }}>{c}</span>
+                    <span style={{ fontSize: 8, color: '#60717d' }}>{c}</span>
                   </div>
                 ))}
               </SBSection>
@@ -518,7 +523,7 @@ function ResumePreviewModal({
                     }}
                   />
                 </div>
-                <div style={{ fontSize: 9, fontWeight: 700, color: '#E2E8F0' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#dfe6e9' }}>
                   {profile.opportunityScore} / 100
                 </div>
               </SBSection>
@@ -529,29 +534,19 @@ function ResumePreviewModal({
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
-                background: 'linear-gradient(135deg, #0F172A, #1E293B)',
+                background: 'var(--surface-muted)',
                 padding: '26px 30px 22px',
                 borderBottom: `3px solid ${C.blue}`,
                 position: 'relative',
                 overflow: 'hidden',
               }}
+              className="v2-light-panel"
             >
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  width: 130,
-                  height: 130,
-                  background: 'radial-gradient(circle, rgba(37,99,235,0.14) 0%, transparent 70%)',
-                  borderRadius: '50%',
-                }}
-              />
               <h1
                 style={{
                   fontSize: 23,
-                  fontWeight: 900,
-                  color: '#F8FAFC',
+                  fontWeight: 700,
+                  color: 'var(--deep)',
                   fontFamily: 'var(--font-display)',
                   margin: 0,
                   letterSpacing: '-0.3px',
@@ -563,7 +558,7 @@ function ResumePreviewModal({
                 <div
                   style={{
                     fontSize: 10.5,
-                    color: '#93C5FD',
+                    color: 'var(--deep)',
                     marginTop: 4,
                     fontFamily: 'var(--font-body)',
                   }}
@@ -584,7 +579,7 @@ function ResumePreviewModal({
                   <span
                     style={{
                       fontSize: 8.5,
-                      color: '#94A3B8',
+                      color: '#60717d',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 4,
@@ -598,7 +593,7 @@ function ResumePreviewModal({
                   <span
                     style={{
                       fontSize: 8.5,
-                      color: '#94A3B8',
+                      color: '#60717d',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 4,
@@ -612,7 +607,7 @@ function ResumePreviewModal({
                   <span
                     style={{
                       fontSize: 8.5,
-                      color: '#94A3B8',
+                      color: '#60717d',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 4,
@@ -626,7 +621,7 @@ function ResumePreviewModal({
                   <span
                     style={{
                       fontSize: 8.5,
-                      color: '#93C5FD',
+                      color: 'var(--deep)',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 4,
@@ -640,7 +635,7 @@ function ResumePreviewModal({
                   <span
                     style={{
                       fontSize: 8.5,
-                      color: '#93C5FD',
+                      color: 'var(--deep)',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 4,
@@ -677,7 +672,7 @@ function ResumePreviewModal({
                       }}
                     >
                       <div
-                        style={{ fontSize: 10.5, fontWeight: 800, color: C.text, marginBottom: 3 }}
+                        style={{ fontSize: 10.5, fontWeight: 700, color: C.text, marginBottom: 3 }}
                       >
                         {proj.title}
                       </div>
@@ -753,7 +748,7 @@ function ResumePreviewModal({
                       }}
                     >
                       <div
-                        style={{ fontSize: 10.5, fontWeight: 800, color: C.text, marginBottom: 3 }}
+                        style={{ fontSize: 10.5, fontWeight: 700, color: C.text, marginBottom: 3 }}
                       >
                         {item.title}
                       </div>
@@ -864,7 +859,7 @@ function ResumePreviewModal({
                     <span
                       style={{
                         fontSize: 8.5,
-                        fontWeight: 800,
+                        fontWeight: 700,
                         color: C.blue,
                         textTransform: 'uppercase',
                         letterSpacing: 1,
@@ -907,7 +902,7 @@ function ResumePreviewModal({
                                 <div
                                   style={{
                                     fontSize: 9.5,
-                                    fontWeight: 800,
+                                    fontWeight: 700,
                                     color: C.text,
                                     marginBottom: 1,
                                   }}
@@ -1072,7 +1067,7 @@ function SectionCard({
         borderRadius: 14,
         border: `1px solid ${filled ? C.successBorder : C.border}`,
         overflow: 'hidden',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        boxShadow: 'var(--shadow-card)',
         transition: 'box-shadow 0.15s',
       }}
     >
@@ -1107,7 +1102,7 @@ function SectionCard({
               fontSize: 11,
               fontWeight: 600,
               color: C.textLight,
-              background: '#F1F5F9',
+              background: '#f6f8f9',
               border: `1px solid ${C.border}`,
               padding: '2px 8px',
               borderRadius: 6,
@@ -1278,23 +1273,7 @@ export default function StudentResumePage() {
   }
 
   if (fetching) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: C.bg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: 'var(--font-body)',
-          color: C.textMuted,
-        }}
-      >
-        <Loader2 size={20} style={{ animation: 'spin 0.8s linear infinite', marginRight: 10 }} />
-        Loading your resume builder…
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      </div>
-    );
+    return <BrandLoader variant="page" label="Loading your resume builder" />;
   }
 
   if (!profile) {
@@ -1310,14 +1289,10 @@ export default function StudentResumePage() {
         }}
       >
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 10 }}>⚠️</div>
+          <div style={{ fontSize: 32, marginBottom: 10 }}>
+            <ContextIcon name="warning" />
+          </div>
           <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>Profile not found</div>
-          <Link
-            href="/student/dashboard"
-            style={{ color: C.blue, fontSize: 14, marginTop: 8, display: 'block' }}
-          >
-            ← Back to Dashboard
-          </Link>
         </div>
       </div>
     );
@@ -1353,7 +1328,13 @@ export default function StudentResumePage() {
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
       {/* ── PAGE HEADER ── */}
-      <div style={{ background: C.indigoDeep, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <div
+        style={{
+          background: 'var(--surface-muted)',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+        }}
+        className="v2-light-panel"
+      >
         <div style={{ maxWidth: 1080, margin: '0 auto', padding: '0 28px' }}>
           {/* Top nav strip */}
           <div
@@ -1380,7 +1361,9 @@ export default function StudentResumePage() {
               Dashboard
             </Link>
             <ChevronRight size={13} color={C.textLight} />
-            <span style={{ color: '#F1F5F9', fontSize: 13, fontWeight: 600 }}>Resume Builder</span>
+            <span style={{ color: 'var(--deep)', fontSize: 13, fontWeight: 600 }}>
+              Resume Builder
+            </span>
           </div>
 
           {/* Header content */}
@@ -1400,7 +1383,7 @@ export default function StudentResumePage() {
                   width: 44,
                   height: 44,
                   borderRadius: 12,
-                  background: 'linear-gradient(135deg, #2563EB, #0D9488)',
+                  background: 'var(--primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1414,8 +1397,8 @@ export default function StudentResumePage() {
                 <h1
                   style={{
                     fontSize: 20,
-                    fontWeight: 800,
-                    color: '#F8FAFC',
+                    fontWeight: 700,
+                    color: 'var(--deep)',
                     fontFamily: 'var(--font-display)',
                     margin: 0,
                     letterSpacing: '-0.2px',
@@ -1497,6 +1480,7 @@ export default function StudentResumePage() {
                 gap: 10,
                 marginBottom: profile.bio ? 12 : 0,
               }}
+              className="v2-page-grid"
             >
               {[
                 { label: 'Name', value: profile.name },
@@ -1547,7 +1531,10 @@ export default function StudentResumePage() {
             filled={!!(profile.university && profile.cgpa)}
           >
             {profile.university || profile.department || profile.cgpa ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              <div
+                style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}
+                className="v2-form-grid"
+              >
                 {[
                   { label: 'University', value: profile.university },
                   { label: 'Department', value: profile.department },
@@ -1609,7 +1596,7 @@ export default function StudentResumePage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {profile.projects.map((proj, i) => (
                   <div key={i} style={{ borderLeft: `3px solid ${C.teal}`, paddingLeft: 12 }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{proj.title}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{proj.title}</div>
                     {proj.techStack?.length > 0 && (
                       <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap' }}>
                         {proj.techStack.map((t) => (
@@ -1688,7 +1675,7 @@ export default function StudentResumePage() {
                     key={`${item.freelanceOrderId ?? item.fileUrl}:${index}`}
                     style={{ borderLeft: `3px solid ${C.blue}`, paddingLeft: 12 }}
                   >
-                    <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{item.title}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{item.title}</div>
                     <div style={{ marginTop: 4, fontSize: 12, color: C.blue, fontWeight: 700 }}>
                       {categoryLabel(item.category)}
                       {item.clientName ? ` | Client: ${item.clientName}` : ''}
@@ -1810,7 +1797,7 @@ export default function StudentResumePage() {
             {profile.completedCourses.length > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                 {profile.completedCourses.map((c) => (
-                  <Chip key={c} label={c} color={C.textMuted} bg="#F8FAFC" border={C.border} />
+                  <Chip key={c} label={c} color={C.textMuted} bg="#f6f8f9" border={C.border} />
                 ))}
               </div>
             ) : (
@@ -2048,7 +2035,8 @@ export default function StudentResumePage() {
             }}
           >
             <div style={{ fontSize: 13, color: C.blue, fontWeight: 500 }}>
-              📝 Changes to your profile automatically reflect in your next generated resume.
+              <ContextIcon name="file" /> Changes to your profile automatically reflect in your next
+              generated resume.
             </div>
             <Link
               href="/student/profile"
@@ -2077,10 +2065,10 @@ export default function StudentResumePage() {
           <div
             style={{
               background: C.card,
-              borderRadius: 16,
+              borderRadius: 12,
               border: `1px solid ${C.border}`,
               padding: '20px',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+              boxShadow: 'var(--shadow-card)',
               position: 'sticky',
               top: 24,
               display: 'flex',
@@ -2092,7 +2080,7 @@ export default function StudentResumePage() {
             <div
               style={{
                 fontSize: 13,
-                fontWeight: 800,
+                fontWeight: 700,
                 color: C.text,
                 marginBottom: 16,
                 fontFamily: 'var(--font-display)',
@@ -2119,7 +2107,7 @@ export default function StudentResumePage() {
                       height: 15,
                       borderRadius: '50%',
                       flexShrink: 0,
-                      background: s.filled ? C.successBg : '#F1F5F9',
+                      background: s.filled ? C.successBg : '#f6f8f9',
                       border: `1.5px solid ${s.filled ? C.successBorder : C.border}`,
                       display: 'flex',
                       alignItems: 'center',
@@ -2165,7 +2153,7 @@ export default function StudentResumePage() {
                   <div
                     style={{
                       fontSize: 20,
-                      fontWeight: 900,
+                      fontWeight: 700,
                       color: C.blue,
                       fontFamily: 'var(--font-display)',
                     }}
@@ -2189,7 +2177,7 @@ export default function StudentResumePage() {
                   <div
                     style={{
                       fontSize: 20,
-                      fontWeight: 900,
+                      fontWeight: 700,
                       color: C.teal,
                       fontFamily: 'var(--font-display)',
                     }}
@@ -2223,7 +2211,7 @@ export default function StudentResumePage() {
                   width: '100%',
                   padding: '11px 0',
                   background: C.indigo,
-                  color: '#E2E8F0',
+                  color: '#dfe6e9',
                   border: 'none',
                   borderRadius: 10,
                   fontSize: 12,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import useDialog from '@/components/ui/useDialog';
 import { CreditCard, LoaderCircle, Lock, ShieldCheck, X } from 'lucide-react';
 import type { PlanId } from '@/lib/subscription-plans';
 
@@ -44,11 +45,11 @@ declare global {
 }
 
 const COLORS = {
-  blue: '#2563EB',
-  border: '#E2E8F0',
-  text: '#0F172A',
-  muted: '#64748B',
-  bg: '#F8FAFC',
+  blue: '#087f72',
+  border: '#dfe6e9',
+  text: '#182c39',
+  muted: '#60717d',
+  bg: '#f6f8f9',
   success: '#10B981',
 };
 
@@ -112,6 +113,7 @@ export default function StripeCheckoutModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [initialized, setInitialized] = useState(false);
+  const dialogRef = useDialog(open, submitting ? undefined : onClose);
   const mountNodeRef = useRef<HTMLDivElement | null>(null);
   const stripeRef = useRef<StripeInstance | null>(null);
   const elementsRef = useRef<StripeElementsInstance | null>(null);
@@ -272,19 +274,25 @@ export default function StripeCheckoutModal({
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Secure card checkout"
+        tabIndex={-1}
         style={{
+          maxHeight: 'calc(100dvh - 40px)',
           width: '100%',
           maxWidth: 560,
           background: '#FFFFFF',
-          borderRadius: 28,
+          borderRadius: 12,
           border: `1px solid ${COLORS.border}`,
           boxShadow: '0 30px 80px rgba(15,23,42,0.22)',
-          overflow: 'hidden',
+          overflow: 'auto',
         }}
       >
         <div
           style={{
-            background: '#0F172A',
+            background: '#f6f8f9',
             padding: '22px 24px',
             display: 'flex',
             alignItems: 'center',
@@ -299,10 +307,10 @@ export default function StripeCheckoutModal({
                 alignItems: 'center',
                 gap: 8,
                 padding: '6px 10px',
-                borderRadius: 999,
+                borderRadius: 6,
                 border: '1px solid rgba(59,130,246,0.28)',
-                background: 'rgba(37,99,235,0.14)',
-                color: '#DBEAFE',
+                background: 'rgba(8,127,114,0.14)',
+                color: COLORS.blue,
                 fontSize: 12,
                 fontWeight: 700,
                 marginBottom: 8,
@@ -314,19 +322,20 @@ export default function StripeCheckoutModal({
             <h3
               style={{
                 margin: 0,
-                color: '#FFFFFF',
+                color: COLORS.text,
                 fontSize: 22,
-                fontWeight: 900,
+                fontWeight: 750,
                 fontFamily: 'var(--font-display)',
               }}
             >
               {planName}
             </h3>
-            <p style={{ margin: '6px 0 0', color: '#CBD5E1', fontSize: 13 }}>
+            <p style={{ margin: '6px 0 0', color: COLORS.muted, fontSize: 13 }}>
               Pay securely with {method === 'visa' ? 'Visa' : 'Mastercard'} via Stripe.
             </p>
           </div>
           <button
+            aria-label="Close checkout"
             onClick={onClose}
             disabled={submitting}
             style={{
@@ -334,8 +343,8 @@ export default function StripeCheckoutModal({
               height: 40,
               borderRadius: 12,
               border: '1px solid #334155',
-              background: '#1E293B',
-              color: '#FFFFFF',
+              background: '#f6f8f9',
+              color: COLORS.text,
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -350,7 +359,7 @@ export default function StripeCheckoutModal({
           <div
             style={{
               background: COLORS.bg,
-              borderRadius: 16,
+              borderRadius: 12,
               padding: '14px 16px',
               display: 'flex',
               justifyContent: 'space-between',
@@ -364,7 +373,7 @@ export default function StripeCheckoutModal({
                 style={{
                   color: COLORS.text,
                   fontSize: 18,
-                  fontWeight: 900,
+                  fontWeight: 750,
                   fontFamily: 'var(--font-display)',
                   marginTop: 2,
                 }}
@@ -392,7 +401,7 @@ export default function StripeCheckoutModal({
               style={{
                 background: '#FEF2F2',
                 border: '1px solid #FECACA',
-                borderRadius: 14,
+                borderRadius: 12,
                 padding: '12px 14px',
                 color: '#991B1B',
                 fontSize: 13,
@@ -406,7 +415,7 @@ export default function StripeCheckoutModal({
           <div
             style={{
               border: `1px solid ${COLORS.border}`,
-              borderRadius: 18,
+              borderRadius: 12,
               padding: 16,
               minHeight: 180,
               background: '#FFFFFF',
@@ -470,18 +479,18 @@ export default function StripeCheckoutModal({
                 gap: 8,
                 minWidth: 180,
                 padding: '12px 18px',
-                borderRadius: 14,
+                borderRadius: 12,
                 border: 'none',
                 background: !initialized || loading || submitting ? '#93C5FD' : COLORS.blue,
                 color: '#FFFFFF',
                 fontSize: 14,
-                fontWeight: 800,
+                fontWeight: 700,
                 fontFamily: 'var(--font-display)',
                 cursor: !initialized || loading || submitting ? 'not-allowed' : 'pointer',
                 boxShadow:
                   !initialized || loading || submitting
                     ? 'none'
-                    : '0 10px 24px rgba(37,99,235,0.28)',
+                    : '0 10px 24px rgba(8,127,114,0.28)',
               }}
             >
               {submitting ? (

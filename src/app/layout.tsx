@@ -4,11 +4,14 @@ import { SessionProvider } from 'next-auth/react';
 import { auth } from '@/lib/auth';
 import GlobalFooter from '@/components/site/GlobalFooter';
 import './globals.css';
+import './product-v2.css';
+import './redesign.css';
+import '@/components/student/career-overview.css';
 
 export const metadata: Metadata = {
   title: { default: 'Nextern — Campus Career Readiness Platform', template: '%s | Nextern' },
   description:
-    'Connect students with internships, employers with talent, and universities with insight. AI-powered career readiness for Bangladesh universities.',
+    'Find internships, build career skills, and work on freelance projects. Connect students, employers, and universities across Bangladesh.',
   keywords: ['internship', 'jobs', 'campus hiring', 'Bangladesh', 'BRAC', 'NSU', 'career'],
   icons: {
     icon: [{ url: '/nextern_logo_2.png', type: 'image/png' }],
@@ -17,7 +20,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Nextern — Campus Career Readiness Platform',
-    description: 'Smart internship matching powered by AI for Bangladesh university students.',
+    description:
+      'Internships, freelance projects, and career development for Bangladesh university students.',
     type: 'website',
   },
 };

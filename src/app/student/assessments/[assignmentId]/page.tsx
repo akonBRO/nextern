@@ -74,6 +74,7 @@ export default async function StudentAssessmentDetailPage({
 
   return (
     <DashboardShell
+      embedded
       role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
@@ -153,7 +154,7 @@ export default async function StudentAssessmentDetailPage({
             >
               <div
                 style={{
-                  borderRadius: 16,
+                  borderRadius: 12,
                   border: '1px solid #FDE68A',
                   background: '#FFFBEB',
                   padding: '14px 16px',

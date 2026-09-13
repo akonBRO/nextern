@@ -1,0 +1,8 @@
+# Nextern campus-to-career illustration
+
+Generated with the built-in imagegen tool for the final UI refinement.
+Asset: `nextern-campus-careers.png` (1448 × 1086). Rendered through Next Image.
+
+## Final prompt
+
+Use case: illustration-story. Asset type: Nextern career platform website hero illustration, landscape 4:3 composition. Create a sophisticated editorial illustration of a Bangladeshi university student at the center of a campus-to-career community. A young adult student with a notebook and backpack is in warm conversation with a woman employer holding a portfolio, with a university mentor nearby; behind them an elegant suggestion of a university portico on the left and a contemporary workplace on the right. Three people, natural anatomy, expressive but restrained, varied professional clothing. The relationships should be conveyed through shared space, gestures and a gently curving walkway, not diagram arrows or floating UI cards. Style: premium hand-drawn editorial illustration with carefully shaped silhouettes, subtle paper grain and fine ink details, mature human proportions, beautiful balanced composition, sophisticated not childish. Color palette: deep forest teal #183c3b, sage green #b9cfac, warm ivory #edf1e8 background, muted ochre accents, natural brown skin tones. Restrained detail and ample negative space around subjects; all subjects fully within frame, no cropped heads. Light calm optimistic feel, seamlessly compatible with a pale sage website. No words, no text, no logos, no watermark, no generic purple gradients, no 3D plastic people, no exaggerated limbs, no disconnected icon bubbles. Output high quality PNG illustration.

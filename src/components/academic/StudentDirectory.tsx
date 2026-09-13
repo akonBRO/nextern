@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import FormField from '@/components/ui/FormField';
 import PaginatedCollection from '@/components/ui/PaginatedCollection';
 
 type StudentDirectoryStudent = {
@@ -45,11 +46,12 @@ export default function StudentDirectory({
   return (
     <div style={{ display: 'grid', gap: 18 }}>
       <div
+        className="nx-surface"
         style={{
           background: '#FFFFFF',
-          borderRadius: 24,
+          borderRadius: 12,
           border: '1px solid #D9E2EC',
-          boxShadow: '0 16px 36px rgba(15,23,42,0.05)',
+          boxShadow: 'var(--shadow-card)',
           padding: 22,
         }}
       >
@@ -67,8 +69,8 @@ export default function StudentDirectory({
             <div
               style={{
                 fontSize: 12,
-                fontWeight: 800,
-                color: '#64748B',
+                fontWeight: 700,
+                color: '#60717d',
                 letterSpacing: 0.8,
                 textTransform: 'uppercase',
               }}
@@ -79,14 +81,14 @@ export default function StudentDirectory({
               style={{
                 margin: '8px 0 0',
                 fontSize: 24,
-                fontWeight: 900,
-                color: '#0F172A',
+                fontWeight: 700,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
               }}
             >
               {title}
             </h2>
-            <p style={{ margin: '10px 0 0', color: '#64748B', fontSize: 14, lineHeight: 1.7 }}>
+            <p style={{ margin: '10px 0 0', color: '#60717d', fontSize: 14, lineHeight: 1.7 }}>
               {description}
             </p>
           </div>
@@ -94,11 +96,11 @@ export default function StudentDirectory({
             style={{
               padding: '7px 13px',
               borderRadius: 999,
-              background: '#EFF6FF',
-              border: '1px solid #BFDBFE',
-              color: '#1D4ED8',
+              background: '#edf7f3',
+              border: '1px solid #bdddd5',
+              color: '#06665d',
               fontSize: 12,
-              fontWeight: 800,
+              fontWeight: 700,
             }}
           >
             {scopeLabel}
@@ -171,11 +173,12 @@ export default function StudentDirectory({
       </div>
 
       <div
+        className="nx-surface"
         style={{
           background: '#FFFFFF',
-          borderRadius: 24,
+          borderRadius: 12,
           border: '1px solid #D9E2EC',
-          boxShadow: '0 16px 36px rgba(15,23,42,0.05)',
+          boxShadow: 'var(--shadow-card)',
           padding: 22,
         }}
       >
@@ -193,8 +196,8 @@ export default function StudentDirectory({
             <div
               style={{
                 fontSize: 12,
-                fontWeight: 800,
-                color: '#64748B',
+                fontWeight: 700,
+                color: '#60717d',
                 letterSpacing: 0.8,
                 textTransform: 'uppercase',
               }}
@@ -205,8 +208,8 @@ export default function StudentDirectory({
               style={{
                 margin: '8px 0 0',
                 fontSize: 24,
-                fontWeight: 900,
-                color: '#0F172A',
+                fontWeight: 700,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
               }}
             >
@@ -218,11 +221,11 @@ export default function StudentDirectory({
         {students.length === 0 ? (
           <div
             style={{
-              borderRadius: 18,
+              borderRadius: 12,
               border: '1px dashed #CBD5E1',
-              background: '#F8FAFC',
+              background: '#f6f8f9',
               padding: '24px 20px',
-              color: '#64748B',
+              color: '#60717d',
               fontSize: 14,
               lineHeight: 1.7,
             }}
@@ -239,8 +242,8 @@ export default function StudentDirectory({
               <div
                 key={student.id}
                 style={{
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
+                  borderRadius: 12,
+                  border: '1px solid #dfe6e9',
                   background: '#FFFFFF',
                   padding: '18px 18px',
                 }}
@@ -258,14 +261,14 @@ export default function StudentDirectory({
                     <div
                       style={{
                         fontSize: 18,
-                        fontWeight: 800,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                       }}
                     >
                       {student.name}
                     </div>
-                    <div style={{ marginTop: 4, fontSize: 13, color: '#64748B' }}>
+                    <div style={{ marginTop: 4, fontSize: 13, color: '#60717d' }}>
                       {student.email}
                     </div>
                   </div>
@@ -331,28 +334,13 @@ export default function StudentDirectory({
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label style={{ display: 'grid', gap: 8 }}>
-      <span
-        style={{
-          fontSize: 12,
-          fontWeight: 800,
-          color: '#475569',
-          textTransform: 'uppercase',
-          letterSpacing: 0.8,
-        }}
-      >
-        {label}
-      </span>
-      {children}
-    </label>
-  );
+  return <FormField label={label}>{children}</FormField>;
 }
 
 function Chip({ label, tone }: { label: string; tone: 'blue' | 'slate' | 'green' | 'amber' }) {
   const palette = {
-    blue: { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' },
-    slate: { bg: '#F8FAFC', border: '#E2E8F0', color: '#334155' },
+    blue: { bg: '#edf7f3', border: '#bdddd5', color: '#06665d' },
+    slate: { bg: '#f6f8f9', border: '#dfe6e9', color: '#334155' },
     green: { bg: '#ECFDF5', border: '#A7F3D0', color: '#166534' },
     amber: { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' },
   }[tone];
@@ -389,8 +377,8 @@ function MetricBadge({
     green: { bg: '#ECFDF5', border: '#A7F3D0', color: '#166534' },
     amber: { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' },
     red: { bg: '#FEF2F2', border: '#FECACA', color: '#B91C1C' },
-    blue: { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' },
-    slate: { bg: '#F8FAFC', border: '#E2E8F0', color: '#334155' },
+    blue: { bg: '#edf7f3', border: '#bdddd5', color: '#06665d' },
+    slate: { bg: '#f6f8f9', border: '#dfe6e9', color: '#334155' },
   }[tone];
 
   return (
@@ -403,7 +391,7 @@ function MetricBadge({
         minWidth: 100,
       }}
     >
-      <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, marginBottom: 3 }}>
+      <div style={{ fontSize: 11, color: '#60717d', fontWeight: 700, marginBottom: 3 }}>
         {label}
       </div>
       <div style={{ fontSize: 15, color: palette.color, fontWeight: 900 }}>{value}</div>
@@ -419,7 +407,7 @@ function inputStyle(): React.CSSProperties {
     border: '1px solid #CBD5E1',
     padding: '12px 14px',
     fontSize: 14,
-    color: '#0F172A',
+    color: '#182c39',
     background: '#FFFFFF',
     outline: 'none',
   };
@@ -431,10 +419,10 @@ function submitStyle(): React.CSSProperties {
     border: 'none',
     borderRadius: 14,
     padding: '12px 16px',
-    background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+    background: 'var(--primary)',
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: 800,
+    fontWeight: 700,
     fontFamily: 'var(--font-display)',
     cursor: 'pointer',
   };

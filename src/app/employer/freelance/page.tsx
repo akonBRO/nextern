@@ -42,6 +42,7 @@ export default async function EmployerFreelancePage() {
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"

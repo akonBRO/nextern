@@ -18,37 +18,16 @@ type EmployerPageShellProps = {
   children: ReactNode;
 };
 
-const PAGE_LEVEL_SHELL_PREFIXES = [
-  '/employer/dashboard',
-  '/employer/calendar',
-  '/employer/jobs',
-  '/employer/assessments',
-  '/employer/interviews',
-  '/employer/recommendations',
-  '/employer/messages',
-  '/employer/freelance',
-  '/employer/ai',
-  '/employer/profile',
-  '/employer/badges',
-  '/employer/premium',
-  '/employer/subscription',
-];
-
-function hasPageLevelShell(pathname: string) {
-  return PAGE_LEVEL_SHELL_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-  );
-}
-
 export default function EmployerPageShell({ user, children }: EmployerPageShellProps) {
   const pathname = usePathname();
 
-  if (!pathname?.startsWith('/employer') || hasPageLevelShell(pathname)) {
+  if (!pathname?.startsWith('/employer')) {
     return <>{children}</>;
   }
 
   return (
     <DashboardShell
+      hideFooter={pathname?.endsWith('/messages')}
       role="employer"
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"

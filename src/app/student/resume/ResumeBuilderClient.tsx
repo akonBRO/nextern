@@ -1,8 +1,11 @@
 'use client';
+
+import BrandLoader from '@/components/ui/BrandLoader';
+import ContextIcon from '@/components/ui/ContextIcon';
 // src/app/student/resume/ResumeBuilderClient.tsx
 // Full resume builder UI — live section preview, readiness sidebar, download & save.
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   AlertCircle,
@@ -25,24 +28,24 @@ import { useUploadThing } from '@/lib/uploadthing';
 
 // ── Palette ────────────────────────────────────────────────────────────────
 const C = {
-  blue: '#2563EB',
+  blue: '#087f72',
   teal: '#0D9488',
-  navy: '#1E293B',
-  bg: '#F1F5F9',
-  gray: '#64748B',
+  navy: '#243e4a',
+  bg: '#f6f8f9',
+  gray: '#60717d',
   white: '#fff',
-  dark: '#0F172A',
-  border: '#E2E8F0',
-  text: '#0F172A',
-  light: '#94A3B8',
+  dark: '#182c39',
+  border: '#dfe6e9',
+  text: '#182c39',
+  light: '#60717d',
   danger: '#EF4444',
   dangerBg: '#FEF2F2',
   dangerBorder: '#FECACA',
   successBg: '#ECFDF5',
   successBorder: '#A7F3D0',
-  success: '#10B981',
-  blueBg: '#EFF6FF',
-  blueBorder: '#BFDBFE',
+  success: '#168257',
+  blueBg: '#edf7f3',
+  blueBorder: '#bdddd5',
   tealBg: '#F0FDFA',
   tealBorder: '#99F6E4',
 };
@@ -101,10 +104,10 @@ function SectionCard({
     <div
       style={{
         background: C.white,
-        borderRadius: 16,
+        borderRadius: 12,
         border: `1px solid ${filled ? C.successBorder : C.border}`,
         overflow: 'hidden',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       <div
@@ -178,12 +181,12 @@ function Chip({
 }
 
 function CompletionBar({ pct, label }: { pct: number; label: string }) {
-  const color = pct >= 80 ? C.success : pct >= 50 ? C.blue : '#F59E0B';
+  const color = pct >= 80 ? C.success : pct >= 50 ? C.blue : '#a86714';
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
         <span style={{ fontSize: 12, color: C.gray, fontWeight: 600 }}>{label}</span>
-        <span style={{ fontSize: 12, fontWeight: 800, color }}>{pct}%</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color }}>{pct}%</span>
       </div>
       <div style={{ height: 7, background: C.bg, borderRadius: 999, overflow: 'hidden' }}>
         <div
@@ -283,23 +286,7 @@ export default function ResumeBuilderClient() {
 
   // ── Loading ────────────────────────────────────────────────────────────
   if (fetching) {
-    return (
-      <div
-        style={{
-          minHeight: '60vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 10,
-          color: C.gray,
-          fontFamily: 'var(--font-body)',
-        }}
-      >
-        <Loader2 size={20} style={{ animation: 'spin 0.8s linear infinite' }} />
-        Loading your profile…
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      </div>
-    );
+    return <BrandLoader variant="page" label="Loading your profile" />;
   }
 
   if (!profile) {
@@ -349,9 +336,10 @@ export default function ResumeBuilderClient() {
       {/* ── Page header ── */}
       <div
         style={{
-          background: `linear-gradient(145deg, ${C.dark}, ${C.navy})`,
+          background: 'var(--surface-muted)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
+        className="v2-light-panel"
       >
         <div style={{ maxWidth: 1080, margin: '0 auto', padding: '24px 28px' }}>
           <div
@@ -370,7 +358,7 @@ export default function ResumeBuilderClient() {
                     width: 38,
                     height: 38,
                     borderRadius: 11,
-                    background: 'linear-gradient(135deg, #2563EB, #0D9488)',
+                    background: 'var(--primary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -382,8 +370,8 @@ export default function ResumeBuilderClient() {
                 <h1
                   style={{
                     fontSize: 22,
-                    fontWeight: 900,
-                    color: '#F8FAFC',
+                    fontWeight: 700,
+                    color: 'var(--deep)',
                     fontFamily: 'var(--font-display)',
                     margin: 0,
                   }}
@@ -406,7 +394,7 @@ export default function ResumeBuilderClient() {
                 loadingLabel="Generating…"
                 icon={<Download size={14} />}
                 label="Download PDF"
-                color="#2563EB"
+                color="#087f72"
                 shadow="rgba(37,99,235,0.4)"
               />
               <ActionBtn
@@ -482,7 +470,10 @@ export default function ResumeBuilderClient() {
             title="Personal Information"
             filled={!!profile.name}
           >
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+              className="v2-page-grid"
+            >
               {[
                 { label: 'Name', value: profile.name },
                 { label: 'Email', value: profile.email },
@@ -535,7 +526,10 @@ export default function ResumeBuilderClient() {
             filled={!!(profile.university && profile.cgpa)}
           >
             {profile.university || profile.cgpa != null ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+              <div
+                style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}
+                className="v2-form-grid"
+              >
                 {[
                   { label: 'University', value: profile.university },
                   { label: 'Department', value: profile.department },
@@ -597,7 +591,7 @@ export default function ResumeBuilderClient() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {profile.projects.map((proj, i) => (
                   <div key={i} style={{ borderLeft: `3px solid ${C.teal}`, paddingLeft: 14 }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{proj.title}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{proj.title}</div>
                     {proj.techStack?.length > 0 && (
                       <div style={{ marginTop: 5, display: 'flex', flexWrap: 'wrap' }}>
                         {proj.techStack.map((t) => (
@@ -725,7 +719,7 @@ export default function ResumeBuilderClient() {
             {profile.completedCourses.length > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                 {profile.completedCourses.map((c) => (
-                  <Chip key={c} label={c} color={C.gray} bg="#F8FAFC" border={C.border} />
+                  <Chip key={c} label={c} color={C.gray} bg="#f6f8f9" border={C.border} />
                 ))}
               </div>
             ) : (
@@ -798,7 +792,8 @@ export default function ResumeBuilderClient() {
             }}
           >
             <div style={{ fontSize: 13, color: C.blue, fontWeight: 600 }}>
-              📝 Changes to your profile automatically reflect in the next generated resume.
+              <ContextIcon name="file" /> Changes to your profile automatically reflect in the next
+              generated resume.
             </div>
             <Link
               href="/student/profile"
@@ -825,12 +820,13 @@ export default function ResumeBuilderClient() {
         {/* ── Right: sticky readiness sidebar ── */}
         <div style={{ width: 256, flexShrink: 0 }} className="resume-sidebar">
           <div
+            className="nx-surface"
             style={{
               background: C.white,
-              borderRadius: 18,
+              borderRadius: 12,
               border: `1px solid ${C.border}`,
               padding: '20px',
-              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+              boxShadow: 'var(--shadow-card)',
               position: 'sticky',
               top: 24,
             }}
@@ -838,7 +834,7 @@ export default function ResumeBuilderClient() {
             <div
               style={{
                 fontSize: 13,
-                fontWeight: 800,
+                fontWeight: 700,
                 color: C.text,
                 marginBottom: 16,
                 fontFamily: 'var(--font-display)',
@@ -902,7 +898,7 @@ export default function ResumeBuilderClient() {
               loadingLabel="Generating…"
               icon={<Download size={13} />}
               label="Download PDF"
-              color="#2563EB"
+              color="#087f72"
               shadow="rgba(37,99,235,0.3)"
               fullWidth
             />

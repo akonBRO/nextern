@@ -110,6 +110,7 @@ export default async function EmployerAiPage() {
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer AI"
       homeHref="/employer/dashboard"
@@ -181,19 +182,19 @@ export default async function EmployerAiPage() {
         >
           <div
             style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}
-            className="employer-ai-grid"
+            className="employer-ai-grid v2-form-grid"
           >
             <Panel
               title="AI applicant shortlisting"
               description="Creates a ranked shortlist from fit scores, requirement matches, gaps, and profile quality."
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                <Sparkles size={22} color="#2563EB" />
+                <Sparkles size={22} color="#087f72" />
                 <div>
-                  <div style={{ fontSize: 28, fontWeight: 900, color: '#1E293B' }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: '#243e4a' }}>
                     {usageLabel(usage.remaining.aiApplicantShortlist)}
                   </div>
-                  <div style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>
+                  <div style={{ fontSize: 12, color: '#60717d', fontWeight: 700 }}>
                     {shortlistLimit === null
                       ? `${shortlistCount} generated this month`
                       : `${shortlistCount}/${shortlistLimit} used this month`}
@@ -208,12 +209,12 @@ export default async function EmployerAiPage() {
               description="Premium listings are also prioritized in student job feeds."
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                <BriefcaseBusiness size={22} color="#10B981" />
+                <BriefcaseBusiness size={22} color="#168257" />
                 <div>
-                  <div style={{ fontSize: 28, fontWeight: 900, color: '#1E293B' }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: '#243e4a' }}>
                     {usageLabel(usage.remaining.jobPosting)}
                   </div>
-                  <div style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>
+                  <div style={{ fontSize: 12, color: '#60717d', fontWeight: 700 }}>
                     {jobLimit === null
                       ? `${jobCount} posted this month`
                       : `${jobCount}/${jobLimit} posted this month`}
@@ -237,14 +238,14 @@ export default async function EmployerAiPage() {
                       gap: 10,
                       padding: '10px 12px',
                       borderRadius: 12,
-                      background: '#F8FAFC',
-                      border: '1px solid #E2E8F0',
-                      color: '#1E293B',
+                      background: '#f6f8f9',
+                      border: '1px solid #dfe6e9',
+                      color: '#243e4a',
                       fontSize: 13,
-                      fontWeight: 800,
+                      fontWeight: 700,
                     }}
                   >
-                    <CreditCard size={15} color="#2563EB" />
+                    <CreditCard size={15} color="#087f72" />
                     {method}
                   </div>
                 ))}
@@ -256,13 +257,13 @@ export default async function EmployerAiPage() {
                     justifyContent: 'center',
                     gap: 8,
                     marginTop: 4,
-                    background: '#2563EB',
+                    background: '#087f72',
                     color: '#FFFFFF',
                     borderRadius: 12,
                     padding: '11px 14px',
                     textDecoration: 'none',
                     fontSize: 13,
-                    fontWeight: 900,
+                    fontWeight: 700,
                   }}
                 >
                   <Crown size={14} />
@@ -280,7 +281,7 @@ export default async function EmployerAiPage() {
           {jobs.length > 0 ? (
             <div
               style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}
-              className="employer-ai-jobs"
+              className="employer-ai-jobs v2-form-grid"
             >
               {jobs.map((job) => (
                 <Panel
@@ -312,13 +313,13 @@ export default async function EmployerAiPage() {
                         <span
                           key={skill}
                           style={{
-                            background: '#EFF6FF',
-                            color: '#2563EB',
-                            border: '1px solid #BFDBFE',
+                            background: '#edf7f3',
+                            color: '#087f72',
+                            border: '1px solid #bdddd5',
                             borderRadius: 999,
                             padding: '4px 9px',
                             fontSize: 11,
-                            fontWeight: 800,
+                            fontWeight: 700,
                           }}
                         >
                           {skill}
@@ -333,13 +334,13 @@ export default async function EmployerAiPage() {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 7,
-                        background: '#0F172A',
+                        background: '#182c39',
                         color: '#FFFFFF',
                         borderRadius: 11,
                         padding: '9px 13px',
                         textDecoration: 'none',
                         fontSize: 12,
-                        fontWeight: 900,
+                        fontWeight: 700,
                       }}
                     >
                       <Target size={13} /> Open AI shortlist
@@ -350,14 +351,14 @@ export default async function EmployerAiPage() {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 7,
-                        background: '#EFF6FF',
-                        color: '#2563EB',
-                        border: '1px solid #BFDBFE',
+                        background: '#edf7f3',
+                        color: '#087f72',
+                        border: '1px solid #bdddd5',
                         borderRadius: 11,
                         padding: '9px 13px',
                         textDecoration: 'none',
                         fontSize: 12,
-                        fontWeight: 800,
+                        fontWeight: 700,
                       }}
                     >
                       <Users size={13} /> View listing

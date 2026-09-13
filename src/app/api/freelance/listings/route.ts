@@ -72,6 +72,22 @@ export async function GET(req: NextRequest) {
     const skill = (searchParams.get('skill') ?? '').trim();
     const minBudget = Number.parseInt(searchParams.get('minBudget') ?? '', 10);
     const maxBudget = Number.parseInt(searchParams.get('maxBudget') ?? '', 10);
+    const priceType = searchParams.get('priceType');
+    const maxDeliveryDays = Number.parseInt(searchParams.get('maxDeliveryDays') ?? '', 10);
+    // Optional discovery controls; the existing default order and permissions stay intact.
+    const sortOptions: Record<string, Record<string, 1 | -1>> = {
+      newest: { isActive: -1, createdAt: -1, _id: -1 },
+      'price-low': { isActive: -1, priceBDT: 1, _id: -1 },
+      'price-high': { isActive: -1, priceBDT: -1, _id: -1 },
+      delivery: { isActive: -1, deliveryDays: 1, _id: -1 },
+      rating: { isActive: -1, averageRating: -1, totalOrdersCompleted: -1, _id: -1 },
+    };
+    const sort = sortOptions[searchParams.get('sort') ?? ''] ?? {
+      isActive: -1,
+      averageRating: -1,
+      totalOrdersCompleted: -1,
+      createdAt: -1,
+    };
 
     await connectDB();
 
@@ -91,6 +107,11 @@ export async function GET(req: NextRequest) {
       query.skills = { $in: [new RegExp(escapeRegExp(skill), 'i')] };
     }
 
+    if (priceType === 'fixed' || priceType === 'hourly') query.priceType = priceType;
+    if (Number.isFinite(maxDeliveryDays) && maxDeliveryDays > 0) {
+      query.deliveryDays = { $lte: maxDeliveryDays };
+    }
+
     if (Number.isFinite(minBudget) || Number.isFinite(maxBudget)) {
       query.priceBDT = {};
       if (Number.isFinite(minBudget)) query.priceBDT.$gte = minBudget;
@@ -105,7 +126,7 @@ export async function GET(req: NextRequest) {
     const [listings, total] = await Promise.all([
       FreelanceListing.find(query)
         .populate('studentId', 'name image university department skills opportunityScore')
-        .sort({ isActive: -1, averageRating: -1, totalOrdersCompleted: -1, createdAt: -1 })
+        .sort(sort)
         .skip(skip)
         .limit(limit)
         .lean(),

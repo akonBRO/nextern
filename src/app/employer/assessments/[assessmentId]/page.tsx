@@ -126,6 +126,7 @@ export default async function EmployerAssessmentDetailPage({
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"

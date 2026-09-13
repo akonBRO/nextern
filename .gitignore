@@ -54,3 +54,10 @@ next-env.d.ts
 /docs
 /postman
 .codex-temp
+/output
+.Nextern_Project.docx
+.nextern-business-value-analysis.md
+.report-source.md
+.UI_V2_QA.md
+.UI_REDESIGN_QA.md
+.project_doc.md

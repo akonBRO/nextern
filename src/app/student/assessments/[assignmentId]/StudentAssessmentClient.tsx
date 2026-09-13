@@ -115,7 +115,7 @@ const fieldStyle = {
   borderRadius: 12,
   border: '1px solid #D9E2EC',
   background: '#FFFFFF',
-  color: '#0F172A',
+  color: '#182c39',
   fontSize: 13,
   outline: 'none',
 } as const;
@@ -492,7 +492,7 @@ export default function StudentAssessmentClient({
       {notice ? (
         <div
           style={{
-            borderRadius: 16,
+            borderRadius: 12,
             padding: '12px 14px',
             background: notice.tone === 'success' ? '#ECFDF5' : '#FEF2F2',
             color: notice.tone === 'success' ? '#065F46' : '#991B1B',
@@ -507,32 +507,33 @@ export default function StudentAssessmentClient({
 
       {!currentSubmission ? (
         <div
+          className="nx-surface"
           style={{
             background: '#FFFFFF',
-            borderRadius: 20,
+            borderRadius: 12,
             border: '1px solid #D9E2EC',
             padding: 24,
-            boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
           <div
             style={{
               fontSize: 18,
-              fontWeight: 900,
-              color: '#0F172A',
+              fontWeight: 700,
+              color: '#182c39',
               fontFamily: 'var(--font-display)',
             }}
           >
             Ready to start?
           </div>
-          <div style={{ marginTop: 8, fontSize: 14, color: '#64748B', lineHeight: 1.7 }}>
+          <div style={{ marginTop: 8, fontSize: 14, color: '#60717d', lineHeight: 1.7 }}>
             Once you begin, the timer starts immediately. Due date:{' '}
             {formatDhakaDateTime(currentAssignment.dueAt ?? assessment.dueAt)}.
           </div>
           <div
             style={{
               marginTop: 14,
-              borderRadius: 16,
+              borderRadius: 12,
               border: '1px solid #FDE68A',
               background: '#FFFBEB',
               padding: '14px 16px',
@@ -552,9 +553,9 @@ export default function StudentAssessmentClient({
             <div
               style={{
                 marginTop: 16,
-                borderRadius: 16,
-                border: '1px solid #E2E8F0',
-                background: '#F8FAFC',
+                borderRadius: 12,
+                border: '1px solid #dfe6e9',
+                background: '#f6f8f9',
                 padding: '14px 16px',
                 fontSize: 13,
                 color: '#334155',
@@ -575,13 +576,13 @@ export default function StudentAssessmentClient({
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+              background: 'var(--primary)',
               color: '#FFFFFF',
               border: 'none',
               borderRadius: 14,
               padding: '12px 16px',
               fontSize: 13,
-              fontWeight: 800,
+              fontWeight: 700,
               cursor: 'pointer',
             }}
           >
@@ -596,10 +597,10 @@ export default function StudentAssessmentClient({
           id="assessment-live-workspace"
           style={{
             background: '#FFFFFF',
-            borderRadius: 20,
+            borderRadius: 12,
             border: '1px solid #D9E2EC',
             padding: 18,
-            boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
+            boxShadow: 'var(--shadow-card)',
             display: 'flex',
             justifyContent: 'space-between',
             gap: 12,
@@ -618,7 +619,7 @@ export default function StudentAssessmentClient({
                     draftState === 'error'
                       ? '#991B1B'
                       : draftState === 'saving'
-                        ? '#2563EB'
+                        ? '#087f72'
                         : '#047857',
                   fontWeight: 700,
                 }}
@@ -641,11 +642,11 @@ export default function StudentAssessmentClient({
                 gap: 8,
                 borderRadius: 999,
                 padding: '8px 12px',
-                background: remainingSeconds < 300 ? '#FEF2F2' : '#EFF6FF',
-                color: remainingSeconds < 300 ? '#991B1B' : '#2563EB',
-                border: `1px solid ${remainingSeconds < 300 ? '#FECACA' : '#BFDBFE'}`,
+                background: remainingSeconds < 300 ? '#FEF2F2' : '#edf7f3',
+                color: remainingSeconds < 300 ? '#991B1B' : '#087f72',
+                border: `1px solid ${remainingSeconds < 300 ? '#FECACA' : '#bdddd5'}`,
                 fontSize: 12,
-                fontWeight: 800,
+                fontWeight: 700,
               }}
             >
               <Clock3 size={14} />
@@ -664,13 +665,14 @@ export default function StudentAssessmentClient({
             );
             return (
               <div
+                className="nx-surface"
                 key={question.index}
                 style={{
                   background: '#FFFFFF',
-                  borderRadius: 20,
+                  borderRadius: 12,
                   border: '1px solid #D9E2EC',
                   padding: 22,
-                  boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
+                  boxShadow: 'var(--shadow-card)',
                   display: 'grid',
                   gap: 16,
                 }}
@@ -687,8 +689,8 @@ export default function StudentAssessmentClient({
                     <div
                       style={{
                         fontSize: 18,
-                        fontWeight: 900,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                       }}
                     >
@@ -696,17 +698,17 @@ export default function StudentAssessmentClient({
                     </div>
                     <div
                       style={{
-                        borderRadius: 18,
+                        borderRadius: 12,
                         border: '1px solid #D7E3F4',
-                        background: 'linear-gradient(180deg, #F8FBFF 0%, #FFFFFF 100%)',
+                        background: '#edf7f3',
                         padding: '16px 18px',
-                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85)',
+                        boxShadow: 'var(--shadow-card)',
                       }}
                     >
                       <div
                         style={{
                           fontSize: 17,
-                          color: '#0F172A',
+                          color: '#182c39',
                           lineHeight: 1.9,
                           fontWeight: 650,
                           whiteSpace: 'pre-wrap',
@@ -721,11 +723,11 @@ export default function StudentAssessmentClient({
                     style={{
                       borderRadius: 999,
                       padding: '8px 12px',
-                      background: '#F8FAFC',
-                      border: '1px solid #E2E8F0',
-                      color: '#0F172A',
+                      background: '#f6f8f9',
+                      border: '1px solid #dfe6e9',
+                      color: '#182c39',
                       fontSize: 13,
-                      fontWeight: 800,
+                      fontWeight: 700,
                       whiteSpace: 'nowrap',
                     }}
                   >
@@ -747,9 +749,9 @@ export default function StudentAssessmentClient({
                           gap: 7,
                           borderRadius: 999,
                           padding: '6px 10px',
-                          background: '#EFF6FF',
-                          color: '#2563EB',
-                          border: '1px solid #BFDBFE',
+                          background: '#edf7f3',
+                          color: '#087f72',
+                          border: '1px solid #bdddd5',
                           fontSize: 12,
                           fontWeight: 700,
                           textDecoration: 'none',
@@ -770,12 +772,12 @@ export default function StudentAssessmentClient({
                           display: 'flex',
                           alignItems: 'center',
                           gap: 12,
-                          borderRadius: 16,
+                          borderRadius: 12,
                           border: '1px solid #D7E3F4',
                           padding: '14px 16px',
                           background: '#FBFDFF',
                           fontSize: 15,
-                          color: '#0F172A',
+                          color: '#182c39',
                           lineHeight: 1.75,
                           fontWeight: 600,
                         }}
@@ -808,7 +810,7 @@ export default function StudentAssessmentClient({
                       padding: '15px 16px',
                       fontSize: 15,
                       lineHeight: 1.85,
-                      color: '#0F172A',
+                      color: '#182c39',
                       borderColor: '#CBD5E1',
                       resize: 'vertical',
                       minHeight: question.type === 'case_study' ? 180 : 110,
@@ -830,7 +832,7 @@ export default function StudentAssessmentClient({
                         padding: '16px 18px',
                         fontSize: 14,
                         lineHeight: 1.75,
-                        color: '#0F172A',
+                        color: '#182c39',
                         borderColor: '#CBD5E1',
                         resize: 'vertical',
                         minHeight: 220,
@@ -855,25 +857,25 @@ export default function StudentAssessmentClient({
                             !codingExecutionEnabled ||
                             runningQuestion === question.index ||
                             isSubmitted
-                              ? '#F8FAFC'
-                              : '#EFF6FF',
+                              ? '#f6f8f9'
+                              : '#edf7f3',
                           color:
                             !codingExecutionEnabled ||
                             runningQuestion === question.index ||
                             isSubmitted
-                              ? '#94A3B8'
-                              : '#2563EB',
+                              ? '#60717d'
+                              : '#087f72',
                           border: `1px solid ${
                             !codingExecutionEnabled ||
                             runningQuestion === question.index ||
                             isSubmitted
-                              ? '#E2E8F0'
-                              : '#BFDBFE'
+                              ? '#dfe6e9'
+                              : '#bdddd5'
                           }`,
                           borderRadius: 12,
                           padding: '10px 14px',
                           fontSize: 12,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           cursor:
                             !codingExecutionEnabled ||
                             runningQuestion === question.index ||
@@ -913,9 +915,9 @@ export default function StudentAssessmentClient({
                         style={{
                           margin: 0,
                           borderRadius: 14,
-                          border: '1px solid #E2E8F0',
-                          background: '#0F172A',
-                          color: '#E2E8F0',
+                          border: '1px solid #dfe6e9',
+                          background: '#182c39',
+                          color: '#dfe6e9',
                           padding: '12px 14px',
                           fontSize: 12,
                           overflowX: 'auto',
@@ -935,12 +937,12 @@ export default function StudentAssessmentClient({
                         alignItems: 'center',
                         gap: 7,
                         borderRadius: 10,
-                        border: '1px solid #BFDBFE',
-                        background: '#EFF6FF',
-                        color: '#2563EB',
+                        border: '1px solid #bdddd5',
+                        background: '#edf7f3',
+                        color: '#087f72',
                         padding: '8px 10px',
                         fontSize: 12,
-                        fontWeight: 800,
+                        fontWeight: 700,
                         cursor: isSubmitted || isUploading ? 'not-allowed' : 'pointer',
                         width: 'fit-content',
                       }}
@@ -968,8 +970,8 @@ export default function StudentAssessmentClient({
                           style={{
                             borderRadius: 999,
                             padding: '6px 10px',
-                            background: '#F8FAFC',
-                            border: '1px solid #E2E8F0',
+                            background: '#f6f8f9',
+                            border: '1px solid #dfe6e9',
                             color: '#334155',
                             fontSize: 12,
                             fontWeight: 700,
@@ -986,8 +988,8 @@ export default function StudentAssessmentClient({
                   <div
                     style={{
                       borderRadius: 14,
-                      border: '1px solid #E2E8F0',
-                      background: '#F8FAFC',
+                      border: '1px solid #dfe6e9',
+                      background: '#f6f8f9',
                       padding: '12px 14px',
                       display: 'flex',
                       gap: 14,
@@ -1021,13 +1023,13 @@ export default function StudentAssessmentClient({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
-                background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+                background: 'var(--primary)',
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: 15,
                 padding: '12px 16px',
                 fontSize: 13,
-                fontWeight: 800,
+                fontWeight: 700,
                 cursor: isPending ? 'not-allowed' : 'pointer',
               }}
             >
@@ -1049,13 +1051,14 @@ export default function StudentAssessmentClient({
             position: 'fixed',
             inset: 0,
             background: 'rgba(15,23,42,0.58)',
-            backdropFilter: 'blur(6px)',
+            backdropFilter: 'none',
             zIndex: 80,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: '20px 16px',
           }}
+          className="v2-dialog-overlay"
         >
           <div
             onClick={(event) => event.stopPropagation()}
@@ -1065,17 +1068,17 @@ export default function StudentAssessmentClient({
             style={{
               width: '100%',
               maxWidth: 640,
-              borderRadius: 24,
+              borderRadius: 12,
               background: '#FFFFFF',
               border: '1px solid #D9E2EC',
-              boxShadow: '0 24px 60px rgba(15,23,42,0.24)',
+              boxShadow: 'var(--shadow-card)',
               overflow: 'hidden',
             }}
           >
             <div
               style={{
                 padding: '22px 22px 18px',
-                borderBottom: '1px solid #E2E8F0',
+                borderBottom: '1px solid #dfe6e9',
                 display: 'flex',
                 justifyContent: 'space-between',
                 gap: 12,
@@ -1087,14 +1090,14 @@ export default function StudentAssessmentClient({
                   id="assessment-start-rules-title"
                   style={{
                     fontSize: 20,
-                    fontWeight: 900,
-                    color: '#0F172A',
+                    fontWeight: 700,
+                    color: '#182c39',
                     fontFamily: 'var(--font-display)',
                   }}
                 >
                   Read Before You Start
                 </div>
-                <div style={{ marginTop: 6, fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
+                <div style={{ marginTop: 6, fontSize: 13, color: '#60717d', lineHeight: 1.7 }}>
                   Starting this assessment launches your timed attempt immediately.
                 </div>
               </div>
@@ -1127,7 +1130,7 @@ export default function StudentAssessmentClient({
             <div style={{ padding: 22, display: 'grid', gap: 16 }}>
               <div
                 style={{
-                  borderRadius: 18,
+                  borderRadius: 12,
                   border: '1px solid #FDE68A',
                   background: '#FFFBEB',
                   padding: '16px 18px',
@@ -1142,7 +1145,7 @@ export default function StudentAssessmentClient({
                     gap: 9,
                     color: '#92400E',
                     fontSize: 14,
-                    fontWeight: 900,
+                    fontWeight: 700,
                   }}
                 >
                   <AlertTriangle size={16} />
@@ -1154,6 +1157,7 @@ export default function StudentAssessmentClient({
                     gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                     gap: 10,
                   }}
+                  className="v2-page-grid"
                 >
                   <div
                     style={{
@@ -1192,9 +1196,9 @@ export default function StudentAssessmentClient({
                       display: 'flex',
                       alignItems: 'flex-start',
                       gap: 10,
-                      borderRadius: 16,
-                      border: '1px solid #E2E8F0',
-                      background: '#F8FAFC',
+                      borderRadius: 12,
+                      border: '1px solid #dfe6e9',
+                      background: '#f6f8f9',
                       padding: '12px 14px',
                     }}
                   >
@@ -1206,10 +1210,10 @@ export default function StudentAssessmentClient({
                         width: 24,
                         height: 24,
                         borderRadius: 999,
-                        background: '#DBEAFE',
-                        color: '#1D4ED8',
+                        background: '#dbefea',
+                        color: '#06665d',
                         fontSize: 12,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         flexShrink: 0,
                       }}
                     >
@@ -1225,7 +1229,7 @@ export default function StudentAssessmentClient({
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: 10,
-                  borderRadius: 16,
+                  borderRadius: 12,
                   border: '1px solid #D9E2EC',
                   background: '#FFFFFF',
                   padding: '12px 14px',
@@ -1248,7 +1252,7 @@ export default function StudentAssessmentClient({
 
             <div
               style={{
-                borderTop: '1px solid #E2E8F0',
+                borderTop: '1px solid #dfe6e9',
                 padding: '18px 22px 22px',
                 display: 'flex',
                 justifyContent: 'flex-end',
@@ -1274,7 +1278,7 @@ export default function StudentAssessmentClient({
                   borderRadius: 14,
                   padding: '11px 14px',
                   fontSize: 13,
-                  fontWeight: 800,
+                  fontWeight: 700,
                   cursor: isStarting ? 'not-allowed' : 'pointer',
                 }}
               >
@@ -1292,13 +1296,13 @@ export default function StudentAssessmentClient({
                   background:
                     !startRulesAccepted || isStarting
                       ? '#CBD5E1'
-                      : 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+                      : 'linear-gradient(135deg, #087f72, #06665d)',
                   color: '#FFFFFF',
                   border: 'none',
                   borderRadius: 14,
                   padding: '11px 16px',
                   fontSize: 13,
-                  fontWeight: 800,
+                  fontWeight: 700,
                   cursor: !startRulesAccepted || isStarting ? 'not-allowed' : 'pointer',
                 }}
               >

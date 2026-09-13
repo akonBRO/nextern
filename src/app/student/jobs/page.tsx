@@ -14,12 +14,7 @@ import { User } from '@/models/User';
 import mongoose from 'mongoose';
 import { STUDENT_NAV_ITEMS } from '@/lib/student-navigation';
 import DashboardShell from '@/components/dashboard/DashboardShell';
-import {
-  DashboardPage,
-  HeroCard,
-  ActionLink,
-  Panel,
-} from '@/components/dashboard/DashboardContent';
+import { DashboardPage, ActionLink } from '@/components/dashboard/DashboardContent';
 import JobFeedClient from './JobFeedClient';
 
 async function getJobFeedData(userId: string) {
@@ -159,6 +154,7 @@ export default async function StudentJobsPage() {
 
   return (
     <DashboardShell
+      embedded
       role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
@@ -177,64 +173,32 @@ export default async function StudentJobsPage() {
       }}
     >
       <DashboardPage>
-        <HeroCard
-          eyebrow="Job & internship feed"
-          title="Your personalized opportunities"
-          description="Jobs below are matched to your university and department. Each card shows your skill fit score so you know where you stand before applying."
-          actions={
-            <>
-              <ActionLink href="/student/applications" label="My applications" />
-              <ActionLink href="/student/dashboard" label="Back to dashboard" tone="ghost" />
-            </>
-          }
-          aside={
-            <Panel
-              title="Your readiness"
-              style={{
-                background: 'rgba(255,255,255,0.12)',
-                border: '1px solid rgba(255,255,255,0.16)',
-              }}
-            >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                {[
-                  { label: 'Listings', value: totalJobs, color: '#FFFFFF' },
-                  { label: 'Applied', value: appliedCount, color: '#BAE6FD' },
-                  { label: 'Opp. Score', value: student.opportunityScore ?? 0, color: '#A7F3D0' },
-                  {
-                    label: 'Profile',
-                    value: `${student.profileCompleteness ?? 0}%`,
-                    color: '#FDE68A',
-                  },
-                ].map((s) => (
-                  <div
-                    key={s.label}
-                    style={{
-                      background: 'rgba(255,255,255,0.08)',
-                      borderRadius: 12,
-                      padding: '12px 14px',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 22,
-                        fontWeight: 900,
-                        color: s.color,
-                        fontFamily: 'var(--font-display)',
-                        lineHeight: 1,
-                      }}
-                    >
-                      {s.value}
-                    </div>
-                    <div style={{ color: '#FFFFFF', fontSize: 12, marginTop: 4, fontWeight: 700 }}>
-                      {s.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Panel>
-          }
-        />
+        <header className="opportunity-page-heading">
+          <div>
+            <p className="opportunity-eyebrow">Internships, jobs & campus events</p>
+            <h1>Find your next opportunity</h1>
+            <p>Explore roles matched to your university and department.</p>
+          </div>
+          <ActionLink href="/student/applications" label="My applications" tone="ghost" />
+          <dl className="opportunity-summary">
+            <div>
+              <dt>Open listings</dt>
+              <dd>{totalJobs}</dd>
+            </div>
+            <div>
+              <dt>Applied</dt>
+              <dd>{appliedCount}</dd>
+            </div>
+            <div>
+              <dt>Opportunity score</dt>
+              <dd>{student.opportunityScore ?? 0}</dd>
+            </div>
+            <div>
+              <dt>Profile complete</dt>
+              <dd>{student.profileCompleteness ?? 0}%</dd>
+            </div>
+          </dl>
+        </header>
 
         <JobFeedClient jobs={jobs} initialSmartUsage={JSON.parse(JSON.stringify(usage))} />
       </DashboardPage>

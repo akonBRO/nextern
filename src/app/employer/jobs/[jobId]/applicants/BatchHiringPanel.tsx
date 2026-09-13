@@ -113,11 +113,11 @@ type Props = {
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const STATUS_CFG: Record<string, { bg: string; color: string; border: string; label: string }> = {
-  applied: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE', label: 'Applied' },
+  applied: { bg: '#edf7f3', color: '#087f72', border: '#bdddd5', label: 'Applied' },
   under_review: { bg: '#FFFBEB', color: '#92400E', border: '#FDE68A', label: 'Under Review' },
   shortlisted: { bg: '#ECFDF5', color: '#065F46', border: '#A7F3D0', label: 'Shortlisted' },
   assessment_sent: { bg: '#F0F9FF', color: '#0369A1', border: '#BAE6FD', label: 'Assessment Sent' },
-  interview_scheduled: { bg: '#EDE9FE', color: '#7C3AED', border: '#DDD6FE', label: 'Interview' },
+  interview_scheduled: { bg: '#e0f0eb', color: '#087f72', border: '#bdddd5', label: 'Interview' },
   hired: { bg: '#DCFCE7', color: '#065F46', border: '#BBF7D0', label: 'Hired' },
   rejected: { bg: '#FEF2F2', color: '#991B1B', border: '#FECACA', label: 'Not Selected' },
 };
@@ -148,17 +148,17 @@ function UniversityRow({
 }) {
   const [expanded, setExpanded] = useState(false);
   const pct = total > 0 ? Math.round((stat.total / total) * 100) : 0;
-  const fitColor = stat.avgFit >= 70 ? '#10B981' : stat.avgFit >= 40 ? '#F59E0B' : '#94A3B8';
+  const fitColor = stat.avgFit >= 70 ? '#168257' : stat.avgFit >= 40 ? '#a86714' : '#60717d';
 
-  const rankColors = ['#F59E0B', '#94A3B8', '#CD7C2F'];
-  const rankColor = rank < 3 ? rankColors[rank] : '#E2E8F0';
-  const rankTextColor = rank < 3 ? '#fff' : '#94A3B8';
+  const rankColors = ['#a86714', '#60717d', '#CD7C2F'];
+  const rankColor = rank < 3 ? rankColors[rank] : '#dfe6e9';
+  const rankTextColor = rank < 3 ? '#fff' : '#60717d';
 
   return (
     <div
       style={{
-        borderRadius: 16,
-        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        border: '1px solid #dfe6e9',
         overflow: 'hidden',
         background: '#fff',
       }}
@@ -174,6 +174,7 @@ function UniversityRow({
           cursor: 'pointer',
         }}
         onClick={() => setExpanded((p) => !p)}
+        className="v2-page-grid"
       >
         {/* Rank */}
         <div
@@ -186,7 +187,7 @@ function UniversityRow({
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 13,
-            fontWeight: 900,
+            fontWeight: 700,
             color: rankTextColor,
           }}
         >
@@ -195,7 +196,7 @@ function UniversityRow({
 
         {/* University + bar */}
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', marginBottom: 5 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39', marginBottom: 5 }}>
             {stat.university}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -203,7 +204,7 @@ function UniversityRow({
               style={{
                 flex: 1,
                 height: 5,
-                background: '#F1F5F9',
+                background: '#f6f8f9',
                 borderRadius: 999,
                 overflow: 'hidden',
                 maxWidth: 180,
@@ -213,12 +214,12 @@ function UniversityRow({
                 style={{
                   width: `${pct}%`,
                   height: '100%',
-                  background: '#2563EB',
+                  background: '#087f72',
                   borderRadius: 999,
                 }}
               />
             </div>
-            <span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>{pct}% of total</span>
+            <span style={{ fontSize: 11, color: '#60717d', fontWeight: 600 }}>{pct}% of total</span>
           </div>
         </div>
 
@@ -226,8 +227,8 @@ function UniversityRow({
         <div
           style={{
             fontSize: 22,
-            fontWeight: 900,
-            color: '#2563EB',
+            fontWeight: 700,
+            color: '#087f72',
             fontFamily: 'var(--font-display)',
             textAlign: 'center',
           }}
@@ -239,8 +240,8 @@ function UniversityRow({
         <div
           style={{
             fontSize: 22,
-            fontWeight: 900,
-            color: '#22D3EE',
+            fontWeight: 700,
+            color: '#178d80',
             fontFamily: 'var(--font-display)',
             textAlign: 'center',
           }}
@@ -252,8 +253,8 @@ function UniversityRow({
         <div
           style={{
             fontSize: 22,
-            fontWeight: 900,
-            color: '#10B981',
+            fontWeight: 700,
+            color: '#168257',
             fontFamily: 'var(--font-display)',
             textAlign: 'center',
           }}
@@ -266,7 +267,7 @@ function UniversityRow({
           <div
             style={{
               fontSize: 20,
-              fontWeight: 900,
+              fontWeight: 700,
               color: fitColor,
               fontFamily: 'var(--font-display)',
             }}
@@ -277,7 +278,7 @@ function UniversityRow({
             <div
               style={{
                 height: 4,
-                background: '#F1F5F9',
+                background: '#f6f8f9',
                 borderRadius: 999,
                 overflow: 'hidden',
                 marginTop: 4,
@@ -307,9 +308,9 @@ function UniversityRow({
               display: 'inline-flex',
               alignItems: 'center',
               gap: 4,
-              background: '#F8FAFC',
-              color: '#64748B',
-              border: '1px solid #E2E8F0',
+              background: '#f6f8f9',
+              color: '#60717d',
+              border: '1px solid #dfe6e9',
               borderRadius: 8,
               padding: '5px 10px',
               fontSize: 11,
@@ -333,13 +334,13 @@ function UniversityRow({
       {/* Expanded pipeline breakdown */}
       {expanded && (
         <div
-          style={{ borderTop: '1px solid #F1F5F9', padding: '16px 18px', background: '#FAFBFC' }}
+          style={{ borderTop: '1px solid #f6f8f9', padding: '16px 18px', background: '#FAFBFC' }}
         >
           <div
             style={{
               fontSize: 12,
               fontWeight: 700,
-              color: '#64748B',
+              color: '#60717d',
               textTransform: 'uppercase',
               letterSpacing: 0.8,
               marginBottom: 12,
@@ -377,11 +378,11 @@ function UniversityRow({
                       {cfg.label}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 12, color: '#94A3B8' }}>{pct}%</span>
+                      <span style={{ fontSize: 12, color: '#60717d' }}>{pct}%</span>
                       <span
                         style={{
                           fontSize: 16,
-                          fontWeight: 900,
+                          fontWeight: 700,
                           color: cfg.color,
                           fontFamily: 'var(--font-display)',
                           minWidth: 24,
@@ -395,7 +396,7 @@ function UniversityRow({
                   <div
                     style={{
                       height: 6,
-                      background: '#F1F5F9',
+                      background: '#f6f8f9',
                       borderRadius: 999,
                       overflow: 'hidden',
                     }}
@@ -432,7 +433,7 @@ function ApplicantCard({
   onSelect: (id: string) => void;
 }) {
   const fitScore = app.fitScore ?? 0;
-  const fitColor = fitScore >= 70 ? '#10B981' : fitScore >= 40 ? '#F59E0B' : '#EF4444';
+  const fitColor = fitScore >= 70 ? '#168257' : fitScore >= 40 ? '#a86714' : '#EF4444';
   const statusCfg = STATUS_CFG[app.status] ?? STATUS_CFG['applied'];
   const hasAssessment = Boolean(app.assessment?.assignmentId || app.assessment?.assessmentId);
   const assessmentSubmitted = Boolean(app.assessment?.submittedAt);
@@ -449,8 +450,8 @@ function ApplicantCard({
     <div
       style={{
         background: '#fff',
-        borderRadius: 16,
-        border: `2px solid ${selected ? '#2563EB' : '#E2E8F0'}`,
+        borderRadius: 12,
+        border: `2px solid ${selected ? '#087f72' : '#dfe6e9'}`,
         padding: '16px 18px',
         display: 'flex',
         alignItems: 'flex-start',
@@ -466,8 +467,8 @@ function ApplicantCard({
           width: 18,
           height: 18,
           borderRadius: 5,
-          border: `2px solid ${selected ? '#2563EB' : '#CBD5E1'}`,
-          background: selected ? '#2563EB' : '#fff',
+          border: `2px solid ${selected ? '#087f72' : '#CBD5E1'}`,
+          background: selected ? '#087f72' : '#fff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -486,13 +487,13 @@ function ApplicantCard({
           width: 42,
           height: 42,
           borderRadius: '50%',
-          background: '#2563EB',
+          background: '#087f72',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: '#fff',
           fontSize: 14,
-          fontWeight: 800,
+          fontWeight: 700,
           flexShrink: 0,
         }}
       >
@@ -510,7 +511,7 @@ function ApplicantCard({
             marginBottom: 3,
           }}
         >
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>{app.student.name}</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#182c39' }}>{app.student.name}</div>
           <span
             style={{
               background: statusCfg.bg,
@@ -525,11 +526,11 @@ function ApplicantCard({
             {statusCfg.label}
           </span>
         </div>
-        <div style={{ fontSize: 13, color: '#64748B', marginBottom: 6 }}>
+        <div style={{ fontSize: 13, color: '#60717d', marginBottom: 6 }}>
           {[app.student.university, app.student.department].filter(Boolean).join(' · ')}
           {app.student.yearOfStudy && ` · Year ${app.student.yearOfStudy}`}
           {typeof app.student.cgpa === 'number' && (
-            <span style={{ color: '#10B981', fontWeight: 600 }}>
+            <span style={{ color: '#168257', fontWeight: 600 }}>
               {' '}
               · CGPA {app.student.cgpa.toFixed(2)}
             </span>
@@ -540,7 +541,7 @@ function ApplicantCard({
             <span
               key={s}
               style={{
-                background: '#F1F5F9',
+                background: '#f6f8f9',
                 color: '#475569',
                 padding: '2px 8px',
                 borderRadius: 999,
@@ -552,7 +553,7 @@ function ApplicantCard({
             </span>
           ))}
         </div>
-        <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 6 }}>
+        <div style={{ fontSize: 11, color: '#60717d', marginTop: 6 }}>
           Applied{' '}
           {app.appliedAt
             ? new Date(app.appliedAt).toLocaleDateString('en-BD', {
@@ -567,8 +568,8 @@ function ApplicantCard({
             style={{
               marginTop: 10,
               borderRadius: 14,
-              border: `1px solid ${assessmentSubmitted ? '#A7F3D0' : '#BFDBFE'}`,
-              background: assessmentSubmitted ? '#ECFDF5' : '#EFF6FF',
+              border: `1px solid ${assessmentSubmitted ? '#A7F3D0' : '#bdddd5'}`,
+              background: assessmentSubmitted ? '#ECFDF5' : '#edf7f3',
               padding: '10px 12px',
               display: 'grid',
               gap: 4,
@@ -586,8 +587,8 @@ function ApplicantCard({
               <span
                 style={{
                   fontSize: 11,
-                  fontWeight: 800,
-                  color: assessmentSubmitted ? '#065F46' : '#1D4ED8',
+                  fontWeight: 700,
+                  color: assessmentSubmitted ? '#065F46' : '#06665d',
                 }}
               >
                 {assessmentSubmitted ? 'Assessment submitted' : 'Assessment not submitted yet'}
@@ -596,8 +597,8 @@ function ApplicantCard({
                 <span
                   style={{
                     fontSize: 11,
-                    fontWeight: 800,
-                    color: assessmentSubmitted ? '#065F46' : '#1D4ED8',
+                    fontWeight: 700,
+                    color: assessmentSubmitted ? '#065F46' : '#06665d',
                   }}
                 >
                   Score {app.assessment.score}
@@ -621,8 +622,8 @@ function ApplicantCard({
             style={{
               marginTop: 10,
               borderRadius: 14,
-              border: `1px solid ${interviewCompleted ? '#A7F3D0' : '#DDD6FE'}`,
-              background: interviewCompleted ? '#ECFDF5' : '#F5F3FF',
+              border: `1px solid ${interviewCompleted ? '#A7F3D0' : '#bdddd5'}`,
+              background: interviewCompleted ? '#ECFDF5' : '#edf7f3',
               padding: '10px 12px',
               display: 'grid',
               gap: 4,
@@ -640,8 +641,8 @@ function ApplicantCard({
               <span
                 style={{
                   fontSize: 11,
-                  fontWeight: 800,
-                  color: interviewCompleted ? '#065F46' : '#6D28D9',
+                  fontWeight: 700,
+                  color: interviewCompleted ? '#065F46' : '#06665d',
                 }}
               >
                 {interviewCompleted ? 'Interview completed' : 'Interview scheduled'}
@@ -650,8 +651,8 @@ function ApplicantCard({
                 <span
                   style={{
                     fontSize: 11,
-                    fontWeight: 800,
-                    color: interviewCompleted ? '#065F46' : '#6D28D9',
+                    fontWeight: 700,
+                    color: interviewCompleted ? '#065F46' : '#06665d',
                   }}
                 >
                   Score {app.interview.score}
@@ -675,13 +676,13 @@ function ApplicantCard({
       <div style={{ textAlign: 'center', flexShrink: 0 }}>
         <div style={{ position: 'relative', width: 52, height: 52 }}>
           <svg width="52" height="52" viewBox="0 0 52 52">
-            <circle cx="26" cy="26" r="20" fill="none" stroke="#F1F5F9" strokeWidth="4.5" />
+            <circle cx="26" cy="26" r="20" fill="none" stroke="#f6f8f9" strokeWidth="4.5" />
             <circle
               cx="26"
               cy="26"
               r="20"
               fill="none"
-              stroke={fitScore > 0 ? fitColor : '#E2E8F0'}
+              stroke={fitScore > 0 ? fitColor : '#dfe6e9'}
               strokeWidth="4.5"
               strokeDasharray={`${2 * Math.PI * 20}`}
               strokeDashoffset={`${2 * Math.PI * 20 * (1 - fitScore / 100)}`}
@@ -697,15 +698,15 @@ function ApplicantCard({
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 10,
-              fontWeight: 900,
-              color: fitScore > 0 ? fitColor : '#94A3B8',
+              fontWeight: 700,
+              color: fitScore > 0 ? fitColor : '#60717d',
               fontFamily: 'var(--font-display)',
             }}
           >
             {fitScore > 0 ? `${fitScore}%` : '—'}
           </div>
         </div>
-        <div style={{ fontSize: 10, color: '#94A3B8', fontWeight: 600, marginTop: 2 }}>fit</div>
+        <div style={{ fontSize: 10, color: '#60717d', fontWeight: 600, marginTop: 2 }}>fit</div>
       </div>
 
       {/* Actions */}
@@ -717,7 +718,7 @@ function ApplicantCard({
             alignItems: 'center',
             justifyContent: 'center',
             gap: 5,
-            background: '#0F172A',
+            background: '#182c39',
             color: '#fff',
             padding: '7px 13px',
             borderRadius: 9,
@@ -735,7 +736,7 @@ function ApplicantCard({
             alignItems: 'center',
             justifyContent: 'center',
             gap: 5,
-            background: '#7C3AED',
+            background: '#087f72',
             color: '#fff',
             padding: '7px 13px',
             borderRadius: 9,
@@ -754,14 +755,14 @@ function ApplicantCard({
               alignItems: 'center',
               justifyContent: 'center',
               gap: 5,
-              background: assessmentSubmitted ? '#ECFDF5' : '#EFF6FF',
-              color: assessmentSubmitted ? '#065F46' : '#1D4ED8',
+              background: assessmentSubmitted ? '#ECFDF5' : '#edf7f3',
+              color: assessmentSubmitted ? '#065F46' : '#06665d',
               padding: '7px 13px',
               borderRadius: 9,
               fontSize: 11,
               fontWeight: 700,
               textDecoration: 'none',
-              border: `1px solid ${assessmentSubmitted ? '#A7F3D0' : '#BFDBFE'}`,
+              border: `1px solid ${assessmentSubmitted ? '#A7F3D0' : '#bdddd5'}`,
             }}
           >
             <Sparkles size={11} />
@@ -776,14 +777,14 @@ function ApplicantCard({
               alignItems: 'center',
               justifyContent: 'center',
               gap: 5,
-              background: interviewCompleted ? '#ECFDF5' : '#F5F3FF',
-              color: interviewCompleted ? '#065F46' : '#6D28D9',
+              background: interviewCompleted ? '#ECFDF5' : '#edf7f3',
+              color: interviewCompleted ? '#065F46' : '#06665d',
               padding: '7px 13px',
               borderRadius: 9,
               fontSize: 11,
               fontWeight: 700,
               textDecoration: 'none',
-              border: `1px solid ${interviewCompleted ? '#A7F3D0' : '#DDD6FE'}`,
+              border: `1px solid ${interviewCompleted ? '#A7F3D0' : '#bdddd5'}`,
             }}
           >
             <CalendarClock size={11} />
@@ -923,17 +924,17 @@ export default function BatchHiringPanel({
         <div
           style={{
             background: '#fff',
-            borderRadius: 20,
-            border: '1px solid #E2E8F0',
+            borderRadius: 12,
+            border: '1px solid #dfe6e9',
             overflow: 'hidden',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
           {/* Panel header */}
           <div
             style={{
               padding: '20px 24px',
-              borderBottom: expandedUniPanel ? '1px solid #F1F5F9' : 'none',
+              borderBottom: expandedUniPanel ? '1px solid #f6f8f9' : 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -947,7 +948,7 @@ export default function BatchHiringPanel({
                   width: 36,
                   height: 36,
                   borderRadius: 10,
-                  background: '#2563EB',
+                  background: '#087f72',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -959,14 +960,14 @@ export default function BatchHiringPanel({
                 <div
                   style={{
                     fontSize: 16,
-                    fontWeight: 800,
-                    color: '#0F172A',
+                    fontWeight: 700,
+                    color: '#182c39',
                     fontFamily: 'var(--font-display)',
                   }}
                 >
                   {isBatchHiring ? 'Batch Hiring Analytics' : 'University Breakdown'}
                 </div>
-                <div style={{ fontSize: 12, color: '#64748B', marginTop: 1 }}>
+                <div style={{ fontSize: 12, color: '#60717d', marginTop: 1 }}>
                   {universityStats.length}{' '}
                   {universityStats.length === 1 ? 'university' : 'universities'} · Click a row to
                   expand pipeline
@@ -977,9 +978,9 @@ export default function BatchHiringPanel({
               {isBatchHiring && (
                 <span
                   style={{
-                    background: '#EDE9FE',
-                    color: '#7C3AED',
-                    border: '1px solid #DDD6FE',
+                    background: '#e0f0eb',
+                    color: '#087f72',
+                    border: '1px solid #bdddd5',
                     padding: '3px 10px',
                     borderRadius: 999,
                     fontSize: 11,
@@ -992,9 +993,9 @@ export default function BatchHiringPanel({
               <button
                 type="button"
                 style={{
-                  background: '#F8FAFC',
-                  color: '#64748B',
-                  border: '1px solid #E2E8F0',
+                  background: '#f6f8f9',
+                  color: '#60717d',
+                  border: '1px solid #dfe6e9',
                   borderRadius: 8,
                   padding: '5px 10px',
                   fontSize: 11,
@@ -1028,6 +1029,7 @@ export default function BatchHiringPanel({
                   gap: 12,
                   padding: '12px 18px 8px',
                 }}
+                className="v2-page-grid"
               >
                 {['#', 'University', 'Total', 'Shortlisted', 'Hired', 'Avg Fit', ''].map((h, i) => (
                   <div
@@ -1035,7 +1037,7 @@ export default function BatchHiringPanel({
                     style={{
                       fontSize: 10,
                       fontWeight: 700,
-                      color: '#94A3B8',
+                      color: '#60717d',
                       textTransform: 'uppercase',
                       letterSpacing: 0.8,
                       textAlign: i >= 2 ? 'center' : 'left',
@@ -1061,35 +1063,36 @@ export default function BatchHiringPanel({
               <div
                 style={{
                   marginTop: 12,
-                  background: '#0F172A',
+                  background: 'var(--surface-muted)',
                   borderRadius: 14,
                   padding: '14px 18px',
                   display: 'flex',
                   alignItems: 'center',
                 }}
+                className="v2-light-panel"
               >
-                <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#94A3B8' }}>
+                <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#60717d' }}>
                   Totals across all universities
                 </div>
                 <div style={{ display: 'flex', gap: 32 }}>
                   {[
-                    { label: 'Applied', value: totalApplications, color: '#2563EB' },
+                    { label: 'Applied', value: totalApplications, color: '#087f72' },
                     {
                       label: 'Shortlisted',
                       value: universityStats.reduce((s, u) => s + u.shortlisted, 0),
-                      color: '#22D3EE',
+                      color: '#178d80',
                     },
                     {
                       label: 'Hired',
                       value: universityStats.reduce((s, u) => s + u.hired, 0),
-                      color: '#10B981',
+                      color: '#168257',
                     },
                   ].map((s) => (
                     <div key={s.label} style={{ textAlign: 'center' }}>
                       <div
                         style={{
                           fontSize: 20,
-                          fontWeight: 900,
+                          fontWeight: 700,
                           color: s.color,
                           fontFamily: 'var(--font-display)',
                           lineHeight: 1,
@@ -1098,7 +1101,7 @@ export default function BatchHiringPanel({
                         {s.value}
                       </div>
                       <div
-                        style={{ fontSize: 10, color: '#64748B', marginTop: 3, fontWeight: 600 }}
+                        style={{ fontSize: 10, color: '#60717d', marginTop: 3, fontWeight: 600 }}
                       >
                         {s.label}
                       </div>
@@ -1112,9 +1115,9 @@ export default function BatchHiringPanel({
                 <div
                   style={{
                     marginTop: 16,
-                    background: '#F8FAFC',
+                    background: '#f6f8f9',
                     borderRadius: 14,
-                    border: '1px solid #E2E8F0',
+                    border: '1px solid #dfe6e9',
                     padding: '16px 18px',
                   }}
                 >
@@ -1122,7 +1125,7 @@ export default function BatchHiringPanel({
                     style={{
                       fontSize: 12,
                       fontWeight: 700,
-                      color: '#64748B',
+                      color: '#60717d',
                       textTransform: 'uppercase',
                       letterSpacing: 0.8,
                       marginBottom: 12,
@@ -1135,7 +1138,7 @@ export default function BatchHiringPanel({
                       .sort((a, b) => b.avgFit - a.avgFit)
                       .map((u) => {
                         const color =
-                          u.avgFit >= 70 ? '#10B981' : u.avgFit >= 40 ? '#F59E0B' : '#94A3B8';
+                          u.avgFit >= 70 ? '#168257' : u.avgFit >= 40 ? '#a86714' : '#60717d';
                         return (
                           <div
                             key={u.university}
@@ -1159,7 +1162,7 @@ export default function BatchHiringPanel({
                               style={{
                                 flex: 1,
                                 height: 8,
-                                background: '#E2E8F0',
+                                background: '#dfe6e9',
                                 borderRadius: 999,
                                 overflow: 'hidden',
                               }}
@@ -1177,7 +1180,7 @@ export default function BatchHiringPanel({
                             <div
                               style={{
                                 fontSize: 13,
-                                fontWeight: 800,
+                                fontWeight: 700,
                                 color,
                                 minWidth: 36,
                                 textAlign: 'right',
@@ -1200,12 +1203,13 @@ export default function BatchHiringPanel({
       <div
         id="ai-shortlist"
         style={{
-          background: '#172033',
-          borderRadius: 20,
+          background: 'var(--surface-muted)',
+          borderRadius: 12,
           border: '1px solid rgba(37,99,235,0.32)',
           overflow: 'hidden',
-          boxShadow: '0 18px 42px rgba(15,23,42,0.14)',
+          boxShadow: 'var(--shadow-card)',
         }}
+        className="v2-light-panel"
       >
         <div
           style={{
@@ -1224,7 +1228,7 @@ export default function BatchHiringPanel({
                 width: 42,
                 height: 42,
                 borderRadius: 14,
-                background: '#2563EB',
+                background: '#087f72',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1238,14 +1242,14 @@ export default function BatchHiringPanel({
               <div
                 style={{
                   fontSize: 17,
-                  fontWeight: 900,
-                  color: '#F8FAFC',
+                  fontWeight: 700,
+                  color: 'var(--deep)',
                   fontFamily: 'var(--font-display)',
                 }}
               >
                 AI applicant shortlist
               </div>
-              <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 3, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 12, color: '#60717d', marginTop: 3, lineHeight: 1.5 }}>
                 Ranks applicants using fit scores, matched requirements, gaps, and profile signals.
               </div>
             </div>
@@ -1258,14 +1262,14 @@ export default function BatchHiringPanel({
                 alignItems: 'center',
                 gap: 6,
                 background: usageState.isPremium ? '#FEF3C7' : 'rgba(255,255,255,0.08)',
-                color: usageState.isPremium ? '#92400E' : '#CBD5E1',
+                color: usageState.isPremium ? '#92400E' : 'var(--deep)',
                 border: usageState.isPremium
                   ? '1px solid #FDE68A'
                   : '1px solid rgba(255,255,255,0.1)',
                 padding: '7px 11px',
                 borderRadius: 999,
                 fontSize: 12,
-                fontWeight: 800,
+                fontWeight: 700,
               }}
             >
               {usageState.isPremium ? <Crown size={13} /> : <Sparkles size={13} />}
@@ -1278,12 +1282,12 @@ export default function BatchHiringPanel({
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 7,
-                  background: '#F59E0B',
+                  background: '#a86714',
                   color: '#111827',
                   borderRadius: 12,
                   padding: '10px 14px',
                   fontSize: 12,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   textDecoration: 'none',
                 }}
               >
@@ -1299,13 +1303,13 @@ export default function BatchHiringPanel({
                   alignItems: 'center',
                   gap: 7,
                   background:
-                    aiLoading || applications.length === 0 ? 'rgba(148,163,184,0.24)' : '#2563EB',
+                    aiLoading || applications.length === 0 ? 'rgba(148,163,184,0.24)' : '#087f72',
                   color: '#FFFFFF',
                   border: 'none',
                   borderRadius: 12,
                   padding: '10px 14px',
                   fontSize: 12,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   cursor: aiLoading || applications.length === 0 ? 'not-allowed' : 'pointer',
                   boxShadow:
                     aiLoading || applications.length === 0
@@ -1342,11 +1346,11 @@ export default function BatchHiringPanel({
             {aiShortlist.map((candidate, index) => {
               const scoreColor =
                 candidate.fitScore >= 80
-                  ? '#10B981'
+                  ? '#168257'
                   : candidate.fitScore >= 65
-                    ? '#22D3EE'
+                    ? '#178d80'
                     : candidate.fitScore >= 45
-                      ? '#F59E0B'
+                      ? '#a86714'
                       : '#EF4444';
               return (
                 <div
@@ -1354,7 +1358,7 @@ export default function BatchHiringPanel({
                   style={{
                     background: 'rgba(255,255,255,0.07)',
                     border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 16,
+                    borderRadius: 12,
                     padding: '14px 16px',
                     display: 'grid',
                     gridTemplateColumns: '42px minmax(0, 1fr) auto',
@@ -1367,13 +1371,13 @@ export default function BatchHiringPanel({
                       width: 36,
                       height: 36,
                       borderRadius: 12,
-                      background: index < 3 ? '#F59E0B' : 'rgba(255,255,255,0.1)',
-                      color: index < 3 ? '#111827' : '#CBD5E1',
+                      background: index < 3 ? '#a86714' : 'rgba(255,255,255,0.1)',
+                      color: index < 3 ? '#111827' : 'var(--deep)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: 13,
-                      fontWeight: 900,
+                      fontWeight: 700,
                     }}
                   >
                     {index + 1}
@@ -1385,9 +1389,9 @@ export default function BatchHiringPanel({
                       <Link
                         href={`/employer/jobs/${jobId}/applicants/${candidate.studentId}`}
                         style={{
-                          color: '#F8FAFC',
+                          color: 'var(--deep)',
                           fontSize: 14,
-                          fontWeight: 900,
+                          fontWeight: 700,
                           textDecoration: 'none',
                         }}
                       >
@@ -1397,17 +1401,17 @@ export default function BatchHiringPanel({
                         style={{
                           background: 'rgba(34,211,238,0.12)',
                           border: '1px solid rgba(34,211,238,0.22)',
-                          color: '#67E8F9',
+                          color: 'var(--deep)',
                           borderRadius: 999,
                           padding: '3px 8px',
                           fontSize: 11,
-                          fontWeight: 800,
+                          fontWeight: 700,
                         }}
                       >
                         {candidate.recommendation}
                       </span>
                     </div>
-                    <div style={{ marginTop: 4, fontSize: 12, color: '#94A3B8' }}>
+                    <div style={{ marginTop: 4, fontSize: 12, color: '#60717d' }}>
                       {[candidate.university, candidate.department].filter(Boolean).join(' / ')}
                     </div>
                     {candidate.reasons.length > 0 ? (
@@ -1417,7 +1421,7 @@ export default function BatchHiringPanel({
                             key={reason}
                             style={{
                               background: 'rgba(255,255,255,0.08)',
-                              color: '#CBD5E1',
+                              color: 'var(--deep)',
                               border: '1px solid rgba(255,255,255,0.1)',
                               padding: '3px 8px',
                               borderRadius: 999,
@@ -1436,14 +1440,14 @@ export default function BatchHiringPanel({
                       style={{
                         fontSize: 26,
                         lineHeight: 1,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: scoreColor,
                         fontFamily: 'var(--font-display)',
                       }}
                     >
                       {candidate.fitScore}%
                     </div>
-                    <div style={{ marginTop: 4, fontSize: 11, color: '#64748B', fontWeight: 800 }}>
+                    <div style={{ marginTop: 4, fontSize: 11, color: '#60717d', fontWeight: 800 }}>
                       AI fit
                     </div>
                   </div>
@@ -1459,14 +1463,14 @@ export default function BatchHiringPanel({
       <div
         style={{
           background: '#fff',
-          borderRadius: 20,
-          border: '1px solid #E2E8F0',
+          borderRadius: 12,
+          border: '1px solid #dfe6e9',
           overflow: 'hidden',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+          boxShadow: 'var(--shadow-card)',
         }}
       >
         {/* Header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid #f6f8f9' }}>
           <div
             style={{
               display: 'flex',
@@ -1483,11 +1487,11 @@ export default function BatchHiringPanel({
                   width: 36,
                   height: 36,
                   borderRadius: 10,
-                  background: '#EFF6FF',
+                  background: '#edf7f3',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#2563EB',
+                  color: '#087f72',
                 }}
               >
                 <Users size={16} />
@@ -1496,23 +1500,23 @@ export default function BatchHiringPanel({
                 <div
                   style={{
                     fontSize: 16,
-                    fontWeight: 800,
-                    color: '#0F172A',
+                    fontWeight: 700,
+                    color: '#182c39',
                     fontFamily: 'var(--font-display)',
                   }}
                 >
                   All Applicants
                 </div>
-                <div style={{ fontSize: 12, color: '#64748B', marginTop: 1 }}>
+                <div style={{ fontSize: 12, color: '#60717d', marginTop: 1 }}>
                   {filteredApps.length} {activeTab !== 'all' ? `from ${activeTab}` : 'total'}
                 </div>
               </div>
             </div>
             <span
               style={{
-                background: '#EFF6FF',
-                color: '#2563EB',
-                border: '1px solid #BFDBFE',
+                background: '#edf7f3',
+                color: '#087f72',
+                border: '1px solid #bdddd5',
                 padding: '3px 10px',
                 borderRadius: 999,
                 fontSize: 12,
@@ -1545,9 +1549,9 @@ export default function BatchHiringPanel({
                     borderRadius: 9,
                     fontSize: 12,
                     fontWeight: 600,
-                    border: `1.5px solid ${activeTab === tab.key ? '#2563EB' : '#E2E8F0'}`,
-                    background: activeTab === tab.key ? '#EFF6FF' : '#F8FAFC',
-                    color: activeTab === tab.key ? '#2563EB' : '#64748B',
+                    border: `1.5px solid ${activeTab === tab.key ? '#087f72' : '#dfe6e9'}`,
+                    background: activeTab === tab.key ? '#edf7f3' : '#f6f8f9',
+                    color: activeTab === tab.key ? '#087f72' : '#60717d',
                     cursor: 'pointer',
                     transition: 'all 0.15s',
                   }}
@@ -1564,7 +1568,7 @@ export default function BatchHiringPanel({
           style={{
             padding: '12px 24px',
             background: '#FAFBFC',
-            borderBottom: '1px solid #F1F5F9',
+            borderBottom: '1px solid #f6f8f9',
             display: 'flex',
             alignItems: 'center',
             gap: 12,
@@ -1581,8 +1585,8 @@ export default function BatchHiringPanel({
                 width: 18,
                 height: 18,
                 borderRadius: 5,
-                border: `2px solid ${allSelected ? '#2563EB' : '#CBD5E1'}`,
-                background: allSelected ? '#2563EB' : '#fff',
+                border: `2px solid ${allSelected ? '#087f72' : '#CBD5E1'}`,
+                background: allSelected ? '#087f72' : '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1593,17 +1597,17 @@ export default function BatchHiringPanel({
                 <div style={{ width: 8, height: 8, borderRadius: 2, background: '#fff' }} />
               )}
             </div>
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#64748B' }}>Select all</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#60717d' }}>Select all</span>
           </div>
 
           {selectedApps.size > 0 && (
             <>
-              <div style={{ width: 1, height: 20, background: '#E2E8F0' }} />
+              <div style={{ width: 1, height: 20, background: '#dfe6e9' }} />
               <span
                 style={{
-                  background: '#EFF6FF',
-                  color: '#2563EB',
-                  border: '1px solid #BFDBFE',
+                  background: '#edf7f3',
+                  color: '#087f72',
+                  border: '1px solid #bdddd5',
                   padding: '2px 9px',
                   borderRadius: 999,
                   fontSize: 11,
@@ -1618,7 +1622,7 @@ export default function BatchHiringPanel({
                   onChange={(e) => setBatchStatus(e.target.value)}
                   style={{
                     padding: '6px 10px',
-                    border: '1.5px solid #E2E8F0',
+                    border: '1.5px solid #dfe6e9',
                     borderRadius: 8,
                     fontSize: 12,
                     fontWeight: 600,
@@ -1644,8 +1648,8 @@ export default function BatchHiringPanel({
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 5,
-                    background: !batchStatus || batchSaving ? '#F1F5F9' : '#2563EB',
-                    color: !batchStatus || batchSaving ? '#94A3B8' : '#fff',
+                    background: !batchStatus || batchSaving ? '#f6f8f9' : '#087f72',
+                    color: !batchStatus || batchSaving ? '#60717d' : '#fff',
                     border: 'none',
                     borderRadius: 8,
                     padding: '7px 14px',
@@ -1664,7 +1668,7 @@ export default function BatchHiringPanel({
                 <span
                   style={{
                     fontSize: 12,
-                    color: '#10B981',
+                    color: '#168257',
                     fontWeight: 700,
                     display: 'flex',
                     alignItems: 'center',
@@ -1678,7 +1682,7 @@ export default function BatchHiringPanel({
           )}
 
           {selectedApps.size === 0 && (
-            <span style={{ fontSize: 12, color: '#94A3B8' }}>
+            <span style={{ fontSize: 12, color: '#60717d' }}>
               Select applicants to use batch actions
             </span>
           )}
@@ -1687,7 +1691,7 @@ export default function BatchHiringPanel({
         {/* Applicant list */}
         <div style={{ padding: '16px 24px' }}>
           {filteredApps.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: '#94A3B8' }}>
+            <div style={{ textAlign: 'center', padding: '40px 0', color: '#60717d' }}>
               <Users size={32} style={{ margin: '0 auto 12px', display: 'block', opacity: 0.4 }} />
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>No applicants</div>
               <div style={{ fontSize: 13 }}>

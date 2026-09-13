@@ -25,7 +25,7 @@ export default function MessageEmployerButton({
           alignItems: 'center',
           justifyContent: 'center',
           gap: 7,
-          background: '#7C3AED',
+          background: '#087f72',
           color: '#fff',
           padding: '9px 18px',
           borderRadius: 12,
@@ -33,7 +33,7 @@ export default function MessageEmployerButton({
           fontWeight: 700,
           textDecoration: 'none',
           border: '1px solid rgba(124,58,237,0.3)',
-          boxShadow: '0 4px 14px rgba(124,58,237,0.25)',
+          boxShadow: 'var(--shadow-card)',
           transition: 'all 0.15s',
         }}
       >
@@ -53,7 +53,7 @@ export default function MessageEmployerButton({
           justifyContent: 'center',
           gap: 7,
           background: 'rgba(255,255,255,0.08)',
-          color: '#94A3B8',
+          color: '#60717d',
           padding: '9px 18px',
           borderRadius: 12,
           fontSize: 13,
@@ -76,19 +76,20 @@ export default function MessageEmployerButton({
             alignItems: 'center',
             justifyContent: 'center',
             background: 'rgba(15,23,42,0.5)',
-            backdropFilter: 'blur(6px)',
+            backdropFilter: 'none',
           }}
           onClick={() => setShowWarning(false)}
+          className="v2-dialog-overlay"
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
               background: '#fff',
-              borderRadius: 24,
+              borderRadius: 12,
               padding: '32px 36px',
               maxWidth: 420,
               width: '90vw',
-              boxShadow: '0 32px 80px rgba(15,23,42,0.22)',
+              boxShadow: 'var(--shadow-card)',
               textAlign: 'center',
               position: 'relative',
             }}
@@ -100,7 +101,7 @@ export default function MessageEmployerButton({
                 position: 'absolute',
                 top: 14,
                 right: 14,
-                background: '#F1F5F9',
+                background: '#f6f8f9',
                 border: 'none',
                 borderRadius: 8,
                 width: 30,
@@ -109,7 +110,7 @@ export default function MessageEmployerButton({
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                color: '#64748B',
+                color: '#60717d',
               }}
             >
               <X size={16} />
@@ -118,7 +119,7 @@ export default function MessageEmployerButton({
               style={{
                 width: 56,
                 height: 56,
-                borderRadius: 16,
+                borderRadius: 12,
                 background: '#FFFBEB',
                 border: '1px solid #FDE68A',
                 display: 'flex',
@@ -133,26 +134,26 @@ export default function MessageEmployerButton({
             <h3
               style={{
                 fontSize: 18,
-                fontWeight: 900,
-                color: '#0F172A',
+                fontWeight: 700,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
                 margin: '0 0 8px',
               }}
             >
               Not eligible to message yet
             </h3>
-            <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7, margin: '0 0 20px' }}>
+            <p style={{ fontSize: 14, color: '#60717d', lineHeight: 1.7, margin: '0 0 20px' }}>
               You can message the employer once your application status reaches{' '}
-              <strong style={{ color: '#0F172A' }}>Shortlisted</strong>,{' '}
-              <strong style={{ color: '#0F172A' }}>Assessment Sent</strong>,{' '}
-              <strong style={{ color: '#0F172A' }}>Interview Scheduled</strong>, or{' '}
-              <strong style={{ color: '#0F172A' }}>Hired</strong>.
+              <strong style={{ color: '#182c39' }}>Shortlisted</strong>,{' '}
+              <strong style={{ color: '#182c39' }}>Assessment Sent</strong>,{' '}
+              <strong style={{ color: '#182c39' }}>Interview Scheduled</strong>, or{' '}
+              <strong style={{ color: '#182c39' }}>Hired</strong>.
             </p>
             <button
               type="button"
               onClick={() => setShowWarning(false)}
               style={{
-                background: '#0F172A',
+                background: '#182c39',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 12,

@@ -202,7 +202,7 @@ const fieldStyle = {
   borderRadius: 12,
   border: '1px solid #D9E2EC',
   background: '#FFFFFF',
-  color: '#0F172A',
+  color: '#182c39',
   fontSize: 13,
   outline: 'none',
 } as const;
@@ -591,17 +591,17 @@ export default function EmployerAssessmentsClient({
         className="assessment-builder-panel"
         style={{
           background: '#FFFFFF',
-          borderRadius: 24,
+          borderRadius: 12,
           border: '1px solid #D9E2EC',
-          boxShadow: '0 20px 42px rgba(15,23,42,0.06)',
+          boxShadow: 'var(--shadow-card)',
           overflow: 'hidden',
         }}
       >
         <div
           style={{
             padding: '22px 24px',
-            borderBottom: '1px solid #E2E8F0',
-            background: 'linear-gradient(135deg, #F8FAFC, #EFF6FF)',
+            borderBottom: '1px solid #dfe6e9',
+            background: '#edf7f3',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -609,8 +609,8 @@ export default function EmployerAssessmentsClient({
               style={{
                 width: 46,
                 height: 46,
-                borderRadius: 16,
-                background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
+                borderRadius: 12,
+                background: 'var(--primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -623,14 +623,14 @@ export default function EmployerAssessmentsClient({
               <div
                 style={{
                   fontSize: 18,
-                  fontWeight: 900,
-                  color: '#0F172A',
+                  fontWeight: 700,
+                  color: '#182c39',
                   fontFamily: 'var(--font-display)',
                 }}
               >
                 Assessment builder
               </div>
-              <div style={{ marginTop: 4, fontSize: 13, color: '#64748B', lineHeight: 1.6 }}>
+              <div style={{ marginTop: 4, fontSize: 13, color: '#60717d', lineHeight: 1.6 }}>
                 Build multiple-choice tests, short answers, coding challenges with the live code
                 runner, or case-study tasks. When opened from the applicant pipeline, the created
                 assessment is sent immediately and application status updates automatically.
@@ -643,11 +643,11 @@ export default function EmployerAssessmentsClient({
                 gap: 6,
                 borderRadius: 999,
                 padding: '6px 11px',
-                background: isPremium ? '#FEF3C7' : '#F1F5F9',
-                color: isPremium ? '#92400E' : '#64748B',
-                border: `1px solid ${isPremium ? '#FDE68A' : '#E2E8F0'}`,
+                background: isPremium ? '#FEF3C7' : '#f6f8f9',
+                color: isPremium ? '#92400E' : '#60717d',
+                border: `1px solid ${isPremium ? '#FDE68A' : '#dfe6e9'}`,
                 fontSize: 12,
-                fontWeight: 800,
+                fontWeight: 700,
               }}
             >
               <Crown size={13} />
@@ -660,10 +660,10 @@ export default function EmployerAssessmentsClient({
           {initialApplicationIds.length > 0 ? (
             <div
               style={{
-                borderRadius: 18,
+                borderRadius: 12,
                 padding: '14px 16px',
                 background: '#F8FBFF',
-                border: '1px solid #BFDBFE',
+                border: '1px solid #bdddd5',
                 color: '#1E3A8A',
                 fontSize: 13,
                 lineHeight: 1.6,
@@ -678,7 +678,7 @@ export default function EmployerAssessmentsClient({
           {notice ? (
             <div
               style={{
-                borderRadius: 16,
+                borderRadius: 12,
                 padding: '12px 14px',
                 background: notice.tone === 'success' ? '#ECFDF5' : '#FEF2F2',
                 color: notice.tone === 'success' ? '#065F46' : '#991B1B',
@@ -694,11 +694,11 @@ export default function EmployerAssessmentsClient({
           {editingAssessmentId ? (
             <div
               style={{
-                borderRadius: 16,
+                borderRadius: 12,
                 padding: '12px 14px',
-                background: '#EFF6FF',
-                color: '#1D4ED8',
-                border: '1px solid #BFDBFE',
+                background: '#edf7f3',
+                color: '#06665d',
+                border: '1px solid #bdddd5',
                 fontSize: 13,
                 fontWeight: 700,
                 lineHeight: 1.6,
@@ -765,21 +765,21 @@ export default function EmployerAssessmentsClient({
 
             <div
               style={{
-                borderRadius: 16,
-                border: '1px solid #E2E8F0',
-                background: '#F8FAFC',
+                borderRadius: 12,
+                border: '1px solid #dfe6e9',
+                background: '#f6f8f9',
                 padding: '12px 14px',
                 display: 'grid',
                 alignContent: 'center',
               }}
             >
-              <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700 }}>TOTAL MARKS</div>
+              <div style={{ fontSize: 11, color: '#60717d', fontWeight: 700 }}>TOTAL MARKS</div>
               <div
                 style={{
                   fontSize: 30,
                   lineHeight: 1,
-                  color: '#2563EB',
-                  fontWeight: 900,
+                  color: '#087f72',
+                  fontWeight: 700,
                   fontFamily: 'var(--font-display)',
                 }}
               >
@@ -806,9 +806,9 @@ export default function EmployerAssessmentsClient({
                 alignItems: 'center',
                 gap: 8,
                 borderRadius: 999,
-                border: '1px solid #BFDBFE',
-                background: '#EFF6FF',
-                color: '#2563EB',
+                border: '1px solid #bdddd5',
+                background: '#edf7f3',
+                color: '#087f72',
                 padding: '9px 12px',
                 fontSize: 12,
                 fontWeight: 700,
@@ -826,9 +826,9 @@ export default function EmployerAssessmentsClient({
                 alignItems: 'center',
                 gap: 8,
                 borderRadius: 999,
-                border: `1px solid ${allowLateSubmission ? '#BFDBFE' : '#E2E8F0'}`,
-                background: allowLateSubmission ? '#EFF6FF' : '#FFFFFF',
-                color: allowLateSubmission ? '#2563EB' : '#475569',
+                border: `1px solid ${allowLateSubmission ? '#bdddd5' : '#dfe6e9'}`,
+                background: allowLateSubmission ? '#edf7f3' : '#FFFFFF',
+                color: allowLateSubmission ? '#087f72' : '#475569',
                 padding: '9px 12px',
                 fontSize: 12,
                 fontWeight: 700,
@@ -845,14 +845,14 @@ export default function EmployerAssessmentsClient({
               <div
                 style={{
                   fontSize: 15,
-                  fontWeight: 800,
-                  color: '#0F172A',
+                  fontWeight: 700,
+                  color: '#182c39',
                   fontFamily: 'var(--font-display)',
                 }}
               >
                 Questions
               </div>
-              <div style={{ marginTop: 3, fontSize: 12, color: '#64748B' }}>
+              <div style={{ marginTop: 3, fontSize: 12, color: '#60717d' }}>
                 Mix objective scoring with manual review where needed.
               </div>
             </div>
@@ -873,11 +873,11 @@ export default function EmployerAssessmentsClient({
                     alignItems: 'center',
                     gap: 7,
                     borderRadius: 12,
-                    border: '1px solid #E2E8F0',
+                    border: '1px solid #dfe6e9',
                     background: '#FFFFFF',
                     padding: '10px 12px',
                     fontSize: 12,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     color: '#334155',
                     cursor: 'pointer',
                   }}
@@ -894,18 +894,18 @@ export default function EmployerAssessmentsClient({
               <div
                 key={question.index}
                 style={{
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
+                  borderRadius: 12,
+                  border: '1px solid #dfe6e9',
                   background: '#FFFFFF',
-                  boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
+                  boxShadow: 'var(--shadow-card)',
                   overflow: 'hidden',
                 }}
               >
                 <div
                   style={{
                     padding: '16px 18px',
-                    borderBottom: '1px solid #E2E8F0',
-                    background: '#F8FAFC',
+                    borderBottom: '1px solid #dfe6e9',
+                    background: '#f6f8f9',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -922,10 +922,10 @@ export default function EmployerAssessmentsClient({
                         width: 30,
                         height: 30,
                         borderRadius: 10,
-                        background: '#0F172A',
+                        background: '#182c39',
                         color: '#FFFFFF',
                         fontSize: 12,
-                        fontWeight: 900,
+                        fontWeight: 700,
                       }}
                     >
                       {question.index}
@@ -975,7 +975,7 @@ export default function EmployerAssessmentsClient({
                       color: questions.length === 1 ? '#FCA5A5' : '#B91C1C',
                       padding: '9px 12px',
                       fontSize: 12,
-                      fontWeight: 800,
+                      fontWeight: 700,
                       cursor: questions.length === 1 ? 'not-allowed' : 'pointer',
                     }}
                   >
@@ -1006,6 +1006,7 @@ export default function EmployerAssessmentsClient({
                         <div
                           key={`${question.index}-option-${optionIndex}`}
                           style={{ display: 'grid', gridTemplateColumns: '1fr 140px', gap: 10 }}
+                          className="v2-page-grid"
                         >
                           <input
                             value={option}
@@ -1029,7 +1030,7 @@ export default function EmployerAssessmentsClient({
                               alignItems: 'center',
                               gap: 8,
                               borderRadius: 12,
-                              border: '1px solid #E2E8F0',
+                              border: '1px solid #dfe6e9',
                               padding: '0 12px',
                               background: '#FFFFFF',
                               color: '#334155',
@@ -1180,7 +1181,7 @@ export default function EmployerAssessmentsClient({
                                 alignItems: 'center',
                                 gap: 8,
                                 borderRadius: 12,
-                                border: '1px solid #E2E8F0',
+                                border: '1px solid #dfe6e9',
                                 padding: '11px 12px',
                                 background: '#FFFFFF',
                                 color: '#334155',
@@ -1258,7 +1259,7 @@ export default function EmployerAssessmentsClient({
                         alignItems: 'center',
                         gap: 8,
                         borderRadius: 999,
-                        border: '1px solid #E2E8F0',
+                        border: '1px solid #dfe6e9',
                         background: '#FFFFFF',
                         padding: '9px 12px',
                         width: 'fit-content',
@@ -1300,12 +1301,12 @@ export default function EmployerAssessmentsClient({
                           alignItems: 'center',
                           gap: 7,
                           borderRadius: 10,
-                          border: '1px solid #BFDBFE',
-                          background: '#EFF6FF',
-                          color: '#2563EB',
+                          border: '1px solid #bdddd5',
+                          background: '#edf7f3',
+                          color: '#087f72',
                           padding: '8px 10px',
                           fontSize: 12,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           cursor: isUploading ? 'not-allowed' : 'pointer',
                         }}
                       >
@@ -1337,8 +1338,8 @@ export default function EmployerAssessmentsClient({
                               gap: 7,
                               borderRadius: 999,
                               padding: '6px 10px',
-                              background: '#F8FAFC',
-                              border: '1px solid #E2E8F0',
+                              background: '#f6f8f9',
+                              border: '1px solid #dfe6e9',
                               color: '#334155',
                               fontSize: 12,
                               fontWeight: 700,
@@ -1349,7 +1350,7 @@ export default function EmployerAssessmentsClient({
                           </span>
                         ))
                       ) : (
-                        <span style={{ fontSize: 12, color: '#94A3B8' }}>
+                        <span style={{ fontSize: 12, color: '#60717d' }}>
                           Add prompt PDFs or reference files if needed.
                         </span>
                       )}
@@ -1372,13 +1373,13 @@ export default function EmployerAssessmentsClient({
                 background:
                   !isPremium || isPending || (requiresDispatchDueAt && !dueAt)
                     ? '#CBD5E1'
-                    : 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+                    : 'linear-gradient(135deg, #087f72, #06665d)',
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: 15,
                 padding: '12px 16px',
                 fontSize: 13,
-                fontWeight: 800,
+                fontWeight: 700,
                 cursor:
                   !isPremium || isPending || (requiresDispatchDueAt && !dueAt)
                     ? 'not-allowed'
@@ -1409,7 +1410,7 @@ export default function EmployerAssessmentsClient({
                   borderRadius: 15,
                   padding: '12px 16px',
                   fontSize: 13,
-                  fontWeight: 800,
+                  fontWeight: 700,
                   cursor: isPending ? 'not-allowed' : 'pointer',
                 }}
               >
@@ -1429,7 +1430,7 @@ export default function EmployerAssessmentsClient({
                   borderRadius: 15,
                   padding: '12px 16px',
                   fontSize: 13,
-                  fontWeight: 800,
+                  fontWeight: 700,
                   textDecoration: 'none',
                 }}
               >
@@ -1446,25 +1447,26 @@ export default function EmployerAssessmentsClient({
         style={{ display: 'grid', gap: 16, alignContent: 'start' }}
       >
         <div
+          className="nx-surface"
           style={{
             background: '#FFFFFF',
-            borderRadius: 24,
+            borderRadius: 12,
             border: '1px solid #D9E2EC',
-            boxShadow: '0 18px 36px rgba(15,23,42,0.06)',
+            boxShadow: 'var(--shadow-card)',
             padding: 22,
           }}
         >
           <div
             style={{
               fontSize: 17,
-              fontWeight: 900,
-              color: '#0F172A',
+              fontWeight: 700,
+              color: '#182c39',
               fontFamily: 'var(--font-display)',
             }}
           >
             Assessment library
           </div>
-          <div style={{ marginTop: 4, fontSize: 13, color: '#64748B', lineHeight: 1.6 }}>
+          <div style={{ marginTop: 4, fontSize: 13, color: '#60717d', lineHeight: 1.6 }}>
             Reuse existing evaluations for the current role, review assignment progress, and open
             the grading workspace when manual review is needed.
           </div>
@@ -1473,8 +1475,8 @@ export default function EmployerAssessmentsClient({
             <div
               style={{
                 marginTop: 16,
-                borderRadius: 18,
-                border: '1px solid #BFDBFE',
+                borderRadius: 12,
+                border: '1px solid #bdddd5',
                 background: '#F8FBFF',
                 padding: '16px 16px 14px',
                 display: 'grid',
@@ -1485,8 +1487,8 @@ export default function EmployerAssessmentsClient({
                 <div
                   style={{
                     fontSize: 13,
-                    fontWeight: 800,
-                    color: '#1D4ED8',
+                    fontWeight: 700,
+                    color: '#06665d',
                   }}
                 >
                   Assessment dispatch
@@ -1515,11 +1517,11 @@ export default function EmployerAssessmentsClient({
             {filteredAssessments.length === 0 ? (
               <div
                 style={{
-                  borderRadius: 18,
+                  borderRadius: 12,
                   border: '1px dashed #CBD5E1',
-                  background: '#F8FAFC',
+                  background: '#f6f8f9',
                   padding: '18px 16px',
-                  color: '#64748B',
+                  color: '#60717d',
                   fontSize: 13,
                   lineHeight: 1.7,
                 }}
@@ -1541,8 +1543,8 @@ export default function EmployerAssessmentsClient({
                     <div
                       key={assessment._id}
                       style={{
-                        borderRadius: 20,
-                        border: '1px solid #E2E8F0',
+                        borderRadius: 12,
+                        border: '1px solid #dfe6e9',
                         background: '#FFFFFF',
                         padding: 16,
                         display: 'grid',
@@ -1561,14 +1563,14 @@ export default function EmployerAssessmentsClient({
                           <div
                             style={{
                               fontSize: 15,
-                              fontWeight: 800,
-                              color: '#0F172A',
+                              fontWeight: 700,
+                              color: '#182c39',
                               fontFamily: 'var(--font-display)',
                             }}
                           >
                             {assessment.title}
                           </div>
-                          <div style={{ marginTop: 5, fontSize: 12, color: '#64748B' }}>
+                          <div style={{ marginTop: 5, fontSize: 12, color: '#60717d' }}>
                             {assessment.job?.title ?? 'Role not available'} •{' '}
                             {formatAssessmentType(assessment.type)}
                           </div>
@@ -1577,11 +1579,11 @@ export default function EmployerAssessmentsClient({
                           style={{
                             borderRadius: 999,
                             padding: '5px 9px',
-                            background: assessment.isActive ? '#ECFDF5' : '#F8FAFC',
-                            color: assessment.isActive ? '#065F46' : '#64748B',
-                            border: `1px solid ${assessment.isActive ? '#A7F3D0' : '#E2E8F0'}`,
+                            background: assessment.isActive ? '#ECFDF5' : '#f6f8f9',
+                            color: assessment.isActive ? '#065F46' : '#60717d',
+                            border: `1px solid ${assessment.isActive ? '#A7F3D0' : '#dfe6e9'}`,
                             fontSize: 11,
-                            fontWeight: 800,
+                            fontWeight: 700,
                           }}
                         >
                           {assessment.isActive ? 'Active' : 'Archived'}
@@ -1599,8 +1601,8 @@ export default function EmployerAssessmentsClient({
                             key={stat.label}
                             style={{
                               borderRadius: 14,
-                              background: '#F8FAFC',
-                              border: '1px solid #E2E8F0',
+                              background: '#f6f8f9',
+                              border: '1px solid #dfe6e9',
                               padding: '10px 12px',
                             }}
                           >
@@ -1608,8 +1610,8 @@ export default function EmployerAssessmentsClient({
                               style={{
                                 fontSize: 22,
                                 lineHeight: 1,
-                                fontWeight: 900,
-                                color: '#2563EB',
+                                fontWeight: 700,
+                                color: '#087f72',
                                 fontFamily: 'var(--font-display)',
                               }}
                             >
@@ -1619,7 +1621,7 @@ export default function EmployerAssessmentsClient({
                               style={{
                                 marginTop: 4,
                                 fontSize: 11,
-                                color: '#64748B',
+                                color: '#60717d',
                                 fontWeight: 700,
                               }}
                             >
@@ -1629,7 +1631,7 @@ export default function EmployerAssessmentsClient({
                         ))}
                       </div>
 
-                      <div style={{ display: 'grid', gap: 5, fontSize: 12, color: '#64748B' }}>
+                      <div style={{ display: 'grid', gap: 5, fontSize: 12, color: '#60717d' }}>
                         <span>
                           <CalendarClock
                             size={13}
@@ -1647,11 +1649,11 @@ export default function EmployerAssessmentsClient({
                         <div
                           style={{
                             borderRadius: 12,
-                            border: '1px solid #E2E8F0',
-                            background: '#F8FAFC',
+                            border: '1px solid #dfe6e9',
+                            background: '#f6f8f9',
                             padding: '10px 12px',
                             fontSize: 12,
-                            color: '#64748B',
+                            color: '#60717d',
                             lineHeight: 1.6,
                           }}
                         >
@@ -1667,12 +1669,12 @@ export default function EmployerAssessmentsClient({
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: 7,
-                            background: '#0F172A',
+                            background: '#182c39',
                             color: '#FFFFFF',
                             borderRadius: 12,
                             padding: '10px 12px',
                             fontSize: 12,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             textDecoration: 'none',
                           }}
                         >
@@ -1686,13 +1688,13 @@ export default function EmployerAssessmentsClient({
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: 7,
-                            background: isEditingThisAssessment ? '#DBEAFE' : '#FFFFFF',
-                            color: '#1D4ED8',
-                            border: '1px solid #BFDBFE',
+                            background: isEditingThisAssessment ? '#dbefea' : '#FFFFFF',
+                            color: '#06665d',
+                            border: '1px solid #bdddd5',
                             borderRadius: 12,
                             padding: '10px 12px',
                             fontSize: 12,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             cursor:
                               !canManageDraft || loadingAssessmentId === assessment._id
                                 ? 'not-allowed'
@@ -1721,7 +1723,7 @@ export default function EmployerAssessmentsClient({
                             borderRadius: 12,
                             padding: '10px 12px',
                             fontSize: 12,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             cursor:
                               !canManageDraft || deletingAssessmentId === assessment._id
                                 ? 'not-allowed'
@@ -1745,13 +1747,13 @@ export default function EmployerAssessmentsClient({
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: 7,
-                              background: '#EFF6FF',
-                              color: '#2563EB',
-                              border: '1px solid #BFDBFE',
+                              background: '#edf7f3',
+                              color: '#087f72',
+                              border: '1px solid #bdddd5',
                               borderRadius: 12,
                               padding: '10px 12px',
                               fontSize: 12,
-                              fontWeight: 800,
+                              fontWeight: 700,
                               cursor:
                                 assigningId === assessment._id || !dueAt
                                   ? 'not-allowed'

@@ -1,5 +1,6 @@
+import BrandLoader from '@/components/ui/BrandLoader';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use client';
+('use client');
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -66,7 +67,7 @@ export default function MyMentorSessionsPage() {
 
   return (
     <div
-      className="mobile-page-frame"
+      className="mobile-page-frame nx-page-width"
       style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px' }}
     >
       <div
@@ -82,9 +83,9 @@ export default function MyMentorSessionsPage() {
             width: 40,
             height: 40,
             borderRadius: 12,
-            background: '#F8FAFC',
-            color: '#64748B',
-            border: '1px solid #E2E8F0',
+            background: '#f6f8f9',
+            color: '#60717d',
+            border: '1px solid #dfe6e9',
             textDecoration: 'none',
           }}
         >
@@ -95,25 +96,25 @@ export default function MyMentorSessionsPage() {
             className="mobile-page-header-title"
             style={{
               fontSize: 32,
-              fontWeight: 900,
-              color: '#1E293B',
+              fontWeight: 700,
+              color: '#243e4a',
               margin: '0 0 4px 0',
               display: 'flex',
               alignItems: 'center',
               gap: 12,
             }}
           >
-            <CalendarDays size={32} color="#2563EB" />
+            <CalendarDays size={32} color="#087f72" />
             My Mentorship Sessions
           </h1>
-          <p style={{ fontSize: 16, color: '#64748B', margin: 0 }}>
+          <p style={{ fontSize: 16, color: '#60717d', margin: 0 }}>
             Track and manage your upcoming and past mentorship requests.
           </p>
         </div>
       </div>
 
       <div
-        className="mobile-page-grid-2"
+        className="mobile-page-grid-2 v2-page-grid"
         style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40 }}
       >
         {/* Upcoming */}
@@ -121,19 +122,17 @@ export default function MyMentorSessionsPage() {
           <h2
             style={{
               fontSize: 20,
-              fontWeight: 800,
-              color: '#1E293B',
+              fontWeight: 700,
+              color: '#243e4a',
               margin: '0 0 20px 0',
               paddingBottom: 12,
-              borderBottom: '2px solid #E2E8F0',
+              borderBottom: '2px solid #dfe6e9',
             }}
           >
             Upcoming & Pending
           </h2>
           {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8' }}>
-              Loading sessions...
-            </div>
+            <BrandLoader variant="section" label="Loading sessions" />
           ) : upcomingSessions.length > 0 ? (
             <div
               className="mobile-page-list-scroll"
@@ -160,22 +159,22 @@ export default function MyMentorSessionsPage() {
           ) : (
             <div
               style={{
-                background: '#F8FAFC',
+                background: '#f6f8f9',
                 padding: 40,
-                borderRadius: 20,
-                border: '2px dashed #E2E8F0',
+                borderRadius: 12,
+                border: '2px dashed #dfe6e9',
                 textAlign: 'center',
               }}
             >
               <Inbox
                 size={48}
-                color="#94A3B8"
+                color="#60717d"
                 style={{ margin: '0 auto 16px auto', display: 'block' }}
               />
               <h3 style={{ margin: '0 0 8px 0', fontSize: 16, fontWeight: 700, color: '#475569' }}>
                 No upcoming sessions
               </h3>
-              <p style={{ margin: 0, color: '#94A3B8', fontSize: 14 }}>
+              <p style={{ margin: 0, color: '#60717d', fontSize: 14 }}>
                 Browse mentors to request a new session.
               </p>
             </div>
@@ -187,11 +186,11 @@ export default function MyMentorSessionsPage() {
           <h2
             style={{
               fontSize: 20,
-              fontWeight: 800,
-              color: '#1E293B',
+              fontWeight: 700,
+              color: '#243e4a',
               margin: '0 0 20px 0',
               paddingBottom: 12,
-              borderBottom: '2px solid #E2E8F0',
+              borderBottom: '2px solid #dfe6e9',
             }}
           >
             Past Sessions
@@ -217,7 +216,7 @@ export default function MyMentorSessionsPage() {
               ))}
             </div>
           ) : (
-            <div style={{ color: '#94A3B8', fontSize: 14 }}>No past sessions found.</div>
+            <div style={{ color: '#60717d', fontSize: 14 }}>No past sessions found.</div>
           )}
         </section>
       </div>

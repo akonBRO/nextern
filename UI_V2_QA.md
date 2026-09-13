@@ -1,0 +1,24 @@
+# Nextern V2 frontend and QA
+
+Completed September 12, 2026. The redesign uses the existing Nextern brand and frontend stack, with a light palette, restrained teal accents, consistent typography, compact cards, clear form labels, and Lucide icons.
+
+The landing page now leads with opportunity search. Because the existing opportunities endpoint requires authentication, search preserves the selected keyword and opportunity type in the login destination. It uses the existing authenticated feed and does not fabricate public listings.
+
+Presentation changes cover the public/auth/legal pages; all role dashboards and navigation; opportunities and applications; employer hiring; academic directories, events, recommendations and reports; freelance services and orders; mentorship; messaging and notifications; calendars; profiles; career tools; premium/subscription views; and shared dialogs, pagination and status displays. The source inventory covers 90 app pages, including dynamic routes.
+
+| Verification                  | Result                                                                                                                                                                                         |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production build              | Passed, including TypeScript and generation of 143 static pages/routes                                                                                                                         |
+| ESLint                        | 0 errors, 35 warnings remain                                                                                                                                                                   |
+| Core browser sweep            | 31 routes at 1440px and 390px: 62 captures, all HTTP 200, no document overflow or recorded browser errors                                                                                      |
+| Final production visual sweep | 16 captures across public pages and all five role dashboards, plus key product pages: all HTTP 200, no document overflow or recorded browser errors                                            |
+| Final interaction checks      | 12 passed: search destination, filters, reset/empty states, pagination/focus, application dialog, category tabs, long recommendation text, and employer detail/edit/applicants pages           |
+| Final breakpoint checks       | 1024px and 1280px dashboard layouts; 360px expanded/collapsed freelance filters for students and employers: all passed                                                                         |
+| Additional browser QA         | Public forms/menu/legal pages; five role shells at desktop/tablet/mobile sizes; admin sections; freelance tabs/dialogs; mentorship; calendar; inbox; notification dropdowns; image crop dialog |
+| Scope check                   | No changes to API routes, models, backend libraries, proxy, package manifest or lockfile                                                                                                       |
+
+Screenshots were inspected after successful builds. That pass led to fixes for mobile freelance overflow, pagination active styling, narrow application tabs, long recommendation notes, calendar spacing, pale text on light panels, and a persistent skip-link overlay. Dialogs and mobile navigation also received viewport bounds, keyboard focus and Escape handling. Closing a job now displays a failed request instead of falsely indicating success; the API request is unchanged.
+
+QA used Chromium and existing account/data states. Pending-approval and forced-password setup states had no suitable existing accounts, so those received source/handler review rather than authenticated screenshots. Live payments, calls, application submissions and other consequential mutations were not exercised. The student job-detail GET records a view, so that route received source/build review rather than runtime navigation. Inbox read-receipt PATCH requests were deliberately blocked during thread testing, producing two expected fetch errors in that specific report. This is not complete end-to-end coverage of every data-dependent state or browser engine.
+
+Local screenshots and machine-readable reports are in [`.codex-temp/v2-qa`](.codex-temp/v2-qa). That directory is ignored by Git and may contain existing account information. Final reports include `production-visuals.json`, `final-interactions.json`, `final-breakpoints.json`, and `core-results.json`. Backend/auth request expressions were also compared against the original source in `contract-audit.json`.

@@ -88,6 +88,7 @@ export default async function EmployerInterviewDetailPage({
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"
@@ -165,7 +166,7 @@ export default async function EmployerInterviewDetailPage({
             <div className="interview-candidate-actions-grid">
               <Panel title="Application status">
                 <div style={{ display: 'grid', gap: 12 }}>
-                  <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
+                  <div style={{ fontSize: 13, color: '#60717d', lineHeight: 1.7 }}>
                     Move this candidate to the next stage as soon as the interview outcome is clear.
                   </div>
                   <ApplicantActions
@@ -186,9 +187,9 @@ export default async function EmployerInterviewDetailPage({
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 8,
-                        color: '#2563EB',
+                        color: '#087f72',
                         fontSize: 13,
-                        fontWeight: 800,
+                        fontWeight: 700,
                         textDecoration: 'none',
                       }}
                     >
@@ -203,9 +204,9 @@ export default async function EmployerInterviewDetailPage({
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 8,
-                        color: '#0F172A',
+                        color: '#182c39',
                         fontSize: 13,
-                        fontWeight: 800,
+                        fontWeight: 700,
                         textDecoration: 'none',
                       }}
                     >
@@ -222,7 +223,7 @@ export default async function EmployerInterviewDetailPage({
                         gap: 8,
                         color: '#0369A1',
                         fontSize: 13,
-                        fontWeight: 800,
+                        fontWeight: 700,
                         textDecoration: 'none',
                       }}
                     >

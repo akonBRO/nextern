@@ -18,35 +18,16 @@ type DeptPageShellProps = {
   children: ReactNode;
 };
 
-const PAGE_LEVEL_SHELL_PREFIXES = [
-  '/dept/dashboard',
-  '/dept/advisors',
-  '/dept/students',
-  '/dept/report',
-  '/dept/calendar',
-  '/dept/messages',
-  '/dept/notifications',
-  '/dept/profile',
-  '/dept/badges',
-  '/dept/recommendations',
-  '/dept/events',
-];
-
-function hasPageLevelShell(pathname: string) {
-  return PAGE_LEVEL_SHELL_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-  );
-}
-
 export default function DeptPageShell({ user, children }: DeptPageShellProps) {
   const pathname = usePathname();
 
-  if (!pathname?.startsWith('/dept') || hasPageLevelShell(pathname)) {
+  if (!pathname?.startsWith('/dept')) {
     return <>{children}</>;
   }
 
   return (
     <DashboardShell
+      hideFooter={pathname?.endsWith('/messages')}
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"

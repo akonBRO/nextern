@@ -1,5 +1,6 @@
 'use client';
 
+import BrandLoader from '@/components/ui/BrandLoader';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import MentorProfileForm from '@/components/mentorship/MentorProfileForm';
@@ -32,7 +33,7 @@ export default function RegisterMentorPage() {
   }, [router]);
 
   if (loading) {
-    return <div style={{ padding: 80, textAlign: 'center', color: '#94A3B8' }}>Loading...</div>;
+    return <BrandLoader variant="section" label="Loading your workspace" />;
   }
 
   if (existingMentor) {
@@ -42,10 +43,10 @@ export default function RegisterMentorPage() {
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 24px' }}>
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 32, fontWeight: 900, color: '#1E293B', margin: '0 0 8px 0' }}>
+        <h1 style={{ fontSize: 32, fontWeight: 700, color: '#243e4a', margin: '0 0 8px 0' }}>
           Become a Mentor
         </h1>
-        <p style={{ fontSize: 16, color: '#64748B', margin: 0 }}>
+        <p style={{ fontSize: 16, color: '#60717d', margin: 0 }}>
           Share your expertise and help guide the next generation of students.
         </p>
       </div>

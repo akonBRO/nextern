@@ -39,7 +39,7 @@ export default function TeacherStudentDashboardLauncher({
         <span
           style={{
             fontSize: 12,
-            fontWeight: 800,
+            fontWeight: 700,
             color: '#475569',
             textTransform: 'uppercase',
             letterSpacing: 0.8,
@@ -59,7 +59,7 @@ export default function TeacherStudentDashboardLauncher({
             border: '1px solid #CBD5E1',
             padding: '12px 14px',
             fontSize: 14,
-            color: '#0F172A',
+            color: '#182c39',
             background: '#FFFFFF',
             outline: 'none',
           }}
@@ -80,10 +80,10 @@ export default function TeacherStudentDashboardLauncher({
             border: 'none',
             borderRadius: 14,
             padding: '12px 16px',
-            background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+            background: 'var(--primary)',
             color: '#FFFFFF',
             fontSize: 14,
-            fontWeight: 800,
+            fontWeight: 700,
             cursor: studentId ? 'pointer' : 'not-allowed',
           }}
         >
@@ -97,12 +97,12 @@ export default function TeacherStudentDashboardLauncher({
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: 14,
-              border: '1px solid #BFDBFE',
-              background: '#EFF6FF',
-              color: '#1D4ED8',
+              border: '1px solid #bdddd5',
+              background: '#edf7f3',
+              color: '#06665d',
               padding: '12px 14px',
               fontSize: 13,
-              fontWeight: 800,
+              fontWeight: 700,
               textDecoration: 'none',
               whiteSpace: 'nowrap',
             }}

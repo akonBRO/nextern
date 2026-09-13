@@ -1,32 +1,34 @@
+import BrandLoader from '@/components/ui/BrandLoader';
 // src/app/advisor/events/[eventId]/edit/page.tsx
 // Advisor edits their own posted event
 
-'use client';
+('use client');
+import FormField from '@/components/ui/FormField';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { AlertCircle, CheckCircle2, ChevronLeft, Rocket } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronLeft } from 'lucide-react';
 
 const C = {
-  blue: '#2563EB',
-  indigo: '#1E293B',
-  bg: '#F1F5F9',
-  gray: '#64748B',
+  blue: '#087f72',
+  indigo: '#243e4a',
+  bg: '#f6f8f9',
+  gray: '#60717d',
   white: '#fff',
-  dark: '#0F172A',
-  border: '#E2E8F0',
-  text: '#0F172A',
+  dark: '#182c39',
+  border: '#dfe6e9',
+  text: '#182c39',
   muted: '#374151',
-  light: '#94A3B8',
+  light: '#60717d',
   danger: '#EF4444',
   dangerBg: '#FEF2F2',
   dangerBorder: '#FECACA',
   successBg: '#ECFDF5',
   successBorder: '#A7F3D0',
-  purple: '#7C3AED',
-  purpleBg: '#EDE9FE',
-  purpleBorder: '#DDD6FE',
+  purple: '#087f72',
+  purpleBg: '#e0f0eb',
+  purpleBorder: '#bdddd5',
 };
 
 const inputBase: React.CSSProperties = {
@@ -86,23 +88,9 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <label
-        style={{
-          display: 'block',
-          fontSize: 12,
-          fontWeight: 700,
-          color: C.muted,
-          marginBottom: 6,
-          textTransform: 'uppercase',
-          letterSpacing: 0.5,
-        }}
-      >
-        {label}
-        {required && <span style={{ color: C.danger, marginLeft: 2 }}>*</span>}
-      </label>
+    <FormField label={label} required={required}>
       {children}
-    </div>
+    </FormField>
   );
 }
 
@@ -225,32 +213,18 @@ export default function EditAdvisorEventPage() {
     }
   }
 
-  if (fetching)
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: C.bg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: 'var(--font-body)',
-          color: C.gray,
-        }}
-      >
-        Loading event…
-      </div>
-    );
+  if (fetching) return <BrandLoader variant="page" label="Loading event" />;
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
       {/* Header */}
       <div
         style={{
-          background: `linear-gradient(145deg, ${C.dark}, ${C.indigo})`,
+          background: 'var(--surface-muted)',
           padding: '24px 0 28px',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
+        className="v2-light-panel"
       >
         <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 24px' }}>
           <Link
@@ -285,8 +259,8 @@ export default function EditAdvisorEventPage() {
           <h1
             style={{
               fontSize: 24,
-              fontWeight: 900,
-              color: '#F8FAFC',
+              fontWeight: 700,
+              color: 'var(--deep)',
               fontFamily: 'var(--font-display)',
               marginBottom: 4,
             }}
@@ -342,9 +316,9 @@ export default function EditAdvisorEventPage() {
         <div
           style={{
             background: C.white,
-            borderRadius: 20,
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
-            boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+            boxShadow: 'var(--shadow-card)',
             overflow: 'hidden',
           }}
         >
@@ -352,10 +326,13 @@ export default function EditAdvisorEventPage() {
             {/* Event type */}
             <div>
               <SectionLabel label="Event Type" />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+                className="v2-page-grid"
+              >
                 {[
-                  { v: 'webinar', l: '🌐 Webinar', desc: 'Online session, live or recorded' },
-                  { v: 'workshop', l: '🔧 Workshop', desc: 'Hands-on skill building session' },
+                  { v: 'webinar', l: 'Webinar', desc: 'Online session, live or recorded' },
+                  { v: 'workshop', l: 'Workshop', desc: 'Hands-on skill building session' },
                 ].map((t) => (
                   <button
                     key={t.v}
@@ -406,7 +383,10 @@ export default function EditAdvisorEventPage() {
                     style={{ ...inputBase, resize: 'vertical' }}
                   />
                 </Field>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div
+                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}
+                  className="v2-page-grid"
+                >
                   <Field label="Format">
                     <select
                       value={form.locationType}
@@ -558,7 +538,7 @@ export default function EditAdvisorEventPage() {
             {/* Status toggle */}
             <div
               style={{
-                background: form.isActive ? C.successBg : '#F8FAFC',
+                background: form.isActive ? C.successBg : '#f6f8f9',
                 border: `1.5px solid ${form.isActive ? C.successBorder : C.border}`,
                 borderRadius: 14,
                 padding: '16px 20px',
@@ -568,7 +548,7 @@ export default function EditAdvisorEventPage() {
               }}
             >
               <div>
-                <div style={{ fontWeight: 800, color: C.text, fontSize: 14 }}>Event Status</div>
+                <div style={{ fontWeight: 700, color: C.text, fontSize: 14 }}>Event Status</div>
                 <div style={{ color: C.gray, fontSize: 13, marginTop: 2 }}>
                   {form.isActive
                     ? 'Active — visible and open for registration'
@@ -582,7 +562,7 @@ export default function EditAdvisorEventPage() {
                   width: 48,
                   height: 26,
                   borderRadius: 999,
-                  background: form.isActive ? '#10B981' : C.border,
+                  background: form.isActive ? '#168257' : C.border,
                   border: 'none',
                   cursor: 'pointer',
                   position: 'relative',
@@ -600,7 +580,7 @@ export default function EditAdvisorEventPage() {
                     top: 3,
                     left: form.isActive ? 25 : 3,
                     transition: 'left 0.2s',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 />
               </button>
@@ -647,7 +627,7 @@ export default function EditAdvisorEventPage() {
                 background:
                   loading || saved
                     ? C.purpleBorder
-                    : `linear-gradient(135deg, ${C.purple}, #6D28D9)`,
+                    : `linear-gradient(135deg, ${C.purple}, #06665d)`,
                 color: C.white,
                 border: 'none',
                 borderRadius: 10,

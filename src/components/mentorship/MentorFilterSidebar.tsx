@@ -1,7 +1,8 @@
 'use client';
 
-import { Search, Filter, X } from 'lucide-react';
+import { Filter, X } from 'lucide-react';
 import { useState } from 'react';
+import './mentorship.css';
 
 interface Props {
   onFilterChange: (filters: { industry: string; expertise: string; mentorType: string }) => void;
@@ -45,10 +46,11 @@ export default function MentorFilterSidebar({ onFilterChange }: Props) {
 
   return (
     <div
+      className="mentor-filters nx-surface"
       style={{
         background: '#FFFFFF',
-        borderRadius: 20,
-        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        border: '1px solid #dfe6e9',
         padding: 24,
         position: 'sticky',
         top: 100,
@@ -74,16 +76,16 @@ export default function MentorFilterSidebar({ onFilterChange }: Props) {
               width: 36,
               height: 36,
               borderRadius: 10,
-              background: '#EFF6FF',
+              background: '#eef7f5',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#2563EB',
+              color: '#087f72',
             }}
           >
             <Filter size={18} strokeWidth={2} />
           </div>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#1E293B' }}>Filters</h2>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#182c39' }}>Filters</h2>
           {(industry || expertise || mentorType) && (
             <button
               onClick={() => {
@@ -96,7 +98,7 @@ export default function MentorFilterSidebar({ onFilterChange }: Props) {
                 marginLeft: 'auto',
                 background: 'transparent',
                 border: 'none',
-                color: '#64748B',
+                color: '#60717d',
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -112,7 +114,7 @@ export default function MentorFilterSidebar({ onFilterChange }: Props) {
 
         {/* Mentor Type */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#475569' }}>Type:</h3>
+          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#435663' }}>Type:</h3>
           <div style={{ display: 'flex', gap: 8 }}>
             {[
               { value: '', label: 'All' },
@@ -121,17 +123,19 @@ export default function MentorFilterSidebar({ onFilterChange }: Props) {
             ].map((type) => (
               <button
                 key={type.value}
+                type="button"
+                aria-pressed={mentorType === type.value}
                 onClick={() => {
                   setMentorType(type.value);
                   applyFilters({ mentorType: type.value });
                 }}
                 style={{
                   padding: '8px 14px',
-                  borderRadius: 999,
+                  borderRadius: 6,
                   border: '1px solid',
-                  borderColor: mentorType === type.value ? '#2563EB' : '#E2E8F0',
-                  background: mentorType === type.value ? '#EFF6FF' : '#FFFFFF',
-                  color: mentorType === type.value ? '#1D4ED8' : '#64748B',
+                  borderColor: mentorType === type.value ? '#087f72' : '#dfe6e9',
+                  background: mentorType === type.value ? '#eef7f5' : '#FFFFFF',
+                  color: mentorType === type.value ? '#06665d' : '#60717d',
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -146,8 +150,9 @@ export default function MentorFilterSidebar({ onFilterChange }: Props) {
 
         {/* Industry */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#475569' }}>Industry:</h3>
+          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#435663' }}>Industry:</h3>
           <select
+            aria-label="Industry"
             value={industry}
             onChange={(e) => {
               setIndustry(e.target.value);
@@ -157,9 +162,9 @@ export default function MentorFilterSidebar({ onFilterChange }: Props) {
               width: '100%',
               padding: '10px 14px',
               borderRadius: 12,
-              border: '1px solid #E2E8F0',
-              background: '#F8FAFC',
-              color: '#1E293B',
+              border: '1px solid #dfe6e9',
+              background: '#f6f8f9',
+              color: '#182c39',
               fontSize: 14,
               fontWeight: 500,
               outline: 'none',
@@ -176,8 +181,9 @@ export default function MentorFilterSidebar({ onFilterChange }: Props) {
 
         {/* Expertise */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#475569' }}>Expertise:</h3>
+          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#435663' }}>Expertise:</h3>
           <select
+            aria-label="Expertise"
             value={expertise}
             onChange={(e) => {
               setExpertise(e.target.value);
@@ -187,9 +193,9 @@ export default function MentorFilterSidebar({ onFilterChange }: Props) {
               width: '100%',
               padding: '10px 14px',
               borderRadius: 12,
-              border: '1px solid #E2E8F0',
-              background: '#F8FAFC',
-              color: '#1E293B',
+              border: '1px solid #dfe6e9',
+              background: '#f6f8f9',
+              color: '#182c39',
               fontSize: 14,
               fontWeight: 500,
               outline: 'none',

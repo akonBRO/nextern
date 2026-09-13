@@ -1,21 +1,32 @@
 'use client';
+import ContextIcon from '@/components/ui/ContextIcon';
 
 import { useState } from 'react';
+import useDialog from '@/components/ui/useDialog';
 
 export default function CloseJobButton({ jobId }: { jobId: string }) {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const dialogRef = useDialog(showModal, loading ? undefined : () => setShowModal(false));
 
   async function handleClose() {
     setLoading(true);
-    await fetch(`/api/jobs/${jobId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive: false }),
-    });
-    setLoading(false);
-    setShowModal(false);
-    window.location.reload();
+    setError('');
+    try {
+      const response = await fetch(`/api/jobs/${jobId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: false }),
+      });
+      if (!response.ok) throw new Error('The listing could not be closed. Please try again.');
+      setShowModal(false);
+      window.location.reload();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to connect. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -42,28 +53,34 @@ export default function CloseJobButton({ jobId }: { jobId: string }) {
 
       {showModal && (
         <div
-          onClick={(e) => e.target === e.currentTarget && setShowModal(false)}
+          onClick={(e) => !loading && e.target === e.currentTarget && setShowModal(false)}
           style={{
             position: 'fixed',
             inset: 0,
             zIndex: 1000,
             background: 'rgba(15,23,42,0.55)',
-            backdropFilter: 'blur(4px)',
+            backdropFilter: 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: 16,
           }}
+          className="v2-dialog-overlay"
         >
           <div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Close this listing?"
+            tabIndex={-1}
             style={{
               background: '#fff',
-              borderRadius: 20,
+              borderRadius: 12,
               padding: '32px 36px',
               width: '100%',
               maxWidth: 420,
-              boxShadow: '0 24px 64px rgba(0,0,0,0.2)',
-              border: '1px solid #E2E8F0',
+              boxShadow: 'var(--shadow-card)',
+              border: '1px solid #dfe6e9',
             }}
           >
             {/* Icon */}
@@ -71,7 +88,7 @@ export default function CloseJobButton({ jobId }: { jobId: string }) {
               style={{
                 width: 52,
                 height: 52,
-                borderRadius: 16,
+                borderRadius: 12,
                 background: '#FFFBEB',
                 border: '1px solid #FDE68A',
                 display: 'flex',
@@ -81,14 +98,14 @@ export default function CloseJobButton({ jobId }: { jobId: string }) {
                 marginBottom: 20,
               }}
             >
-              ⚠️
+              <ContextIcon name="warning" />
             </div>
 
             <h3
               style={{
                 fontSize: 18,
-                fontWeight: 900,
-                color: '#0F172A',
+                fontWeight: 700,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
                 margin: 0,
                 marginBottom: 8,
@@ -98,7 +115,7 @@ export default function CloseJobButton({ jobId }: { jobId: string }) {
             </h3>
             <p
               style={{
-                color: '#64748B',
+                color: '#60717d',
                 fontSize: 14,
                 lineHeight: 1.7,
                 margin: 0,
@@ -109,13 +126,18 @@ export default function CloseJobButton({ jobId }: { jobId: string }) {
               be affected and you can reopen it anytime from the edit page.
             </p>
 
+            {error && (
+              <p role="alert" style={{ color: '#b91c1c', marginBottom: 16, fontSize: 14 }}>
+                {error}
+              </p>
+            )}
             <div style={{ display: 'flex', gap: 10 }}>
               <button
                 onClick={() => setShowModal(false)}
                 style={{
                   flex: 1,
                   padding: '11px',
-                  border: '1.5px solid #E2E8F0',
+                  border: '1.5px solid #dfe6e9',
                   borderRadius: 10,
                   background: '#fff',
                   color: '#475569',
@@ -132,7 +154,7 @@ export default function CloseJobButton({ jobId }: { jobId: string }) {
                 style={{
                   flex: 1,
                   padding: '11px',
-                  background: loading ? '#FDE68A' : 'linear-gradient(135deg, #F59E0B, #D97706)',
+                  background: loading ? '#FDE68A' : 'linear-gradient(135deg, #a86714, #D97706)',
                   color: '#fff',
                   border: 'none',
                   borderRadius: 10,

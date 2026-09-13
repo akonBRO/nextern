@@ -44,6 +44,7 @@ export default async function EmployerCalendarPage() {
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer calendar"
       homeHref="/employer/dashboard"
@@ -53,18 +54,16 @@ export default async function EmployerCalendarPage() {
       <DashboardPage>
         <HeroCard
           eyebrow="Calendar"
-          title="See your hiring schedule on a real monthly calendar"
-          description="Navigate month by month, keep interview schedules visible, and monitor job deadlines and employer-hosted events from one shared planner."
+          title="Hiring calendar"
+          description="Your interviews, application deadlines, and campus events in one place."
           actions={
             <>
-              <ActionLink href="/employer/dashboard#calendar" label="Back to Dashboard" />
               <ActionLink href="/employer/jobs" label="View Jobs & Applicants" tone="ghost" />
             </>
           }
           aside={
             <Panel
-              title="Planner snapshot"
-              description="A compact overview of everything currently loaded into your employer calendar."
+              title="Coming up"
               style={{
                 background: 'rgba(255,255,255,0.12)',
                 border: '1px solid rgba(255,255,255,0.16)',
@@ -83,7 +82,7 @@ export default async function EmployerCalendarPage() {
         <DashboardSection
           id="calendar"
           title="Monthly calendar"
-          description="Use the arrows to move between months and click any day to inspect the hiring events scheduled there."
+          description="Select a day to see its schedule."
         >
           <CalendarBoard
             events={calendarEvents}

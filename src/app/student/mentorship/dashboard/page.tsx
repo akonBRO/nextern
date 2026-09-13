@@ -1,5 +1,7 @@
+import BrandLoader from '@/components/ui/BrandLoader';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use client';
+('use client');
+import BadgeIcon from '@/components/ui/BadgeIcon';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -21,15 +23,15 @@ import VideoSessionLauncher from '@/components/mentorship/VideoSessionLauncher';
 
 /* ─── Design tokens (match navbar) ── */
 const C = {
-  heroBg: '#1E293B',
-  pageBg: '#F8FAFC',
-  accent: '#2563EB',
-  accent2: '#1D4ED8',
-  border: '#E2E8F0',
+  heroBg: '#243e4a',
+  pageBg: '#f6f8f9',
+  accent: '#087f72',
+  accent2: '#06665d',
+  border: '#dfe6e9',
   cardBg: '#FFFFFF',
-  muted: '#94A3B8',
-  text: '#1E293B',
-  textSub: '#64748B',
+  muted: '#60717d',
+  text: '#243e4a',
+  textSub: '#60717d',
 };
 
 type Tab = 'sessions' | 'achievements' | 'profile';
@@ -85,36 +87,7 @@ function MentorDashboard() {
   }
 
   /* ── Loading ── */
-  if (loading)
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: C.pageBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <div style={{ textAlign: 'center' }}>
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: '50%',
-              border: `3px solid ${C.border}`,
-              borderTopColor: C.accent,
-              animation: 'spin 0.7s linear infinite',
-              margin: '0 auto 14px',
-            }}
-          />
-          <p style={{ color: C.muted, fontWeight: 600, fontSize: 14, margin: 0 }}>
-            Loading dashboard…
-          </p>
-        </div>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      </div>
-    );
+  if (loading) return <BrandLoader variant="page" label="Loading dashboard" />;
 
   /* ── No profile ── */
   if (!mentor)
@@ -134,8 +107,8 @@ function MentorDashboard() {
             style={{
               width: 72,
               height: 72,
-              borderRadius: 20,
-              background: `linear-gradient(135deg,${C.accent},${C.accent2})`,
+              borderRadius: 12,
+              background: '#edf7f3',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -145,7 +118,7 @@ function MentorDashboard() {
           >
             <Users size={34} color="#FFF" />
           </div>
-          <h2 style={{ fontSize: 26, fontWeight: 900, color: C.text, marginBottom: 10 }}>
+          <h2 style={{ fontSize: 26, fontWeight: 700, color: C.text, marginBottom: 10 }}>
             No Mentor Profile Yet
           </h2>
           <p style={{ color: C.textSub, fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
@@ -158,7 +131,7 @@ function MentorDashboard() {
               borderRadius: 12,
               border: 'none',
               cursor: 'pointer',
-              background: `linear-gradient(135deg,${C.accent},${C.accent2})`,
+              background: '#edf7f3',
               color: '#FFF',
               fontWeight: 700,
               fontSize: 14,
@@ -264,8 +237,8 @@ function MentorDashboard() {
                   style={{
                     margin: 0,
                     fontSize: 24,
-                    fontWeight: 900,
-                    color: '#F1F5F9',
+                    fontWeight: 700,
+                    color: '#f6f8f9',
                     letterSpacing: '-0.02em',
                   }}
                 >
@@ -285,6 +258,7 @@ function MentorDashboard() {
                 gap: 12,
                 animation: 'fadeUp .3s ease .06s both',
               }}
+              className="v2-page-grid"
             >
               {STATS.map((s) => (
                 <div
@@ -300,7 +274,7 @@ function MentorDashboard() {
                     gap: 12,
                     transition: 'transform 0.18s, box-shadow 0.18s',
                     cursor: 'default',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <div
@@ -319,7 +293,7 @@ function MentorDashboard() {
                     {s.icon}
                   </div>
                   <div>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: '#F1F5F9', lineHeight: 1 }}>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: '#f6f8f9', lineHeight: 1 }}>
                       {s.value}
                     </div>
                     <div style={{ fontSize: 12, color: C.muted, marginTop: 3, fontWeight: 600 }}>
@@ -344,6 +318,7 @@ function MentorDashboard() {
                 alignItems: 'start',
                 animation: 'fadeUp .25s ease',
               }}
+              className="v2-page-grid"
             >
               <div>
                 <SectionHeader
@@ -464,7 +439,9 @@ function MentorDashboard() {
                           cursor: 'default',
                         }}
                       >
-                        <span style={{ fontSize: 18 }}>{b.badgeIcon}</span>
+                        <span style={{ fontSize: 18 }}>
+                          <BadgeIcon value={b.badgeIcon} label={b.badgeName} />
+                        </span>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: C.accent }}>
                             {b.badgeName}
@@ -501,7 +478,7 @@ function MentorDashboard() {
                         key={e._id}
                         className="mdb-endorse"
                         style={{
-                          background: '#F8FAFC',
+                          background: '#f6f8f9',
                           border: `1px solid ${C.border}`,
                           borderRadius: 14,
                           padding: '18px 20px',
@@ -521,12 +498,12 @@ function MentorDashboard() {
                               width: 34,
                               height: 34,
                               borderRadius: '50%',
-                              background: `linear-gradient(135deg,${C.accent},${C.accent2})`,
+                              background: '#edf7f3',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               fontSize: 13,
-                              fontWeight: 800,
+                              fontWeight: 700,
                               color: '#FFF',
                               flexShrink: 0,
                             }}
@@ -618,9 +595,9 @@ function MentorDashboard() {
                 style={{
                   background: C.cardBg,
                   border: `1px solid ${C.border}`,
-                  borderRadius: 20,
+                  borderRadius: 12,
                   padding: 32,
-                  boxShadow: '0 2px 12px rgba(30,41,59,.06)',
+                  boxShadow: 'var(--shadow-card)',
                 }}
               >
                 <MentorProfileForm initialData={mentor} isEdit={true} />
@@ -647,12 +624,13 @@ function Card({
 }) {
   return (
     <div
+      className="nx-surface"
       style={{
         background: '#FFFFFF',
-        border: '1px solid #E2E8F0',
-        borderRadius: 20,
+        border: '1px solid #dfe6e9',
+        borderRadius: 12,
         padding: 28,
-        boxShadow: '0 2px 12px rgba(30,41,59,.06)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       <div
@@ -662,7 +640,7 @@ function Card({
           gap: 10,
           marginBottom: 20,
           paddingBottom: 16,
-          borderBottom: '1px solid #E2E8F0',
+          borderBottom: '1px solid #dfe6e9',
         }}
       >
         <div
@@ -670,8 +648,8 @@ function Card({
             width: 36,
             height: 36,
             borderRadius: 10,
-            background: '#EFF6FF',
-            color: '#2563EB',
+            background: '#edf7f3',
+            color: '#087f72',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -680,8 +658,8 @@ function Card({
           {icon}
         </div>
         <div>
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#1E293B' }}>{title}</h2>
-          <p style={{ margin: 0, fontSize: 12, color: '#64748B' }}>{sub}</p>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#243e4a' }}>{title}</h2>
+          <p style={{ margin: 0, fontSize: 12, color: '#60717d' }}>{sub}</p>
         </div>
       </div>
       {children}
@@ -708,12 +686,12 @@ function SectionHeader({
         justifyContent: 'space-between',
         marginBottom: 14,
         paddingBottom: 10,
-        borderBottom: '2px solid #E2E8F0',
+        borderBottom: '2px solid #dfe6e9',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
         <span style={{ color: accent }}>{icon}</span>
-        <span style={{ fontSize: 15, fontWeight: 800, color: '#1E293B' }}>{label}</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: '#243e4a' }}>{label}</span>
       </div>
       {count != null && count > 0 && (
         <span
@@ -721,7 +699,7 @@ function SectionHeader({
             background: accent,
             color: '#FFF',
             fontSize: 11,
-            fontWeight: 800,
+            fontWeight: 700,
             padding: '2px 10px',
             borderRadius: 999,
           }}
@@ -737,8 +715,8 @@ function EmptyBox({ icon, title, sub }: { icon: React.ReactNode; title: string; 
   return (
     <div
       style={{
-        background: '#F8FAFC',
-        border: '1.5px dashed #E2E8F0',
+        background: '#f6f8f9',
+        border: '1.5px dashed #dfe6e9',
         borderRadius: 14,
         padding: '28px 20px',
         textAlign: 'center',
@@ -746,8 +724,8 @@ function EmptyBox({ icon, title, sub }: { icon: React.ReactNode; title: string; 
       }}
     >
       <div style={{ color: '#CBD5E1', marginBottom: 10 }}>{icon}</div>
-      <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: '#64748B' }}>{title}</p>
-      <p style={{ margin: 0, fontSize: 12, color: '#94A3B8' }}>{sub}</p>
+      <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: '#60717d' }}>{title}</p>
+      <p style={{ margin: 0, fontSize: 12, color: '#60717d' }}>{sub}</p>
     </div>
   );
 }
@@ -755,21 +733,7 @@ function EmptyBox({ icon, title, sub }: { icon: React.ReactNode; title: string; 
 /* Wrap in Suspense because useSearchParams requires it in Next.js App Router */
 export default function MentorDashboardPage() {
   return (
-    <Suspense
-      fallback={
-        <div
-          style={{
-            minHeight: '100vh',
-            background: '#F8FAFC',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <p style={{ color: '#94A3B8', fontWeight: 600 }}>Loading…</p>
-        </div>
-      }
-    >
+    <Suspense fallback={<BrandLoader variant="page" label="Loading your workspace" />}>
       <MentorDashboard />
     </Suspense>
   );

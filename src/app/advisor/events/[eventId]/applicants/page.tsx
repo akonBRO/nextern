@@ -1,3 +1,4 @@
+import ContextIcon from '@/components/ui/ContextIcon';
 // src/app/advisor/events/[eventId]/applicants/page.tsx
 // Advisor view — event detail + application summary (not a list of people)
 
@@ -88,7 +89,7 @@ export default async function AdvisorEventApplicantsPage({
   const isExpired = daysLeft !== null && daysLeft < 0;
 
   const pipelineStages = [
-    { key: 'applied', label: 'Applied', color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
+    { key: 'applied', label: 'Applied', color: '#087f72', bg: '#edf7f3', border: '#bdddd5' },
     {
       key: 'under_review',
       label: 'Under Review',
@@ -106,9 +107,9 @@ export default async function AdvisorEventApplicantsPage({
     {
       key: 'interview_scheduled',
       label: 'Interview',
-      color: '#7C3AED',
-      bg: '#EDE9FE',
-      border: '#DDD6FE',
+      color: '#087f72',
+      bg: '#e0f0eb',
+      border: '#bdddd5',
     },
     { key: 'hired', label: 'Hired', color: '#065F46', bg: '#DCFCE7', border: '#BBF7D0' },
     { key: 'rejected', label: 'Not Selected', color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
@@ -116,6 +117,7 @@ export default async function AdvisorEventApplicantsPage({
 
   return (
     <DashboardShell
+      embedded
       role={isDeptHead ? 'departmentHead' : 'advisor'}
       roleLabel={isDeptHead ? 'Department dashboard' : 'Advisor dashboard'}
       homeHref={isDeptHead ? '/dept/dashboard' : '/advisor/dashboard'}
@@ -133,31 +135,19 @@ export default async function AdvisorEventApplicantsPage({
       }}
     >
       <DashboardPage>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <div className="nx-page-width" style={{ maxWidth: 1100, margin: '0 auto' }}>
           {/* ── Hero banner ── */}
           <div
             style={{
-              background: 'linear-gradient(145deg, #0F172A, #1E293B)',
-              borderRadius: 24,
+              background: 'var(--surface-muted)',
+              borderRadius: 12,
               padding: '32px 36px',
               marginBottom: 24,
               position: 'relative',
               overflow: 'hidden',
             }}
+            className="v2-light-panel"
           >
-            <div
-              style={{
-                position: 'absolute',
-                top: -60,
-                right: -60,
-                width: 220,
-                height: 220,
-                background: 'radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 70%)',
-                borderRadius: '50%',
-                pointerEvents: 'none',
-              }}
-            />
-
             <div
               style={{
                 display: 'flex',
@@ -174,7 +164,7 @@ export default async function AdvisorEventApplicantsPage({
                     style={{
                       background:
                         event.type === 'webinar' ? 'rgba(3,105,161,0.3)' : 'rgba(124,58,237,0.3)',
-                      color: event.type === 'webinar' ? '#BAE6FD' : '#DDD6FE',
+                      color: event.type === 'webinar' ? 'var(--deep)' : 'var(--deep)',
                       border: `1px solid ${event.type === 'webinar' ? 'rgba(186,230,253,0.3)' : 'rgba(221,214,254,0.3)'}`,
                       padding: '4px 12px',
                       borderRadius: 999,
@@ -182,7 +172,12 @@ export default async function AdvisorEventApplicantsPage({
                       fontWeight: 700,
                     }}
                   >
-                    {event.type === 'webinar' ? '🌐' : '🔧'} {formatStatusLabel(event.type)}
+                    {event.type === 'webinar' ? (
+                      <ContextIcon name="globe" />
+                    ) : (
+                      <ContextIcon name="tool" />
+                    )}{' '}
+                    {formatStatusLabel(event.type)}
                   </span>
                   <span
                     style={{
@@ -190,7 +185,7 @@ export default async function AdvisorEventApplicantsPage({
                       alignItems: 'center',
                       gap: 5,
                       background: event.isActive ? 'rgba(16,185,129,0.2)' : 'rgba(148,163,184,0.2)',
-                      color: event.isActive ? '#6EE7B7' : '#94A3B8',
+                      color: event.isActive ? 'var(--deep)' : '#60717d',
                       border: `1px solid ${event.isActive ? 'rgba(110,231,183,0.3)' : 'rgba(148,163,184,0.2)'}`,
                       padding: '4px 12px',
                       borderRadius: 999,
@@ -203,7 +198,7 @@ export default async function AdvisorEventApplicantsPage({
                         width: 6,
                         height: 6,
                         borderRadius: '50%',
-                        background: event.isActive ? '#10B981' : '#94A3B8',
+                        background: event.isActive ? '#168257' : '#60717d',
                         display: 'inline-block',
                       }}
                     />
@@ -215,8 +210,8 @@ export default async function AdvisorEventApplicantsPage({
                 <h1
                   style={{
                     fontSize: 28,
-                    fontWeight: 900,
-                    color: '#F8FAFC',
+                    fontWeight: 700,
+                    color: 'var(--deep)',
                     fontFamily: 'var(--font-display)',
                     letterSpacing: '-0.5px',
                     margin: 0,
@@ -232,7 +227,7 @@ export default async function AdvisorEventApplicantsPage({
                     display: 'flex',
                     flexWrap: 'wrap',
                     gap: 16,
-                    color: '#94A3B8',
+                    color: '#60717d',
                     fontSize: 13,
                   }}
                 >
@@ -250,8 +245,8 @@ export default async function AdvisorEventApplicantsPage({
                         color: isExpired
                           ? '#EF4444'
                           : daysLeft !== null && daysLeft <= 3
-                            ? '#F59E0B'
-                            : '#94A3B8',
+                            ? '#a86714'
+                            : '#60717d',
                         fontWeight: isExpired || (daysLeft !== null && daysLeft <= 3) ? 700 : 400,
                       }}
                     >
@@ -259,30 +254,34 @@ export default async function AdvisorEventApplicantsPage({
                       {isExpired ? 'Registration closed' : `${daysLeft}d left`}
                     </span>
                   )}
-                  {event.academicSession && <span>🎓 {event.academicSession}</span>}
+                  {event.academicSession && (
+                    <span>
+                      <ContextIcon name="graduation" /> {event.academicSession}
+                    </span>
+                  )}
                 </div>
 
                 {/* Quick stats */}
                 <div style={{ display: 'flex', gap: 32, marginTop: 22 }}>
                   {[
-                    { label: 'Applications', value: totalApplications, color: '#22D3EE' },
-                    { label: 'Registrations', value: regCount, color: '#A78BFA' },
+                    { label: 'Applications', value: totalApplications, color: '#178d80' },
+                    { label: 'Registrations', value: regCount, color: 'var(--deep)' },
                     {
                       label: 'Deadline',
                       value: deadline ? formatShortDate(deadline.toISOString()) : '—',
-                      color: '#F8FAFC',
+                      color: 'var(--deep)',
                     },
                     {
                       label: 'Posted',
                       value: formatShortDate(event.createdAt?.toISOString()),
-                      color: '#F8FAFC',
+                      color: 'var(--deep)',
                     },
                   ].map((s) => (
                     <div key={s.label}>
                       <div
                         style={{
                           fontSize: 22,
-                          fontWeight: 900,
+                          fontWeight: 700,
                           color: s.color,
                           fontFamily: 'var(--font-display)',
                           lineHeight: 1,
@@ -291,7 +290,7 @@ export default async function AdvisorEventApplicantsPage({
                         {s.value}
                       </div>
                       <div
-                        style={{ fontSize: 12, color: '#64748B', marginTop: 4, fontWeight: 600 }}
+                        style={{ fontSize: 12, color: '#60717d', marginTop: 4, fontWeight: 600 }}
                       >
                         {s.label}
                       </div>
@@ -308,7 +307,7 @@ export default async function AdvisorEventApplicantsPage({
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 8,
-                    background: '#2563EB',
+                    background: '#087f72',
                     color: '#fff',
                     padding: '10px 20px',
                     borderRadius: 12,
@@ -316,7 +315,7 @@ export default async function AdvisorEventApplicantsPage({
                     fontWeight: 700,
                     textDecoration: 'none',
                     fontFamily: 'var(--font-display)',
-                    boxShadow: '0 4px 12px rgba(37,99,235,0.35)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <Users size={14} /> View Registrants ({formatCompactNumber(regCount)})
@@ -329,7 +328,7 @@ export default async function AdvisorEventApplicantsPage({
                     gap: 8,
                     background: 'rgba(255,255,255,0.08)',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    color: '#CBD5E1',
+                    color: 'var(--deep)',
                     padding: '10px 20px',
                     borderRadius: 12,
                     fontSize: 13,
@@ -345,7 +344,7 @@ export default async function AdvisorEventApplicantsPage({
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
-                    color: '#64748B',
+                    color: '#60717d',
                     fontSize: 13,
                     textDecoration: 'none',
                     justifyContent: 'center',
@@ -366,26 +365,27 @@ export default async function AdvisorEventApplicantsPage({
               gap: 20,
               alignItems: 'start',
             }}
-            className="event-detail-grid"
+            className="event-detail-grid v2-page-grid"
           >
             {/* Left: Description + Pipeline */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Description */}
               {event.description && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '28px 32px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <h2
                     style={{
                       fontSize: 17,
-                      fontWeight: 800,
-                      color: '#0F172A',
+                      fontWeight: 700,
+                      color: '#182c39',
                       fontFamily: 'var(--font-display)',
                       margin: 0,
                       marginBottom: 14,
@@ -409,12 +409,13 @@ export default async function AdvisorEventApplicantsPage({
 
               {/* Application pipeline summary */}
               <div
+                className="nx-surface"
                 style={{
                   background: '#fff',
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
+                  borderRadius: 12,
+                  border: '1px solid #dfe6e9',
                   padding: '28px 32px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  boxShadow: 'var(--shadow-card)',
                 }}
               >
                 <div
@@ -428,8 +429,8 @@ export default async function AdvisorEventApplicantsPage({
                   <h2
                     style={{
                       fontSize: 17,
-                      fontWeight: 800,
-                      color: '#0F172A',
+                      fontWeight: 700,
+                      color: '#182c39',
                       fontFamily: 'var(--font-display)',
                       margin: 0,
                     }}
@@ -438,9 +439,9 @@ export default async function AdvisorEventApplicantsPage({
                   </h2>
                   <span
                     style={{
-                      background: '#EFF6FF',
-                      color: '#2563EB',
-                      border: '1px solid #BFDBFE',
+                      background: '#edf7f3',
+                      color: '#087f72',
+                      border: '1px solid #bdddd5',
                       padding: '3px 10px',
                       borderRadius: 999,
                       fontSize: 12,
@@ -456,7 +457,7 @@ export default async function AdvisorEventApplicantsPage({
                     style={{
                       textAlign: 'center',
                       padding: '32px 0',
-                      color: '#94A3B8',
+                      color: '#60717d',
                       fontSize: 14,
                     }}
                   >
@@ -497,13 +498,13 @@ export default async function AdvisorEventApplicantsPage({
                               {stage.label}
                             </span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <span style={{ fontSize: 13, color: '#64748B', fontWeight: 600 }}>
+                              <span style={{ fontSize: 13, color: '#60717d', fontWeight: 600 }}>
                                 {pct}%
                               </span>
                               <span
                                 style={{
                                   fontSize: 18,
-                                  fontWeight: 900,
+                                  fontWeight: 700,
                                   color: stage.color,
                                   fontFamily: 'var(--font-display)',
                                   lineHeight: 1,
@@ -518,7 +519,7 @@ export default async function AdvisorEventApplicantsPage({
                           <div
                             style={{
                               height: 7,
-                              background: '#F1F5F9',
+                              background: '#f6f8f9',
                               borderRadius: 999,
                               overflow: 'hidden',
                             }}
@@ -539,20 +540,20 @@ export default async function AdvisorEventApplicantsPage({
                       style={{
                         marginTop: 8,
                         paddingTop: 14,
-                        borderTop: '1px solid #F1F5F9',
+                        borderTop: '1px solid #f6f8f9',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                       }}
                     >
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#182c39' }}>
                         Total applications
                       </span>
                       <span
                         style={{
                           fontSize: 22,
-                          fontWeight: 900,
-                          color: '#2563EB',
+                          fontWeight: 700,
+                          color: '#087f72',
                           fontFamily: 'var(--font-display)',
                         }}
                       >
@@ -568,19 +569,20 @@ export default async function AdvisorEventApplicantsPage({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Event details */}
               <div
+                className="nx-surface"
                 style={{
                   background: '#fff',
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
+                  borderRadius: 12,
+                  border: '1px solid #dfe6e9',
                   padding: '24px 26px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  boxShadow: 'var(--shadow-card)',
                 }}
               >
                 <h3
                   style={{
                     fontSize: 16,
-                    fontWeight: 800,
-                    color: '#0F172A',
+                    fontWeight: 700,
+                    color: '#182c39',
                     fontFamily: 'var(--font-display)',
                     margin: 0,
                     marginBottom: 18,
@@ -591,16 +593,30 @@ export default async function AdvisorEventApplicantsPage({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {[
                     {
-                      icon: '📅',
+                      icon: <ContextIcon name="calendar" />,
                       label: 'DEADLINE',
                       value: deadline ? formatShortDate(deadline.toISOString()) : '—',
                     },
-                    { icon: '📍', label: 'FORMAT', value: formatStatusLabel(event.locationType) },
-                    event.city ? { icon: '🏙️', label: 'VENUE', value: event.city } : null,
-                    event.academicSession
-                      ? { icon: '🎓', label: 'SESSION', value: event.academicSession }
+                    {
+                      icon: <ContextIcon name="location" />,
+                      label: 'FORMAT',
+                      value: formatStatusLabel(event.locationType),
+                    },
+                    event.city
+                      ? { icon: <ContextIcon name="location" />, label: 'VENUE', value: event.city }
                       : null,
-                    { icon: '📋', label: 'TYPE', value: formatStatusLabel(event.type) },
+                    event.academicSession
+                      ? {
+                          icon: <ContextIcon name="graduation" />,
+                          label: 'SESSION',
+                          value: event.academicSession,
+                        }
+                      : null,
+                    {
+                      icon: <ContextIcon name="clipboard" />,
+                      label: 'TYPE',
+                      value: formatStatusLabel(event.type),
+                    },
                   ]
                     .filter(Boolean)
                     .map((item) => (
@@ -612,14 +628,14 @@ export default async function AdvisorEventApplicantsPage({
                           style={{
                             fontSize: 10,
                             fontWeight: 700,
-                            color: '#94A3B8',
+                            color: '#60717d',
                             textTransform: 'uppercase',
                             letterSpacing: 0.8,
                           }}
                         >
                           {item!.icon} {item!.label}
                         </span>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: '#0F172A' }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: '#182c39' }}>
                           {item!.value}
                         </span>
                       </div>
@@ -632,19 +648,20 @@ export default async function AdvisorEventApplicantsPage({
                 event.targetDepartments?.length > 0 ||
                 event.targetYears?.length > 0) && (
                 <div
+                  className="nx-surface"
                   style={{
                     background: '#fff',
-                    borderRadius: 20,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     padding: '24px 26px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <h3
                     style={{
                       fontSize: 16,
-                      fontWeight: 800,
-                      color: '#0F172A',
+                      fontWeight: 700,
+                      color: '#182c39',
                       fontFamily: 'var(--font-display)',
                       margin: 0,
                       marginBottom: 6,
@@ -652,7 +669,7 @@ export default async function AdvisorEventApplicantsPage({
                   >
                     Targeting
                   </h3>
-                  <p style={{ fontSize: 13, color: '#64748B', margin: '0 0 16px' }}>
+                  <p style={{ fontSize: 13, color: '#60717d', margin: '0 0 16px' }}>
                     Who this event is shown to
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -662,7 +679,7 @@ export default async function AdvisorEventApplicantsPage({
                           style={{
                             fontSize: 11,
                             fontWeight: 700,
-                            color: '#94A3B8',
+                            color: '#60717d',
                             textTransform: 'uppercase',
                             letterSpacing: 0.8,
                             marginBottom: 8,
@@ -675,9 +692,9 @@ export default async function AdvisorEventApplicantsPage({
                             <span
                               key={u}
                               style={{
-                                background: '#EFF6FF',
-                                color: '#2563EB',
-                                border: '1px solid #BFDBFE',
+                                background: '#edf7f3',
+                                color: '#087f72',
+                                border: '1px solid #bdddd5',
                                 padding: '3px 10px',
                                 borderRadius: 999,
                                 fontSize: 12,
@@ -696,7 +713,7 @@ export default async function AdvisorEventApplicantsPage({
                           style={{
                             fontSize: 11,
                             fontWeight: 700,
-                            color: '#94A3B8',
+                            color: '#60717d',
                             textTransform: 'uppercase',
                             letterSpacing: 0.8,
                             marginBottom: 8,
@@ -709,9 +726,9 @@ export default async function AdvisorEventApplicantsPage({
                             <span
                               key={d}
                               style={{
-                                background: '#F5F3FF',
-                                color: '#7C3AED',
-                                border: '1px solid #DDD6FE',
+                                background: '#edf7f3',
+                                color: '#087f72',
+                                border: '1px solid #bdddd5',
                                 padding: '3px 10px',
                                 borderRadius: 999,
                                 fontSize: 12,
@@ -730,7 +747,7 @@ export default async function AdvisorEventApplicantsPage({
                           style={{
                             fontSize: 11,
                             fontWeight: 700,
-                            color: '#94A3B8',
+                            color: '#60717d',
                             textTransform: 'uppercase',
                             letterSpacing: 0.8,
                             marginBottom: 8,
@@ -743,9 +760,9 @@ export default async function AdvisorEventApplicantsPage({
                             <span
                               key={y}
                               style={{
-                                background: '#F8FAFC',
+                                background: '#f6f8f9',
                                 color: '#475569',
-                                border: '1px solid #E2E8F0',
+                                border: '1px solid #dfe6e9',
                                 padding: '3px 10px',
                                 borderRadius: 999,
                                 fontSize: 12,

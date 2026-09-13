@@ -1,0 +1,98 @@
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 15px;
+  color: #234b44;
+  font-family: var(--font-body);
+}
+.page {
+  min-height: min(70vh, 640px);
+  width: 100%;
+  background: #f3f6ef;
+  border-radius: 12px;
+  padding: 40px 20px;
+}
+.section {
+  min-height: 200px;
+  padding: 32px 20px;
+  background: #f6f8f3;
+  border-radius: 10px;
+}
+.identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.mark {
+  display: inline-flex;
+}
+.wordmark {
+  font: 700 27px/1 var(--font-display);
+  letter-spacing: -0.045em;
+}
+.wordmark > span {
+  color: #168474;
+}
+.label {
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+  color: #5d7169;
+}
+.track {
+  display: flex;
+  gap: 5px;
+  width: 72px;
+}
+.track i {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: #b9cec0;
+  animation: brand-step 1.25s ease-in-out infinite;
+}
+.track i:nth-child(2) {
+  animation-delay: 140ms;
+}
+.track i:nth-child(3) {
+  animation-delay: 280ms;
+}
+.inline {
+  display: inline-flex;
+  flex-direction: row;
+  gap: 9px;
+  min-height: 32px;
+}
+.inline .track {
+  width: 28px;
+  gap: 3px;
+}
+.inline .label {
+  text-align: left;
+}
+@keyframes brand-step {
+  0%,
+  65%,
+  100% {
+    background: #b9cec0;
+    transform: scaleY(1);
+  }
+  30% {
+    background: #168474;
+    transform: scaleY(1.65);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .track i {
+    animation: none;
+    background: #168474;
+  }
+  .track i:nth-child(2) {
+    opacity: 0.65;
+  }
+  .track i:nth-child(3) {
+    opacity: 0.3;
+  }
+}

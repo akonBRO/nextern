@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { LegalPage } from '@/components/legal/LegalPage';
 
-export const metadata: Metadata = { title: 'Privacy Policy | Nextern' };
+export const metadata: Metadata = { title: 'Privacy Policy' };
 
 export default function PrivacyPage() {
   return (

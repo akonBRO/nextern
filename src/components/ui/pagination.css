@@ -1,0 +1,58 @@
+.ui-pagination {
+  border-radius: 10px;
+  box-shadow: none;
+  gap: 14px;
+}
+.ui-pagination-summary strong {
+  font-weight: 600;
+}
+.ui-pagination-pages button {
+  border-radius: 8px;
+  min-width: 40px;
+  height: 40px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.ui-pagination-pages button:hover:not(:disabled) {
+  border-color: #a8c9c1;
+  background: #eef7f5;
+  color: #087f72;
+}
+.ui-pagination-pages button.is-active {
+  color: white;
+  background: #087f72;
+  border-color: #087f72;
+}
+.ui-pagination-pages button:disabled {
+  cursor: not-allowed;
+}
+.ui-pagination-size select {
+  min-height: 40px;
+  border-radius: 8px;
+}
+.ui-pagination :is(button, select):focus-visible {
+  outline: 3px solid #b3dcd3;
+  outline-offset: 2px;
+}
+.ui-pagination-mobile-page {
+  display: none;
+}
+@media (max-width: 480px) {
+  .ui-pagination {
+    padding: 14px;
+  }
+  .ui-pagination-pages {
+    justify-content: space-between;
+  }
+  .ui-pagination-mobile-page {
+    display: inline-flex;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #435663;
+  }
+  .ui-pagination-pages .ui-pagination-number,
+  .ui-pagination-ellipsis {
+    display: none;
+  }
+}

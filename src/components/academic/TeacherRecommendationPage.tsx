@@ -169,6 +169,7 @@ export default function TeacherRecommendationPage({
 
   return (
     <DashboardShell
+      embedded
       role={shellRole}
       roleLabel={roleLabel}
       homeHref={homeHref}
@@ -220,7 +221,7 @@ export default function TeacherRecommendationPage({
                 <div style={{ display: 'grid', gap: 14 }}>
                   <div>
                     <div
-                      style={{ color: '#FFFFFF', fontSize: 20, fontWeight: 900, lineHeight: 1.15 }}
+                      style={{ color: '#FFFFFF', fontSize: 20, fontWeight: 700, lineHeight: 1.15 }}
                     >
                       {selectedStudent.name}
                     </div>
@@ -282,7 +283,7 @@ export default function TeacherRecommendationPage({
               gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
               gap: 14,
             }}
-            className="teacher-workflow-grid"
+            className="teacher-workflow-grid v2-form-grid"
           >
             {workflowSteps.map((step, index) => (
               <WorkflowStepCard
@@ -316,7 +317,7 @@ export default function TeacherRecommendationPage({
               value={String(data.cohortSummary.highAttentionStudents)}
               hint="Below readiness threshold"
               Icon={ShieldAlert}
-              accent="#F59E0B"
+              accent="#a86714"
               showIcon={false}
             />
             <StatCard
@@ -324,7 +325,7 @@ export default function TeacherRecommendationPage({
               value={`${Math.round(data.cohortSummary.averageOpportunityScore)}%`}
               hint="Average readiness"
               Icon={TrendingUp}
-              accent="#10B981"
+              accent="#168257"
               showIcon={false}
             />
             <StatCard
@@ -368,7 +369,7 @@ export default function TeacherRecommendationPage({
               <div
                 style={{
                   padding: '14px 18px',
-                  borderBottom: '1px solid #F1F5F9',
+                  borderBottom: '1px solid #f6f8f9',
                   display: 'grid',
                   gap: 12,
                 }}
@@ -386,7 +387,7 @@ export default function TeacherRecommendationPage({
                       padding: '0 14px',
                     }}
                   >
-                    <Search size={16} color="#64748B" />
+                    <Search size={16} color="#60717d" />
                     <input
                       value={studentQuery}
                       onChange={(event) => setStudentQuery(event.target.value)}
@@ -397,7 +398,7 @@ export default function TeacherRecommendationPage({
                         outline: 'none',
                         padding: '12px 0',
                         fontSize: 14,
-                        color: '#0F172A',
+                        color: '#182c39',
                         background: 'transparent',
                       }}
                     />
@@ -422,10 +423,10 @@ export default function TeacherRecommendationPage({
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39' }}>
                       Workspace selection
                     </div>
-                    <div style={{ marginTop: 4, fontSize: 12, lineHeight: 1.6, color: '#64748B' }}>
+                    <div style={{ marginTop: 4, fontSize: 12, lineHeight: 1.6, color: '#60717d' }}>
                       {filteredStudents.length === 0
                         ? 'No students match the current search.'
                         : `Search, review, and switch between ${filteredStudents.length} matching student${
@@ -446,9 +447,9 @@ export default function TeacherRecommendationPage({
                         width: 34,
                         height: 34,
                         borderRadius: 12,
-                        border: '1px solid #DBEAFE',
-                        background: '#EFF6FF',
-                        color: '#2563EB',
+                        border: '1px solid #dbefea',
+                        background: '#edf7f3',
+                        color: '#087f72',
                       }}
                     >
                       <ChevronDown size={16} />
@@ -468,11 +469,11 @@ export default function TeacherRecommendationPage({
                   {selectedStudent ? (
                     <div
                       style={{
-                        borderRadius: 18,
+                        borderRadius: 12,
                         border: '1.5px solid #93C5FD',
-                        background: 'linear-gradient(135deg, #EFF6FF, #F8FBFF)',
+                        background: '#edf7f3',
                         padding: '14px',
-                        boxShadow: '0 10px 24px rgba(37,99,235,0.08)',
+                        boxShadow: 'var(--shadow-card)',
                       }}
                     >
                       <div
@@ -486,9 +487,9 @@ export default function TeacherRecommendationPage({
                         <div style={{ minWidth: 0 }}>
                           <div
                             style={{
-                              color: '#0F172A',
+                              color: '#182c39',
                               fontSize: 15,
-                              fontWeight: 800,
+                              fontWeight: 700,
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
@@ -498,7 +499,7 @@ export default function TeacherRecommendationPage({
                           </div>
                           <div
                             style={{
-                              color: '#94A3B8',
+                              color: '#60717d',
                               fontSize: 11,
                               marginTop: 4,
                               overflow: 'hidden',
@@ -552,11 +553,11 @@ export default function TeacherRecommendationPage({
                             justifyContent: 'center',
                             borderRadius: 14,
                             border: 'none',
-                            background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+                            background: 'var(--primary)',
                             color: '#FFFFFF',
                             padding: '12px 16px',
                             fontSize: 14,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             textDecoration: 'none',
                           }}
                         >
@@ -569,12 +570,12 @@ export default function TeacherRecommendationPage({
                             alignItems: 'center',
                             justifyContent: 'center',
                             borderRadius: 14,
-                            border: '1px solid #BFDBFE',
+                            border: '1px solid #bdddd5',
                             background: '#FFFFFF',
-                            color: '#1D4ED8',
+                            color: '#06665d',
                             padding: '12px 14px',
                             fontSize: 13,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             textDecoration: 'none',
                             whiteSpace: 'nowrap',
                           }}
@@ -594,10 +595,10 @@ export default function TeacherRecommendationPage({
                           href={`${pagePath}?studentId=${student.id}`}
                           style={{
                             textDecoration: 'none',
-                            borderRadius: 16,
-                            border: isSelected ? '1.5px solid #93C5FD' : '1px solid #E2E8F0',
+                            borderRadius: 12,
+                            border: isSelected ? '1.5px solid #93C5FD' : '1px solid #dfe6e9',
                             background: isSelected
-                              ? 'linear-gradient(135deg, #EFF6FF, #F8FBFF)'
+                              ? 'linear-gradient(135deg, #edf7f3, #F8FBFF)'
                               : '#FFFFFF',
                             padding: '13px 14px',
                             display: 'block',
@@ -616,9 +617,9 @@ export default function TeacherRecommendationPage({
                             <div style={{ minWidth: 0 }}>
                               <div
                                 style={{
-                                  color: '#0F172A',
+                                  color: '#182c39',
                                   fontSize: 14,
-                                  fontWeight: 800,
+                                  fontWeight: 700,
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
                                   whiteSpace: 'nowrap',
@@ -628,7 +629,7 @@ export default function TeacherRecommendationPage({
                               </div>
                               <div
                                 style={{
-                                  color: '#94A3B8',
+                                  color: '#60717d',
                                   fontSize: 11,
                                   marginTop: 3,
                                   overflow: 'hidden',
@@ -714,15 +715,15 @@ export default function TeacherRecommendationPage({
                         <div
                           style={{
                             fontSize: 22,
-                            fontWeight: 900,
-                            color: '#0F172A',
+                            fontWeight: 700,
+                            color: '#182c39',
                             fontFamily: 'var(--font-display)',
                             letterSpacing: '-0.03em',
                           }}
                         >
                           {selectedStudent.name}
                         </div>
-                        <div style={{ marginTop: 5, fontSize: 13, color: '#64748B' }}>
+                        <div style={{ marginTop: 5, fontSize: 13, color: '#60717d' }}>
                           {selectedStudent.email}
                         </div>
                       </div>
@@ -805,8 +806,8 @@ export default function TeacherRecommendationPage({
 
                       <div
                         style={{
-                          borderRadius: 18,
-                          border: '1px solid #E2E8F0',
+                          borderRadius: 12,
+                          border: '1px solid #dfe6e9',
                           background:
                             'linear-gradient(180deg, rgba(248,250,252,0.9), rgba(255,255,255,1))',
                           padding: 16,
@@ -897,7 +898,7 @@ export default function TeacherRecommendationPage({
               <div
                 style={{
                   background: '#FAFBFC',
-                  borderRadius: 24,
+                  borderRadius: 12,
                   border: '1.5px dashed #D9E2EC',
                   display: 'flex',
                   alignItems: 'center',
@@ -941,7 +942,7 @@ export default function TeacherRecommendationPage({
                   gridTemplateColumns: 'minmax(0, 1.4fr) minmax(180px, 0.4fr) minmax(180px, 0.4fr)',
                   gap: 12,
                 }}
-                className="teacher-search-grid"
+                className="teacher-search-grid v2-page-grid"
               >
                 <label style={{ display: 'grid', gap: 8 }}>
                   <span style={subHeadingStyle}>Search opportunities</span>
@@ -950,14 +951,14 @@ export default function TeacherRecommendationPage({
                       display: 'flex',
                       alignItems: 'center',
                       gap: 10,
-                      borderRadius: 16,
+                      borderRadius: 12,
                       border: '1px solid #CBD5E1',
                       background: '#FFFFFF',
                       padding: '0 14px',
-                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.7)',
+                      boxShadow: 'var(--shadow-card)',
                     }}
                   >
-                    <Search size={17} color="#64748B" />
+                    <Search size={17} color="#60717d" />
                     <input
                       value={opportunityQuery}
                       onChange={(event) => setOpportunityQuery(event.target.value)}
@@ -968,7 +969,7 @@ export default function TeacherRecommendationPage({
                         outline: 'none',
                         padding: '13px 0',
                         fontSize: 14,
-                        color: '#0F172A',
+                        color: '#182c39',
                         background: 'transparent',
                       }}
                     />
@@ -1021,9 +1022,9 @@ export default function TeacherRecommendationPage({
                         onClick={() => setOpportunityQuery(cue)}
                         style={{
                           borderRadius: 999,
-                          border: '1px solid #DBEAFE',
-                          background: '#EFF6FF',
-                          color: '#1D4ED8',
+                          border: '1px solid #dbefea',
+                          background: '#edf7f3',
+                          color: '#06665d',
                           padding: '7px 12px',
                           fontSize: 12,
                           fontWeight: 700,
@@ -1045,16 +1046,16 @@ export default function TeacherRecommendationPage({
                   gap: 12,
                   flexWrap: 'wrap',
                   padding: '14px 16px',
-                  borderRadius: 16,
-                  border: '1px solid #E2E8F0',
-                  background: 'linear-gradient(180deg, #FBFDFF, #F8FAFC)',
+                  borderRadius: 12,
+                  border: '1px solid #dfe6e9',
+                  background: '#edf7f3',
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39' }}>
                     Search results ready
                   </div>
-                  <div style={{ marginTop: 4, fontSize: 12, lineHeight: 1.6, color: '#64748B' }}>
+                  <div style={{ marginTop: 4, fontSize: 12, lineHeight: 1.6, color: '#60717d' }}>
                     {filteredRecommendations.length === 0
                       ? 'No opportunities match the current search and filters.'
                       : `${filteredRecommendations.length} opportunities match the current search.`}
@@ -1088,11 +1089,11 @@ export default function TeacherRecommendationPage({
 
               <details
                 style={{
-                  borderRadius: 18,
+                  borderRadius: 12,
                   border: '1px solid #D9E2EC',
                   background: '#FFFFFF',
                   overflow: 'hidden',
-                  boxShadow: '0 10px 24px rgba(15,23,42,0.04)',
+                  boxShadow: 'var(--shadow-card)',
                 }}
               >
                 <summary
@@ -1104,14 +1105,14 @@ export default function TeacherRecommendationPage({
                     justifyContent: 'space-between',
                     gap: 16,
                     padding: '16px 18px',
-                    background: 'linear-gradient(180deg, #FCFDFF, #F8FAFC)',
+                    background: '#edf7f3',
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#182c39' }}>
                       Job view list
                     </div>
-                    <div style={{ marginTop: 4, fontSize: 12, lineHeight: 1.6, color: '#64748B' }}>
+                    <div style={{ marginTop: 4, fontSize: 12, lineHeight: 1.6, color: '#60717d' }}>
                       Expand only when you want to browse the matching opportunities.
                     </div>
                   </div>
@@ -1128,9 +1129,9 @@ export default function TeacherRecommendationPage({
                         width: 36,
                         height: 36,
                         borderRadius: 12,
-                        border: '1px solid #DBEAFE',
-                        background: '#EFF6FF',
-                        color: '#2563EB',
+                        border: '1px solid #dbefea',
+                        background: '#edf7f3',
+                        color: '#087f72',
                         flexShrink: 0,
                       }}
                     >
@@ -1141,9 +1142,9 @@ export default function TeacherRecommendationPage({
 
                 <div
                   style={{
-                    borderTop: '1px solid #E2E8F0',
+                    borderTop: '1px solid #dfe6e9',
                     padding: '16px 16px 18px',
-                    background: '#F8FAFC',
+                    background: '#f6f8f9',
                   }}
                 >
                   <div
@@ -1160,11 +1161,11 @@ export default function TeacherRecommendationPage({
                         <div
                           key={rec.id}
                           style={{
-                            borderRadius: 18,
-                            border: '1px solid #E2E8F0',
+                            borderRadius: 12,
+                            border: '1px solid #dfe6e9',
                             background: '#FFFFFF',
                             padding: '16px 18px',
-                            boxShadow: '0 10px 24px rgba(15,23,42,0.04)',
+                            boxShadow: 'var(--shadow-card)',
                           }}
                         >
                           <div
@@ -1193,14 +1194,14 @@ export default function TeacherRecommendationPage({
                               <div
                                 style={{
                                   fontSize: 17,
-                                  fontWeight: 800,
-                                  color: '#0F172A',
+                                  fontWeight: 700,
+                                  color: '#182c39',
                                   fontFamily: 'var(--font-display)',
                                 }}
                               >
                                 {rec.title}
                               </div>
-                              <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
+                              <div style={{ fontSize: 12, color: '#60717d', marginTop: 4 }}>
                                 {rec.organizationName}
                                 {rec.dateLabel ? ` - ${rec.dateLabel}` : ''}
                               </div>
@@ -1230,7 +1231,7 @@ export default function TeacherRecommendationPage({
                               gridTemplateColumns: '1fr 1fr',
                               gap: 10,
                             }}
-                            className="teacher-signal-grid"
+                            className="teacher-signal-grid v2-page-grid"
                           >
                             <SignalCard
                               title="Matched signals"
@@ -1260,12 +1261,12 @@ export default function TeacherRecommendationPage({
                       style={{
                         marginTop: 12,
                         borderRadius: 14,
-                        border: '1px solid #E2E8F0',
+                        border: '1px solid #dfe6e9',
                         background: '#FFFFFF',
                         padding: '12px 14px',
                         fontSize: 12,
                         lineHeight: 1.6,
-                        color: '#64748B',
+                        color: '#60717d',
                       }}
                     >
                       Refine the search to narrow further.{' '}
@@ -1299,7 +1300,7 @@ export default function TeacherRecommendationPage({
                   gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
                   gap: 14,
                 }}
-                className="teacher-action-highlights"
+                className="teacher-action-highlights v2-form-grid"
               >
                 <ActionHighlightCard
                   title="Academic review"
@@ -1354,7 +1355,7 @@ export default function TeacherRecommendationPage({
             <div
               style={{
                 background: '#FAFBFC',
-                borderRadius: 24,
+                borderRadius: 12,
                 border: '1.5px dashed #D9E2EC',
                 padding: '48px 24px',
               }}
@@ -1407,7 +1408,7 @@ export default function TeacherRecommendationPage({
                         key={action.id}
                         style={{
                           borderRadius: 14,
-                          border: '1px solid #E2E8F0',
+                          border: '1px solid #dfe6e9',
                           background: '#FFFFFF',
                           padding: '13px 15px',
                         }}
@@ -1421,14 +1422,14 @@ export default function TeacherRecommendationPage({
                             marginBottom: 6,
                           }}
                         >
-                          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39' }}>
                             {action.studentName}
                           </div>
                           <Pill label={formatStatusLabel(action.actionType)} tone="info" />
                         </div>
                         {action.advisorNote ? (
                           <p
-                            style={{ margin: 0, fontSize: 12, lineHeight: 1.65, color: '#64748B' }}
+                            style={{ margin: 0, fontSize: 12, lineHeight: 1.65, color: '#60717d' }}
                           >
                             {action.advisorNote}
                           </p>
@@ -1454,7 +1455,7 @@ export default function TeacherRecommendationPage({
           >
             <div
               style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}
-              className="teacher-opportunity-insights"
+              className="teacher-opportunity-insights v2-form-grid"
             >
               <SurfaceCard
                 title="Readiness distribution"
@@ -1494,15 +1495,15 @@ export default function TeacherRecommendationPage({
                           justifyContent: 'space-between',
                           gap: 10,
                           borderRadius: 12,
-                          border: '1px solid #E2E8F0',
+                          border: '1px solid #dfe6e9',
                           padding: '10px 12px',
                         }}
                       >
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#182c39' }}>
                             {item.skill}
                           </div>
-                          <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
+                          <div style={{ fontSize: 11, color: '#60717d', marginTop: 2 }}>
                             Demand {item.demandPct}% - Supply {item.supplyPct}%
                           </div>
                         </div>
@@ -1601,16 +1602,16 @@ function WorkflowStepCard({
       ? { bg: '#ECFDF5', border: '#A7F3D0', color: '#166534' }
       : tone === 'warning'
         ? { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' }
-        : { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' };
+        : { bg: '#edf7f3', border: '#bdddd5', color: '#06665d' };
 
   return (
     <div
       style={{
-        borderRadius: 22,
-        border: active ? `1px solid ${palette.border}` : '1px solid #E2E8F0',
+        borderRadius: 12,
+        border: active ? `1px solid ${palette.border}` : '1px solid #dfe6e9',
         background: active
           ? `linear-gradient(180deg, ${palette.bg}, #FFFFFF)`
-          : 'linear-gradient(180deg, #FFFFFF, #F8FAFC)',
+          : 'linear-gradient(180deg, #FFFFFF, #f6f8f9)',
         padding: 18,
         boxShadow: active ? '0 16px 28px rgba(15,23,42,0.06)' : '0 8px 18px rgba(15,23,42,0.04)',
       }}
@@ -1641,8 +1642,8 @@ function WorkflowStepCard({
         <span
           style={{
             fontSize: 11,
-            fontWeight: 800,
-            color: active ? palette.color : '#94A3B8',
+            fontWeight: 700,
+            color: active ? palette.color : '#60717d',
             textTransform: 'uppercase',
             letterSpacing: 0.8,
           }}
@@ -1651,8 +1652,8 @@ function WorkflowStepCard({
         </span>
       </div>
 
-      <div style={{ marginTop: 14, fontSize: 17, fontWeight: 800, color: '#0F172A' }}>{title}</div>
-      <p style={{ margin: '8px 0 0', fontSize: 13, lineHeight: 1.7, color: '#64748B' }}>
+      <div style={{ marginTop: 14, fontSize: 17, fontWeight: 700, color: '#182c39' }}>{title}</div>
+      <p style={{ margin: '8px 0 0', fontSize: 13, lineHeight: 1.7, color: '#60717d' }}>
         {description}
       </p>
       <div style={{ marginTop: 14 }}>
@@ -1684,17 +1685,17 @@ function SurfaceCard({
     <div
       style={{
         background: '#FFFFFF',
-        borderRadius: 22,
-        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        border: '1px solid #dfe6e9',
         overflow: 'hidden',
-        boxShadow: '0 16px 30px rgba(15,23,42,0.05)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       <div
         style={{
           padding: '16px 20px',
-          borderBottom: '1px solid #F1F5F9',
-          background: 'linear-gradient(180deg, #FBFDFF, #F8FAFC)',
+          borderBottom: '1px solid #f6f8f9',
+          background: '#edf7f3',
           display: 'flex',
           alignItems: 'flex-start',
           justifyContent: 'space-between',
@@ -1703,8 +1704,8 @@ function SurfaceCard({
         }}
       >
         <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{title}</div>
-          <div style={{ fontSize: 12, color: '#64748B', marginTop: 3, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39' }}>{title}</div>
+          <div style={{ fontSize: 12, color: '#60717d', marginTop: 3, lineHeight: 1.6 }}>
             {description}
           </div>
         </div>
@@ -1747,17 +1748,17 @@ function SnapshotMetric({
 }) {
   const palette =
     tone === 'info'
-      ? { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' }
+      ? { bg: '#edf7f3', border: '#bdddd5', color: '#06665d' }
       : tone === 'success'
         ? { bg: '#ECFDF5', border: '#A7F3D0', color: '#166534' }
         : tone === 'warning'
           ? { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' }
-          : { bg: '#F8FAFC', border: '#E2E8F0', color: '#334155' };
+          : { bg: '#f6f8f9', border: '#dfe6e9', color: '#334155' };
 
   return (
     <div
       style={{
-        borderRadius: 16,
+        borderRadius: 12,
         border: `1px solid ${palette.border}`,
         background: palette.bg,
         padding: '14px 15px',
@@ -1766,15 +1767,15 @@ function SnapshotMetric({
       <div
         style={{
           fontSize: 11,
-          fontWeight: 800,
-          color: '#64748B',
+          fontWeight: 700,
+          color: '#60717d',
           textTransform: 'uppercase',
           letterSpacing: 0.8,
         }}
       >
         {label}
       </div>
-      <div style={{ marginTop: 8, fontSize: 20, fontWeight: 900, color: palette.color }}>
+      <div style={{ marginTop: 8, fontSize: 20, fontWeight: 700, color: palette.color }}>
         {value}
       </div>
     </div>
@@ -1799,16 +1800,16 @@ function ActionHighlightCard({
       ? { bg: '#ECFDF5', border: '#A7F3D0', color: '#166534' }
       : tone === 'warning'
         ? { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' }
-        : { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' };
+        : { bg: '#edf7f3', border: '#bdddd5', color: '#06665d' };
 
   return (
     <div
       style={{
-        borderRadius: 18,
-        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        border: '1px solid #dfe6e9',
         background: '#FFFFFF',
         padding: 18,
-        boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       <div
@@ -1830,8 +1831,8 @@ function ActionHighlightCard({
         style={{
           marginTop: 14,
           fontSize: 17,
-          fontWeight: 900,
-          color: '#0F172A',
+          fontWeight: 700,
+          color: '#182c39',
           letterSpacing: '-0.01em',
         }}
       >
@@ -1869,8 +1870,8 @@ function CoachingPlayCard({
   return (
     <div
       style={{
-        borderRadius: 16,
-        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        border: '1px solid #dfe6e9',
         background: '#FFFFFF',
         padding: compact ? '12px 13px' : '14px 15px',
       }}
@@ -1898,7 +1899,7 @@ function CoachingPlayCard({
           />
         </div>
       </div>
-      <div style={{ marginTop: 10, fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
+      <div style={{ marginTop: 10, fontSize: 14, fontWeight: 700, color: '#182c39' }}>
         {item.title}
       </div>
       <p
@@ -1906,7 +1907,7 @@ function CoachingPlayCard({
           margin: '8px 0 0',
           fontSize: 12,
           lineHeight: 1.7,
-          color: '#64748B',
+          color: '#60717d',
         }}
       >
         {item.description}
@@ -1939,10 +1940,10 @@ function CollapsibleWorkspaceCard({
     <details
       open={open}
       style={{
-        borderRadius: 22,
-        border: '1.5px solid #BFDBFE', // blue border instead of grey
+        borderRadius: 12,
+        border: '1.5px solid #bdddd5', // blue border instead of grey
         background: '#FFFFFF',
-        boxShadow: '0 20px 40px rgba(37,99,235,0.10), 0 4px 12px rgba(15,23,42,0.06)', // stronger blue-tinted shadow
+        boxShadow: 'var(--shadow-card)', // stronger blue-tinted shadow
         overflow: 'hidden',
       }}
     >
@@ -1955,16 +1956,16 @@ function CollapsibleWorkspaceCard({
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 16,
-          background: 'linear-gradient(135deg, #EFF6FF, #F8FBFF)',
-          borderBottom: '1px solid #DBEAFE',
+          background: '#edf7f3',
+          borderBottom: '1px solid #dbefea',
         }}
       >
         <div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <div style={{ fontSize: 24, fontWeight: 600, color: '#0F172A' }}>{title}</div>
+            <div style={{ fontSize: 24, fontWeight: 600, color: '#182c39' }}>{title}</div>
             {badge ? <MiniChip label={badge} tone="success" /> : null}
           </div>
-          <div style={{ fontSize: 14, color: '#64748B', marginTop: 4, lineHeight: 1.55 }}>
+          <div style={{ fontSize: 14, color: '#60717d', marginTop: 4, lineHeight: 1.55 }}>
             {description}
           </div>
         </div>
@@ -1977,16 +1978,16 @@ function CollapsibleWorkspaceCard({
             height: 38,
             borderRadius: 12,
             border: '1.5px solid #93C5FD',
-            background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+            background: 'var(--primary)',
             color: '#FFFFFF',
             flexShrink: 0,
-            boxShadow: '0 4px 10px rgba(37,99,235,0.25)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
           <ChevronDown size={16} />
         </span>
       </summary>
-      <div style={{ borderTop: '1px solid #E2E8F0', padding: '20px 22px', background: '#F8FAFC' }}>
+      <div style={{ borderTop: '1px solid #dfe6e9', padding: '20px 22px', background: '#f6f8f9' }}>
         {children}
       </div>
     </details>
@@ -2012,7 +2013,7 @@ function SignalCard({
   return (
     <div
       style={{
-        borderRadius: 16,
+        borderRadius: 12,
         border: `1px solid ${palette.border}`,
         background: palette.bg,
         padding: '13px 14px',
@@ -2021,7 +2022,7 @@ function SignalCard({
       <div
         style={{
           fontSize: 10,
-          fontWeight: 800,
+          fontWeight: 700,
           color: palette.color,
           textTransform: 'uppercase',
           letterSpacing: 0.8,
@@ -2078,7 +2079,7 @@ function InsightMetric({
       }}
     >
       <span style={{ fontSize: 13, color: '#475569', fontWeight: 600 }}>{label}</span>
-      <span style={{ fontSize: 18, fontWeight: 900, color: palette.color }}>{value}</span>
+      <span style={{ fontSize: 18, fontWeight: 700, color: palette.color }}>{value}</span>
     </div>
   );
 }
@@ -2093,12 +2094,12 @@ function MetricLine({ label, value }: { label: string; value: string }) {
         gap: 12,
         padding: '10px 12px',
         borderRadius: 12,
-        border: '1px solid #E2E8F0',
-        background: '#F8FAFC',
+        border: '1px solid #dfe6e9',
+        background: '#f6f8f9',
       }}
     >
-      <span style={{ fontSize: 12, color: '#64748B', fontWeight: 600 }}>{label}</span>
-      <span style={{ fontSize: 13, color: '#0F172A', fontWeight: 700 }}>{value}</span>
+      <span style={{ fontSize: 12, color: '#60717d', fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: 13, color: '#182c39', fontWeight: 700 }}>{value}</span>
     </div>
   );
 }
@@ -2118,10 +2119,10 @@ function Pill({
     | 'neutralOnDark';
 }) {
   const palette = {
-    info: { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' },
+    info: { bg: '#edf7f3', border: '#bdddd5', color: '#06665d' },
     success: { bg: '#ECFDF5', border: '#A7F3D0', color: '#166534' },
     warning: { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' },
-    neutral: { bg: '#F8FAFC', border: '#E2E8F0', color: '#475569' },
+    neutral: { bg: '#f6f8f9', border: '#dfe6e9', color: '#475569' },
     infoOnDark: {
       bg: 'rgba(255,255,255,0.12)',
       border: 'rgba(191,219,254,0.38)',
@@ -2135,7 +2136,7 @@ function Pill({
     neutralOnDark: {
       bg: 'rgba(255,255,255,0.08)',
       border: 'rgba(255,255,255,0.18)',
-      color: '#E2E8F0',
+      color: '#dfe6e9',
     },
   }[tone];
 
@@ -2172,7 +2173,7 @@ function MiniChip({
       ? { bg: '#F0FDF4', border: '#BBF7D0', color: '#166534' }
       : tone === 'warning'
         ? { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' }
-        : { bg: '#F8FAFC', border: '#E2E8F0', color: '#334155' };
+        : { bg: '#f6f8f9', border: '#dfe6e9', color: '#334155' };
 
   return (
     <span
@@ -2194,7 +2195,7 @@ function MiniChip({
 }
 
 function MiniText({ text }: { text: string }) {
-  return <div style={{ fontSize: 12, lineHeight: 1.7, color: '#94A3B8' }}>{text}</div>;
+  return <div style={{ fontSize: 12, lineHeight: 1.7, color: '#60717d' }}>{text}</div>;
 }
 
 function getUniqueValues(values: string[]) {
@@ -2217,7 +2218,7 @@ function getOpportunitySearchCues(
 const subHeadingStyle: CSSProperties = {
   fontSize: 11,
   fontWeight: 700,
-  color: '#94A3B8',
+  color: '#60717d',
   textTransform: 'uppercase',
   letterSpacing: 0.8,
 };
@@ -2228,9 +2229,9 @@ const secondaryLinkStyle: CSSProperties = {
   gap: 6,
   textDecoration: 'none',
   borderRadius: 12,
-  border: '1px solid #BFDBFE',
-  background: '#EFF6FF',
-  color: '#1D4ED8',
+  border: '1px solid #bdddd5',
+  background: '#edf7f3',
+  color: '#06665d',
   padding: '8px 12px',
   fontSize: 12,
   fontWeight: 700,
@@ -2239,11 +2240,11 @@ const secondaryLinkStyle: CSSProperties = {
 const searchSelectStyle: CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
-  borderRadius: 16,
+  borderRadius: 12,
   border: '1px solid #CBD5E1',
   padding: '13px 14px',
   fontSize: 14,
-  color: '#0F172A',
+  color: '#182c39',
   background: '#FFFFFF',
   outline: 'none',
 };

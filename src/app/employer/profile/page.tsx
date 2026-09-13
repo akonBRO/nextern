@@ -1,8 +1,13 @@
 'use client';
+
+import BrandLoader from '@/components/ui/BrandLoader';
+import BadgeIcon from '@/components/ui/BadgeIcon';
+
+import FormField from '@/components/ui/FormField';
 // src/app/employer/profile/page.tsx
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+
 import EmployerClientShell from '@/components/employer/EmployerClientShell';
 import ProfilePictureUpload from '@/components/profile/ProfilePictureUpload';
 import ReputationHistory from '@/components/reviews/ReputationHistory';
@@ -19,24 +24,24 @@ import {
 } from 'lucide-react';
 
 const C = {
-  blue: '#2563EB',
-  indigo: '#1E293B',
-  bg: '#F1F5F9',
-  gray: '#64748B',
-  success: '#10B981',
+  blue: '#087f72',
+  indigo: '#243e4a',
+  bg: '#f6f8f9',
+  gray: '#60717d',
+  success: '#168257',
   white: '#fff',
-  dark: '#0F172A',
-  border: '#E2E8F0',
-  text: '#0F172A',
+  dark: '#182c39',
+  border: '#dfe6e9',
+  text: '#182c39',
   muted: '#374151',
-  light: '#94A3B8',
+  light: '#60717d',
   danger: '#EF4444',
   dangerBg: '#FEF2F2',
   dangerBorder: '#FECACA',
   successBg: '#ECFDF5',
   successBorder: '#A7F3D0',
-  blueBg: '#EFF6FF',
-  blueBorder: '#BFDBFE',
+  blueBg: '#edf7f3',
+  blueBorder: '#bdddd5',
 };
 
 const inputBase: React.CSSProperties = {
@@ -93,7 +98,7 @@ function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }
     >
       <div style={{ color: C.blue }}>{icon}</div>
       <div
-        style={{ fontSize: 15, fontWeight: 800, color: C.text, fontFamily: 'var(--font-display)' }}
+        style={{ fontSize: 15, fontWeight: 700, color: C.text, fontFamily: 'var(--font-display)' }}
       >
         {label}
       </div>
@@ -102,24 +107,7 @@ function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label
-        style={{
-          display: 'block',
-          fontSize: 12,
-          fontWeight: 700,
-          color: C.muted,
-          marginBottom: 6,
-          textTransform: 'uppercase',
-          letterSpacing: 0.5,
-        }}
-      >
-        {label}
-      </label>
-      {children}
-    </div>
-  );
+  return <FormField label={label}>{children}</FormField>;
 }
 
 export default function EmployerProfilePage() {
@@ -274,19 +262,7 @@ export default function EmployerProfilePage() {
   if (fetching)
     return (
       <EmployerClientShell>
-        <div
-          style={{
-            minHeight: '50vh',
-            background: C.bg,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontFamily: 'var(--font-body)',
-            color: C.gray,
-          }}
-        >
-          Loading profile...
-        </div>
+        <BrandLoader variant="page" label="Loading profile" />
       </EmployerClientShell>
     );
 
@@ -298,21 +274,16 @@ export default function EmployerProfilePage() {
         {/* Header */}
         <div
           style={{
-            background: `linear-gradient(145deg, ${C.dark}, ${C.indigo})`,
+            background: 'var(--surface-muted)',
             padding: '0',
             borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
+          className="v2-light-panel"
         >
           <div
             className="mobile-page-hero-inner"
             style={{ maxWidth: 860, margin: '0 auto', padding: '20px 24px' }}
           >
-            <Link
-              href="/employer/dashboard"
-              style={{ color: C.gray, fontSize: 13, textDecoration: 'none', fontWeight: 500 }}
-            >
-              ← Back to Dashboard
-            </Link>
             <div
               className="mobile-page-stack"
               style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}
@@ -323,7 +294,7 @@ export default function EmployerProfilePage() {
                   name={form.companyName ?? 'E'}
                   size={96}
                   radius="18px"
-                  gradient="linear-gradient(135deg, #1E293B, #334155)"
+                  gradient="linear-gradient(135deg, #243e4a, #334155)"
                   uploaderType="companyLogoUploader"
                   label="Choose company profile picture"
                   imageLabel="company profile picture"
@@ -336,8 +307,8 @@ export default function EmployerProfilePage() {
                 <h1
                   style={{
                     fontSize: 22,
-                    fontWeight: 900,
-                    color: '#F8FAFC',
+                    fontWeight: 700,
+                    color: 'var(--deep)',
                     fontFamily: 'var(--font-display)',
                     margin: 0,
                   }}
@@ -421,17 +392,18 @@ export default function EmployerProfilePage() {
 
           {/* Section 1: Contact */}
           <div
+            className="nx-surface"
             style={{
               background: C.white,
-              borderRadius: 18,
+              borderRadius: 12,
               border: `1px solid ${C.border}`,
               padding: '24px 28px',
-              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <SectionHeader icon={<Phone size={18} />} label="Contact Information" />
             <div
-              className="mobile-page-grid-2"
+              className="mobile-page-grid-2 v2-page-grid"
               style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
             >
               <Field label="Contact Person Name">
@@ -464,17 +436,18 @@ export default function EmployerProfilePage() {
 
           {/* Section 2: Company Info */}
           <div
+            className="nx-surface"
             style={{
               background: C.white,
-              borderRadius: 18,
+              borderRadius: 12,
               border: `1px solid ${C.border}`,
               padding: '24px 28px',
-              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <SectionHeader icon={<Building2 size={18} />} label="Company Information" />
             <div
-              className="mobile-page-grid-2"
+              className="mobile-page-grid-2 v2-page-grid"
               style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
             >
               <Field label="Company Name">
@@ -600,12 +573,13 @@ export default function EmployerProfilePage() {
 
           {/* Section 3: Badges & Achievements */}
           <div
+            className="nx-surface"
             style={{
               background: C.white,
-              borderRadius: 18,
+              borderRadius: 12,
               border: `1px solid ${C.border}`,
               padding: '24px 28px',
-              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <SectionHeader icon={<Award size={18} />} label="Badges & Achievements" />
@@ -637,6 +611,7 @@ export default function EmployerProfilePage() {
                   overflowY: 'auto',
                   paddingRight: 8,
                 }}
+                className="v2-page-grid"
               >
                 {badges.map((b) => (
                   <div
@@ -646,12 +621,14 @@ export default function EmployerProfilePage() {
                       alignItems: 'center',
                       gap: 12,
                       padding: '12px',
-                      background: '#F8FAFC',
-                      border: '1px solid #E2E8F0',
+                      background: '#f6f8f9',
+                      border: '1px solid #dfe6e9',
                       borderRadius: 12,
                     }}
                   >
-                    <div style={{ fontSize: 24 }}>{b.badgeIcon}</div>
+                    <div style={{ fontSize: 24 }}>
+                      <BadgeIcon value={b.badgeIcon} label={b.badgeName} />
+                    </div>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
                         {b.badgeName}
@@ -668,12 +645,13 @@ export default function EmployerProfilePage() {
 
           {/* Section 4: Reputation & Reviews */}
           <div
+            className="nx-surface"
             style={{
               background: C.white,
-              borderRadius: 18,
+              borderRadius: 12,
               border: `1px solid ${C.border}`,
               padding: '24px 28px',
-              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <SectionHeader icon={<Award size={18} />} label="Reputation & Verified Reviews" />
@@ -684,18 +662,19 @@ export default function EmployerProfilePage() {
             {user && (user._id || user.id) ? (
               <ReputationHistory userId={(user._id || user.id) as string} userRole="employer" />
             ) : (
-              <div style={{ fontSize: 13, color: C.light }}>Loading reputation data...</div>
+              <BrandLoader variant="inline" label="Loading reputation data" />
             )}
           </div>
 
           {/* Section 5: Notification Preferences */}
           <div
+            className="nx-surface"
             style={{
               background: C.white,
-              borderRadius: 18,
+              borderRadius: 12,
               border: `1px solid ${C.border}`,
               padding: '24px 28px',
-              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <SectionHeader icon={<Bell size={18} />} label="Notification Preferences" />
@@ -764,7 +743,7 @@ export default function EmployerProfilePage() {
                           top: 3,
                           left: isOn ? 23 : 3,
                           transition: 'left 0.2s',
-                          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                          boxShadow: 'var(--shadow-card)',
                         }}
                       />
                     </button>
@@ -776,12 +755,13 @@ export default function EmployerProfilePage() {
 
           {/* Section 6: Email Preferences */}
           <div
+            className="nx-surface"
             style={{
               background: C.white,
-              borderRadius: 18,
+              borderRadius: 12,
               border: `1px solid ${C.border}`,
               padding: '24px 28px',
-              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <SectionHeader icon={<Mail size={18} />} label="Email Preferences" />
@@ -850,7 +830,7 @@ export default function EmployerProfilePage() {
                           top: 3,
                           left: isOn ? 23 : 3,
                           transition: 'left 0.2s',
-                          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                          boxShadow: 'var(--shadow-card)',
                         }}
                       />
                     </button>
@@ -873,7 +853,7 @@ export default function EmployerProfilePage() {
                 alignItems: 'center',
                 gap: 8,
                 padding: '13px 32px',
-                background: saving ? '#93C5FD' : `linear-gradient(135deg, ${C.blue}, #1D4ED8)`,
+                background: saving ? '#93C5FD' : `linear-gradient(135deg, ${C.blue}, #06665d)`,
                 color: C.white,
                 border: 'none',
                 borderRadius: 12,

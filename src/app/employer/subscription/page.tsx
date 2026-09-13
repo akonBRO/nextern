@@ -49,6 +49,7 @@ export default async function EmployerSubscriptionPage() {
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer"
       homeHref="/employer/dashboard"
@@ -65,6 +66,7 @@ export default async function EmployerSubscriptionPage() {
     >
       <DashboardPage>
         <DashboardSection
+          headingLevel={1}
           title="Subscription & Billing"
           description="Manage your employer premium billing and payment history."
         >

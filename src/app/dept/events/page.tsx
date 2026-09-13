@@ -1,3 +1,4 @@
+import ContextIcon from '@/components/ui/ContextIcon';
 // src/app/dept/events/page.tsx
 // Department Head posted events — mirrors advisor events page
 
@@ -30,7 +31,7 @@ import PaginatedCollection from '@/components/ui/PaginatedCollection';
 
 const TYPE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   webinar: { bg: '#F0F9FF', color: '#0369A1', border: '#BAE6FD' },
-  workshop: { bg: '#EDE9FE', color: '#7C3AED', border: '#DDD6FE' },
+  workshop: { bg: '#e0f0eb', color: '#087f72', border: '#bdddd5' },
 };
 
 async function getEventsData(userId: string) {
@@ -112,6 +113,7 @@ export default async function DeptEventsPage() {
 
   return (
     <DashboardShell
+      embedded
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
@@ -136,7 +138,6 @@ export default async function DeptEventsPage() {
           actions={
             <>
               <ActionLink href="/dept/events/new" label="Post New Event" />
-              <ActionLink href="/dept/dashboard" label="Back to dashboard" tone="ghost" />
             </>
           }
           aside={
@@ -147,12 +148,15 @@ export default async function DeptEventsPage() {
                 border: '1px solid rgba(255,255,255,0.16)',
               }}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}
+                className="v2-page-grid"
+              >
                 {[
-                  { label: 'Total Events', value: stats.total, color: '#F8FAFC' },
-                  { label: 'Active', value: stats.active, color: '#10B981' },
-                  { label: 'Registrations', value: stats.totalRegistrations, color: '#22D3EE' },
-                  { label: 'Closed', value: stats.closed, color: '#F59E0B' },
+                  { label: 'Total Events', value: stats.total, color: '#f6f8f9' },
+                  { label: 'Active', value: stats.active, color: '#168257' },
+                  { label: 'Registrations', value: stats.totalRegistrations, color: '#178d80' },
+                  { label: 'Closed', value: stats.closed, color: '#a86714' },
                 ].map((s) => (
                   <div
                     key={s.label}
@@ -166,7 +170,7 @@ export default async function DeptEventsPage() {
                     <div
                       style={{
                         fontSize: 22,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: s.color,
                         fontFamily: 'var(--font-display)',
                         lineHeight: 1,
@@ -187,24 +191,25 @@ export default async function DeptEventsPage() {
         <section style={{ marginTop: 22 }}>
           <div
             style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}
+            className="v2-form-grid"
           >
             <StatCard
               label="Total events"
               value={formatCompactNumber(stats.total)}
               Icon={CalendarDays}
-              accent="#7C3AED"
+              accent="#087f72"
             />
             <StatCard
               label="Active events"
               value={formatCompactNumber(stats.active)}
               Icon={Clock}
-              accent="#10B981"
+              accent="#168257"
             />
             <StatCard
               label="Total registrations"
               value={formatCompactNumber(stats.totalRegistrations)}
               Icon={Users}
-              accent="#22D3EE"
+              accent="#178d80"
             />
           </div>
         </section>
@@ -239,11 +244,12 @@ export default async function DeptEventsPage() {
 
                 return (
                   <div
+                    className="nx-surface"
                     key={event._id}
                     style={{
                       background: '#fff',
-                      borderRadius: 20,
-                      border: `1px solid ${isUrgent ? '#FDE68A' : '#E2E8F0'}`,
+                      borderRadius: 12,
+                      border: `1px solid ${isUrgent ? '#FDE68A' : '#dfe6e9'}`,
                       padding: '20px 24px',
                       boxShadow: isUrgent
                         ? '0 0 0 3px rgba(245,158,11,0.08)'
@@ -280,16 +286,21 @@ export default async function DeptEventsPage() {
                               fontWeight: 700,
                             }}
                           >
-                            {event.type === 'webinar' ? '🌐' : '🔧'} {formatStatusLabel(event.type)}
+                            {event.type === 'webinar' ? (
+                              <ContextIcon name="globe" />
+                            ) : (
+                              <ContextIcon name="tool" />
+                            )}{' '}
+                            {formatStatusLabel(event.type)}
                           </span>
                           <span
                             style={{
                               display: 'flex',
                               alignItems: 'center',
                               gap: 5,
-                              background: event.isActive ? '#ECFDF5' : '#F8FAFC',
-                              color: event.isActive ? '#065F46' : '#64748B',
-                              border: `1px solid ${event.isActive ? '#A7F3D0' : '#E2E8F0'}`,
+                              background: event.isActive ? '#ECFDF5' : '#f6f8f9',
+                              color: event.isActive ? '#065F46' : '#60717d',
+                              border: `1px solid ${event.isActive ? '#A7F3D0' : '#dfe6e9'}`,
                               padding: '3px 10px',
                               borderRadius: 999,
                               fontSize: 11,
@@ -301,7 +312,7 @@ export default async function DeptEventsPage() {
                                 width: 6,
                                 height: 6,
                                 borderRadius: '50%',
-                                background: event.isActive ? '#10B981' : '#94A3B8',
+                                background: event.isActive ? '#168257' : '#60717d',
                                 display: 'inline-block',
                               }}
                             />
@@ -319,7 +330,7 @@ export default async function DeptEventsPage() {
                                 fontWeight: 700,
                               }}
                             >
-                              ⚡ Closing soon
+                              <ContextIcon name="zap" /> Closing soon
                             </span>
                           )}
                         </div>
@@ -327,8 +338,8 @@ export default async function DeptEventsPage() {
                         <h3
                           style={{
                             fontSize: 17,
-                            fontWeight: 800,
-                            color: '#0F172A',
+                            fontWeight: 700,
+                            color: '#182c39',
                             fontFamily: 'var(--font-display)',
                             margin: 0,
                             marginBottom: 8,
@@ -342,22 +353,22 @@ export default async function DeptEventsPage() {
                             display: 'flex',
                             flexWrap: 'wrap',
                             gap: 14,
-                            color: '#64748B',
+                            color: '#60717d',
                             fontSize: 13,
                           }}
                         >
                           <span>
-                            📍 {event.city ? `${event.city} · ` : ''}
+                            <ContextIcon name="location" /> {event.city ? `${event.city} · ` : ''}
                             {formatStatusLabel(event.locationType)}
                           </span>
                           {deadline && (
                             <span
                               style={{
-                                color: isUrgent ? '#F59E0B' : isExpired ? '#EF4444' : '#64748B',
+                                color: isUrgent ? '#a86714' : isExpired ? '#EF4444' : '#60717d',
                                 fontWeight: isUrgent || isExpired ? 700 : 400,
                               }}
                             >
-                              📅{' '}
+                              <ContextIcon name="calendar" />{' '}
                               {isExpired
                                 ? 'Registration closed'
                                 : isUrgent
@@ -365,7 +376,11 @@ export default async function DeptEventsPage() {
                                   : `${daysLeft}d left`}
                             </span>
                           )}
-                          {event.academicSession && <span>🎓 {event.academicSession}</span>}
+                          {event.academicSession && (
+                            <span>
+                              <ContextIcon name="graduation" /> {event.academicSession}
+                            </span>
+                          )}
                         </div>
 
                         {(event.targetDepartments.length > 0 ||
@@ -375,7 +390,7 @@ export default async function DeptEventsPage() {
                               <span
                                 key={d}
                                 style={{
-                                  background: '#F1F5F9',
+                                  background: '#f6f8f9',
                                   color: '#475569',
                                   padding: '2px 8px',
                                   borderRadius: 999,
@@ -390,8 +405,8 @@ export default async function DeptEventsPage() {
                               <span
                                 key={u}
                                 style={{
-                                  background: '#EFF6FF',
-                                  color: '#2563EB',
+                                  background: '#edf7f3',
+                                  color: '#087f72',
                                   padding: '2px 8px',
                                   borderRadius: 999,
                                   fontSize: 11,
@@ -409,8 +424,8 @@ export default async function DeptEventsPage() {
                         <div
                           style={{
                             fontSize: 32,
-                            fontWeight: 900,
-                            color: '#7C3AED',
+                            fontWeight: 700,
+                            color: '#087f72',
                             fontFamily: 'var(--font-display)',
                             lineHeight: 1,
                           }}
@@ -418,7 +433,7 @@ export default async function DeptEventsPage() {
                           {formatCompactNumber(event.registrationCount)}
                         </div>
                         <div
-                          style={{ fontSize: 11, color: '#64748B', marginTop: 4, fontWeight: 600 }}
+                          style={{ fontSize: 11, color: '#60717d', marginTop: 4, fontWeight: 600 }}
                         >
                           Registrations
                         </div>
@@ -431,7 +446,7 @@ export default async function DeptEventsPage() {
                         gap: 10,
                         marginTop: 16,
                         paddingTop: 14,
-                        borderTop: '1px solid #F1F5F9',
+                        borderTop: '1px solid #f6f8f9',
                         flexWrap: 'wrap',
                       }}
                     >
@@ -441,7 +456,7 @@ export default async function DeptEventsPage() {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 6,
-                          background: '#0F172A',
+                          background: '#182c39',
                           color: '#fff',
                           padding: '8px 16px',
                           borderRadius: 10,
@@ -458,21 +473,21 @@ export default async function DeptEventsPage() {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 6,
-                          background: '#EFF6FF',
-                          color: '#2563EB',
+                          background: '#edf7f3',
+                          color: '#087f72',
                           padding: '8px 14px',
                           borderRadius: 10,
                           fontSize: 12,
                           fontWeight: 600,
                           textDecoration: 'none',
-                          border: '1px solid #BFDBFE',
+                          border: '1px solid #bdddd5',
                         }}
                       >
                         <FileText size={13} /> View Applications
                         {event.applicationCount > 0 && (
                           <span
                             style={{
-                              background: '#2563EB',
+                              background: '#087f72',
                               color: '#fff',
                               borderRadius: 999,
                               padding: '1px 7px',
@@ -490,14 +505,14 @@ export default async function DeptEventsPage() {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 6,
-                          background: '#EDE9FE',
-                          color: '#7C3AED',
+                          background: '#e0f0eb',
+                          color: '#087f72',
                           padding: '8px 14px',
                           borderRadius: 10,
                           fontSize: 12,
                           fontWeight: 600,
                           textDecoration: 'none',
-                          border: '1px solid #DDD6FE',
+                          border: '1px solid #bdddd5',
                         }}
                       >
                         Edit

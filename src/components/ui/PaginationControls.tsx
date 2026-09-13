@@ -1,8 +1,9 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import './pagination.css';
 
-const DEFAULT_PAGE_SIZES = [24, 50, 100] as const;
+const DEFAULT_PAGE_SIZES = [12, 24, 50, 100] as const;
 
 type PaginationControlsProps = {
   page: number;
@@ -48,6 +49,7 @@ export default function PaginationControls({
   const currentPage = Math.min(Math.max(page, 1), totalPages);
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const end = Math.min(currentPage * pageSize, totalItems);
+  const availablePageSizes = [...new Set([...pageSizes, pageSize])].sort((a, b) => a - b);
 
   function updateUrl(nextPage: number, nextPageSize = pageSize) {
     if (typeof window === 'undefined') return;
@@ -83,7 +85,7 @@ export default function PaginationControls({
             onChange={(event) => changePageSize(Number(event.target.value))}
             aria-label={`${itemLabel} per page`}
           >
-            {pageSizes.map((size) => (
+            {availablePageSizes.map((size) => (
               <option key={size} value={size}>
                 {size}
               </option>
@@ -101,6 +103,10 @@ export default function PaginationControls({
             <ChevronLeft size={16} />
           </button>
 
+          <span className="ui-pagination-mobile-page">
+            {currentPage} / {totalPages}
+          </span>
+
           {pageNumbers(currentPage, totalPages).map((value, index) =>
             value === 'ellipsis' ? (
               <span key={`ellipsis-${index}`} className="ui-pagination-ellipsis" aria-hidden="true">
@@ -111,7 +117,9 @@ export default function PaginationControls({
                 type="button"
                 key={value}
                 onClick={() => changePage(value)}
-                className={value === currentPage ? 'is-active' : undefined}
+                className={
+                  value === currentPage ? 'ui-pagination-number is-active' : 'ui-pagination-number'
+                }
                 aria-label={`Page ${value}`}
                 aria-current={value === currentPage ? 'page' : undefined}
               >

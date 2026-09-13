@@ -21,6 +21,7 @@ export default async function StudentMockInterviewPage() {
 
   return (
     <DashboardShell
+      embedded
       role="student"
       roleLabel="Student"
       homeHref="/student/dashboard"
@@ -37,8 +38,9 @@ export default async function StudentMockInterviewPage() {
     >
       <DashboardPage>
         <DashboardSection
-          title="AI Mock Interview"
-          description="Practice role-specific interviews with AI guidance and receive instant feedback after each session."
+          headingLevel={1}
+          title="Mock interviews"
+          description="Prepare for your next conversation with focused practice and personal feedback."
         >
           <MockInterviewClient />
         </DashboardSection>

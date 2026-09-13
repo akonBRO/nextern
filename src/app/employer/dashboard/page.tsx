@@ -1,3 +1,5 @@
+import ContextIcon from '@/components/ui/ContextIcon';
+import HiringPipeline from '@/components/employer/HiringPipeline';
 // src/app/employer/dashboard/page.tsx
 
 import { auth } from '@/lib/auth';
@@ -135,11 +137,10 @@ export default async function EmployerDashboard() {
   const upcomingDeadlines = data.recentJobs.filter(
     (job) => job.applicationDeadline && new Date(job.applicationDeadline) >= now
   ).length;
-  const pipelineMax = Math.max(1, ...data.pipeline.map((stage) => stage.count));
-  const pipelineColors = ['#2563EB', '#22D3EE', '#F59E0B', '#10B981'];
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"
@@ -147,7 +148,6 @@ export default async function EmployerDashboard() {
       user={{ ...data.chromeUser, isPremium: usage.isPremium, userId: session.user.id }}
     >
       <DashboardPage>
-        {/* ── Hero ── */}
         <HeroCard
           eyebrow="Employer workspace"
           title={data.company.companyName}
@@ -158,8 +158,8 @@ export default async function EmployerDashboard() {
           subtitle={
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               {data.company.headquartersCity && (
-                <span style={{ fontSize: 13, color: '#94A3B8', fontWeight: 500 }}>
-                  📍 {data.company.headquartersCity}
+                <span style={{ fontSize: 13, color: '#60717d', fontWeight: 500 }}>
+                  <ContextIcon name="location" /> {data.company.headquartersCity}
                 </span>
               )}
               {data.company.headquartersCity && data.company.industry && (
@@ -175,7 +175,7 @@ export default async function EmployerDashboard() {
                     borderRadius: 999,
                     padding: '5px 14px',
                     fontSize: 13,
-                    color: '#E2E8F0',
+                    color: '#dfe6e9',
                     fontWeight: 600,
                   }}
                 >
@@ -191,12 +191,12 @@ export default async function EmployerDashboard() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
-                    background: '#EFF6FF',
-                    border: '1px solid #BFDBFE',
+                    background: '#edf7f3',
+                    border: '1px solid #bdddd5',
                     borderRadius: 999,
                     padding: '5px 14px',
                     fontSize: 13,
-                    color: '#2563EB',
+                    color: '#087f72',
                     fontWeight: 700,
                     textDecoration: 'none',
                   }}
@@ -229,17 +229,17 @@ export default async function EmployerDashboard() {
                   gap: 12,
                 }}
               >
-                <div
+                <h3
                   style={{
-                    fontSize: 26,
-                    fontWeight: 900,
-                    color: '#F8FAFC',
+                    fontSize: 18,
+                    fontWeight: 700,
+                    color: '#f6f8f9',
                     fontFamily: 'var(--font-display)',
                     letterSpacing: -0.3,
                   }}
                 >
                   Company Snapshot
-                </div>
+                </h3>
                 <div
                   style={{
                     display: 'flex',
@@ -250,12 +250,12 @@ export default async function EmployerDashboard() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>Profile</span>
+                    <span style={{ fontSize: 11, color: '#60717d', fontWeight: 600 }}>Profile</span>
                     <span
                       style={{
                         fontSize: 13,
-                        fontWeight: 900,
-                        color: profileScore === 100 ? '#10B981' : '#F59E0B',
+                        fontWeight: 700,
+                        color: profileScore === 100 ? '#168257' : '#a86714',
                         fontFamily: 'var(--font-display)',
                       }}
                     >
@@ -278,8 +278,8 @@ export default async function EmployerDashboard() {
                         borderRadius: 999,
                         background:
                           profileScore === 100
-                            ? 'linear-gradient(90deg, #10B981, #34D399)'
-                            : 'linear-gradient(90deg, #2563EB, #22D3EE)',
+                            ? 'linear-gradient(90deg, #168257, #34D399)'
+                            : 'linear-gradient(90deg, #087f72, #178d80)',
                       }}
                     />
                   </div>
@@ -288,25 +288,28 @@ export default async function EmployerDashboard() {
 
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }} />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}
+                className="v2-page-grid"
+              >
                 {[
                   {
                     label: 'Profile fields',
                     value: `${completedProfileItems}/4`,
                     desc: 'core details complete',
-                    color: '#22D3EE',
+                    color: '#178d80',
                   },
                   {
                     label: 'Avg per active role',
                     value: avgApplicantsPerActiveRole.toLocaleString(),
                     desc: 'applicant density',
-                    color: '#F59E0B',
+                    color: '#a86714',
                   },
                   {
                     label: 'Roles with traction',
                     value: recentRoleCount ? `${rolesWithApplicants}/${recentRoleCount}` : '0',
                     desc: 'recent roles drawing interest',
-                    color: '#10B981',
+                    color: '#168257',
                   },
                   {
                     label: 'Upcoming deadlines',
@@ -331,7 +334,7 @@ export default async function EmployerDashboard() {
                       style={{
                         color: metric.color,
                         fontSize: 20,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         lineHeight: 1.05,
                         fontFamily: 'var(--font-display)',
                       }}
@@ -341,14 +344,14 @@ export default async function EmployerDashboard() {
                     <div
                       style={{
                         marginTop: 8,
-                        color: '#E2E8F0',
+                        color: '#dfe6e9',
                         fontSize: 12,
-                        fontWeight: 800,
+                        fontWeight: 700,
                       }}
                     >
                       {metric.label}
                     </div>
-                    <div style={{ marginTop: 3, color: '#94A3B8', fontSize: 10, fontWeight: 600 }}>
+                    <div style={{ marginTop: 3, color: '#60717d', fontSize: 10, fontWeight: 600 }}>
                       {metric.desc}
                     </div>
                   </div>
@@ -357,8 +360,6 @@ export default async function EmployerDashboard() {
             </HeroAsideCard>
           }
         />
-
-        {/* ── Stat cards ── */}
         <section style={{ marginTop: 22 }}>
           <div
             style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 16 }}
@@ -373,600 +374,224 @@ export default async function EmployerDashboard() {
               label="Applications"
               value={formatCompactNumber(data.stats.totalApplications)}
               Icon={Users}
-              accent="#22D3EE"
+              accent="#178d80"
             />
             <StatCard
               label="Shortlisted"
               value={formatCompactNumber(data.stats.shortlisted)}
               Icon={CheckCircle2}
-              accent="#10B981"
+              accent="#168257"
             />
             <StatCard
               label="Interviews"
               value={formatCompactNumber(data.stats.interviews)}
               Icon={Clock3}
-              accent="#F59E0B"
+              accent="#a86714"
             />
             <StatCard
               label="Hired"
               value={formatCompactNumber(data.stats.hired)}
               Icon={Sparkles}
-              accent="#2563EB"
+              accent="#087f72"
             />
           </div>
         </section>
-
-        {/* ── Calendar ── */}
-        <DashboardSection
-          id="calendar"
-          title="Calendar"
-          description="Track interview schedules, job deadlines, and employer-hosted event dates with the same interactive monthly planner used in the student experience."
-        >
-          <CalendarBoard
-            events={calendarEvents}
-            isCalendarConnected={false}
-            mode="dashboard"
-            boardTitle="Hiring Calendar"
-            boardSubtitle="Browse month by month, track interviews, deadlines, and employer-hosted events."
-            fullCalendarHref="/employer/calendar"
-            manageCalendarHref={null}
-            showConnectionStatus={false}
-            eventHrefTemplate="/employer/jobs/:jobId/applicants"
-            emptyNextEventMessage="No upcoming hiring events yet. Post roles, publish events, or schedule interviews to fill this planner."
-          />
-        </DashboardSection>
-
-        {/* ── AI hiring ── */}
-        <DashboardSection
-          id="ai-hiring"
-          title="AI hiring & premium access"
-          description="Employer AI is visible from your dashboard. Premium employers get unlimited shortlists and postings; regular employers keep monthly free limits."
-        >
-          <div
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}
-            className="dashboard-grid-three"
+        <div className="dashboard-composition">
+          <DashboardSection
+            id="jobs"
+            title="Recent roles"
+            description="Your latest job postings with live status, application volume, and deadline."
           >
             <Panel
-              title="AI applicant shortlist"
-              description="Rank applicants from each job pipeline using fit scores, gaps, and student profile signals."
-              action={
-                <Link
-                  href="/employer/ai"
-                  style={{
-                    color: '#2563EB',
-                    textDecoration: 'none',
-                    fontSize: 13,
-                    fontWeight: 800,
-                  }}
-                >
-                  Open AI center
-                </Link>
-              }
+              title="Role activity"
+              description="A high-signal list of your latest jobs and how much candidate attention they are receiving."
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                <Target size={22} color="#2563EB" />
-                <div>
-                  <div
-                    style={{
-                      fontSize: 30,
-                      lineHeight: 1,
-                      color: '#1E293B',
-                      fontWeight: 900,
-                      fontFamily: 'var(--font-display)',
-                    }}
-                  >
-                    {usageLabel(usage.remaining.aiApplicantShortlist)}
-                  </div>
-                  <div style={{ marginTop: 4, fontSize: 12, color: '#64748B', fontWeight: 700 }}>
-                    {usage.limits.aiApplicantShortlist === null
-                      ? `${usage.counts.aiApplicantShortlist} generated this month`
-                      : `${usage.counts.aiApplicantShortlist}/${usage.limits.aiApplicantShortlist} used this month`}
-                  </div>
-                </div>
-              </div>
-              <ProgressBar
-                value={usagePercent(
-                  usage.counts.aiApplicantShortlist,
-                  usage.limits.aiApplicantShortlist
-                )}
-              />
-            </Panel>
-
-            <Panel
-              title="Premium status"
-              description={
-                usage.isPremium
-                  ? 'Employer AI tools are unlocked without monthly caps.'
-                  : 'Upgrade when you need unlimited AI shortlists, postings, and priority visibility.'
-              }
-              action={
-                <Link
-                  href={usage.isPremium ? '/employer/subscription' : '/employer/premium'}
+              {data.recentJobs.length > 0 ? (
+                <div
                   style={{
-                    color: '#2563EB',
-                    textDecoration: 'none',
-                    fontSize: 13,
-                    fontWeight: 800,
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                    gap: 14,
                   }}
+                  className="dashboard-grid-two v2-form-grid"
                 >
-                  {usage.isPremium ? 'Billing' : 'Upgrade'}
-                </Link>
-              }
-            >
-              <div style={{ display: 'grid', gap: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Crown size={22} color={usage.isPremium ? '#F59E0B' : '#64748B'} />
-                  <div>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: '#1E293B' }}>
-                      {usageLabel(usage.remaining.jobPosting)}
+                  {data.recentJobs.map((job) => (
+                    <div
+                      key={job.id}
+                      style={{
+                        padding: 18,
+                        borderRadius: 12,
+                        border: '1px solid #dfe6e9',
+                        background: '#FFFFFF',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: '#243e4a' }}>
+                            {job.title}
+                          </div>
+                          <div style={{ marginTop: 6, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            <Tag label={formatStatusLabel(job.type)} tone="neutral" />
+                            <Tag label={formatStatusLabel(job.locationType)} tone="neutral" />
+                            <Tag
+                              label={job.isActive ? 'Active' : 'Closed'}
+                              tone={statusTone(job.isActive)}
+                            />
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#60717d' }}>
+                            Applications
+                          </div>
+                          <div
+                            style={{
+                              marginTop: 4,
+                              fontSize: 26,
+                              fontWeight: 700,
+                              color: '#087f72',
+                              fontFamily: 'var(--font-display)',
+                            }}
+                          >
+                            {formatCompactNumber(job.applicationCount)}
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 14,
+                          display: 'grid',
+                          gap: 8,
+                          color: '#60717d',
+                          fontSize: 13,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <MapPin size={15} strokeWidth={2} />
+                          {job.city || 'Location shared inside role details'}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Clock3 size={15} strokeWidth={2} />
+                          Deadline {formatShortDate(job.applicationDeadline)}
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>
-                      Job postings this month
-                    </div>
-                  </div>
+                  ))}
                 </div>
-                <ProgressBar
-                  value={usagePercent(usage.counts.jobPosting, usage.limits.jobPosting)}
-                  tone="success"
+              ) : (
+                <EmptyState
+                  title="No jobs posted yet"
+                  description="Your role list will populate here as soon as your company creates its first opportunity."
                 />
-              </div>
+              )}
             </Panel>
-
+          </DashboardSection>
+          <DashboardSection
+            id="applications"
+            title="Recent applicant flow"
+            description="The latest candidate records arriving under your employer account."
+          >
             <Panel
-              title="Payment options"
-              description="Employer Premium checkout is available through local mobile payment and cards."
-              action={
-                <Link
-                  href="/employer/subscription"
-                  style={{
-                    color: '#2563EB',
-                    textDecoration: 'none',
-                    fontSize: 13,
-                    fontWeight: 800,
-                  }}
-                >
-                  Billing
-                </Link>
-              }
+              title="Incoming applications"
+              description="Recent submissions with student context, fit scores, and the role they applied for."
             >
-              <div style={{ display: 'grid', gap: 10 }}>
-                {['bKash', 'Visa', 'Mastercard'].map((method) => (
-                  <div
-                    key={method}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      padding: '10px 12px',
-                      borderRadius: 12,
-                      background: '#F8FAFC',
-                      border: '1px solid #E2E8F0',
-                      fontSize: 13,
-                      fontWeight: 800,
-                      color: '#1E293B',
-                    }}
-                  >
-                    <CreditCard size={15} color="#2563EB" />
-                    {method}
-                  </div>
-                ))}
-              </div>
+              {data.recentApplications.length > 0 ? (
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {data.recentApplications.map((application) => (
+                    <div
+                      key={application.id}
+                      style={{
+                        padding: 18,
+                        borderRadius: 12,
+                        border: '1px solid #dfe6e9',
+                        background: '#FFFFFF',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'minmax(0, 1.3fr) auto',
+                          gap: 12,
+                          alignItems: 'center',
+                        }}
+                        className="dashboard-inline-grid"
+                      >
+                        <div>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              flexWrap: 'wrap',
+                            }}
+                          >
+                            <div style={{ fontSize: 16, fontWeight: 700, color: '#243e4a' }}>
+                              {application.studentName}
+                            </div>
+                            <Tag label={formatStatusLabel(application.status)} tone="info" />
+                          </div>
+                          <div style={{ marginTop: 6, fontSize: 13, color: '#60717d' }}>
+                            {application.jobTitle}
+                          </div>
+                          <div
+                            style={{
+                              marginTop: 6,
+                              display: 'flex',
+                              gap: 12,
+                              flexWrap: 'wrap',
+                              fontSize: 13,
+                              color: '#60717d',
+                            }}
+                          >
+                            {application.university ? <span>{application.university}</span> : null}
+                            {application.department ? <span>{application.department}</span> : null}
+                            <span>Applied {formatShortDate(application.appliedAt)}</span>
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#60717d' }}>
+                            Fit score
+                          </div>
+                          <div
+                            style={{
+                              marginTop: 4,
+                              fontSize: 28,
+                              fontWeight: 700,
+                              color: '#087f72',
+                              fontFamily: 'var(--font-display)',
+                            }}
+                          >
+                            {typeof application.fitScore === 'number'
+                              ? `${application.fitScore}%`
+                              : 'Pending'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="No recent applicants"
+                  description="New applications will appear here automatically as students apply to your roles."
+                />
+              )}
             </Panel>
-          </div>
-        </DashboardSection>
-
-        {/* ── Hiring pipeline ── */}
+          </DashboardSection>
+        </div>
         <DashboardSection
           id="pipeline"
           title="Hiring pipeline"
           description="A live funnel view built from real application statuses already stored for your company."
         >
-          <div
-            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
-            className="dashboard-grid-two"
-          >
-            <Panel
-              title="Pipeline stage counts"
-              description="Distribution of application volume moving through each hiring stage."
-            >
-              <div style={{ display: 'grid', gap: 12 }}>
-                <div
-                  style={{
-                    minHeight: 210,
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${data.pipeline.length || 1}, minmax(0, 1fr))`,
-                    gap: 14,
-                    alignItems: 'end',
-                    padding: '20px 18px 16px',
-                    borderRadius: 18,
-                    background: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
-                  }}
-                >
-                  {data.pipeline.map((stage, i) => {
-                    const color = pipelineColors[i % pipelineColors.length];
-                    const total = data.stats.totalApplications;
-                    const pct = total > 0 ? Math.round((stage.count / total) * 100) : 0;
-                    const height =
-                      stage.count > 0 ? Math.max(18, (stage.count / pipelineMax) * 100) : 6;
-                    return (
-                      <div
-                        key={stage.label}
-                        style={{
-                          minHeight: 174,
-                          minWidth: 0,
-                          display: 'grid',
-                          gridTemplateRows: 'auto 1fr auto',
-                          gap: 10,
-                        }}
-                      >
-                        <div style={{ textAlign: 'center' }}>
-                          <div
-                            style={{
-                              color,
-                              fontSize: 24,
-                              fontWeight: 900,
-                              lineHeight: 1,
-                              fontFamily: 'var(--font-display)',
-                            }}
-                          >
-                            {formatCompactNumber(stage.count)}
-                          </div>
-                          <div
-                            style={{
-                              marginTop: 4,
-                              color: '#64748B',
-                              fontSize: 11,
-                              fontWeight: 800,
-                            }}
-                          >
-                            {pct}% of total
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'flex-end',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: '100%',
-                              maxWidth: 56,
-                              height: `${height}%`,
-                              borderRadius: '14px 14px 6px 6px',
-                              background: color,
-                              boxShadow: `0 12px 24px ${color}26`,
-                            }}
-                          />
-                        </div>
-                        <div
-                          style={{
-                            textAlign: 'center',
-                            color: '#64748B',
-                            fontSize: 11,
-                            fontWeight: 800,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {stage.label}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </Panel>
-
-            <Panel
-              title="Conversion metrics"
-              description="How effectively your pipeline is converting applicants through each stage."
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {[
-                  {
-                    label: 'Application → Shortlist',
-                    numerator: data.stats.shortlisted,
-                    denominator: data.stats.totalApplications,
-                    color: '#22D3EE',
-                    desc: 'of applicants made it to review',
-                  },
-                  {
-                    label: 'Shortlist → Interview',
-                    numerator: data.stats.interviews,
-                    denominator: data.stats.shortlisted,
-                    color: '#F59E0B',
-                    desc: 'of shortlisted reached interview',
-                  },
-                  {
-                    label: 'Interview → Hire',
-                    numerator: data.stats.hired,
-                    denominator: data.stats.interviews,
-                    color: '#10B981',
-                    desc: 'of interviews resulted in hire',
-                  },
-                  {
-                    label: 'Overall hire rate',
-                    numerator: data.stats.hired,
-                    denominator: data.stats.totalApplications,
-                    color: '#A78BFA',
-                    desc: 'of all applicants were hired',
-                  },
-                ].map((metric) => {
-                  const pct =
-                    metric.denominator > 0
-                      ? Math.round((metric.numerator / metric.denominator) * 100)
-                      : 0;
-                  return (
-                    <div key={metric.label}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          marginBottom: 6,
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
-                            {metric.label}
-                          </div>
-                          <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 1 }}>
-                            {metric.desc}
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'baseline',
-                            gap: 4,
-                            flexShrink: 0,
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontSize: 20,
-                              fontWeight: 900,
-                              color: metric.color,
-                              fontFamily: 'var(--font-display)',
-                              lineHeight: 1,
-                            }}
-                          >
-                            {pct}%
-                          </div>
-                          <div style={{ fontSize: 11, color: '#94A3B8' }}>
-                            ({metric.numerator}/{metric.denominator})
-                          </div>
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          height: 8,
-                          background: '#F1F5F9',
-                          borderRadius: 999,
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: `${pct}%`,
-                            height: '100%',
-                            background: metric.color,
-                            borderRadius: 999,
-                            transition: 'width 0.4s',
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-                {data.stats.totalApplications === 0 && (
-                  <EmptyState
-                    title="No applications yet"
-                    description="Conversion metrics will appear once candidates start applying to your roles."
-                  />
-                )}
-              </div>
-            </Panel>
-          </div>
+          <HiringPipeline pipeline={data.pipeline} stats={data.stats} />
         </DashboardSection>
-
-        {/* ── Recent roles ── */}
-        <DashboardSection
-          id="jobs"
-          title="Recent roles"
-          description="Your latest job postings with live status, application volume, and deadline."
-        >
-          <Panel
-            title="Role activity"
-            description="A high-signal list of your latest jobs and how much candidate attention they are receiving."
-          >
-            {data.recentJobs.length > 0 ? (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                  gap: 14,
-                }}
-                className="dashboard-grid-two"
-              >
-                {data.recentJobs.map((job) => (
-                  <div
-                    key={job.id}
-                    style={{
-                      padding: 18,
-                      borderRadius: 18,
-                      border: '1px solid #E2E8F0',
-                      background: '#FFFFFF',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        justifyContent: 'space-between',
-                        gap: 12,
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontSize: 16, fontWeight: 800, color: '#1E293B' }}>
-                          {job.title}
-                        </div>
-                        <div style={{ marginTop: 6, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                          <Tag label={formatStatusLabel(job.type)} tone="neutral" />
-                          <Tag label={formatStatusLabel(job.locationType)} tone="neutral" />
-                          <Tag
-                            label={job.isActive ? 'Active' : 'Closed'}
-                            tone={statusTone(job.isActive)}
-                          />
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>
-                          Applications
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 4,
-                            fontSize: 26,
-                            fontWeight: 900,
-                            color: '#2563EB',
-                            fontFamily: 'var(--font-display)',
-                          }}
-                        >
-                          {formatCompactNumber(job.applicationCount)}
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 14,
-                        display: 'grid',
-                        gap: 8,
-                        color: '#64748B',
-                        fontSize: 13,
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <MapPin size={15} strokeWidth={2} />
-                        {job.city || 'Location shared inside role details'}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Clock3 size={15} strokeWidth={2} />
-                        Deadline {formatShortDate(job.applicationDeadline)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="No jobs posted yet"
-                description="Your role list will populate here as soon as your company creates its first opportunity."
-              />
-            )}
-          </Panel>
-        </DashboardSection>
-
-        {/* ── Recent applicant flow ── */}
-        <DashboardSection
-          id="applications"
-          title="Recent applicant flow"
-          description="The latest candidate records arriving under your employer account."
-        >
-          <Panel
-            title="Incoming applications"
-            description="Recent submissions with student context, fit scores, and the role they applied for."
-          >
-            {data.recentApplications.length > 0 ? (
-              <div style={{ display: 'grid', gap: 12 }}>
-                {data.recentApplications.map((application) => (
-                  <div
-                    key={application.id}
-                    style={{
-                      padding: 18,
-                      borderRadius: 18,
-                      border: '1px solid #E2E8F0',
-                      background: '#FFFFFF',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'minmax(0, 1.3fr) auto',
-                        gap: 12,
-                        alignItems: 'center',
-                      }}
-                      className="dashboard-inline-grid"
-                    >
-                      <div>
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            flexWrap: 'wrap',
-                          }}
-                        >
-                          <div style={{ fontSize: 16, fontWeight: 800, color: '#1E293B' }}>
-                            {application.studentName}
-                          </div>
-                          <Tag label={formatStatusLabel(application.status)} tone="info" />
-                        </div>
-                        <div style={{ marginTop: 6, fontSize: 13, color: '#64748B' }}>
-                          {application.jobTitle}
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 6,
-                            display: 'flex',
-                            gap: 12,
-                            flexWrap: 'wrap',
-                            fontSize: 13,
-                            color: '#64748B',
-                          }}
-                        >
-                          {application.university ? <span>{application.university}</span> : null}
-                          {application.department ? <span>{application.department}</span> : null}
-                          <span>Applied {formatShortDate(application.appliedAt)}</span>
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>
-                          Fit score
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 4,
-                            fontSize: 28,
-                            fontWeight: 900,
-                            color: '#2563EB',
-                            fontFamily: 'var(--font-display)',
-                          }}
-                        >
-                          {typeof application.fitScore === 'number'
-                            ? `${application.fitScore}%`
-                            : 'Pending'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="No recent applicants"
-                description="New applications will appear here automatically as students apply to your roles."
-              />
-            )}
-          </Panel>
-        </DashboardSection>
-
-        {/* ── Top candidates ── */}
         <DashboardSection
           id="candidates"
           title="Top candidates"
@@ -983,15 +608,15 @@ export default async function EmployerDashboard() {
                   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
                   gap: 14,
                 }}
-                className="dashboard-grid-two"
+                className="dashboard-grid-two v2-form-grid"
               >
                 {data.topCandidates.map((candidate) => (
                   <div
                     key={candidate.id}
                     style={{
                       padding: 18,
-                      borderRadius: 18,
-                      border: '1px solid #E2E8F0',
+                      borderRadius: 12,
+                      border: '1px solid #dfe6e9',
                       background: '#FFFFFF',
                     }}
                   >
@@ -1004,10 +629,10 @@ export default async function EmployerDashboard() {
                       }}
                     >
                       <div>
-                        <div style={{ fontSize: 16, fontWeight: 800, color: '#1E293B' }}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: '#243e4a' }}>
                           {candidate.studentName}
                         </div>
-                        <div style={{ marginTop: 4, fontSize: 13, color: '#64748B' }}>
+                        <div style={{ marginTop: 4, fontSize: 13, color: '#60717d' }}>
                           {candidate.jobTitle}
                         </div>
                       </div>
@@ -1020,7 +645,7 @@ export default async function EmployerDashboard() {
                         gap: 12,
                         flexWrap: 'wrap',
                         fontSize: 13,
-                        color: '#64748B',
+                        color: '#60717d',
                       }}
                     >
                       {candidate.university ? <span>{candidate.university}</span> : null}
@@ -1038,10 +663,169 @@ export default async function EmployerDashboard() {
             )}
           </Panel>
         </DashboardSection>
+        <div className="dashboard-composition">
+          <DashboardSection
+            id="calendar"
+            title="Calendar"
+            description="Track interview schedules, job deadlines, and employer-hosted event dates with the same interactive monthly planner used in the student experience."
+          >
+            <CalendarBoard
+              events={calendarEvents}
+              isCalendarConnected={false}
+              mode="dashboard"
+              boardTitle="Hiring Calendar"
+              boardSubtitle="Browse month by month, track interviews, deadlines, and employer-hosted events."
+              fullCalendarHref="/employer/calendar"
+              manageCalendarHref={null}
+              showConnectionStatus={false}
+              eventHrefTemplate="/employer/jobs/:jobId/applicants"
+              emptyNextEventMessage="No upcoming hiring events yet. Post roles, publish events, or schedule interviews to fill this planner."
+            />
+          </DashboardSection>
+          <DashboardSection
+            id="ai-hiring"
+            title="AI hiring & premium access"
+            description="Employer AI is visible from your dashboard. Premium employers get unlimited shortlists and postings; regular employers keep monthly free limits."
+          >
+            <div
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}
+              className="dashboard-grid-three v2-form-grid"
+            >
+              <Panel
+                title="AI applicant shortlist"
+                description="Rank applicants from each job pipeline using fit scores, gaps, and student profile signals."
+                action={
+                  <Link
+                    href="/employer/ai"
+                    style={{
+                      color: '#087f72',
+                      textDecoration: 'none',
+                      fontSize: 13,
+                      fontWeight: 700,
+                    }}
+                  >
+                    Open AI center
+                  </Link>
+                }
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                  <Target size={22} color="#087f72" />
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 30,
+                        lineHeight: 1,
+                        color: '#243e4a',
+                        fontWeight: 700,
+                        fontFamily: 'var(--font-display)',
+                      }}
+                    >
+                      {usageLabel(usage.remaining.aiApplicantShortlist)}
+                    </div>
+                    <div style={{ marginTop: 4, fontSize: 12, color: '#60717d', fontWeight: 700 }}>
+                      {usage.limits.aiApplicantShortlist === null
+                        ? `${usage.counts.aiApplicantShortlist} generated this month`
+                        : `${usage.counts.aiApplicantShortlist}/${usage.limits.aiApplicantShortlist} used this month`}
+                    </div>
+                  </div>
+                </div>
+                <ProgressBar
+                  value={usagePercent(
+                    usage.counts.aiApplicantShortlist,
+                    usage.limits.aiApplicantShortlist
+                  )}
+                />
+              </Panel>
 
+              <Panel
+                title="Premium status"
+                description={
+                  usage.isPremium
+                    ? 'Employer AI tools are unlocked without monthly caps.'
+                    : 'Upgrade when you need unlimited AI shortlists, postings, and priority visibility.'
+                }
+                action={
+                  <Link
+                    href={usage.isPremium ? '/employer/subscription' : '/employer/premium'}
+                    style={{
+                      color: '#087f72',
+                      textDecoration: 'none',
+                      fontSize: 13,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {usage.isPremium ? 'Billing' : 'Upgrade'}
+                  </Link>
+                }
+              >
+                <div style={{ display: 'grid', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Crown size={22} color={usage.isPremium ? '#a86714' : '#60717d'} />
+                    <div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: '#243e4a' }}>
+                        {usageLabel(usage.remaining.jobPosting)}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#60717d', fontWeight: 700 }}>
+                        Job postings this month
+                      </div>
+                    </div>
+                  </div>
+                  <ProgressBar
+                    value={usagePercent(usage.counts.jobPosting, usage.limits.jobPosting)}
+                    tone="success"
+                  />
+                </div>
+              </Panel>
+
+              <Panel
+                title="Payment options"
+                description="Employer Premium checkout is available through local mobile payment and cards."
+                action={
+                  <Link
+                    href="/employer/subscription"
+                    style={{
+                      color: '#087f72',
+                      textDecoration: 'none',
+                      fontSize: 13,
+                      fontWeight: 700,
+                    }}
+                  >
+                    Billing
+                  </Link>
+                }
+              >
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {['bKash', 'Visa', 'Mastercard'].map((method) => (
+                    <div
+                      key={method}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        padding: '10px 12px',
+                        borderRadius: 12,
+                        background: '#f6f8f9',
+                        border: '1px solid #dfe6e9',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: '#243e4a',
+                      }}
+                    >
+                      <CreditCard size={15} color="#087f72" />
+                      {method}
+                    </div>
+                  ))}
+                </div>
+              </Panel>
+            </div>
+          </DashboardSection>
+        </div>
         <style>{`
+          #jobs, #applications { display: flex; flex-direction: column; }
+          #jobs > .dashboard-panel, #applications > .dashboard-panel { flex: 1; height: auto; }
           @media (max-width: 1100px) {
             .dashboard-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            #ai-hiring .dashboard-grid-three { grid-template-columns: 1fr !important; }
           }
           @media (max-width: 900px) {
             .dashboard-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }

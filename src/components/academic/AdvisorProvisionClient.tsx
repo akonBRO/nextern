@@ -1,5 +1,8 @@
 'use client';
 
+import BrandLoader from '@/components/ui/BrandLoader';
+import FormField from '@/components/ui/FormField';
+
 import { useEffect, useState } from 'react';
 import { ACADEMIC_DEPARTMENTS } from '@/lib/academic-options';
 
@@ -119,12 +122,13 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
       style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 390px) minmax(0, 1fr)', gap: 22 }}
     >
       <div
+        className="nx-surface"
         id="new-advisor"
         style={{
           background: '#FFFFFF',
-          borderRadius: 24,
+          borderRadius: 12,
           border: '1px solid #D9E2EC',
-          boxShadow: '0 16px 36px rgba(15,23,42,0.05)',
+          boxShadow: 'var(--shadow-card)',
           padding: 24,
           alignSelf: 'start',
         }}
@@ -133,8 +137,8 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
           <div
             style={{
               fontSize: 12,
-              fontWeight: 800,
-              color: '#64748B',
+              fontWeight: 700,
+              color: '#60717d',
               letterSpacing: 0.8,
               textTransform: 'uppercase',
             }}
@@ -145,8 +149,8 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
             style={{
               margin: '8px 0 0',
               fontSize: 24,
-              fontWeight: 900,
-              color: '#0F172A',
+              fontWeight: 700,
+              color: '#182c39',
               fontFamily: 'var(--font-display)',
             }}
           >
@@ -159,7 +163,7 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
             <input
               value={institutionName}
               readOnly
-              style={{ ...inputStyle(), background: '#F8FAFC' }}
+              style={{ ...inputStyle(), background: '#f6f8f9' }}
             />
           </Field>
 
@@ -200,7 +204,10 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
             </select>
           </Field>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+            className="v2-page-grid"
+          >
             <Field label="Designation">
               <input
                 value={form.designation}
@@ -231,11 +238,11 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
 
           <div
             style={{
-              background: '#EFF6FF',
-              border: '1px solid #BFDBFE',
-              borderRadius: 16,
+              background: '#edf7f3',
+              border: '1px solid #bdddd5',
+              borderRadius: 12,
               padding: '14px 16px',
-              color: '#1D4ED8',
+              color: '#06665d',
               fontSize: 13,
               lineHeight: 1.7,
             }}
@@ -250,7 +257,7 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
                 background: notice.tone === 'success' ? '#ECFDF5' : '#FEF2F2',
                 border: `1px solid ${notice.tone === 'success' ? '#A7F3D0' : '#FECACA'}`,
                 color: notice.tone === 'success' ? '#065F46' : '#B91C1C',
-                borderRadius: 16,
+                borderRadius: 12,
                 padding: '13px 15px',
                 fontSize: 14,
                 lineHeight: 1.6,
@@ -265,12 +272,12 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
             disabled={saving}
             style={{
               border: 'none',
-              borderRadius: 16,
+              borderRadius: 12,
               padding: '14px 18px',
-              background: saving ? '#93C5FD' : 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+              background: saving ? '#93C5FD' : 'linear-gradient(135deg, #087f72, #06665d)',
               color: '#FFFFFF',
               fontSize: 15,
-              fontWeight: 800,
+              fontWeight: 700,
               fontFamily: 'var(--font-display)',
               cursor: saving ? 'not-allowed' : 'pointer',
               boxShadow: saving ? 'none' : '0 18px 30px rgba(37,99,235,0.18)',
@@ -282,11 +289,12 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
       </div>
 
       <div
+        className="nx-surface"
         style={{
           background: '#FFFFFF',
-          borderRadius: 24,
+          borderRadius: 12,
           border: '1px solid #D9E2EC',
-          boxShadow: '0 16px 36px rgba(15,23,42,0.05)',
+          boxShadow: 'var(--shadow-card)',
           padding: 24,
         }}
       >
@@ -303,8 +311,8 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
             <div
               style={{
                 fontSize: 12,
-                fontWeight: 800,
-                color: '#64748B',
+                fontWeight: 700,
+                color: '#60717d',
                 letterSpacing: 0.8,
                 textTransform: 'uppercase',
               }}
@@ -315,8 +323,8 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
               style={{
                 margin: '8px 0 0',
                 fontSize: 24,
-                fontWeight: 900,
-                color: '#0F172A',
+                fontWeight: 700,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
               }}
             >
@@ -342,15 +350,15 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
         </div>
 
         {loading ? (
-          <div style={{ color: '#64748B', fontSize: 14 }}>Loading advisors...</div>
+          <BrandLoader variant="section" label="Loading advisors" />
         ) : advisors.length === 0 ? (
           <div
             style={{
-              borderRadius: 18,
+              borderRadius: 12,
               border: '1px dashed #CBD5E1',
-              background: '#F8FAFC',
+              background: '#f6f8f9',
               padding: '24px 20px',
-              color: '#64748B',
+              color: '#60717d',
               fontSize: 14,
               lineHeight: 1.7,
             }}
@@ -363,8 +371,8 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
               <div
                 key={advisor._id}
                 style={{
-                  borderRadius: 20,
-                  border: '1px solid #E2E8F0',
+                  borderRadius: 12,
+                  border: '1px solid #dfe6e9',
                   background: '#FFFFFF',
                   padding: '18px 18px',
                 }}
@@ -382,14 +390,14 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
                     <div
                       style={{
                         fontSize: 17,
-                        fontWeight: 800,
-                        color: '#0F172A',
+                        fontWeight: 700,
+                        color: '#182c39',
                         fontFamily: 'var(--font-display)',
                       }}
                     >
                       {advisor.name}
                     </div>
-                    <div style={{ marginTop: 4, fontSize: 13, color: '#64748B' }}>
+                    <div style={{ marginTop: 4, fontSize: 13, color: '#60717d' }}>
                       {advisor.email}
                     </div>
                   </div>
@@ -401,7 +409,7 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
                       borderRadius: 999,
                       padding: '5px 12px',
                       fontSize: 12,
-                      fontWeight: 800,
+                      fontWeight: 700,
                     }}
                   >
                     Approved
@@ -433,27 +441,12 @@ export default function AdvisorProvisionClient({ institutionName }: { institutio
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label style={{ display: 'grid', gap: 8 }}>
-      <span
-        style={{
-          fontSize: 12,
-          fontWeight: 800,
-          color: '#475569',
-          textTransform: 'uppercase',
-          letterSpacing: 0.8,
-        }}
-      >
-        {label}
-      </span>
-      {children}
-    </label>
-  );
+  return <FormField label={label}>{children}</FormField>;
 }
 
 function Chip({ label, tone }: { label: string; tone: 'slate' | 'green' | 'amber' }) {
   const palette = {
-    slate: { bg: '#F8FAFC', border: '#E2E8F0', color: '#334155' },
+    slate: { bg: '#f6f8f9', border: '#dfe6e9', color: '#334155' },
     green: { bg: '#ECFDF5', border: '#A7F3D0', color: '#166534' },
     amber: { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' },
   }[tone];
@@ -485,7 +478,7 @@ function inputStyle(): React.CSSProperties {
     border: '1px solid #CBD5E1',
     padding: '12px 14px',
     fontSize: 14,
-    color: '#0F172A',
+    color: '#182c39',
     background: '#FFFFFF',
     outline: 'none',
   };

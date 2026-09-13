@@ -43,6 +43,7 @@ export default async function AdvisorCalendarPage() {
 
   return (
     <DashboardShell
+      embedded
       role="advisor"
       roleLabel="Advisor calendar"
       homeHref="/advisor/dashboard"
@@ -56,7 +57,6 @@ export default async function AdvisorCalendarPage() {
           description="Navigate month by month and keep only your hosted event dates and registration deadlines visible from one planner."
           actions={
             <>
-              <ActionLink href="/advisor/dashboard#calendar" label="Back to Dashboard" />
               <ActionLink
                 href="/advisor/profile#calendar"
                 label={

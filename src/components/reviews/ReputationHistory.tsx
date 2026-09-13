@@ -1,7 +1,9 @@
 'use client';
 
+import BrandLoader from '@/components/ui/BrandLoader';
 import React, { useEffect, useState } from 'react';
 import {
+  AlertCircle,
   Star,
   MessageSquareQuote,
   CheckCircle2,
@@ -10,7 +12,6 @@ import {
   TrendingUp,
   UserCheck,
   Clock,
-  Sparkles,
   Building2,
   BookOpen,
   ThumbsUp,
@@ -72,25 +73,7 @@ export default function ReputationHistory({
     fetchReviews();
   }, [userId]);
 
-  if (isLoading) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {[1, 2].map((i) => (
-          <div
-            key={i}
-            style={{
-              height: 120,
-              borderRadius: 16,
-              background: 'linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%)',
-              backgroundSize: '200% 100%',
-              animation: 'shimmer 1.5s infinite',
-            }}
-          />
-        ))}
-        <style>{`@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
-      </div>
-    );
-  }
+  if (isLoading) return <BrandLoader label="Loading reviews" />;
 
   if (error) {
     return (
@@ -107,7 +90,11 @@ export default function ReputationHistory({
           fontSize: 13,
         }}
       >
-        ⚠️ {error}
+        <AlertCircle
+          size={16}
+          style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }}
+        />{' '}
+        {error}
       </div>
     );
   }
@@ -116,10 +103,10 @@ export default function ReputationHistory({
     return (
       <div
         style={{
-          background: 'linear-gradient(145deg, #FAFBFF, #F8FAFF)',
-          borderRadius: 20,
+          background: '#FAFBFF',
+          borderRadius: 12,
           padding: '40px 28px',
-          border: '1px solid rgba(37, 99, 235, 0.06)',
+          border: '1px solid rgba(8, 127, 114, 0.06)',
           textAlign: 'center',
           position: 'relative',
           overflow: 'hidden',
@@ -132,7 +119,7 @@ export default function ReputationHistory({
             right: -40,
             width: 120,
             height: 120,
-            background: 'radial-gradient(circle, rgba(37, 99, 235, 0.04) 0%, transparent 70%)',
+            background: 'transparent',
             borderRadius: '50%',
           }}
         />
@@ -140,28 +127,28 @@ export default function ReputationHistory({
           style={{
             width: 56,
             height: 56,
-            borderRadius: 16,
-            background: 'linear-gradient(135deg, #F1F5F9, #E2E8F0)',
+            borderRadius: 12,
+            background: '#f6f8f9',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 14px',
           }}
         >
-          <MessageSquareQuote size={24} color="#94A3B8" />
+          <MessageSquareQuote size={24} color="#6e7f89" />
         </div>
         <p
           style={{
             fontSize: 15,
             fontWeight: 700,
-            color: '#475569',
+            color: '#435663',
             margin: '0 0 4px',
             fontFamily: 'var(--font-display)',
           }}
         >
           No Verified Reviews Yet
         </p>
-        <p style={{ fontSize: 13, color: '#94A3B8', margin: 0 }}>
+        <p style={{ fontSize: 13, color: '#6e7f89', margin: 0 }}>
           Reviews will appear here once verified feedback is submitted.
         </p>
       </div>
@@ -193,7 +180,7 @@ export default function ReputationHistory({
           key={star}
           size={size}
           style={{
-            color: star <= rating ? '#F59E0B' : '#E2E8F0',
+            color: star <= rating ? '#F59E0B' : '#dfe6e9',
             transition: 'color 0.2s ease',
           }}
           fill={star <= rating ? 'currentColor' : 'none'}
@@ -205,9 +192,9 @@ export default function ReputationHistory({
 
   const getRatingLabel = (rating: number) => {
     if (rating >= 4.5) return { label: 'Exceptional', color: '#059669', bg: '#ECFDF5' };
-    if (rating >= 3.5) return { label: 'Very Good', color: '#2563EB', bg: '#EFF6FF' };
+    if (rating >= 3.5) return { label: 'Very Good', color: '#087f72', bg: '#eef7f5' };
     if (rating >= 2.5) return { label: 'Good', color: '#D97706', bg: '#FFFBEB' };
-    return { label: 'Fair', color: '#64748B', bg: '#F8FAFC' };
+    return { label: 'Fair', color: '#60717d', bg: '#f6f8f9' };
   };
 
   const ratingMeta = getRatingLabel(avgRating);
@@ -217,10 +204,10 @@ export default function ReputationHistory({
       {/* Header with aggregate stats */}
       <div
         style={{
-          background: 'linear-gradient(145deg, #FAFBFF, #F0F4FF)',
-          borderRadius: 20,
+          background: '#FAFBFF',
+          borderRadius: 12,
           padding: '24px 28px',
-          border: '1px solid rgba(37, 99, 235, 0.08)',
+          border: '1px solid rgba(8, 127, 114, 0.08)',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -232,7 +219,7 @@ export default function ReputationHistory({
             right: -30,
             width: 120,
             height: 120,
-            background: 'radial-gradient(circle, rgba(37, 99, 235, 0.06) 0%, transparent 70%)',
+            background: 'transparent',
             borderRadius: '50%',
           }}
         />
@@ -251,11 +238,11 @@ export default function ReputationHistory({
               width: 36,
               height: 36,
               borderRadius: 10,
-              background: 'linear-gradient(135deg, #10B981, #34D399)',
+              background: '#10B981',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+              boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
             }}
           >
             <Shield size={18} color="#fff" />
@@ -264,8 +251,8 @@ export default function ReputationHistory({
             <h3
               style={{
                 fontSize: 17,
-                fontWeight: 900,
-                color: '#0F172A',
+                fontWeight: 750,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
                 margin: 0,
                 letterSpacing: '-0.3px',
@@ -273,7 +260,7 @@ export default function ReputationHistory({
             >
               Verified Reputation
             </h3>
-            <p style={{ fontSize: 12, color: '#94A3B8', margin: '2px 0 0' }}>
+            <p style={{ fontSize: 12, color: '#6e7f89', margin: '2px 0 0' }}>
               Based on {reviews.length} verified {reviews.length === 1 ? 'review' : 'reviews'}
             </p>
           </div>
@@ -291,7 +278,7 @@ export default function ReputationHistory({
           <div
             style={{
               background: '#fff',
-              borderRadius: 14,
+              borderRadius: 12,
               padding: '14px 16px',
               border: '1px solid #E8ECF1',
               textAlign: 'center',
@@ -300,8 +287,8 @@ export default function ReputationHistory({
             <div
               style={{
                 fontSize: 28,
-                fontWeight: 900,
-                color: '#0F172A',
+                fontWeight: 750,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
                 lineHeight: 1,
               }}
@@ -318,7 +305,7 @@ export default function ReputationHistory({
                 color: ratingMeta.color,
                 background: ratingMeta.bg,
                 padding: '2px 8px',
-                borderRadius: 999,
+                borderRadius: 6,
               }}
             >
               {ratingMeta.label}
@@ -329,7 +316,7 @@ export default function ReputationHistory({
           <div
             style={{
               background: '#fff',
-              borderRadius: 14,
+              borderRadius: 12,
               padding: '14px 16px',
               border: '1px solid #E8ECF1',
               textAlign: 'center',
@@ -338,15 +325,15 @@ export default function ReputationHistory({
             <div
               style={{
                 fontSize: 28,
-                fontWeight: 900,
-                color: '#0F172A',
+                fontWeight: 750,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
                 lineHeight: 1,
               }}
             >
               {reviews.length}
             </div>
-            <div style={{ fontSize: 11, color: '#64748B', fontWeight: 600, marginTop: 6 }}>
+            <div style={{ fontSize: 11, color: '#60717d', fontWeight: 600, marginTop: 6 }}>
               Total Reviews
             </div>
           </div>
@@ -356,7 +343,7 @@ export default function ReputationHistory({
             <div
               style={{
                 background: '#fff',
-                borderRadius: 14,
+                borderRadius: 12,
                 padding: '14px 16px',
                 border: '1px solid #E8ECF1',
                 textAlign: 'center',
@@ -365,15 +352,15 @@ export default function ReputationHistory({
               <div
                 style={{
                   fontSize: 28,
-                  fontWeight: 900,
-                  color: '#2563EB',
+                  fontWeight: 750,
+                  color: '#087f72',
                   fontFamily: 'var(--font-display)',
                   lineHeight: 1,
                 }}
               >
                 {recommendationCount}
               </div>
-              <div style={{ fontSize: 11, color: '#64748B', fontWeight: 600, marginTop: 6 }}>
+              <div style={{ fontSize: 11, color: '#60717d', fontWeight: 600, marginTop: 6 }}>
                 Endorsements
               </div>
             </div>
@@ -397,14 +384,14 @@ export default function ReputationHistory({
             key={r._id}
             style={{
               background: '#fff',
-              borderRadius: 16,
+              borderRadius: 12,
               border: '1px solid #E8ECF1',
               transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
               boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.boxShadow = '0 4px 20px rgba(15, 23, 42, 0.08)';
-              e.currentTarget.style.borderColor = 'rgba(37, 99, 235, 0.15)';
+              e.currentTarget.style.borderColor = 'rgba(8, 127, 114, 0.15)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.boxShadow = '0 2px 8px rgba(15, 23, 42, 0.04)';
@@ -418,7 +405,7 @@ export default function ReputationHistory({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '16px 20px',
-                borderBottom: '1px solid #F1F5F9',
+                borderBottom: '1px solid #f6f8f9',
               }}
             >
               <div style={{ display: 'flex', gap: 12 }}>
@@ -427,12 +414,12 @@ export default function ReputationHistory({
                     width: 40,
                     height: 40,
                     borderRadius: 12,
-                    background: 'linear-gradient(135deg, #E2E8F0, #CBD5E1)',
+                    background: '#dfe6e9',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontWeight: 800,
-                    color: '#64748B',
+                    fontWeight: 700,
+                    color: '#60717d',
                     fontSize: 16,
                     fontFamily: 'var(--font-display)',
                     overflow: 'hidden',
@@ -457,13 +444,13 @@ export default function ReputationHistory({
                       gap: 6,
                       fontSize: 14,
                       fontWeight: 700,
-                      color: '#0F172A',
+                      color: '#182c39',
                       flexWrap: 'wrap',
                     }}
                   >
                     {r.reviewerId?.name}
                     {r.reviewerId?.isVerified && (
-                      <CheckCircle2 size={14} color="#2563EB" fill="#EFF6FF" />
+                      <CheckCircle2 size={14} color="#087f72" fill="#eef7f5" />
                     )}
                   </div>
                   <div>
@@ -477,7 +464,7 @@ export default function ReputationHistory({
                       alignItems: 'center',
                       gap: 5,
                       fontSize: 12,
-                      color: '#94A3B8',
+                      color: '#6e7f89',
                     }}
                   >
                     <Clock size={11} />
@@ -498,7 +485,7 @@ export default function ReputationHistory({
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#2563EB',
+                  color: '#087f72',
                   cursor: 'pointer',
                   fontSize: 13,
                   fontWeight: 700,
@@ -535,7 +522,7 @@ export default function ReputationHistory({
           <div
             style={{
               background: '#fff',
-              borderRadius: 24,
+              borderRadius: 12,
               width: '100%',
               maxWidth: 600,
               maxHeight: '90vh',
@@ -550,7 +537,7 @@ export default function ReputationHistory({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '20px 24px',
-                borderBottom: '1px solid #F1F5F9',
+                borderBottom: '1px solid #f6f8f9',
                 position: 'sticky',
                 top: 0,
                 background: '#fff',
@@ -561,8 +548,8 @@ export default function ReputationHistory({
                 style={{
                   margin: 0,
                   fontSize: 18,
-                  fontWeight: 800,
-                  color: '#0F172A',
+                  fontWeight: 700,
+                  color: '#182c39',
                   fontFamily: 'var(--font-display)',
                 }}
               >
@@ -571,7 +558,7 @@ export default function ReputationHistory({
               <button
                 onClick={() => setSelectedReview(null)}
                 style={{
-                  background: '#F1F5F9',
+                  background: '#f6f8f9',
                   border: 'none',
                   width: 32,
                   height: 32,
@@ -580,7 +567,7 @@ export default function ReputationHistory({
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: '#64748B',
+                  color: '#60717d',
                 }}
               >
                 ✕
@@ -603,12 +590,12 @@ export default function ReputationHistory({
                       width: 48,
                       height: 48,
                       borderRadius: 12,
-                      background: 'linear-gradient(135deg, #E2E8F0, #CBD5E1)',
+                      background: '#dfe6e9',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontWeight: 800,
-                      color: '#64748B',
+                      fontWeight: 700,
+                      color: '#60717d',
                       fontSize: 18,
                       overflow: 'hidden',
                       flexShrink: 0,
@@ -633,7 +620,7 @@ export default function ReputationHistory({
                       style={{
                         fontSize: 16,
                         fontWeight: 700,
-                        color: '#0F172A',
+                        color: '#182c39',
                         display: 'flex',
                         alignItems: 'center',
                         gap: 6,
@@ -642,7 +629,7 @@ export default function ReputationHistory({
                     >
                       {selectedReview.reviewerId?.name}
                       {selectedReview.reviewerId?.isVerified && (
-                        <CheckCircle2 size={16} color="#2563EB" fill="#EFF6FF" />
+                        <CheckCircle2 size={16} color="#087f72" fill="#eef7f5" />
                       )}
                     </div>
                     <div>
@@ -656,7 +643,7 @@ export default function ReputationHistory({
                         alignItems: 'center',
                         gap: 6,
                         fontSize: 13,
-                        color: '#64748B',
+                        color: '#60717d',
                       }}
                     >
                       <Clock size={12} />
@@ -719,12 +706,12 @@ export default function ReputationHistory({
               </div>
 
               {selectedReview.comment && (
-                <div style={{ paddingBottom: 24, borderTop: '1px solid #F1F5F9', paddingTop: 20 }}>
+                <div style={{ paddingBottom: 24, borderTop: '1px solid #f6f8f9', paddingTop: 20 }}>
                   <h4
                     style={{
                       fontSize: 12,
                       fontWeight: 700,
-                      color: '#64748B',
+                      color: '#60717d',
                       textTransform: 'uppercase',
                       letterSpacing: 0.6,
                       margin: '0 0 12px 0',
@@ -735,7 +722,7 @@ export default function ReputationHistory({
                   <p
                     style={{
                       fontSize: 15,
-                      color: '#475569',
+                      color: '#435663',
                       lineHeight: 1.7,
                       margin: 0,
                       fontStyle: 'italic',
@@ -750,9 +737,9 @@ export default function ReputationHistory({
                 <div
                   style={{
                     padding: '20px 18px',
-                    background: 'linear-gradient(135deg, #EFF6FF, #F0F7FF)',
-                    border: '1px solid rgba(37, 99, 235, 0.15)',
-                    borderRadius: 14,
+                    background: '#eef7f5',
+                    border: '1px solid rgba(8, 127, 114, 0.15)',
+                    borderRadius: 12,
                   }}
                 >
                   <div
@@ -760,12 +747,12 @@ export default function ReputationHistory({
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 4,
-                      background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+                      background: '#087f72',
                       color: '#fff',
                       fontSize: 10,
-                      fontWeight: 800,
+                      fontWeight: 700,
                       padding: '3px 10px',
-                      borderRadius: 999,
+                      borderRadius: 6,
                       letterSpacing: 0.3,
                       marginBottom: 12,
                     }}
@@ -811,11 +798,11 @@ function MetricPill({
   const hasRating = typeof rating === 'number' && rating > 0;
   const getColor = (r: number) => {
     if (r >= 4) return { text: '#065F46', bg: '#ECFDF5', border: '#A7F3D0' };
-    if (r >= 3) return { text: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' };
+    if (r >= 3) return { text: '#06665d', bg: '#eef7f5', border: '#c8e3dc' };
     if (r >= 2) return { text: '#92400E', bg: '#FFFBEB', border: '#FDE68A' };
-    return { text: '#64748B', bg: '#F8FAFC', border: '#E2E8F0' };
+    return { text: '#60717d', bg: '#f6f8f9', border: '#dfe6e9' };
   };
-  const c = hasRating ? getColor(rating) : { text: '#94A3B8', bg: '#F8FAFC', border: '#E2E8F0' };
+  const c = hasRating ? getColor(rating) : { text: '#6e7f89', bg: '#f6f8f9', border: '#dfe6e9' };
 
   return (
     <div
@@ -849,7 +836,7 @@ function MetricPill({
       <span
         style={{
           fontSize: 12,
-          fontWeight: 800,
+          fontWeight: 700,
           color: c.text,
           fontFamily: 'var(--font-display)',
           flexShrink: 0,

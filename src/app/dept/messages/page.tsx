@@ -24,6 +24,7 @@ export default async function DeptMessagesPage({
 
   return (
     <DashboardShell
+      embedded
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
@@ -31,15 +32,7 @@ export default async function DeptMessagesPage({
       user={{ ...data.chromeUser, userId: session.user.id }}
       hideFooter
     >
-      <div
-        style={{
-          height: '100%',
-          padding: '16px 24px',
-          boxSizing: 'border-box',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <div className="messaging-page">
         <Inbox
           currentUserId={session.user.id}
           currentUserRole="dept_head"

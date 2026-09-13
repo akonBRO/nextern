@@ -1,4 +1,5 @@
 'use client';
+import FormField from '@/components/ui/FormField';
 // src/components/academic/TeacherRecommendationComposer.tsx
 
 import { useMemo, useState, useTransition } from 'react';
@@ -51,7 +52,7 @@ function getApiErrorMessage(data: ApiResponse | null | undefined, fallback: stri
 function badgeTone(priority: 'high' | 'medium' | 'low') {
   if (priority === 'high') return { bg: '#FEF2F2', border: '#FECACA', color: '#B91C1C' };
   if (priority === 'medium') return { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' };
-  return { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' };
+  return { bg: '#edf7f3', border: '#bdddd5', color: '#06665d' };
 }
 
 function requestStatusTone(status: 'pending' | 'accepted' | 'rejected' | 'hold') {
@@ -227,15 +228,16 @@ export default function TeacherRecommendationComposer({
         gridTemplateColumns: 'minmax(0, 1.08fr) minmax(0, 0.92fr)',
         gap: 18,
       }}
-      className="teacher-recommendation-grid"
+      className="teacher-recommendation-grid v2-page-grid"
     >
       {/* ── Composer ── */}
       <div
+        className="nx-surface"
         style={{
-          borderRadius: 24,
+          borderRadius: 12,
           background: '#FFFFFF',
           border: '1px solid #D9E2EC',
-          boxShadow: '0 18px 34px rgba(15,23,42,0.06)',
+          boxShadow: 'var(--shadow-card)',
           padding: 22,
         }}
       >
@@ -243,8 +245,8 @@ export default function TeacherRecommendationComposer({
           <div
             style={{
               fontSize: 12,
-              fontWeight: 800,
-              color: '#64748B',
+              fontWeight: 700,
+              color: '#60717d',
               textTransform: 'uppercase',
               letterSpacing: 0.8,
             }}
@@ -255,8 +257,8 @@ export default function TeacherRecommendationComposer({
             style={{
               margin: '8px 0 0',
               fontSize: 24,
-              fontWeight: 900,
-              color: '#0F172A',
+              fontWeight: 700,
+              color: '#182c39',
               fontFamily: 'var(--font-display)',
             }}
           >
@@ -264,7 +266,7 @@ export default function TeacherRecommendationComposer({
               ? 'Edit a saved job recommendation'
               : 'Recommend the student for a platform job'}
           </h3>
-          <p style={{ margin: '10px 0 0', fontSize: 14, lineHeight: 1.7, color: '#64748B' }}>
+          <p style={{ margin: '10px 0 0', fontSize: 14, lineHeight: 1.7, color: '#60717d' }}>
             {editingRecommendationId
               ? 'Adjust the saved recommendation details here, then save your changes. Cancel anytime to go back to creating a new recommendation.'
               : 'Choose an internship, part-time, or full-time job from this platform and explain why the student should be prioritized.'}
@@ -277,7 +279,7 @@ export default function TeacherRecommendationComposer({
             style={{
               borderRadius: 14,
               border: '1.5px solid #93C5FD',
-              background: 'linear-gradient(135deg, #EFF6FF, #F0F9FF)',
+              background: '#edf7f3',
               padding: '12px 15px',
               marginBottom: 16,
               display: 'flex',
@@ -293,7 +295,7 @@ export default function TeacherRecommendationComposer({
                   width: 32,
                   height: 32,
                   borderRadius: 10,
-                  background: '#BFDBFE',
+                  background: '#bdddd5',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -305,7 +307,7 @@ export default function TeacherRecommendationComposer({
                   height="15"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="#1D4ED8"
+                  stroke="#06665d"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -325,8 +327,8 @@ export default function TeacherRecommendationComposer({
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: '#64748B',
-                background: '#F1F5F9',
+                color: '#60717d',
+                background: '#f6f8f9',
                 border: '1px solid #CBD5E1',
                 borderRadius: 10,
                 padding: '6px 12px',
@@ -359,14 +361,14 @@ export default function TeacherRecommendationComposer({
             <div
               style={{
                 borderRadius: 14,
-                border: '1px solid #BFDBFE',
-                background: '#EFF6FF',
+                border: '1px solid #bdddd5',
+                background: '#edf7f3',
                 padding: '13px 15px',
                 display: 'grid',
                 gap: 8,
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#182c39' }}>
                 {linkedJob.title}
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -382,6 +384,7 @@ export default function TeacherRecommendationComposer({
 
           <div
             style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}
+            className="v2-form-grid"
           >
             <Field label="Recommendation title">
               <input
@@ -464,8 +467,8 @@ export default function TeacherRecommendationComposer({
           <div
             style={{
               borderRadius: 14,
-              background: '#F8FAFC',
-              border: '1px solid #E2E8F0',
+              background: '#f6f8f9',
+              border: '1px solid #dfe6e9',
               padding: '12px 14px',
               color: '#475569',
               fontSize: 13,
@@ -484,10 +487,10 @@ export default function TeacherRecommendationComposer({
               border: 'none',
               borderRadius: 14,
               padding: '13px 20px',
-              background: isPending ? '#BFDBFE' : 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+              background: isPending ? '#bdddd5' : 'linear-gradient(135deg, #087f72, #06665d)',
               color: '#FFFFFF',
               fontSize: 14,
-              fontWeight: 800,
+              fontWeight: 700,
               cursor: isPending ? 'wait' : 'pointer',
               alignSelf: 'start',
             }}
@@ -505,11 +508,12 @@ export default function TeacherRecommendationComposer({
 
       {/* ── History ── */}
       <div
+        className="nx-surface"
         style={{
-          borderRadius: 24,
+          borderRadius: 12,
           background: '#FFFFFF',
           border: '1px solid #D9E2EC',
-          boxShadow: '0 18px 34px rgba(15,23,42,0.06)',
+          boxShadow: 'var(--shadow-card)',
           padding: 22,
         }}
       >
@@ -527,8 +531,8 @@ export default function TeacherRecommendationComposer({
             <div
               style={{
                 fontSize: 12,
-                fontWeight: 800,
-                color: '#64748B',
+                fontWeight: 700,
+                color: '#60717d',
                 textTransform: 'uppercase',
                 letterSpacing: 0.8,
               }}
@@ -539,8 +543,8 @@ export default function TeacherRecommendationComposer({
               style={{
                 margin: '8px 0 0',
                 fontSize: 22,
-                fontWeight: 900,
-                color: '#0F172A',
+                fontWeight: 700,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
               }}
             >
@@ -555,11 +559,11 @@ export default function TeacherRecommendationComposer({
         {recommendations.length === 0 ? (
           <div
             style={{
-              borderRadius: 16,
+              borderRadius: 12,
               border: '1px dashed #CBD5E1',
-              background: '#F8FAFC',
+              background: '#f6f8f9',
               padding: '24px 18px',
-              color: '#64748B',
+              color: '#60717d',
               fontSize: 14,
               lineHeight: 1.7,
             }}
@@ -583,8 +587,8 @@ export default function TeacherRecommendationComposer({
                 <div
                   key={item.id}
                   style={{
-                    borderRadius: 18,
-                    border: isEditing ? '1.5px solid #93C5FD' : '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: isEditing ? '1.5px solid #93C5FD' : '1px solid #dfe6e9',
                     background: isEditing ? '#F8FBFF' : '#FFFFFF',
                     padding: 16,
                     transition: 'border-color 0.15s, background 0.15s',
@@ -607,12 +611,12 @@ export default function TeacherRecommendationComposer({
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: 5,
-                            background: '#BFDBFE',
-                            color: '#1D4ED8',
+                            background: '#bdddd5',
+                            color: '#06665d',
                             borderRadius: 999,
                             padding: '2px 8px',
                             fontSize: 10,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             textTransform: 'uppercase',
                             letterSpacing: 0.5,
                             marginBottom: 6,
@@ -637,8 +641,8 @@ export default function TeacherRecommendationComposer({
                       <div
                         style={{
                           fontSize: 15,
-                          fontWeight: 800,
-                          color: '#0F172A',
+                          fontWeight: 700,
+                          color: '#182c39',
                           overflowWrap: 'anywhere',
                           fontFamily: 'var(--font-display)',
                         }}
@@ -650,7 +654,7 @@ export default function TeacherRecommendationComposer({
                           style={{
                             marginTop: 5,
                             fontSize: 13,
-                            color: '#64748B',
+                            color: '#60717d',
                             overflowWrap: 'anywhere',
                           }}
                         >
@@ -675,9 +679,9 @@ export default function TeacherRecommendationComposer({
                           alignItems: 'center',
                           gap: 5,
                           borderRadius: 10,
-                          border: isEditing ? '1px solid #93C5FD' : '1px solid #BFDBFE',
-                          background: isEditing ? '#DBEAFE' : '#EFF6FF',
-                          color: '#1D4ED8',
+                          border: isEditing ? '1px solid #93C5FD' : '1px solid #bdddd5',
+                          background: isEditing ? '#dbefea' : '#edf7f3',
+                          color: '#06665d',
                           padding: '8px 11px',
                           fontSize: 12,
                           fontWeight: 700,
@@ -768,9 +772,9 @@ export default function TeacherRecommendationComposer({
                             onClick={() => setConfirmDeleteId(null)}
                             style={{
                               borderRadius: 10,
-                              border: '1px solid #E2E8F0',
-                              background: '#F8FAFC',
-                              color: '#64748B',
+                              border: '1px solid #dfe6e9',
+                              background: '#f6f8f9',
+                              color: '#60717d',
                               padding: '8px 10px',
                               fontSize: 12,
                               fontWeight: 700,
@@ -828,9 +832,9 @@ export default function TeacherRecommendationComposer({
                           width: 36,
                           height: 36,
                           borderRadius: 10,
-                          border: '1px solid #E2E8F0',
-                          background: '#F8FAFC',
-                          color: '#64748B',
+                          border: '1px solid #dfe6e9',
+                          background: '#f6f8f9',
+                          color: '#60717d',
                           display: 'inline-flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -901,7 +905,7 @@ export default function TeacherRecommendationComposer({
                             border: `1px solid ${tone.border}`,
                             color: tone.color,
                             fontSize: 11,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             textTransform: 'uppercase',
                           }}
                         >
@@ -942,9 +946,9 @@ export default function TeacherRecommendationComposer({
                               display: 'inline-flex',
                               alignItems: 'center',
                               borderRadius: 999,
-                              border: '1px solid #BFDBFE',
-                              background: '#EFF6FF',
-                              color: '#1D4ED8',
+                              border: '1px solid #bdddd5',
+                              background: '#edf7f3',
+                              color: '#06665d',
                               padding: '5px 10px',
                               textDecoration: 'none',
                               fontSize: 12,
@@ -961,15 +965,15 @@ export default function TeacherRecommendationComposer({
                           style={{
                             marginTop: 12,
                             borderRadius: 12,
-                            border: '1px solid #E2E8F0',
-                            background: '#F8FAFC',
+                            border: '1px solid #dfe6e9',
+                            background: '#f6f8f9',
                             padding: '11px 13px',
                           }}
                         >
                           <div
                             style={{
                               fontSize: 10,
-                              fontWeight: 800,
+                              fontWeight: 700,
                               color: '#475569',
                               textTransform: 'uppercase',
                               letterSpacing: 0.6,
@@ -991,7 +995,7 @@ export default function TeacherRecommendationComposer({
                         </div>
                       )}
 
-                      <div style={{ marginTop: 12, fontSize: 12, color: '#94A3B8' }}>
+                      <div style={{ marginTop: 12, fontSize: 12, color: '#60717d' }}>
                         Added {new Date(item.createdAt).toLocaleDateString()}
                       </div>
                     </>
@@ -1018,22 +1022,7 @@ export default function TeacherRecommendationComposer({
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label style={{ display: 'grid', gap: 8 }}>
-      <span
-        style={{
-          fontSize: 12,
-          fontWeight: 800,
-          color: '#475569',
-          textTransform: 'uppercase',
-          letterSpacing: 0.8,
-        }}
-      >
-        {label}
-      </span>
-      {children}
-    </label>
-  );
+  return <FormField label={label}>{children}</FormField>;
 }
 
 function Chip({
@@ -1045,12 +1034,12 @@ function Chip({
 }) {
   const p =
     tone === 'info'
-      ? { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' }
+      ? { bg: '#edf7f3', border: '#bdddd5', color: '#06665d' }
       : tone === 'success'
         ? { bg: '#ECFDF5', border: '#A7F3D0', color: '#166634' }
         : tone === 'warning'
           ? { bg: '#FFFBEB', border: '#FDE68A', color: '#92400E' }
-          : { bg: '#F8FAFC', border: '#E2E8F0', color: '#334155' };
+          : { bg: '#f6f8f9', border: '#dfe6e9', color: '#334155' };
   return (
     <span
       style={{
@@ -1102,7 +1091,7 @@ function inputStyle(): React.CSSProperties {
     border: '1px solid #CBD5E1',
     padding: '11px 13px',
     fontSize: 14,
-    color: '#0F172A',
+    color: '#182c39',
     background: '#FFFFFF',
     outline: 'none',
     fontFamily: 'inherit',

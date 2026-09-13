@@ -72,7 +72,7 @@ const fieldStyle = {
   borderRadius: 12,
   border: '1px solid #D9E2EC',
   background: '#FFFFFF',
-  color: '#0F172A',
+  color: '#182c39',
   fontSize: 13,
   outline: 'none',
 } as const;
@@ -131,11 +131,11 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
       {notice ? (
         <div
           style={{
-            borderRadius: 16,
+            borderRadius: 12,
             padding: '12px 14px',
-            background: '#EFF6FF',
-            color: '#1D4ED8',
-            border: '1px solid #BFDBFE',
+            background: '#edf7f3',
+            color: '#06665d',
+            border: '1px solid #bdddd5',
             fontSize: 13,
             fontWeight: 700,
           }}
@@ -150,9 +150,9 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
             key={assignment._id}
             style={{
               background: '#FFFFFF',
-              borderRadius: 20,
+              borderRadius: 12,
               border: '1px solid #D9E2EC',
-              boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
+              boxShadow: 'var(--shadow-card)',
               padding: 18,
               display: 'grid',
               gap: 12,
@@ -170,14 +170,14 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                 <div
                   style={{
                     fontSize: 16,
-                    fontWeight: 900,
-                    color: '#0F172A',
+                    fontWeight: 700,
+                    color: '#182c39',
                     fontFamily: 'var(--font-display)',
                   }}
                 >
                   {assignment.student?.name ?? 'Candidate'}
                 </div>
-                <div style={{ marginTop: 4, fontSize: 12, color: '#64748B' }}>
+                <div style={{ marginTop: 4, fontSize: 12, color: '#60717d' }}>
                   {[assignment.student?.university, assignment.student?.department]
                     .filter(Boolean)
                     .join(' • ')}
@@ -187,11 +187,11 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                 style={{
                   borderRadius: 999,
                   padding: '6px 10px',
-                  background: '#F8FAFC',
-                  border: '1px solid #E2E8F0',
+                  background: '#f6f8f9',
+                  border: '1px solid #dfe6e9',
                   color: '#475569',
                   fontSize: 12,
-                  fontWeight: 800,
+                  fontWeight: 700,
                 }}
               >
                 {formatAssessmentAssignmentStatus(assignment.status)}
@@ -211,29 +211,29 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                   key={stat.label}
                   style={{
                     borderRadius: 14,
-                    background: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
+                    background: '#f6f8f9',
+                    border: '1px solid #dfe6e9',
                     padding: '10px 12px',
                   }}
                 >
                   <div
                     style={{
                       fontSize: 20,
-                      fontWeight: 900,
-                      color: '#2563EB',
+                      fontWeight: 700,
+                      color: '#087f72',
                       fontFamily: 'var(--font-display)',
                     }}
                   >
                     {stat.value}
                   </div>
-                  <div style={{ marginTop: 4, fontSize: 11, color: '#64748B', fontWeight: 700 }}>
+                  <div style={{ marginTop: 4, fontSize: 11, color: '#60717d', fontWeight: 700 }}>
                     {stat.label}
                   </div>
                 </div>
               ))}
             </div>
 
-            <div style={{ fontSize: 12, color: '#64748B' }}>
+            <div style={{ fontSize: 12, color: '#60717d' }}>
               Submitted: {formatDhakaDateTime(assignment.submission?.submittedAt, 'Not submitted')}
             </div>
 
@@ -241,8 +241,8 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
               <div
                 style={{
                   borderRadius: 14,
-                  border: '1px solid #E2E8F0',
-                  background: '#F8FAFC',
+                  border: '1px solid #dfe6e9',
+                  background: '#f6f8f9',
                   padding: '12px 14px',
                   display: 'flex',
                   alignItems: 'center',
@@ -252,10 +252,10 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                 }}
               >
                 <div style={{ display: 'grid', gap: 4 }}>
-                  <div style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>
+                  <div style={{ fontSize: 12, color: '#60717d', fontWeight: 700 }}>
                     Candidate decision
                   </div>
-                  <div style={{ fontSize: 13, color: '#0F172A', fontWeight: 800 }}>
+                  <div style={{ fontSize: 13, color: '#182c39', fontWeight: 800 }}>
                     Update the pipeline status directly while you review this submission.
                   </div>
                 </div>
@@ -281,15 +281,15 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                 <div
                   key={`${assignment._id}-${answer.questionIndex}`}
                   style={{
-                    borderRadius: 16,
-                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
                     background: '#FFFFFF',
                     padding: 14,
                     display: 'grid',
                     gap: 10,
                   }}
                 >
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#182c39' }}>
                     Q{answer.questionIndex}. {question?.questionText ?? 'Question'}
                   </div>
                   <div
@@ -303,17 +303,17 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                     {answer.answerText || answer.code || 'No answer submitted.'}
                   </div>
                   {answer.executionStatus ? (
-                    <div style={{ fontSize: 12, color: '#64748B' }}>
+                    <div style={{ fontSize: 12, color: '#60717d' }}>
                       Execution: {answer.executionStatus}
                     </div>
                   ) : null}
                   {typeof answer.plagiarismScore === 'number' ? (
-                    <div style={{ fontSize: 12, color: '#64748B' }}>
+                    <div style={{ fontSize: 12, color: '#60717d' }}>
                       Similarity flag: {answer.plagiarismScore}%
                     </div>
                   ) : null}
                   {typeof answer.objectiveMarksAwarded === 'number' ? (
-                    <div style={{ fontSize: 12, color: '#64748B' }}>
+                    <div style={{ fontSize: 12, color: '#60717d' }}>
                       Auto score: {answer.objectiveMarksAwarded}
                       {question ? ` / ${question.marks}` : ''}
                     </div>
@@ -322,8 +322,8 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                     <div
                       style={{
                         borderRadius: 12,
-                        border: '1px solid #E2E8F0',
-                        background: '#F8FAFC',
+                        border: '1px solid #dfe6e9',
+                        background: '#f6f8f9',
                         padding: '10px 12px',
                         fontSize: 12,
                         color: '#475569',
@@ -348,9 +348,9 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                             gap: 6,
                             borderRadius: 999,
                             padding: '6px 10px',
-                            background: '#EFF6FF',
-                            border: '1px solid #BFDBFE',
-                            color: '#2563EB',
+                            background: '#edf7f3',
+                            border: '1px solid #bdddd5',
+                            color: '#087f72',
                             fontSize: 12,
                             fontWeight: 700,
                             textDecoration: 'none',
@@ -414,13 +414,13 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 8,
-                  background: '#0F172A',
+                  background: '#182c39',
                   color: '#FFFFFF',
                   border: 'none',
                   borderRadius: 12,
                   padding: '10px 14px',
                   fontSize: 12,
-                  fontWeight: 800,
+                  fontWeight: 700,
                   cursor: gradingId === assignment._id ? 'not-allowed' : 'pointer',
                 }}
               >
@@ -437,9 +437,9 @@ export default function EmployerAssessmentDetailClient({ assessment, assignments
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 8,
-                  color: '#64748B',
+                  color: '#60717d',
                   fontSize: 12,
-                  fontWeight: 800,
+                  fontWeight: 700,
                 }}
               >
                 <CheckCircle2 size={14} />

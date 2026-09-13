@@ -109,6 +109,7 @@ export default async function AdvisorStudentsPage({
 
   return (
     <DashboardShell
+      embedded
       role="advisor"
       roleLabel="Advisor dashboard"
       homeHref="/advisor/dashboard"
@@ -139,7 +140,7 @@ export default async function AdvisorStudentsPage({
               }}
             >
               <div style={{ display: 'grid', gap: 10 }}>
-                <div style={{ color: '#E2E8F0', fontSize: 14, lineHeight: 1.7 }}>
+                <div style={{ color: '#dfe6e9', fontSize: 14, lineHeight: 1.7 }}>
                   {session.user.role === 'dept_head'
                     ? 'Viewing students across your university scope.'
                     : 'Viewing only students assigned to you as advisor.'}

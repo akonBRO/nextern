@@ -1,4 +1,6 @@
 'use client';
+
+import BrandLoader from '@/components/ui/BrandLoader';
 // src/components/notifications/NotificationsPageClient.tsx
 
 import { useCallback, useEffect, useState } from 'react';
@@ -24,16 +26,16 @@ import { readJsonSafely } from '@/lib/safe-json';
 import PaginationControls from '@/components/ui/PaginationControls';
 
 const C = {
-  blue: '#2563EB',
-  dark: '#0F172A',
-  bg: '#F1F5F9',
+  blue: '#087f72',
+  dark: '#182c39',
+  bg: '#f6f8f9',
   white: '#fff',
-  border: '#E2E8F0',
-  text: '#0F172A',
-  gray: '#64748B',
-  light: '#64748B',
-  blueBg: '#EFF6FF',
-  blueBorder: '#BFDBFE',
+  border: '#dfe6e9',
+  text: '#182c39',
+  gray: '#60717d',
+  light: '#60717d',
+  blueBg: '#eef7f5',
+  blueBorder: '#c8e3dc',
 };
 
 type Notif = {
@@ -73,23 +75,23 @@ const DEFAULT_TYPE_CONFIG: Record<
 > = {
   application_received: {
     icon: <Users size={15} />,
-    color: '#0D9488',
+    color: '#087f72',
     bg: '#F0FDFA',
     border: '#99F6E4',
     label: 'Registration',
   },
   status_update: {
     icon: <Briefcase size={15} />,
-    color: '#2563EB',
-    bg: '#EFF6FF',
-    border: '#BFDBFE',
+    color: '#087f72',
+    bg: '#eef7f5',
+    border: '#c8e3dc',
     label: 'Update',
   },
   recommendation_request: {
     icon: <SendToBack size={15} />,
-    color: '#7C3AED',
-    bg: '#F5F3FF',
-    border: '#DDD6FE',
+    color: '#087f72',
+    bg: '#eef7f5',
+    border: '#c8e3dc',
     label: 'Recommendation',
   },
   deadline_reminder: {
@@ -101,14 +103,14 @@ const DEFAULT_TYPE_CONFIG: Record<
   },
   badge_earned: {
     icon: <Award size={15} />,
-    color: '#7C3AED',
+    color: '#087f72',
     bg: '#EDE9FE',
-    border: '#DDD6FE',
+    border: '#c8e3dc',
     label: 'Badge',
   },
   job_match: {
     icon: <Zap size={15} />,
-    color: '#0D9488',
+    color: '#087f72',
     bg: '#F0FDFA',
     border: '#99F6E4',
     label: 'Match',
@@ -129,9 +131,9 @@ const DEFAULT_TYPE_CONFIG: Record<
   },
   mentorship_request: {
     icon: <Users size={15} />,
-    color: '#6366F1',
-    bg: '#EEF2FF',
-    border: '#C7D2FE',
+    color: '#087f72',
+    bg: '#eef7f5',
+    border: '#c8e3dc',
     label: 'Mentor Request',
   },
   mentorship_accepted: {
@@ -143,37 +145,37 @@ const DEFAULT_TYPE_CONFIG: Record<
   },
   score_update: {
     icon: <TrendingUp size={15} />,
-    color: '#6366F1',
-    bg: '#EEF2FF',
-    border: '#C7D2FE',
+    color: '#087f72',
+    bg: '#eef7f5',
+    border: '#c8e3dc',
     label: 'Score',
   },
   message_received: {
     icon: <MessageSquare size={15} />,
-    color: '#64748B',
-    bg: '#F1F5F9',
-    border: '#E2E8F0',
+    color: '#60717d',
+    bg: '#f6f8f9',
+    border: '#dfe6e9',
     label: 'Message',
   },
   support_message: {
     icon: <MessageSquare size={15} />,
-    color: '#0F766E',
+    color: '#06665d',
     bg: '#F0FDFA',
     border: '#99F6E4',
     label: 'Support Message',
   },
   admin_message: {
     icon: <MessageSquare size={15} />,
-    color: '#1D4ED8',
-    bg: '#EFF6FF',
-    border: '#BFDBFE',
+    color: '#06665d',
+    bg: '#eef7f5',
+    border: '#c8e3dc',
     label: 'Admin Message',
   },
   system_message: {
     icon: <AlertCircle size={15} />,
-    color: '#7C3AED',
-    bg: '#F5F3FF',
-    border: '#DDD6FE',
+    color: '#087f72',
+    bg: '#eef7f5',
+    border: '#c8e3dc',
     label: 'System Message',
   },
 };
@@ -182,9 +184,9 @@ function typeConfig(type: string) {
   return (
     DEFAULT_TYPE_CONFIG[type] ?? {
       icon: <AlertCircle size={15} />,
-      color: '#64748B',
-      bg: '#F1F5F9',
-      border: '#E2E8F0',
+      color: '#60717d',
+      bg: '#f6f8f9',
+      border: '#dfe6e9',
       label: 'Notification',
     }
   );
@@ -223,6 +225,7 @@ export default function NotificationsPageClient({
   const [notifications, setNotifs] = useState<Notif[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [markingAll, setMarkingAll] = useState(false);
   const [filter, setFilter] = useState(defaultFilter);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
@@ -237,11 +240,13 @@ export default function NotificationsPageClient({
 
   const fetchNotifs = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const params = new URLSearchParams({ page: String(page), limit: String(pageSize) });
       if (showUnreadOnly) params.set('unread', 'true');
       if (filter !== 'all') params.set('type', filter);
       const res = await fetch(`/api/notifications?${params}`);
+      if (!res.ok) throw new Error('Notifications could not be loaded. Please try again.');
       const data = await readJsonSafely<{
         notifications?: Notif[];
         unreadCount?: number;
@@ -250,6 +255,8 @@ export default function NotificationsPageClient({
       setNotifs(data.notifications ?? []);
       setUnread(data.unreadCount ?? 0);
       setTotalNotifications(data.pagination?.total ?? data.notifications?.length ?? 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Notifications could not be loaded.');
     } finally {
       setLoading(false);
     }
@@ -260,17 +267,28 @@ export default function NotificationsPageClient({
   }, [fetchNotifs]);
 
   async function markRead(id: string) {
-    await fetch(`/api/notifications?id=${id}`, { method: 'PATCH' });
-    setNotifs((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)));
-    setUnread((prev) => Math.max(0, prev - 1));
+    try {
+      const res = await fetch(`/api/notifications?id=${id}`, { method: 'PATCH' });
+      if (!res.ok) throw new Error('This notification could not be marked as read.');
+      setNotifs((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)));
+      setUnread((prev) => Math.max(0, prev - 1));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Please try again.');
+    }
   }
 
   async function markAllRead() {
     setMarkingAll(true);
-    await fetch('/api/notifications', { method: 'PATCH' });
-    setNotifs((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    setUnread(0);
-    setMarkingAll(false);
+    try {
+      const res = await fetch('/api/notifications', { method: 'PATCH' });
+      if (!res.ok) throw new Error('Notifications could not be marked as read.');
+      setNotifs((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setUnread(0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Please try again.');
+    } finally {
+      setMarkingAll(false);
+    }
   }
 
   return (
@@ -278,23 +296,14 @@ export default function NotificationsPageClient({
       {/* ── Header ── */}
       <div
         style={{
-          background: '#172033',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          background: '#FFFFFF',
+          borderBottom: `1px solid ${C.border}`,
         }}
       >
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '20px 24px' }}>
-          <Link
-            href={dashboardHref}
-            style={{
-              color: C.gray,
-              fontSize: 13,
-              textDecoration: 'none',
-              fontWeight: 500,
-            }}
-          >
-            ← Back to Dashboard
-          </Link>
-
+        <div
+          className="nx-page-width"
+          style={{ maxWidth: 900, margin: '0 auto', padding: '20px 24px' }}
+        >
           <div
             style={{
               display: 'flex',
@@ -310,13 +319,13 @@ export default function NotificationsPageClient({
                 style={{
                   width: 46,
                   height: 46,
-                  borderRadius: 14,
+                  borderRadius: 12,
                   background: C.blue,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#fff',
-                  boxShadow: '0 8px 20px rgba(37,99,235,0.3)',
+                  boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
                 }}
               >
                 <Bell size={20} />
@@ -325,15 +334,15 @@ export default function NotificationsPageClient({
                 <h1
                   style={{
                     fontSize: 22,
-                    fontWeight: 900,
-                    color: '#F8FAFC',
+                    fontWeight: 750,
+                    color: C.text,
                     fontFamily: 'var(--font-display)',
                     margin: 0,
                   }}
                 >
                   {title}
                 </h1>
-                <div style={{ fontSize: 13, color: '#B8C5D6', marginTop: 3 }}>{subtitle}</div>
+                <div style={{ fontSize: 13, color: C.gray, marginTop: 3 }}>{subtitle}</div>
               </div>
             </div>
 
@@ -353,7 +362,7 @@ export default function NotificationsPageClient({
                   <div
                     style={{ width: 8, height: 8, borderRadius: '50%', background: '#EF4444' }}
                   />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#FCA5A5' }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#9f3737' }}>
                     {unread} unread
                   </span>
                 </div>
@@ -367,9 +376,9 @@ export default function NotificationsPageClient({
                   gap: 7,
                   padding: '10px 18px',
                   borderRadius: 12,
-                  background: unread === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.1)',
-                  color: unread === 0 ? C.gray : '#E2E8F0',
-                  border: '1px solid rgba(255,255,255,0.12)',
+                  background: unread === 0 ? C.bg : C.blueBg,
+                  color: unread === 0 ? C.gray : C.blue,
+                  border: `1px solid ${C.border}`,
                   fontSize: 13,
                   fontWeight: 700,
                   cursor: unread === 0 ? 'not-allowed' : 'pointer',
@@ -384,12 +393,48 @@ export default function NotificationsPageClient({
       </div>
 
       {/* ── Body ── */}
-      <div style={{ maxWidth: 900, margin: '28px auto', padding: '0 24px' }}>
+      <div
+        className="nx-page-width"
+        style={{ maxWidth: 900, margin: '28px auto', padding: '0 24px' }}
+      >
+        {error && (
+          <div
+            role="alert"
+            style={{
+              padding: 16,
+              border: '1px solid #fecaca',
+              borderRadius: 8,
+              background: '#fff1f2',
+              color: '#9f3737',
+              marginBottom: 16,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              flexWrap: 'wrap',
+            }}
+          >
+            <AlertCircle size={18} />
+            <span style={{ flex: 1 }}>{error}</span>
+            <button
+              type="button"
+              onClick={() => void fetchNotifs()}
+              style={{
+                border: '1px solid #fecaca',
+                background: 'white',
+                borderRadius: 6,
+                padding: '8px 12px',
+                cursor: 'pointer',
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
         {/* Filter bar */}
         <div
           style={{
             background: C.white,
-            borderRadius: 16,
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
             padding: '14px 18px',
             display: 'flex',
@@ -405,6 +450,7 @@ export default function NotificationsPageClient({
             {filterTabs.map((tab) => (
               <button
                 key={tab.value}
+                aria-pressed={filter === tab.value}
                 onClick={() => {
                   setFilter(tab.value);
                   setPage(1);
@@ -419,7 +465,7 @@ export default function NotificationsPageClient({
                   fontWeight: 700,
                   border:
                     filter === tab.value ? `1.5px solid ${C.blue}` : `1.5px solid ${C.border}`,
-                  background: filter === tab.value ? C.blueBg : '#F8FAFC',
+                  background: filter === tab.value ? C.blueBg : '#f6f8f9',
                   color: filter === tab.value ? C.blue : C.gray,
                   cursor: 'pointer',
                   transition: 'all 0.15s',
@@ -431,6 +477,7 @@ export default function NotificationsPageClient({
             ))}
           </div>
           <button
+            aria-pressed={showUnreadOnly}
             onClick={() => {
               setShowUnreadOnly((value) => !value);
               setPage(1);
@@ -442,7 +489,7 @@ export default function NotificationsPageClient({
               padding: '7px 14px',
               borderRadius: 10,
               border: showUnreadOnly ? `1.5px solid ${C.blue}` : `1.5px solid ${C.border}`,
-              background: showUnreadOnly ? C.blueBg : '#F8FAFC',
+              background: showUnreadOnly ? C.blueBg : '#f6f8f9',
               color: showUnreadOnly ? C.blue : C.gray,
               fontSize: 12,
               fontWeight: 700,
@@ -458,35 +505,22 @@ export default function NotificationsPageClient({
         <div
           style={{
             background: C.white,
-            borderRadius: 18,
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
             overflow: 'hidden',
             boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
           }}
         >
           {loading ? (
-            <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  border: `3px solid ${C.border}`,
-                  borderTopColor: C.blue,
-                  borderRadius: '50%',
-                  margin: '0 auto 16px',
-                  animation: 'spin 0.8s linear infinite',
-                }}
-              />
-              <div style={{ color: C.light, fontSize: 14 }}>Loading notifications…</div>
-            </div>
+            <BrandLoader variant="section" label="Loading notifications" />
           ) : notifications.length === 0 ? (
             <div style={{ padding: '64px 24px', textAlign: 'center' }}>
               <div
                 style={{
                   width: 64,
                   height: 64,
-                  borderRadius: 20,
-                  background: '#F1F5F9',
+                  borderRadius: 12,
+                  background: '#f6f8f9',
                   border: `1px solid ${C.border}`,
                   display: 'flex',
                   alignItems: 'center',
@@ -497,13 +531,13 @@ export default function NotificationsPageClient({
               >
                 <Bell size={28} />
               </div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: C.dark, marginBottom: 6 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: C.dark, marginBottom: 6 }}>
                 No notifications
               </div>
               <div style={{ fontSize: 13, color: C.light, maxWidth: 380, margin: '0 auto' }}>
                 {showUnreadOnly
                   ? "No unread notifications — you're all caught up!"
-                  : 'Notifications will appear here when students register for your events.'}
+                  : 'Updates about your activity, conversations, and opportunities will appear here.'}
               </div>
             </div>
           ) : (
@@ -525,7 +559,7 @@ export default function NotificationsPageClient({
                     cursor: notif.isRead ? 'default' : 'pointer',
                     transition: 'background 0.1s',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#F8FAFC')}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f6f8f9')}
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.background = notif.isRead ? C.white : '#F8FBFF')
                   }
@@ -567,7 +601,7 @@ export default function NotificationsPageClient({
                             color: cfg.color,
                             border: `1px solid ${cfg.border}`,
                             padding: '1px 8px',
-                            borderRadius: 999,
+                            borderRadius: 6,
                             fontSize: 10,
                             fontWeight: 700,
                             marginBottom: 5,
@@ -682,17 +716,6 @@ export default function NotificationsPageClient({
             <div style={{ fontSize: 13, color: C.light }}>
               {showUnreadOnly ? 'Showing unread notifications only' : 'Showing all notifications'}
             </div>
-            <Link
-              href={dashboardHref}
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: C.blue,
-                textDecoration: 'none',
-              }}
-            >
-              ← Back to dashboard
-            </Link>
           </div>
         )}
       </div>

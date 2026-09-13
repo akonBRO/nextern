@@ -1,4 +1,5 @@
 'use client';
+import FormField from '@/components/ui/FormField';
 // src/app/dept/events/new/page.tsx
 // Department Head posts a webinar or workshop — mirrors advisor/events/new
 
@@ -8,25 +9,25 @@ import Link from 'next/link';
 import { AlertCircle, Rocket } from 'lucide-react';
 
 const C = {
-  blue: '#2563EB',
-  indigo: '#1E293B',
-  bg: '#F1F5F9',
-  gray: '#64748B',
+  blue: '#087f72',
+  indigo: '#243e4a',
+  bg: '#f6f8f9',
+  gray: '#60717d',
   white: '#fff',
-  dark: '#0F172A',
-  border: '#E2E8F0',
-  text: '#0F172A',
+  dark: '#182c39',
+  border: '#dfe6e9',
+  text: '#182c39',
   muted: '#374151',
-  light: '#94A3B8',
+  light: '#60717d',
   danger: '#EF4444',
   dangerBg: '#FEF2F2',
   dangerBorder: '#FECACA',
   teal: '#0D9488',
   tealBg: '#F0FDFA',
   tealBorder: '#99F6E4',
-  purple: '#7C3AED',
-  purpleBg: '#EDE9FE',
-  purpleBorder: '#DDD6FE',
+  purple: '#087f72',
+  purpleBg: '#e0f0eb',
+  purpleBorder: '#bdddd5',
 };
 
 const inputBase: React.CSSProperties = {
@@ -88,30 +89,9 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <label
-        style={{ display: 'block', fontSize: 13, fontWeight: 700, color: C.muted, marginBottom: 7 }}
-      >
-        {label}
-        {required && <span style={{ color: C.danger, marginLeft: 2 }}>*</span>}
-      </label>
+    <FormField label={label} required={required} error={error}>
       {children}
-      {error && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            marginTop: 5,
-            color: C.danger,
-            fontSize: 12,
-          }}
-        >
-          <AlertCircle size={13} />
-          {error}
-        </div>
-      )}
-    </div>
+    </FormField>
   );
 }
 
@@ -311,10 +291,11 @@ export default function DeptEventCreatePageClient() {
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
       <div
         style={{
-          background: `linear-gradient(145deg, ${C.dark}, ${C.indigo})`,
+          background: 'var(--surface-muted)',
           padding: '24px 0 28px',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
+        className="v2-light-panel"
       >
         <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 24px' }}>
           <Link
@@ -349,8 +330,8 @@ export default function DeptEventCreatePageClient() {
           <h1
             style={{
               fontSize: 24,
-              fontWeight: 900,
-              color: '#F8FAFC',
+              fontWeight: 700,
+              color: 'var(--deep)',
               fontFamily: 'var(--font-display)',
               marginBottom: 4,
             }}
@@ -387,7 +368,7 @@ export default function DeptEventCreatePageClient() {
         <div
           style={{
             background: C.white,
-            borderRadius: 20,
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
             boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
             overflow: 'hidden',
@@ -396,10 +377,13 @@ export default function DeptEventCreatePageClient() {
           <div style={{ padding: '32px 36px', display: 'flex', flexDirection: 'column', gap: 22 }}>
             {/* Event type */}
             <Field label="Event Type">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+                className="v2-page-grid"
+              >
                 {[
-                  { v: 'webinar', l: '🌐 Webinar', desc: 'Online session, live or recorded' },
-                  { v: 'workshop', l: '🔧 Workshop', desc: 'Hands-on skill building session' },
+                  { v: 'webinar', l: 'Webinar', desc: 'Online session, live or recorded' },
+                  { v: 'workshop', l: 'Workshop', desc: 'Hands-on skill building session' },
                 ].map((t) => (
                   <button
                     key={t.v}
@@ -454,7 +438,10 @@ export default function DeptEventCreatePageClient() {
               />
             </Field>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+              className="v2-page-grid"
+            >
               <Field label="Format">
                 <select
                   value={form.locationType}
@@ -501,7 +488,10 @@ export default function DeptEventCreatePageClient() {
               </Field>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+              className="v2-page-grid"
+            >
               <div />
               <Field label="Academic Session" required={false}>
                 <input
@@ -654,9 +644,9 @@ export default function DeptEventCreatePageClient() {
               }}
             >
               <p style={{ color: C.teal, fontSize: 13, margin: 0, fontWeight: 600 }}>
-                📅 This event will appear in the student job feed under the Webinar / Workshop
-                filter. Students register directly from the platform and their registration is
-                tracked in their applications dashboard.
+                This event will appear in the student job feed under the Webinar / Workshop filter.
+                Students register directly from the platform and their registration is tracked in
+                their applications dashboard.
               </p>
             </div>
           </div>

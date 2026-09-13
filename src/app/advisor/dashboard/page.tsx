@@ -1,3 +1,4 @@
+import ContextIcon from '@/components/ui/ContextIcon';
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
@@ -6,7 +7,7 @@ import { User } from '@/models/User';
 import mongoose from 'mongoose';
 import Link from 'next/link';
 import DashboardShell from '@/components/dashboard/DashboardShell';
-import { getAdvisorNavItems } from '@/lib/academic-navigation';
+
 import {
   ActionLink,
   DashboardPage,
@@ -34,7 +35,6 @@ import {
   Target,
   Users,
   Star,
-  MessageSquare,
 } from 'lucide-react';
 
 const navItems = [
@@ -119,23 +119,24 @@ export default async function AdvisorDashboard() {
   const { advisor, totalEvents, calendarEvents } = extras;
 
   const quickStats = [
-    { label: 'Advisees', value: String(data.stats.totalAdvisees), color: '#22D3EE' },
-    { label: 'Avg Score', value: String(data.stats.avgOpportunityScore), color: '#10B981' },
-    { label: 'Avg Profile', value: `${data.stats.avgProfileCompleteness}%`, color: '#F59E0B' },
-    { label: 'Events', value: String(totalEvents), color: '#F8FAFC' },
+    { label: 'Advisees', value: String(data.stats.totalAdvisees), color: '#178d80' },
+    { label: 'Avg Score', value: String(data.stats.avgOpportunityScore), color: '#168257' },
+    { label: 'Avg Profile', value: `${data.stats.avgProfileCompleteness}%`, color: '#a86714' },
+    { label: 'Events', value: String(totalEvents), color: '#f6f8f9' },
   ];
   const advisorVisualMetrics = [
-    { label: 'Score', value: data.stats.avgOpportunityScore, color: '#22D3EE' },
-    { label: 'Profile', value: data.stats.avgProfileCompleteness, color: '#10B981' },
+    { label: 'Score', value: data.stats.avgOpportunityScore, color: '#178d80' },
+    { label: 'Profile', value: data.stats.avgProfileCompleteness, color: '#168257' },
     {
       label: 'Quality',
       value: Math.round((data.reputationStats.avgWorkQuality / 5) * 100),
-      color: '#F59E0B',
+      color: '#a86714',
     },
   ];
 
   return (
     <DashboardShell
+      embedded
       role="advisor"
       roleLabel="Advisor dashboard"
       homeHref="/advisor/dashboard"
@@ -143,7 +144,6 @@ export default async function AdvisorDashboard() {
       user={{ ...data.chromeUser, userId: session.user.id }}
     >
       <DashboardPage>
-        {/* ── Hero ── */}
         <HeroCard
           eyebrow="Advisor workspace"
           title={advisor?.name ?? 'Advisor'}
@@ -159,7 +159,7 @@ export default async function AdvisorDashboard() {
                     borderRadius: 999,
                     padding: '5px 14px',
                     fontSize: 13,
-                    color: '#E2E8F0',
+                    color: '#dfe6e9',
                     fontWeight: 600,
                   }}
                 >
@@ -185,7 +185,10 @@ export default async function AdvisorDashboard() {
               )}
             </div>
           }
-          description={advisor?.bio || 'No bio added yet — go to My Profile to write one.'}
+          description={
+            advisor?.bio ||
+            'Support your students, spot their next steps, and connect them with opportunities.'
+          }
           actions={
             <>
               <ActionLink href="/advisor/events/new" label="Post Event" />
@@ -202,7 +205,10 @@ export default async function AdvisorDashboard() {
             >
               <div style={{ display: 'grid', gap: 12 }}>
                 {/* Quick stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div
+                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}
+                  className="v2-page-grid"
+                >
                   {quickStats.map((s) => (
                     <div
                       key={s.label}
@@ -216,7 +222,7 @@ export default async function AdvisorDashboard() {
                       <div
                         style={{
                           fontSize: 22,
-                          fontWeight: 900,
+                          fontWeight: 700,
                           color: s.color,
                           fontFamily: 'var(--font-display)',
                           lineHeight: 1,
@@ -241,10 +247,11 @@ export default async function AdvisorDashboard() {
                     alignItems: 'end',
                     minHeight: 118,
                     padding: '14px 12px 12px',
-                    borderRadius: 16,
+                    borderRadius: 12,
                     background: 'rgba(15,23,42,0.22)',
                     border: '1px solid rgba(255,255,255,0.12)',
                   }}
+                  className="v2-form-grid"
                 >
                   {advisorVisualMetrics.map((metric) => (
                     <div
@@ -282,7 +289,7 @@ export default async function AdvisorDashboard() {
                           textAlign: 'center',
                           color: '#CBD5E1',
                           fontSize: 11,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
@@ -317,7 +324,7 @@ export default async function AdvisorDashboard() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: 6,
-                        color: '#22D3EE',
+                        color: '#178d80',
                         fontSize: 12,
                         textDecoration: 'none',
                         fontWeight: 600,
@@ -331,8 +338,6 @@ export default async function AdvisorDashboard() {
             </Panel>
           }
         />
-
-        {/* ── Stat cards — 2 plain + 2 with progress bars ── */}
         <section style={{ marginTop: 22 }}>
           <div
             style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}
@@ -347,21 +352,22 @@ export default async function AdvisorDashboard() {
 
             {/* Avg opportunity score — with progress bar */}
             <div
+              className="nx-surface"
               style={{
-                borderRadius: 22,
+                borderRadius: 12,
                 background: '#FFFFFF',
                 border: '1px solid #D9E2EC',
                 padding: 20,
-                boxShadow: '0 16px 32px rgba(15,23,42,0.06)',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
               <div
                 style={{
                   width: 48,
                   height: 48,
-                  borderRadius: 16,
+                  borderRadius: 12,
                   background: 'rgba(34,211,238,0.08)',
-                  color: '#22D3EE',
+                  color: '#178d80',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -378,14 +384,14 @@ export default async function AdvisorDashboard() {
                     marginBottom: 8,
                   }}
                 >
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#243e4a' }}>
                     Avg opportunity score
                   </div>
                   <div
                     style={{
                       fontSize: 20,
-                      fontWeight: 900,
-                      color: '#22D3EE',
+                      fontWeight: 700,
+                      color: '#178d80',
                       fontFamily: 'var(--font-display)',
                     }}
                   >
@@ -395,7 +401,7 @@ export default async function AdvisorDashboard() {
                 <div
                   style={{
                     height: 10,
-                    background: '#E2E8F0',
+                    background: '#dfe6e9',
                     borderRadius: 999,
                     overflow: 'hidden',
                   }}
@@ -404,7 +410,7 @@ export default async function AdvisorDashboard() {
                     style={{
                       width: `${data.stats.avgOpportunityScore}%`,
                       height: '100%',
-                      background: 'linear-gradient(90deg, #22D3EE, #06B6D4)',
+                      background: '#edf7f3',
                       borderRadius: 999,
                       transition: 'width 0.5s ease',
                     }}
@@ -415,21 +421,22 @@ export default async function AdvisorDashboard() {
 
             {/* Avg profile completeness — with progress bar */}
             <div
+              className="nx-surface"
               style={{
-                borderRadius: 22,
+                borderRadius: 12,
                 background: '#FFFFFF',
                 border: '1px solid #D9E2EC',
                 padding: 20,
-                boxShadow: '0 16px 32px rgba(15,23,42,0.06)',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
               <div
                 style={{
                   width: 48,
                   height: 48,
-                  borderRadius: 16,
+                  borderRadius: 12,
                   background: 'rgba(16,185,129,0.08)',
-                  color: '#10B981',
+                  color: '#168257',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -446,14 +453,14 @@ export default async function AdvisorDashboard() {
                     marginBottom: 8,
                   }}
                 >
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#243e4a' }}>
                     Avg profile completeness
                   </div>
                   <div
                     style={{
                       fontSize: 20,
-                      fontWeight: 900,
-                      color: '#10B981',
+                      fontWeight: 700,
+                      color: '#168257',
                       fontFamily: 'var(--font-display)',
                     }}
                   >
@@ -463,7 +470,7 @@ export default async function AdvisorDashboard() {
                 <div
                   style={{
                     height: 10,
-                    background: '#E2E8F0',
+                    background: '#dfe6e9',
                     borderRadius: 999,
                     overflow: 'hidden',
                   }}
@@ -472,7 +479,7 @@ export default async function AdvisorDashboard() {
                     style={{
                       width: `${data.stats.avgProfileCompleteness}%`,
                       height: '100%',
-                      background: 'linear-gradient(90deg, #059669, #10B981)',
+                      background: '#edf7f3',
                       borderRadius: 999,
                       transition: 'width 0.5s ease',
                     }}
@@ -486,29 +493,10 @@ export default async function AdvisorDashboard() {
               label="Events posted"
               value={formatCompactNumber(totalEvents)}
               Icon={CalendarDays}
-              accent="#7C3AED"
+              accent="#087f72"
             />
           </div>
         </section>
-
-        {/* ── Student attention queue ── */}
-        <DashboardSection
-          id="calendar"
-          title="Calendar"
-          description="Track only your own posted webinars and workshops, including registration deadlines and event dates."
-        >
-          <CalendarBoard
-            events={calendarEvents}
-            isCalendarConnected={advisor?.googleCalendarConnected ?? false}
-            boardTitle="Calendar"
-            boardSubtitle="Monitor only your hosted sessions and registration cutoffs from one board."
-            fullCalendarHref="/advisor/calendar"
-            manageCalendarHref="/advisor/profile#calendar"
-            eventHrefTemplate="/advisor/events/:jobId/registrants"
-            emptyNextEventMessage="No hosted advisor events are coming up yet. Post a workshop or webinar to populate this planner."
-          />
-        </DashboardSection>
-
         <DashboardSection
           id="students"
           title="Student attention queue"
@@ -534,15 +522,15 @@ export default async function AdvisorDashboard() {
                   overflowY: 'auto',
                   paddingRight: 8,
                 }}
-                className="dashboard-grid-two"
+                className="dashboard-grid-two v2-form-grid"
               >
                 {data.attentionStudents.map((student) => (
                   <div
                     key={student.id}
                     style={{
                       padding: 18,
-                      borderRadius: 18,
-                      border: `1px solid ${student.priorityFlagged ? '#FDE68A' : '#E2E8F0'}`,
+                      borderRadius: 12,
+                      border: `1px solid ${student.priorityFlagged ? '#FDE68A' : '#dfe6e9'}`,
                       background: student.priorityFlagged ? '#FFFBEB' : '#FFFFFF',
                     }}
                   >
@@ -555,16 +543,16 @@ export default async function AdvisorDashboard() {
                       }}
                     >
                       <div>
-                        <div style={{ fontSize: 16, fontWeight: 800, color: '#1E293B' }}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: '#243e4a' }}>
                           {student.name}
                         </div>
-                        <div style={{ marginTop: 4, fontSize: 13, color: '#64748B' }}>
+                        <div style={{ marginTop: 4, fontSize: 13, color: '#60717d' }}>
                           {[student.university, student.department].filter(Boolean).join(' · ') ||
                             'Academic info pending'}
                         </div>
                       </div>
                       <Tag
-                        label={student.priorityFlagged ? '⚠ Priority' : 'Monitor'}
+                        label={student.priorityFlagged ? 'Priority' : 'Monitor'}
                         tone={student.priorityFlagged ? 'warning' : 'info'}
                       />
                     </div>
@@ -598,8 +586,6 @@ export default async function AdvisorDashboard() {
             )}
           </Panel>
         </DashboardSection>
-
-        {/* ── Upcoming interviews + skill gaps ── */}
         <DashboardSection
           id="interviews"
           title="Upcoming interviews & skill gaps"
@@ -607,7 +593,7 @@ export default async function AdvisorDashboard() {
         >
           <div
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
-            className="dashboard-grid-two"
+            className="dashboard-grid-two v2-page-grid"
           >
             <Panel
               title="Interview watchlist"
@@ -629,8 +615,8 @@ export default async function AdvisorDashboard() {
                       key={interview.id}
                       style={{
                         padding: 16,
-                        borderRadius: 16,
-                        border: '1px solid #E2E8F0',
+                        borderRadius: 12,
+                        border: '1px solid #dfe6e9',
                         background: '#FFFFFF',
                       }}
                     >
@@ -643,10 +629,10 @@ export default async function AdvisorDashboard() {
                         }}
                       >
                         <div>
-                          <div style={{ fontSize: 15, fontWeight: 800, color: '#1E293B' }}>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#243e4a' }}>
                             {interview.studentName}
                           </div>
-                          <div style={{ marginTop: 4, fontSize: 13, color: '#64748B' }}>
+                          <div style={{ marginTop: 4, fontSize: 13, color: '#60717d' }}>
                             {interview.jobTitle} · {interview.companyName}
                           </div>
                         </div>
@@ -655,7 +641,7 @@ export default async function AdvisorDashboard() {
                             display: 'flex',
                             alignItems: 'center',
                             gap: 6,
-                            color: '#2563EB',
+                            color: '#087f72',
                             fontSize: 12,
                             fontWeight: 700,
                             flexShrink: 0,
@@ -689,14 +675,14 @@ export default async function AdvisorDashboard() {
                         gap: 10,
                         marginBottom: 16,
                         padding: 14,
-                        borderRadius: 16,
-                        background: '#F8FAFC',
-                        border: '1px solid #E2E8F0',
+                        borderRadius: 12,
+                        background: '#f6f8f9',
+                        border: '1px solid #dfe6e9',
                       }}
                     >
                       {data.topSkillGaps.slice(0, 4).map((gap, index) => {
                         const width = Math.max(38, 100 - index * 16);
-                        const colors = ['#F59E0B', '#22D3EE', '#7C3AED', '#10B981'];
+                        const colors = ['#a86714', '#178d80', '#087f72', '#168257'];
                         const color = colors[index % colors.length];
                         return (
                           <div
@@ -712,7 +698,7 @@ export default async function AdvisorDashboard() {
                               style={{
                                 color: '#475569',
                                 fontSize: 12,
-                                fontWeight: 800,
+                                fontWeight: 700,
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
@@ -724,7 +710,7 @@ export default async function AdvisorDashboard() {
                               style={{
                                 height: 10,
                                 borderRadius: 999,
-                                background: '#E2E8F0',
+                                background: '#dfe6e9',
                                 overflow: 'hidden',
                               }}
                             >
@@ -746,16 +732,16 @@ export default async function AdvisorDashboard() {
                         <Tag key={gap} label={gap} tone="warning" />
                       ))}
                     </div>
-                    <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid #F1F5F9' }}>
+                    <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid #f6f8f9' }}>
                       <Link
                         href="/advisor/events/new"
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 6,
-                          background: '#EDE9FE',
-                          color: '#7C3AED',
-                          border: '1px solid #DDD6FE',
+                          background: '#e0f0eb',
+                          color: '#087f72',
+                          border: '1px solid #bdddd5',
                           padding: '8px 16px',
                           borderRadius: 10,
                           fontSize: 13,
@@ -763,7 +749,7 @@ export default async function AdvisorDashboard() {
                           textDecoration: 'none',
                         }}
                       >
-                        📅 Run a workshop on these gaps →
+                        <ContextIcon name="calendar" /> Run a workshop on these gaps →
                       </Link>
                     </div>
                   </>
@@ -777,8 +763,6 @@ export default async function AdvisorDashboard() {
             </div>
           </div>
         </DashboardSection>
-
-        {/* ── Reputation & Verified Reviews ── */}
         <DashboardSection
           id="reputation"
           title="Cohort Reputation & Verified Reviews"
@@ -790,7 +774,7 @@ export default async function AdvisorDashboard() {
               gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 2fr)',
               gap: 16,
             }}
-            className="dashboard-grid-two"
+            className="dashboard-grid-two v2-page-grid"
           >
             <Panel title="Reputation Overview" description="Advising cohort aggregated feedback.">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -799,15 +783,15 @@ export default async function AdvisorDashboard() {
                     display: 'flex',
                     justifyContent: 'space-between',
                     padding: '16px',
-                    background: '#F8FAFC',
+                    background: '#f6f8f9',
                     borderRadius: '12px',
-                    border: '1px solid #E2E8F0',
+                    border: '1px solid #dfe6e9',
                   }}
                 >
-                  <div style={{ fontSize: 13, color: '#64748B', fontWeight: 600 }}>
+                  <div style={{ fontSize: 13, color: '#60717d', fontWeight: 600 }}>
                     Total Verified Reviews
                   </div>
-                  <div style={{ fontSize: 18, color: '#0F172A', fontWeight: 800 }}>
+                  <div style={{ fontSize: 18, color: '#182c39', fontWeight: 800 }}>
                     {data.reputationStats.totalReviews}
                   </div>
                 </div>
@@ -816,15 +800,15 @@ export default async function AdvisorDashboard() {
                     display: 'flex',
                     justifyContent: 'space-between',
                     padding: '16px',
-                    background: '#F8FAFC',
+                    background: '#f6f8f9',
                     borderRadius: '12px',
-                    border: '1px solid #E2E8F0',
+                    border: '1px solid #dfe6e9',
                   }}
                 >
-                  <div style={{ fontSize: 13, color: '#64748B', fontWeight: 600 }}>
+                  <div style={{ fontSize: 13, color: '#60717d', fontWeight: 600 }}>
                     Formal Recommendations
                   </div>
-                  <div style={{ fontSize: 18, color: '#10B981', fontWeight: 800 }}>
+                  <div style={{ fontSize: 18, color: '#168257', fontWeight: 800 }}>
                     {data.reputationStats.totalRecommendations}
                   </div>
                 </div>
@@ -845,7 +829,7 @@ export default async function AdvisorDashboard() {
                     style={{
                       fontSize: 18,
                       color: '#B45309',
-                      fontWeight: 800,
+                      fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
                       gap: 4,
@@ -878,7 +862,7 @@ export default async function AdvisorDashboard() {
                       key={rec.id}
                       style={{
                         padding: '14px 16px',
-                        border: '1px solid #E2E8F0',
+                        border: '1px solid #dfe6e9',
                         borderRadius: '12px',
                         background: '#FFFFFF',
                       }}
@@ -892,13 +876,13 @@ export default async function AdvisorDashboard() {
                         }}
                       >
                         <div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39' }}>
                             {rec.studentName}
                           </div>
                           <div
                             style={{
                               fontSize: 12,
-                              color: '#64748B',
+                              color: '#60717d',
                               display: 'flex',
                               alignItems: 'center',
                               gap: 4,
@@ -917,7 +901,7 @@ export default async function AdvisorDashboard() {
                           lineHeight: 1.6,
                           marginTop: 8,
                           paddingLeft: 12,
-                          borderLeft: '2px solid #E2E8F0',
+                          borderLeft: '2px solid #dfe6e9',
                         }}
                       >
                         &ldquo;{rec.text}&rdquo;
@@ -934,84 +918,99 @@ export default async function AdvisorDashboard() {
             </Panel>
           </div>
         </DashboardSection>
-
-        {/* ── Recent advisor actions ── */}
-        <DashboardSection
-          id="actions"
-          title="Recent advisor activity"
-          description="A rolling view of the intervention and planning actions recorded under your advisor account."
-        >
-          <Panel
-            title="Logged actions"
-            description="Recent plan updates, notes, and priority flags."
+        <div className="dashboard-composition">
+          <DashboardSection
+            id="actions"
+            title="Recent advisor activity"
+            description="A rolling view of the intervention and planning actions recorded under your advisor account."
           >
-            {data.recentActions.length > 0 ? (
-              <div
-                style={{
-                  display: 'grid',
-                  gap: 12,
-                  maxHeight: 400,
-                  overflowY: 'auto',
-                  paddingRight: 8,
-                }}
-              >
-                {data.recentActions.map((action) => (
-                  <div
-                    key={action.id}
-                    style={{
-                      padding: 16,
-                      borderRadius: 16,
-                      border: '1px solid #E2E8F0',
-                      background: '#FFFFFF',
-                    }}
-                  >
+            <Panel
+              title="Logged actions"
+              description="Recent plan updates, notes, and priority flags."
+            >
+              {data.recentActions.length > 0 ? (
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: 12,
+                    maxHeight: 400,
+                    overflowY: 'auto',
+                    paddingRight: 8,
+                  }}
+                >
+                  {data.recentActions.map((action) => (
                     <div
+                      key={action.id}
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 12,
-                        flexWrap: 'wrap',
+                        padding: 16,
+                        borderRadius: 12,
+                        border: '1px solid #dfe6e9',
+                        background: '#FFFFFF',
                       }}
                     >
-                      <div>
-                        <div style={{ fontSize: 15, fontWeight: 800, color: '#1E293B' }}>
-                          {action.studentName}
-                        </div>
-                        <div style={{ marginTop: 4, fontSize: 13, color: '#64748B' }}>
-                          {formatStatusLabel(action.actionType)}
-                        </div>
-                      </div>
-                      <Tag label={formatShortDate(action.createdAt)} tone="neutral" />
-                    </div>
-                    {action.advisorNote && (
                       <div
                         style={{
-                          marginTop: 10,
-                          fontSize: 13,
-                          lineHeight: 1.65,
-                          color: '#64748B',
-                          background: '#F8FAFC',
-                          borderRadius: 8,
-                          padding: '8px 12px',
-                          borderLeft: '2px solid #E2E8F0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                          flexWrap: 'wrap',
                         }}
                       >
-                        {action.advisorNote}
+                        <div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#243e4a' }}>
+                            {action.studentName}
+                          </div>
+                          <div style={{ marginTop: 4, fontSize: 13, color: '#60717d' }}>
+                            {formatStatusLabel(action.actionType)}
+                          </div>
+                        </div>
+                        <Tag label={formatShortDate(action.createdAt)} tone="neutral" />
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="No advisor actions recorded yet"
-                description="Once you start modifying plans or flagging students, the history will appear here."
-              />
-            )}
-          </Panel>
-        </DashboardSection>
-
+                      {action.advisorNote && (
+                        <div
+                          style={{
+                            marginTop: 10,
+                            fontSize: 13,
+                            lineHeight: 1.65,
+                            color: '#60717d',
+                            background: '#f6f8f9',
+                            borderRadius: 8,
+                            padding: '8px 12px',
+                            borderLeft: '2px solid #dfe6e9',
+                          }}
+                        >
+                          {action.advisorNote}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="No advisor actions recorded yet"
+                  description="Once you start modifying plans or flagging students, the history will appear here."
+                />
+              )}
+            </Panel>
+          </DashboardSection>
+          <DashboardSection
+            id="calendar"
+            title="Calendar"
+            description="Track only your own posted webinars and workshops, including registration deadlines and event dates."
+          >
+            <CalendarBoard
+              events={calendarEvents}
+              isCalendarConnected={advisor?.googleCalendarConnected ?? false}
+              boardTitle="Calendar"
+              boardSubtitle="Monitor only your hosted sessions and registration cutoffs from one board."
+              fullCalendarHref="/advisor/calendar"
+              manageCalendarHref="/advisor/profile#calendar"
+              eventHrefTemplate="/advisor/events/:jobId/registrants"
+              emptyNextEventMessage="No hosted advisor events are coming up yet. Post a workshop or webinar to populate this planner."
+            />
+          </DashboardSection>
+        </div>
         <style>{`
           @media (max-width: 1100px) {
             .dashboard-stats-grid {

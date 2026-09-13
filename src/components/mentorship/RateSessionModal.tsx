@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import useDialog from '@/components/ui/useDialog';
+import './mentorship.css';
 import { X, Star } from 'lucide-react';
 
 interface Props {
@@ -17,6 +19,7 @@ export default function RateSessionModal({ isOpen, sessionId, onClose, onSuccess
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const dialogRef = useDialog(isOpen, loading ? undefined : onClose);
   if (!isOpen) return null;
 
   async function handleSubmit(e: React.FormEvent) {
@@ -54,6 +57,7 @@ export default function RateSessionModal({ isOpen, sessionId, onClose, onSuccess
 
   return (
     <div
+      className="mentor-modal-backdrop"
       style={{
         position: 'fixed',
         inset: 0,
@@ -67,9 +71,15 @@ export default function RateSessionModal({ isOpen, sessionId, onClose, onSuccess
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Rate your session"
+        tabIndex={-1}
+        className="mentor-modal-panel"
         style={{
           background: '#FFFFFF',
-          borderRadius: 24,
+          borderRadius: 12,
           width: '100%',
           maxWidth: 480,
           boxShadow: '0 24px 48px rgba(15,23,42,0.15)',
@@ -79,6 +89,7 @@ export default function RateSessionModal({ isOpen, sessionId, onClose, onSuccess
       >
         <div style={{ position: 'relative', padding: 32 }}>
           <button
+            aria-label="Close dialog"
             onClick={onClose}
             disabled={loading}
             style={{
@@ -87,7 +98,7 @@ export default function RateSessionModal({ isOpen, sessionId, onClose, onSuccess
               right: 24,
               background: 'transparent',
               border: 'none',
-              color: '#94A3B8',
+              color: '#6e7f89',
               cursor: 'pointer',
               padding: 4,
             }}
@@ -99,8 +110,8 @@ export default function RateSessionModal({ isOpen, sessionId, onClose, onSuccess
             style={{
               width: 56,
               height: 56,
-              borderRadius: 16,
-              background: 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
+              borderRadius: 12,
+              background: '#FEF3C7',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -111,10 +122,10 @@ export default function RateSessionModal({ isOpen, sessionId, onClose, onSuccess
             <Star size={28} strokeWidth={2} fill="currentColor" />
           </div>
 
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: '#1E293B', margin: '0 0 8px 0' }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#182c39', margin: '0 0 8px 0' }}>
             Rate Your Session
           </h2>
-          <p style={{ fontSize: 15, color: '#64748B', lineHeight: 1.6, margin: '0 0 24px 0' }}>
+          <p style={{ fontSize: 15, color: '#60717d', lineHeight: 1.6, margin: '0 0 24px 0' }}>
             Your feedback helps us maintain a high-quality mentorship network and guide other
             students.
           </p>
@@ -125,6 +136,7 @@ export default function RateSessionModal({ isOpen, sessionId, onClose, onSuccess
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
+                    aria-label={`Rate ${star} out of 5`}
                     type="button"
                     onClick={() => setRating(star)}
                     onMouseEnter={() => setHoverRating(star)}
@@ -140,7 +152,7 @@ export default function RateSessionModal({ isOpen, sessionId, onClose, onSuccess
                   >
                     <Star
                       size={32}
-                      color={(hoverRating || rating) >= star ? '#F59E0B' : '#E2E8F0'}
+                      color={(hoverRating || rating) >= star ? '#F59E0B' : '#dfe6e9'}
                       fill={(hoverRating || rating) >= star ? '#F59E0B' : 'transparent'}
                     />
                   </button>
@@ -154,13 +166,14 @@ export default function RateSessionModal({ isOpen, sessionId, onClose, onSuccess
                   display: 'block',
                   fontSize: 14,
                   fontWeight: 700,
-                  color: '#475569',
+                  color: '#435663',
                   marginBottom: 8,
                 }}
               >
                 Written Review (Optional)
               </label>
               <textarea
+                aria-label="Session notes"
                 value={review}
                 onChange={(e) => setReview(e.target.value)}
                 placeholder="How did the mentor help you?"
@@ -169,9 +182,9 @@ export default function RateSessionModal({ isOpen, sessionId, onClose, onSuccess
                   width: '100%',
                   padding: '12px 16px',
                   borderRadius: 12,
-                  border: '1px solid #E2E8F0',
-                  background: '#F8FAFC',
-                  color: '#1E293B',
+                  border: '1px solid #dfe6e9',
+                  background: '#f6f8f9',
+                  color: '#182c39',
                   fontSize: 15,
                   resize: 'none',
                   outline: 'none',
@@ -204,9 +217,9 @@ export default function RateSessionModal({ isOpen, sessionId, onClose, onSuccess
                   flex: 1,
                   padding: '12px 20px',
                   borderRadius: 12,
-                  border: '1px solid #E2E8F0',
+                  border: '1px solid #dfe6e9',
                   background: '#FFFFFF',
-                  color: '#64748B',
+                  color: '#60717d',
                   fontSize: 15,
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -222,13 +235,13 @@ export default function RateSessionModal({ isOpen, sessionId, onClose, onSuccess
                   padding: '12px 20px',
                   borderRadius: 12,
                   border: 'none',
-                  background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                  background: '#F59E0B',
                   color: '#FFFFFF',
                   fontSize: 15,
                   fontWeight: 700,
                   cursor: 'pointer',
                   opacity: loading ? 0.7 : 1,
-                  boxShadow: '0 4px 12px rgba(217,119,6,0.2)',
+                  boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
                 }}
               >
                 {loading ? 'Submitting...' : 'Submit Rating'}

@@ -15,13 +15,13 @@ import {
 } from 'lucide-react';
 
 const C = {
-  blue: '#2563EB',
-  bg: '#F1F5F9',
-  border: '#E2E8F0',
-  text: '#0F172A',
-  muted: '#64748B',
-  success: '#10B981',
-  warning: '#F59E0B',
+  blue: '#087f72',
+  bg: '#f6f8f9',
+  border: '#dfe6e9',
+  text: '#182c39',
+  muted: '#60717d',
+  success: '#168257',
+  warning: '#a86714',
 };
 
 const INDUSTRIES = [
@@ -84,10 +84,10 @@ function Badge({
   tone?: 'neutral' | 'warning' | 'success' | 'info';
 }) {
   const palette = {
-    neutral: { bg: '#F8FAFC', color: '#475569', border: '#E2E8F0' },
+    neutral: { bg: '#f6f8f9', color: '#475569', border: '#dfe6e9' },
     warning: { bg: '#FFFBEB', color: '#92400E', border: '#FDE68A' },
     success: { bg: '#ECFDF5', color: '#166534', border: '#A7F3D0' },
-    info: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE' },
+    info: { bg: '#edf7f3', color: '#087f72', border: '#bdddd5' },
   } as const;
 
   const colors = palette[tone];
@@ -115,10 +115,10 @@ function StatusNotice({ meta }: { meta: AIExecutionMeta }) {
   const info = describeAIExecutionMeta(meta);
   const palette =
     meta.mode === 'ai'
-      ? { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' }
+      ? { bg: '#edf7f3', color: '#06665d', border: '#bdddd5' }
       : meta.mode === 'fallback'
         ? { bg: '#FFFBEB', color: '#92400E', border: '#FDE68A' }
-        : { bg: '#F8FAFC', color: '#475569', border: '#E2E8F0' };
+        : { bg: '#f6f8f9', color: '#475569', border: '#dfe6e9' };
 
   return (
     <div
@@ -164,7 +164,7 @@ function ScorePill({ label, score }: { label: string; score: number }) {
       <div
         style={{
           fontSize: 28,
-          fontWeight: 900,
+          fontWeight: 700,
           color,
           fontFamily: 'var(--font-display)',
           lineHeight: 1,
@@ -363,12 +363,13 @@ export default function MockInterviewClient() {
     return (
       <div style={{ display: 'grid', gap: 20 }}>
         <div
+          className="nx-surface"
           style={{
             background: '#FFFFFF',
-            borderRadius: 24,
+            borderRadius: 12,
             padding: 28,
             border: `1px solid ${C.border}`,
-            boxShadow: '0 16px 34px rgba(15,23,42,0.06)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
@@ -377,12 +378,12 @@ export default function MockInterviewClient() {
                 width: 72,
                 height: 72,
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
+                background: 'var(--primary)',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 16,
-                boxShadow: '0 12px 32px rgba(37,99,235,0.3)',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
               <Trophy size={32} color="#FFFFFF" />
@@ -390,7 +391,7 @@ export default function MockInterviewClient() {
             <h2
               style={{
                 fontSize: 28,
-                fontWeight: 900,
+                fontWeight: 700,
                 color: C.text,
                 fontFamily: 'var(--font-display)',
                 margin: 0,
@@ -401,7 +402,7 @@ export default function MockInterviewClient() {
             <div
               style={{
                 fontSize: 48,
-                fontWeight: 900,
+                fontWeight: 700,
                 color: C.blue,
                 fontFamily: 'var(--font-display)',
                 lineHeight: 1,
@@ -423,8 +424,8 @@ export default function MockInterviewClient() {
 
           <div
             style={{
-              background: '#F8FAFC',
-              borderRadius: 20,
+              background: '#f6f8f9',
+              borderRadius: 12,
               padding: 20,
               border: `1px solid ${C.border}`,
             }}
@@ -443,7 +444,7 @@ export default function MockInterviewClient() {
 
         <div
           style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14 }}
-          className="mock-grid"
+          className="mock-grid v2-form-grid"
         >
           <ScorePill label="Communication" score={feedback.communicationScore} />
           <ScorePill label="Technical" score={feedback.technicalScore} />
@@ -452,21 +453,22 @@ export default function MockInterviewClient() {
 
         <div
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
-          className="mock-grid"
+          className="mock-grid v2-page-grid"
         >
           <div
+            className="nx-surface"
             style={{
               background: '#FFFFFF',
-              borderRadius: 20,
+              borderRadius: 12,
               padding: 22,
               border: `1px solid ${C.border}`,
-              boxShadow: '0 16px 34px rgba(15,23,42,0.06)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <h3
               style={{
                 fontSize: 15,
-                fontWeight: 800,
+                fontWeight: 700,
                 color: C.success,
                 fontFamily: 'var(--font-display)',
                 marginBottom: 14,
@@ -485,18 +487,19 @@ export default function MockInterviewClient() {
           </div>
 
           <div
+            className="nx-surface"
             style={{
               background: '#FFFFFF',
-              borderRadius: 20,
+              borderRadius: 12,
               padding: 22,
               border: `1px solid ${C.border}`,
-              boxShadow: '0 16px 34px rgba(15,23,42,0.06)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <h3
               style={{
                 fontSize: 15,
-                fontWeight: 800,
+                fontWeight: 700,
                 color: C.warning,
                 fontFamily: 'var(--font-display)',
                 marginBottom: 14,
@@ -517,16 +520,17 @@ export default function MockInterviewClient() {
 
         <div
           style={{
-            background: 'linear-gradient(135deg, #1E293B, #1E3A5F)',
-            borderRadius: 20,
+            background: 'var(--surface-muted)',
+            borderRadius: 12,
             padding: 24,
           }}
+          className="v2-light-panel"
         >
           <h3
             style={{
               fontSize: 15,
-              fontWeight: 800,
-              color: '#FFFFFF',
+              fontWeight: 700,
+              color: 'var(--deep)',
               fontFamily: 'var(--font-display)',
               marginBottom: 14,
             }}
@@ -550,12 +554,12 @@ export default function MockInterviewClient() {
                   flexShrink: 0,
                   fontSize: 11,
                   fontWeight: 700,
-                  color: '#93C5FD',
+                  color: 'var(--deep)',
                 }}
               >
                 {index + 1}
               </div>
-              <span style={{ color: '#CBD5E1', fontSize: 14, lineHeight: 1.6 }}>{step}</span>
+              <span style={{ color: 'var(--deep)', fontSize: 14, lineHeight: 1.6 }}>{step}</span>
             </div>
           ))}
         </div>
@@ -573,7 +577,7 @@ export default function MockInterviewClient() {
               borderRadius: 12,
               padding: '12px 18px',
               fontSize: 14,
-              fontWeight: 800,
+              fontWeight: 700,
               fontFamily: 'var(--font-display)',
               cursor: 'pointer',
             }}
@@ -601,9 +605,9 @@ export default function MockInterviewClient() {
       <div
         style={{
           background: '#FFFFFF',
-          borderRadius: 24,
+          borderRadius: 12,
           border: `1px solid ${C.border}`,
-          boxShadow: '0 16px 34px rgba(15,23,42,0.06)',
+          boxShadow: 'var(--shadow-card)',
           overflow: 'hidden',
         }}
       >
@@ -611,26 +615,27 @@ export default function MockInterviewClient() {
           style={{
             padding: '18px 22px',
             borderBottom: `1px solid ${C.border}`,
-            background: 'linear-gradient(135deg, #1E293B, rgba(37,99,235,0.96))',
+            background: 'var(--surface-muted)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             gap: 12,
             flexWrap: 'wrap',
           }}
+          className="v2-light-panel"
         >
           <div>
             <div
               style={{
-                color: '#FFFFFF',
+                color: 'var(--deep)',
                 fontSize: 18,
-                fontWeight: 800,
+                fontWeight: 700,
                 fontFamily: 'var(--font-display)',
               }}
             >
               Live mock interview
             </div>
-            <div style={{ color: '#CBD5E1', fontSize: 12, marginTop: 4 }}>
+            <div style={{ color: 'var(--deep)', fontSize: 12, marginTop: 4 }}>
               Answer naturally. The interview ends automatically after all questions.
             </div>
           </div>
@@ -640,12 +645,12 @@ export default function MockInterviewClient() {
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                background: conversationMeta?.mode === 'fallback' ? '#F59E0B' : '#10B981',
+                background: conversationMeta?.mode === 'fallback' ? '#a86714' : '#168257',
                 boxShadow:
-                  conversationMeta?.mode === 'fallback' ? '0 0 6px #F59E0B' : '0 0 6px #10B981',
+                  conversationMeta?.mode === 'fallback' ? '0 0 6px #a86714' : '0 0 6px #168257',
               }}
             />
-            <span style={{ color: '#CBD5E1', fontSize: 13 }}>
+            <span style={{ color: 'var(--deep)', fontSize: 13 }}>
               {conversationInfo?.badgeLabel ?? 'Interviewer active'}
             </span>
           </div>
@@ -697,7 +702,7 @@ export default function MockInterviewClient() {
                       width: 36,
                       height: 36,
                       borderRadius: 10,
-                      background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
+                      background: 'var(--primary)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -718,7 +723,7 @@ export default function MockInterviewClient() {
                       message.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
                     background: message.role === 'user' ? C.blue : '#FFFFFF',
                     border: message.role === 'user' ? 'none' : `1px solid ${C.border}`,
-                    boxShadow: '0 4px 16px rgba(15,23,42,0.08)',
+                    boxShadow: 'var(--shadow-card)',
                     color: message.role === 'user' ? '#FFFFFF' : C.text,
                     fontSize: 15,
                     lineHeight: 1.7,
@@ -736,7 +741,7 @@ export default function MockInterviewClient() {
                     width: 36,
                     height: 36,
                     borderRadius: 10,
-                    background: 'linear-gradient(135deg, #2563EB, #22D3EE)',
+                    background: 'var(--primary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -798,7 +803,7 @@ export default function MockInterviewClient() {
                 justifyContent: 'center',
                 alignSelf: 'flex-end',
                 opacity: !input.trim() || sending ? 0.5 : 1,
-                boxShadow: '0 4px 12px rgba(37,99,235,0.3)',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
               <Send size={18} color="#FFFFFF" />
@@ -810,14 +815,15 @@ export default function MockInterviewClient() {
   }
 
   return (
-    <div style={{ display: 'grid', gap: 20 }}>
+    <div className="mock-practice-layout">
       <div
+        className="mock-practice-intro"
         style={{
           background:
             'linear-gradient(135deg, rgba(30,41,59,0.98), rgba(37,99,235,0.96) 62%, rgba(34,211,238,0.88))',
-          borderRadius: 24,
+          borderRadius: 12,
           padding: 24,
-          boxShadow: '0 18px 40px rgba(15,23,42,0.12)',
+          boxShadow: 'var(--shadow-card)',
         }}
       >
         <div
@@ -846,29 +852,29 @@ export default function MockInterviewClient() {
               }}
             >
               <Brain size={14} />
-              Nextern AI interview simulator
+              Interview practice
             </div>
             <h2
               style={{
                 margin: '14px 0 0',
                 color: '#FFFFFF',
                 fontSize: 28,
-                fontWeight: 900,
+                fontWeight: 700,
                 fontFamily: 'var(--font-display)',
               }}
             >
               Practice interviews before the real one
             </h2>
             <p style={{ margin: '10px 0 0', color: '#D6E4FF', fontSize: 14, lineHeight: 1.7 }}>
-              Nextern AI generates the question plan, powers the live interviewer, and prepares the
-              final feedback. The page also tells you whenever backup logic is used instead.
+              Prepare for the conversations that matter. Practice role-specific questions, then get
+              feedback on your communication, confidence, and technical answers.
             </p>
           </div>
 
           <div
             style={{
               background: 'rgba(255,255,255,0.08)',
-              borderRadius: 16,
+              borderRadius: 12,
               border: '1px solid rgba(255,255,255,0.12)',
               padding: '14px 16px',
               minWidth: 240,
@@ -879,7 +885,7 @@ export default function MockInterviewClient() {
               style={{
                 color: '#FFFFFF',
                 fontSize: 28,
-                fontWeight: 900,
+                fontWeight: 700,
                 fontFamily: 'var(--font-display)',
                 marginTop: 4,
               }}
@@ -921,15 +927,39 @@ export default function MockInterviewClient() {
             </Link>
           </div>
         ) : null}
+        <div className="practice-steps">
+          <div>
+            <b>01</b>
+            <span>
+              <strong>Choose your focus</strong>
+              <p>Select a role and industry for your practice.</p>
+            </span>
+          </div>
+          <div>
+            <b>02</b>
+            <span>
+              <strong>Have the conversation</strong>
+              <p>Answer at your own pace and build confidence.</p>
+            </span>
+          </div>
+          <div>
+            <b>03</b>
+            <span>
+              <strong>Learn from your feedback</strong>
+              <p>Review your strengths and what to work on next.</p>
+            </span>
+          </div>
+        </div>
       </div>
 
       <div
+        className="mock-practice-form nx-surface"
         style={{
           background: '#FFFFFF',
-          borderRadius: 24,
+          borderRadius: 12,
           padding: 28,
           border: `1px solid ${C.border}`,
-          boxShadow: '0 16px 34px rgba(15,23,42,0.06)',
+          boxShadow: 'var(--shadow-card)',
           maxWidth: 760,
         }}
       >
@@ -962,6 +992,7 @@ export default function MockInterviewClient() {
             Target Role
           </label>
           <select
+            aria-label="Target role"
             value={targetRole}
             onChange={(event) => setTargetRole(event.target.value)}
             style={{
@@ -985,6 +1016,7 @@ export default function MockInterviewClient() {
             ))}
           </select>
           <input
+            aria-label="Custom target role"
             value={customRole}
             onChange={(event) => setCustomRole(event.target.value)}
             placeholder="Or type a custom role (for example: Product Manager Intern)"
@@ -1017,11 +1049,12 @@ export default function MockInterviewClient() {
           </label>
           <div
             style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}
-            className="mock-setup-grid"
+            className="mock-setup-grid v2-form-grid"
           >
             {INDUSTRIES.map((item) => (
               <button
                 key={item}
+                aria-pressed={industry === item}
                 onClick={() => setIndustry(item)}
                 style={{
                   padding: '10px 8px',
@@ -1031,7 +1064,7 @@ export default function MockInterviewClient() {
                   fontWeight: 600,
                   textAlign: 'center',
                   border: `2px solid ${industry === item ? C.blue : C.border}`,
-                  background: industry === item ? '#EFF6FF' : '#FFFFFF',
+                  background: industry === item ? '#edf7f3' : '#FFFFFF',
                   color: industry === item ? C.blue : C.muted,
                   transition: 'all 0.15s',
                 }}
@@ -1053,7 +1086,7 @@ export default function MockInterviewClient() {
             border: 'none',
             borderRadius: 14,
             fontSize: 16,
-            fontWeight: 800,
+            fontWeight: 700,
             fontFamily: 'var(--font-display)',
             cursor:
               stage === 'loading' || (!targetRole && !customRole.trim()) || !industry
@@ -1063,7 +1096,7 @@ export default function MockInterviewClient() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: 8,
-            boxShadow: '0 6px 20px rgba(37,99,235,0.35)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
           {stage === 'loading' ? (

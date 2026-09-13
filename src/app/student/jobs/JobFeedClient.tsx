@@ -4,6 +4,8 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import useDialog from '@/components/ui/useDialog';
 import PaginatedCollection from '@/components/ui/PaginatedCollection';
 import {
   CalendarDays,
@@ -22,18 +24,18 @@ import {
 } from 'lucide-react';
 
 const C = {
-  blue: '#2563EB',
-  indigo: '#1E293B',
-  cyan: '#22D3EE',
-  bg: '#F1F5F9',
-  gray: '#64748B',
-  success: '#10B981',
-  warning: '#F59E0B',
+  blue: '#087f72',
+  indigo: '#243e4a',
+  cyan: '#178d80',
+  bg: '#f6f8f9',
+  gray: '#60717d',
+  success: '#168257',
+  warning: '#a86714',
   white: '#fff',
-  dark: '#0F172A',
-  border: '#E2E8F0',
-  text: '#0F172A',
-  light: '#94A3B8',
+  dark: '#182c39',
+  border: '#dfe6e9',
+  text: '#182c39',
+  light: '#60717d',
   danger: '#EF4444',
   dangerBg: '#FEF2F2',
   dangerBorder: '#FECACA',
@@ -41,8 +43,8 @@ const C = {
   successBorder: '#A7F3D0',
   warnBg: '#FFFBEB',
   warnBorder: '#FDE68A',
-  blueBg: '#EFF6FF',
-  blueBorder: '#BFDBFE',
+  blueBg: '#edf7f3',
+  blueBorder: '#bdddd5',
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -57,7 +59,7 @@ const TYPE_LABELS: Record<string, string> = {
 const TYPE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   internship: { bg: C.blueBg, color: C.blue, border: C.blueBorder },
   'part-time': { bg: C.successBg, color: '#065F46', border: C.successBorder },
-  'full-time': { bg: '#EDE9FE', color: '#7C3AED', border: '#DDD6FE' },
+  'full-time': { bg: '#e0f0eb', color: '#087f72', border: '#bdddd5' },
   'campus-drive': { bg: C.warnBg, color: '#92400E', border: C.warnBorder },
   webinar: { bg: '#F0F9FF', color: '#0369A1', border: '#BAE6FD' },
   workshop: { bg: C.dangerBg, color: '#BE123C', border: C.dangerBorder },
@@ -185,6 +187,7 @@ function ApplyModal({
   const [coverLetter, setCoverLetter] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const dialogRef = useDialog(true, loading ? undefined : onClose);
 
   async function handleApply() {
     setLoading(true);
@@ -221,22 +224,28 @@ function ApplyModal({
         justifyContent: 'center',
         padding: 16,
       }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={(e) => !loading && e.target === e.currentTarget && onClose()}
+      className="v2-dialog-overlay"
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Apply to ${job.title}`}
+        tabIndex={-1}
         style={{
           background: C.white,
-          borderRadius: 16,
+          borderRadius: 12,
           padding: 28,
           width: '100%',
           maxWidth: 480,
-          boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
+          boxShadow: 'var(--shadow-card)',
         }}
       >
         <h2
           style={{
             fontSize: 20,
-            fontWeight: 900,
+            fontWeight: 700,
             color: C.text,
             fontFamily: 'var(--font-display)',
             marginBottom: 4,
@@ -265,6 +274,7 @@ function ApplyModal({
         )}
         <div style={{ marginBottom: 16 }}>
           <label
+            htmlFor="application-cover-letter"
             style={{
               display: 'block',
               fontSize: 13,
@@ -277,6 +287,8 @@ function ApplyModal({
             <span style={{ color: C.light, fontWeight: 400 }}>(optional, max 2000 chars)</span>
           </label>
           <textarea
+            id="application-cover-letter"
+            maxLength={2000}
             value={coverLetter}
             onChange={(e) => setCoverLetter(e.target.value)}
             rows={5}
@@ -361,6 +373,7 @@ export default function JobFeedClient({
   jobs: Job[];
   initialSmartUsage: SmartUsage;
 }) {
+  const searchParams = useSearchParams();
   const [jobs, setJobs] = useState(initialJobs);
   const [smartJobs, setSmartJobs] = useState<Job[]>([]);
   const [smartActive, setSmartActive] = useState(false);
@@ -370,9 +383,13 @@ export default function JobFeedClient({
   const [smartMeta, setSmartMeta] = useState<AIExecutionMeta | null>(null);
   const [smartUsage, setSmartUsage] = useState<SmartUsage>(initialSmartUsage);
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams.get('search') ?? '');
   const [datePosted, setDatePosted] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState(() => {
+    const value = searchParams.get('type') ?? '';
+    return JOB_TYPES.some((type) => type.value === value) ? value : '';
+  });
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [workModeFilter, setWorkModeFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [skillFilter, setSkillFilter] = useState('');
@@ -610,14 +627,15 @@ export default function JobFeedClient({
   return (
     <>
       <section
+        className="job-search-panel"
         style={{
           marginTop: 28,
           marginBottom: 20,
           background: C.white,
           border: `1px solid ${C.border}`,
-          borderRadius: 18,
+          borderRadius: 12,
           padding: 18,
-          boxShadow: '0 1px 6px rgba(15,23,42,0.04)',
+          boxShadow: 'var(--shadow-card)',
         }}
       >
         <div
@@ -644,6 +662,7 @@ export default function JobFeedClient({
             </div>
             <input
               type="text"
+              aria-label="Search opportunities"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search jobs, companies, skills, or locations"
@@ -663,6 +682,15 @@ export default function JobFeedClient({
           </div>
 
           <button
+            className="job-filter-toggle"
+            type="button"
+            aria-expanded={filtersOpen}
+            aria-controls="job-filters"
+            onClick={() => setFiltersOpen(!filtersOpen)}
+          >
+            <SlidersHorizontal size={16} /> Filters
+          </button>
+          <button
             onClick={handleSmartRecommendations}
             disabled={smartLoading || !canUseSmart}
             style={{
@@ -677,7 +705,7 @@ export default function JobFeedClient({
               color: C.white,
               cursor: smartLoading || !canUseSmart ? 'not-allowed' : 'pointer',
               fontSize: 13,
-              fontWeight: 800,
+              fontWeight: 700,
               fontFamily: 'var(--font-display)',
               boxShadow: smartLoading || !canUseSmart ? 'none' : '0 5px 14px rgba(37,99,235,0.28)',
             }}
@@ -717,10 +745,18 @@ export default function JobFeedClient({
           </span>
         </div>
 
-        <div className="job-filter-grid">
+        <div
+          id="job-filters"
+          className="job-filter-grid"
+          style={{ display: filtersOpen ? 'grid' : 'none' }}
+        >
           <label className="job-filter-field">
             <span>Date posted</span>
-            <select value={datePosted} onChange={(e) => setDatePosted(e.target.value)}>
+            <select
+              aria-label="Date posted"
+              value={datePosted}
+              onChange={(e) => setDatePosted(e.target.value)}
+            >
               {DATE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -731,7 +767,11 @@ export default function JobFeedClient({
 
           <label className="job-filter-field">
             <span>Role type</span>
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+            <select
+              aria-label="Role type"
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+            >
               {JOB_TYPES.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -742,7 +782,11 @@ export default function JobFeedClient({
 
           <label className="job-filter-field">
             <span>Work mode</span>
-            <select value={workModeFilter} onChange={(e) => setWorkModeFilter(e.target.value)}>
+            <select
+              aria-label="Work mode"
+              value={workModeFilter}
+              onChange={(e) => setWorkModeFilter(e.target.value)}
+            >
               {WORK_MODES.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -805,7 +849,11 @@ export default function JobFeedClient({
 
           <label className="job-filter-field">
             <span>Sort by</span>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortKey)}>
+            <select
+              aria-label="Sort by"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortKey)}
+            >
               {smartActive && <option value="recommended">Smart rank</option>}
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
@@ -839,7 +887,7 @@ export default function JobFeedClient({
                   alignItems: 'center',
                   gap: 6,
                   color: C.blue,
-                  fontWeight: 800,
+                  fontWeight: 700,
                 }}
               >
                 <Sparkles size={14} />
@@ -876,7 +924,7 @@ export default function JobFeedClient({
               borderRadius: 12,
               border: `1px solid ${C.blueBorder}`,
               background: C.blueBg,
-              color: '#1D4ED8',
+              color: '#06665d',
               padding: '10px 12px',
               fontSize: 13,
               lineHeight: 1.6,
@@ -903,22 +951,58 @@ export default function JobFeedClient({
         )}
       </section>
 
+      <nav className="opportunity-types" aria-label="Opportunity types">
+        {JOB_TYPES.map((type) => (
+          <button
+            type="button"
+            key={type.value}
+            aria-pressed={typeFilter === type.value}
+            onClick={() => setTypeFilter(type.value)}
+          >
+            {type.value ? type.label : 'All opportunities'}
+            <span>{jobs.filter((job) => !type.value || job.type === type.value).length}</span>
+          </button>
+        ))}
+      </nav>
+      <div className="job-results-heading" aria-live="polite">
+        <div>
+          <h2>{typeFilter ? TYPE_LABELS[typeFilter] : 'All opportunities'}</h2>
+          <p>
+            {filtered.length} result{filtered.length === 1 ? '' : 's'}
+            {search ? ` for “${search}”` : ' matching your preferences'}
+          </p>
+        </div>
+        {(search ||
+          typeFilter ||
+          datePosted ||
+          workModeFilter ||
+          locationFilter ||
+          skillFilter ||
+          stipendMin ||
+          stipendMax) && (
+          <button type="button" className="job-filter-toggle" onClick={resetFilters}>
+            <X size={15} /> Clear filters
+          </button>
+        )}
+      </div>
+
       {successMsg && (
         <div
           style={{
             position: 'fixed',
             top: 20,
             right: 20,
-            background: C.indigo,
+            background: 'var(--surface-muted)',
             color: C.success,
             padding: '13px 20px',
             borderRadius: 12,
             fontSize: 14,
             fontWeight: 700,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            boxShadow: 'var(--shadow-card)',
             zIndex: 999,
             border: '1px solid rgba(16,185,129,0.2)',
           }}
+          className="v2-light-panel"
         >
           {successMsg}
         </div>
@@ -928,7 +1012,7 @@ export default function JobFeedClient({
         <div
           style={{
             background: C.white,
-            borderRadius: 20,
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
             padding: '48px',
             textAlign: 'center',
@@ -938,7 +1022,7 @@ export default function JobFeedClient({
           <h3
             style={{
               fontSize: 18,
-              fontWeight: 800,
+              fontWeight: 700,
               color: C.text,
               fontFamily: 'var(--font-display)',
               marginBottom: 8,
@@ -953,6 +1037,7 @@ export default function JobFeedClient({
       ) : (
         <PaginatedCollection
           itemLabel="job listings"
+          defaultPageSize={12}
           resetKey={`${search}|${datePosted}|${typeFilter}|${workModeFilter}|${locationFilter}|${skillFilter}|${stipendMin}|${stipendMax}|${sortBy}|${smartActive}`}
           className="job-card-grid"
           style={{
@@ -972,13 +1057,13 @@ export default function JobFeedClient({
             return (
               <div
                 key={job._id}
-                className="job-card"
+                className="job-card nx-surface"
                 style={{
                   background: C.white,
-                  borderRadius: 18,
+                  borderRadius: 12,
                   border: `1px solid ${isUrgent ? C.warnBorder : C.border}`,
                   padding: '20px 22px',
-                  boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+                  boxShadow: 'var(--shadow-card)',
                   transition: 'box-shadow 0.2s, transform 0.2s',
                   cursor: 'default',
                   display: 'flex',
@@ -1002,16 +1087,17 @@ export default function JobFeedClient({
                       width: 44,
                       height: 44,
                       borderRadius: 12,
-                      background: C.indigo,
+                      background: 'var(--surface-muted)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: C.white,
+                      color: 'var(--deep)',
                       fontSize: 16,
-                      fontWeight: 900,
+                      fontWeight: 700,
                       flexShrink: 0,
                       fontFamily: 'var(--font-display)',
                     }}
+                    className="v2-light-panel"
                   >
                     {job.companyLogo ? (
                       <img
@@ -1053,12 +1139,12 @@ export default function JobFeedClient({
                             alignItems: 'center',
                             gap: 4,
                             background: C.blueBg,
-                            color: '#1D4ED8',
+                            color: '#06665d',
                             border: `1px solid ${C.blueBorder}`,
                             padding: '2px 8px',
                             borderRadius: 999,
                             fontSize: 10,
-                            fontWeight: 800,
+                            fontWeight: 700,
                           }}
                         >
                           <Sparkles size={10} />
@@ -1071,9 +1157,9 @@ export default function JobFeedClient({
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: 3,
-                            background: '#EDE9FE',
-                            color: '#7C3AED',
-                            border: '1px solid #DDD6FE',
+                            background: '#e0f0eb',
+                            color: '#087f72',
+                            border: '1px solid #bdddd5',
                             padding: '2px 8px',
                             borderRadius: 999,
                             fontSize: 10,
@@ -1132,7 +1218,7 @@ export default function JobFeedClient({
                     <h3
                       style={{
                         fontSize: 15,
-                        fontWeight: 800,
+                        fontWeight: 700,
                         color: C.text,
                         fontFamily: 'var(--font-display)',
                         margin: 0,
@@ -1172,7 +1258,7 @@ export default function JobFeedClient({
                       {saving ? (
                         <LoaderCircle size={15} className="job-spin" />
                       ) : (
-                        <Heart size={15} fill={job.isSaved ? '#10B981' : 'none'} />
+                        <Heart size={15} fill={job.isSaved ? '#168257' : 'none'} />
                       )}
                     </button>
 
@@ -1181,7 +1267,7 @@ export default function JobFeedClient({
                         <div
                           style={{
                             fontSize: 18,
-                            fontWeight: 900,
+                            fontWeight: 700,
                             color:
                               job.fitScore >= 70
                                 ? C.success

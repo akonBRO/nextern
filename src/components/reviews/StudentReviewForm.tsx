@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {
+  AlertCircle,
   Star,
   MessageSquare,
   CheckCircle2,
@@ -117,7 +118,7 @@ export default function StudentReviewForm({
         style={{
           background: rating > 0 ? 'rgba(13, 148, 136, 0.04)' : '#FAFBFC',
           border: `1.5px solid ${rating > 0 ? 'rgba(13, 148, 136, 0.15)' : '#E8ECF1'}`,
-          borderRadius: 14,
+          borderRadius: 12,
           padding: '16px 18px',
           transition: 'all 0.3s ease',
         }}
@@ -128,11 +129,11 @@ export default function StudentReviewForm({
               width: 28,
               height: 28,
               borderRadius: 8,
-              background: rating > 0 ? 'linear-gradient(135deg, #0D9488, #14B8A6)' : '#F1F5F9',
+              background: rating > 0 ? '#087f72' : '#f6f8f9',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: rating > 0 ? '#fff' : '#94A3B8',
+              color: rating > 0 ? '#fff' : '#6e7f89',
               transition: 'all 0.3s ease',
             }}
           >
@@ -142,7 +143,7 @@ export default function StudentReviewForm({
             style={{
               fontSize: 13,
               fontWeight: 700,
-              color: rating > 0 ? '#1E293B' : '#64748B',
+              color: rating > 0 ? '#182c39' : '#60717d',
               transition: 'color 0.3s ease',
             }}
           >
@@ -153,11 +154,11 @@ export default function StudentReviewForm({
               style={{
                 marginLeft: 'auto',
                 fontSize: 12,
-                fontWeight: 800,
-                color: '#0D9488',
+                fontWeight: 700,
+                color: '#087f72',
                 background: '#F0FDFA',
                 padding: '2px 8px',
-                borderRadius: 999,
+                borderRadius: 6,
               }}
             >
               {rating}/5
@@ -169,6 +170,8 @@ export default function StudentReviewForm({
             <button
               key={star}
               type="button"
+              aria-label={`${label}: ${star} out of 5`}
+              aria-pressed={star === rating}
               onClick={() => setRating(star)}
               onMouseEnter={() => setHoveredStar((prev) => ({ ...prev, [key]: star }))}
               onMouseLeave={() => setHoveredStar((prev) => ({ ...prev, [key]: 0 }))}
@@ -198,8 +201,8 @@ export default function StudentReviewForm({
     return (
       <div
         style={{
-          background: 'linear-gradient(145deg, #FAFFFE, #F0FDFA)',
-          borderRadius: 20,
+          background: '#FAFFFE',
+          borderRadius: 12,
           padding: 32,
           border: '1px solid rgba(13, 148, 136, 0.08)',
         }}
@@ -208,8 +211,8 @@ export default function StudentReviewForm({
           style={{
             width: '100%',
             height: 200,
-            borderRadius: 14,
-            background: 'linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%)',
+            borderRadius: 12,
+            background: 'linear-gradient(90deg, #f6f8f9 25%, #dfe6e9 50%, #f6f8f9 75%)',
             backgroundSize: '200% 100%',
             animation: 'shimmer 1.5s infinite',
           }}
@@ -223,8 +226,8 @@ export default function StudentReviewForm({
     return (
       <div
         style={{
-          background: 'linear-gradient(145deg, #F0FDFA, #ECFDF5)',
-          borderRadius: 20,
+          background: '#F0FDFA',
+          borderRadius: 12,
           padding: '36px 32px',
           border: '1px solid rgba(16, 185, 129, 0.15)',
           textAlign: 'center',
@@ -240,7 +243,7 @@ export default function StudentReviewForm({
             right: -30,
             width: 120,
             height: 120,
-            background: 'radial-gradient(circle, rgba(13, 148, 136, 0.08) 0%, transparent 70%)',
+            background: 'transparent',
             borderRadius: '50%',
           }}
         />
@@ -251,7 +254,7 @@ export default function StudentReviewForm({
             left: -20,
             width: 80,
             height: 80,
-            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)',
+            background: 'transparent',
             borderRadius: '50%',
           }}
         />
@@ -260,13 +263,13 @@ export default function StudentReviewForm({
           style={{
             width: 64,
             height: 64,
-            borderRadius: 16,
-            background: 'linear-gradient(135deg, #0D9488, #14B8A6)',
+            borderRadius: 12,
+            background: '#087f72',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 16px',
-            boxShadow: '0 8px 24px rgba(13, 148, 136, 0.25)',
+            boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
           }}
         >
           <CheckCircle2 size={32} color="#fff" />
@@ -274,8 +277,8 @@ export default function StudentReviewForm({
         <h3
           style={{
             fontSize: 20,
-            fontWeight: 900,
-            color: '#0F172A',
+            fontWeight: 750,
+            color: '#182c39',
             fontFamily: 'var(--font-display)',
             margin: '0 0 8px',
           }}
@@ -285,7 +288,7 @@ export default function StudentReviewForm({
         <p
           style={{
             fontSize: 14,
-            color: '#64748B',
+            color: '#60717d',
             margin: 0,
             lineHeight: 1.6,
             maxWidth: 340,
@@ -314,7 +317,7 @@ export default function StudentReviewForm({
               color: '#065F46',
               border: '1px solid #A7F3D0',
               padding: '5px 12px',
-              borderRadius: 999,
+              borderRadius: 6,
               fontSize: 12,
               fontWeight: 600,
             }}
@@ -327,10 +330,10 @@ export default function StudentReviewForm({
               alignItems: 'center',
               gap: 5,
               background: '#F0FDFA',
-              color: '#0F766E',
+              color: '#06665d',
               border: '1px solid #99F6E4',
               padding: '5px 12px',
-              borderRadius: 999,
+              borderRadius: 6,
               fontSize: 12,
               fontWeight: 600,
             }}
@@ -348,7 +351,7 @@ export default function StudentReviewForm({
           style={{
             marginTop: 24,
             padding: '10px 24px',
-            background: 'linear-gradient(135deg, #0D9488, #0F766E)',
+            background: '#087f72',
             color: '#fff',
             border: 'none',
             borderRadius: 12,
@@ -356,7 +359,7 @@ export default function StudentReviewForm({
             fontWeight: 700,
             cursor: 'pointer',
             fontFamily: 'var(--font-display)',
-            boxShadow: '0 4px 12px rgba(13, 148, 136, 0.25)',
+            boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
             transition: 'all 0.2s ease',
           }}
         >
@@ -374,17 +377,17 @@ export default function StudentReviewForm({
   return (
     <div
       style={{
-        background: 'linear-gradient(145deg, #FAFFFE, #F8FFFE)',
-        borderRadius: 20,
+        background: '#FAFFFE',
+        borderRadius: 12,
         border: '1px solid rgba(13, 148, 136, 0.08)',
         overflow: 'hidden',
-        boxShadow: '0 4px 24px rgba(15, 23, 42, 0.06)',
+        boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
       }}
     >
       {/* Header */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #134E4A, #0F766E)',
+          background: '#f6f8f9',
           padding: '24px 28px',
           position: 'relative',
           overflow: 'hidden',
@@ -397,7 +400,7 @@ export default function StudentReviewForm({
             right: -40,
             width: 160,
             height: 160,
-            background: 'radial-gradient(circle, rgba(20, 184, 166, 0.25) 0%, transparent 70%)',
+            background: 'transparent',
             borderRadius: '50%',
           }}
         />
@@ -407,11 +410,11 @@ export default function StudentReviewForm({
               width: 42,
               height: 42,
               borderRadius: 12,
-              background: 'linear-gradient(135deg, #14B8A6, #2DD4BF)',
+              background: '#14B8A6',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(20, 184, 166, 0.4)',
+              boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
             }}
           >
             <MessageSquare size={20} color="#fff" />
@@ -420,8 +423,8 @@ export default function StudentReviewForm({
             <h2
               style={{
                 fontSize: 18,
-                fontWeight: 900,
-                color: '#F0FDFA',
+                fontWeight: 750,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
                 margin: 0,
                 letterSpacing: '-0.3px',
@@ -429,7 +432,7 @@ export default function StudentReviewForm({
             >
               Rate Your Experience
             </h2>
-            <p style={{ fontSize: 12, color: '#99F6E4', margin: '3px 0 0' }}>
+            <p style={{ fontSize: 12, color: '#60717d', margin: '3px 0 0' }}>
               Help other students by sharing your internship feedback
             </p>
           </div>
@@ -443,7 +446,7 @@ export default function StudentReviewForm({
               justifyContent: 'space-between',
               fontSize: 11,
               fontWeight: 600,
-              color: 'rgba(240, 253, 250, 0.6)',
+              color: '#60717d',
               marginBottom: 6,
             }}
           >
@@ -454,7 +457,7 @@ export default function StudentReviewForm({
             style={{
               height: 4,
               borderRadius: 99,
-              background: 'rgba(255,255,255,0.1)',
+              background: '#dfe6e9',
               overflow: 'hidden',
             }}
           >
@@ -462,9 +465,7 @@ export default function StudentReviewForm({
               style={{
                 height: '100%',
                 borderRadius: 99,
-                background: allRated
-                  ? 'linear-gradient(90deg, #10B981, #34D399)'
-                  : 'linear-gradient(90deg, #14B8A6, #2DD4BF)',
+                background: allRated ? '#10B981' : '#14B8A6',
                 width: `${((filledCount + (comment.trim() ? 1 : 0)) / 4) * 100}%`,
                 transition: 'width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
               }}
@@ -498,7 +499,7 @@ export default function StudentReviewForm({
               display: 'block',
               fontSize: 12,
               fontWeight: 700,
-              color: '#475569',
+              color: '#435663',
               marginBottom: 8,
               textTransform: 'uppercase',
               letterSpacing: 0.6,
@@ -516,7 +517,7 @@ export default function StudentReviewForm({
               background: comment.trim() ? 'rgba(13, 148, 136, 0.02)' : '#FAFBFC',
               fontSize: 14,
               fontFamily: 'var(--font-body)',
-              color: '#0F172A',
+              color: '#182c39',
               outline: 'none',
               minHeight: 100,
               resize: 'vertical',
@@ -545,7 +546,11 @@ export default function StudentReviewForm({
               fontWeight: 600,
             }}
           >
-            ⚠️ {error}
+            <AlertCircle
+              size={16}
+              style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }}
+            />{' '}
+            {error}
           </div>
         )}
 
@@ -556,12 +561,12 @@ export default function StudentReviewForm({
             width: '100%',
             marginTop: 18,
             padding: '14px 20px',
-            background: allRated ? 'linear-gradient(135deg, #0D9488, #0F766E)' : '#E2E8F0',
-            color: allRated ? '#fff' : '#94A3B8',
+            background: allRated ? '#087f72' : '#dfe6e9',
+            color: allRated ? '#fff' : '#6e7f89',
             border: 'none',
-            borderRadius: 14,
+            borderRadius: 12,
             fontSize: 15,
-            fontWeight: 800,
+            fontWeight: 700,
             fontFamily: 'var(--font-display)',
             cursor: allRated && !isSubmitting ? 'pointer' : 'not-allowed',
             boxShadow: allRated ? '0 6px 20px rgba(13, 148, 136, 0.3)' : 'none',

@@ -63,6 +63,7 @@ export default async function EmployerBadgesPage() {
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer workspace"
       homeHref="/employer/dashboard"
@@ -97,7 +98,7 @@ export default async function EmployerBadgesPage() {
               <div
                 style={{
                   fontSize: 32,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   color: '#FFFFFF',
                   fontFamily: 'var(--font-display)',
                   lineHeight: 1,
@@ -129,12 +130,13 @@ export default async function EmployerBadgesPage() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
               gap: 16,
             }}
+            className="v2-page-grid"
           >
             {progressList.map(
               ({ definition: def, currentCount, threshold, isEarned, progressPercentage }) => {
                 const bg = isEarned ? '#F0FDF4' : '#FFFFFF';
-                const border = isEarned ? '#4ADE80' : '#E2E8F0';
-                const titleColor = isEarned ? '#14532D' : '#1E293B';
+                const border = isEarned ? '#4ADE80' : '#dfe6e9';
+                const titleColor = isEarned ? '#14532D' : '#243e4a';
 
                 return (
                   <div
@@ -142,7 +144,7 @@ export default async function EmployerBadgesPage() {
                     style={{
                       background: bg,
                       border: `2px solid ${border}`,
-                      borderRadius: 18,
+                      borderRadius: 12,
                       padding: 20,
                       position: 'relative',
                       overflow: 'hidden',
@@ -158,7 +160,7 @@ export default async function EmployerBadgesPage() {
                           background: '#22C55E',
                           color: '#FFF',
                           fontSize: 11,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           borderBottomLeftRadius: 14,
                         }}
                       >
@@ -171,8 +173,8 @@ export default async function EmployerBadgesPage() {
                         style={{
                           width: 64,
                           height: 64,
-                          borderRadius: 16,
-                          background: isEarned ? '#DCFCE7' : '#F1F5F9',
+                          borderRadius: 12,
+                          background: isEarned ? '#DCFCE7' : '#f6f8f9',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -186,7 +188,7 @@ export default async function EmployerBadgesPage() {
 
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ fontSize: 16, fontWeight: 800, color: titleColor }}>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: titleColor }}>
                             {def.name}
                           </div>
                           <span
@@ -195,15 +197,15 @@ export default async function EmployerBadgesPage() {
                               fontWeight: 700,
                               padding: '2px 8px',
                               borderRadius: 999,
-                              background: isEarned ? '#DBEAFE' : '#F1F5F9',
-                              color: isEarned ? '#1E40AF' : '#64748B',
+                              background: isEarned ? '#dbefea' : '#f6f8f9',
+                              color: isEarned ? '#1E40AF' : '#60717d',
                             }}
                           >
                             +{def.marksReward || 0} pts
                           </span>
                         </div>
                         <div
-                          style={{ fontSize: 13, color: '#64748B', marginTop: 4, lineHeight: 1.4 }}
+                          style={{ fontSize: 13, color: '#60717d', marginTop: 4, lineHeight: 1.4 }}
                         >
                           {def.description}
                         </div>
@@ -218,7 +220,7 @@ export default async function EmployerBadgesPage() {
                           marginBottom: 8,
                           fontSize: 12,
                           fontWeight: 700,
-                          color: isEarned ? '#16A34A' : '#94A3B8',
+                          color: isEarned ? '#16A34A' : '#60717d',
                         }}
                       >
                         <span>{def.criteria}</span>
@@ -229,7 +231,7 @@ export default async function EmployerBadgesPage() {
                       <div
                         style={{
                           height: 8,
-                          background: isEarned ? '#BBF7D0' : '#F1F5F9',
+                          background: isEarned ? '#BBF7D0' : '#f6f8f9',
                           borderRadius: 999,
                           overflow: 'hidden',
                         }}

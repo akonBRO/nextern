@@ -24,6 +24,7 @@ export default async function AdvisorMessagesPage({
 
   return (
     <DashboardShell
+      embedded
       role="advisor"
       roleLabel="Advisor dashboard"
       homeHref="/advisor/dashboard"
@@ -31,15 +32,7 @@ export default async function AdvisorMessagesPage({
       user={{ ...data.chromeUser, userId: session.user.id }}
       hideFooter
     >
-      <div
-        style={{
-          height: '100%',
-          padding: '16px 24px',
-          boxSizing: 'border-box',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <div className="messaging-page">
         <Inbox
           currentUserId={session.user.id}
           currentUserRole="advisor"

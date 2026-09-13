@@ -1,3 +1,4 @@
+import ContextIcon from '@/components/ui/ContextIcon';
 // src/app/dept/report/page.tsx
 // Strategic Career Readiness Report — printable/exportable overview for dept head
 
@@ -11,7 +12,6 @@ import {
   DashboardSection,
   EmptyState,
   HeroCard,
-  ActionLink,
   Panel,
   ProgressBar,
   StatCard,
@@ -93,6 +93,7 @@ export default async function DeptReportPage() {
 
   return (
     <DashboardShell
+      embedded
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"
@@ -112,11 +113,7 @@ export default async function DeptReportPage() {
             </span>
           }
           description={`Generated on ${today}. This report summarises cohort readiness, skill coverage, industry alignment, and hiring pipeline for curriculum review and accreditation documentation.`}
-          actions={
-            <>
-              <ActionLink href="/dept/dashboard" label="← Back to Dashboard" tone="ghost" />
-            </>
-          }
+          actions={<></>}
           aside={
             <Panel
               title="Report summary"
@@ -125,15 +122,18 @@ export default async function DeptReportPage() {
                 border: '1px solid rgba(255,255,255,0.16)',
               }}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}
+                className="v2-page-grid"
+              >
                 {[
-                  { label: 'Dept students', value: data.stats.deptStudents, color: '#22D3EE' },
+                  { label: 'Dept students', value: data.stats.deptStudents, color: '#178d80' },
                   {
                     label: 'Avg score',
                     value: `${data.stats.avgOpportunityScore}%`,
-                    color: data.stats.avgOpportunityScore >= 70 ? '#10B981' : '#F59E0B',
+                    color: data.stats.avgOpportunityScore >= 70 ? '#168257' : '#a86714',
                   },
-                  { label: 'Hired', value: data.stats.hiredStudents, color: '#10B981' },
+                  { label: 'Hired', value: data.stats.hiredStudents, color: '#168257' },
                   {
                     label: 'Avg CGPA',
                     value: data.stats.avgCGPA ? data.stats.avgCGPA.toFixed(2) : '—',
@@ -152,7 +152,7 @@ export default async function DeptReportPage() {
                     <div
                       style={{
                         fontSize: 20,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: s.color,
                         fontFamily: 'var(--font-display)',
                         lineHeight: 1,
@@ -176,7 +176,7 @@ export default async function DeptReportPage() {
             style={{
               background: '#FEF2F2',
               border: '1px solid #FECACA',
-              borderRadius: 16,
+              borderRadius: 12,
               padding: '16px 20px',
               display: 'flex',
               alignItems: 'flex-start',
@@ -197,10 +197,10 @@ export default async function DeptReportPage() {
                 flexShrink: 0,
               }}
             >
-              ⚠️
+              <ContextIcon name="warning" />
             </div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#991B1B', marginBottom: 4 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#991B1B', marginBottom: 4 }}>
                 Cohort below benchmark threshold
               </div>
               <div style={{ fontSize: 13, color: '#B91C1C', lineHeight: 1.6 }}>
@@ -236,19 +236,19 @@ export default async function DeptReportPage() {
               label="Applications submitted"
               value={formatCompactNumber(data.stats.totalApplications)}
               Icon={BriefcaseBusiness}
-              accent="#22D3EE"
+              accent="#178d80"
             />
             <StatCard
               label="Students hired"
               value={formatCompactNumber(data.stats.hiredStudents)}
               Icon={Sparkles}
-              accent="#10B981"
+              accent="#168257"
             />
             <StatCard
               label="Active openings"
               value={formatCompactNumber(data.stats.activeOpenings)}
               Icon={Target}
-              accent="#F59E0B"
+              accent="#a86714"
             />
           </div>
         </section>
@@ -261,7 +261,7 @@ export default async function DeptReportPage() {
         >
           <div
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
-            className="dashboard-grid-two"
+            className="dashboard-grid-two v2-page-grid"
           >
             <Panel title="Readiness tiers" description="Percentage of students in each tier.">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -271,7 +271,7 @@ export default async function DeptReportPage() {
                     sublabel: 'Score ≥ 70',
                     count: readinessDistribution.ready.count,
                     pct: readinessDistribution.ready.pct,
-                    color: '#10B981',
+                    color: '#168257',
                     bg: '#ECFDF5',
                     border: '#A7F3D0',
                   },
@@ -280,7 +280,7 @@ export default async function DeptReportPage() {
                     sublabel: 'Score 40–69',
                     count: readinessDistribution.partial.count,
                     pct: readinessDistribution.partial.pct,
-                    color: '#F59E0B',
+                    color: '#a86714',
                     bg: '#FFFBEB',
                     border: '#FDE68A',
                   },
@@ -317,13 +317,13 @@ export default async function DeptReportPage() {
                         >
                           {tier.label}
                         </span>
-                        <span style={{ fontSize: 12, color: '#94A3B8' }}>{tier.sublabel}</span>
+                        <span style={{ fontSize: 12, color: '#60717d' }}>{tier.sublabel}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 14, fontWeight: 800, color: tier.color }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: tier.color }}>
                           {tier.pct}%
                         </span>
-                        <span style={{ fontSize: 12, color: '#94A3B8' }}>
+                        <span style={{ fontSize: 12, color: '#60717d' }}>
                           ({tier.count} students)
                         </span>
                       </div>
@@ -331,7 +331,7 @@ export default async function DeptReportPage() {
                     <div
                       style={{
                         height: 10,
-                        background: '#F1F5F9',
+                        background: '#f6f8f9',
                         borderRadius: 999,
                         overflow: 'hidden',
                       }}
@@ -356,13 +356,13 @@ export default async function DeptReportPage() {
                     <div
                       style={{
                         width: `${readinessDistribution.ready.pct}%`,
-                        background: '#10B981',
+                        background: '#168257',
                       }}
                     />
                     <div
                       style={{
                         width: `${readinessDistribution.partial.pct}%`,
-                        background: '#F59E0B',
+                        background: '#a86714',
                       }}
                     />
                     <div
@@ -392,23 +392,23 @@ export default async function DeptReportPage() {
                     <div
                       style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}
                     >
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#243e4a' }}>
                         Avg Opportunity Score
                       </span>
                       <div style={{ display: 'flex', gap: 10 }}>
                         <span
                           style={{
                             fontSize: 13,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             color:
                               data.stats.avgOpportunityScore >= benchmark.minReadinessScore
-                                ? '#10B981'
+                                ? '#168257'
                                 : '#EF4444',
                           }}
                         >
                           {data.stats.avgOpportunityScore}%
                         </span>
-                        <span style={{ fontSize: 12, color: '#94A3B8' }}>
+                        <span style={{ fontSize: 12, color: '#60717d' }}>
                           / min {benchmark.minReadinessScore}%
                         </span>
                       </div>
@@ -428,23 +428,23 @@ export default async function DeptReportPage() {
                     <div
                       style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}
                     >
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#243e4a' }}>
                         Avg CGPA
                       </span>
                       <div style={{ display: 'flex', gap: 10 }}>
                         <span
                           style={{
                             fontSize: 13,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             color:
                               (data.stats.avgCGPA ?? 0) >= benchmark.minCGPA
-                                ? '#10B981'
+                                ? '#168257'
                                 : '#EF4444',
                           }}
                         >
                           {data.stats.avgCGPA ? data.stats.avgCGPA.toFixed(2) : '—'}
                         </span>
-                        <span style={{ fontSize: 12, color: '#94A3B8' }}>
+                        <span style={{ fontSize: 12, color: '#60717d' }}>
                           / min {benchmark.minCGPA.toFixed(2)}
                         </span>
                       </div>
@@ -452,7 +452,7 @@ export default async function DeptReportPage() {
                     <div
                       style={{
                         height: 10,
-                        background: '#F1F5F9',
+                        background: '#f6f8f9',
                         borderRadius: 999,
                         overflow: 'hidden',
                       }}
@@ -462,7 +462,7 @@ export default async function DeptReportPage() {
                           width: `${Math.min(((data.stats.avgCGPA ?? 0) / 4) * 100, 100)}%`,
                           height: '100%',
                           background:
-                            (data.stats.avgCGPA ?? 0) >= benchmark.minCGPA ? '#10B981' : '#EF4444',
+                            (data.stats.avgCGPA ?? 0) >= benchmark.minCGPA ? '#168257' : '#EF4444',
                           borderRadius: 999,
                         }}
                       />
@@ -481,11 +481,11 @@ export default async function DeptReportPage() {
                     <div
                       style={{
                         fontSize: 15,
-                        fontWeight: 800,
+                        fontWeight: 700,
                         color: belowBenchmark ? '#991B1B' : '#065F46',
                       }}
                     >
-                      {belowBenchmark ? '⚠ Below benchmark' : '✓ Meeting benchmark'}
+                      {belowBenchmark ? 'Below benchmark' : '✓ Meeting benchmark'}
                     </div>
                     <div
                       style={{
@@ -527,24 +527,24 @@ export default async function DeptReportPage() {
                   key={stage.label}
                   style={{
                     padding: '20px',
-                    borderRadius: 16,
-                    border: '1px solid #E2E8F0',
-                    background: '#F8FAFC',
+                    borderRadius: 12,
+                    border: '1px solid #dfe6e9',
+                    background: '#f6f8f9',
                     textAlign: 'center',
                   }}
                 >
                   <div
                     style={{
                       fontSize: 32,
-                      fontWeight: 900,
-                      color: '#2563EB',
+                      fontWeight: 700,
+                      color: '#087f72',
                       fontFamily: 'var(--font-display)',
                       lineHeight: 1,
                     }}
                   >
                     {formatCompactNumber(stage.count)}
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B', marginTop: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#243e4a', marginTop: 8 }}>
                     {stage.label}
                   </div>
                 </div>
@@ -578,31 +578,31 @@ export default async function DeptReportPage() {
                             width: 22,
                             height: 22,
                             borderRadius: 6,
-                            background: '#EFF6FF',
-                            color: '#2563EB',
+                            background: '#edf7f3',
+                            color: '#087f72',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontSize: 10,
-                            fontWeight: 800,
+                            fontWeight: 700,
                           }}
                         >
                           {i + 1}
                         </div>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: '#182c39' }}>
                           {item.skill}
                         </span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <span style={{ fontSize: 12, color: '#64748B' }}>
+                        <span style={{ fontSize: 12, color: '#60717d' }}>
                           {item.count} students
                         </span>
                         <span
                           style={{
                             fontSize: 13,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             color:
-                              item.pct >= 60 ? '#10B981' : item.pct >= 30 ? '#F59E0B' : '#94A3B8',
+                              item.pct >= 60 ? '#168257' : item.pct >= 30 ? '#a86714' : '#60717d',
                           }}
                         >
                           {item.pct}%
@@ -612,7 +612,7 @@ export default async function DeptReportPage() {
                     <div
                       style={{
                         height: 8,
-                        background: '#F1F5F9',
+                        background: '#f6f8f9',
                         borderRadius: 999,
                         overflow: 'hidden',
                       }}
@@ -624,10 +624,10 @@ export default async function DeptReportPage() {
                           borderRadius: 999,
                           background:
                             item.pct >= 60
-                              ? 'linear-gradient(90deg, #10B981, #34D399)'
+                              ? 'linear-gradient(90deg, #168257, #34D399)'
                               : item.pct >= 30
-                                ? 'linear-gradient(90deg, #F59E0B, #FBBF24)'
-                                : 'linear-gradient(90deg, #94A3B8, #CBD5E1)',
+                                ? 'linear-gradient(90deg, #a86714, #FBBF24)'
+                                : 'linear-gradient(90deg, #60717d, #CBD5E1)',
                         }}
                       />
                     </div>
@@ -651,7 +651,7 @@ export default async function DeptReportPage() {
         >
           <div
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
-            className="dashboard-grid-two"
+            className="dashboard-grid-two v2-page-grid"
           >
             {/* Critical gaps */}
             <Panel
@@ -701,10 +701,10 @@ export default async function DeptReportPage() {
                         </span>
                       </div>
                       <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
-                        <span style={{ color: '#2563EB', fontWeight: 700 }}>
+                        <span style={{ color: '#087f72', fontWeight: 700 }}>
                           Student supply: {item.supplyPct}%
                         </span>
-                        <span style={{ color: '#7C3AED', fontWeight: 700 }}>
+                        <span style={{ color: '#087f72', fontWeight: 700 }}>
                           Employer demand: {item.demandPct}%
                         </span>
                       </div>
@@ -772,6 +772,7 @@ export default async function DeptReportPage() {
                     gap: 12,
                     padding: '8px 12px',
                   }}
+                  className="v2-page-grid"
                 >
                   {['Semester', 'Avg Score', 'Avg CGPA', 'Students'].map((h) => (
                     <div
@@ -779,7 +780,7 @@ export default async function DeptReportPage() {
                       style={{
                         fontSize: 11,
                         fontWeight: 700,
-                        color: '#94A3B8',
+                        color: '#60717d',
                         textTransform: 'uppercase',
                         letterSpacing: 0.8,
                       }}
@@ -797,23 +798,24 @@ export default async function DeptReportPage() {
                       gap: 12,
                       padding: '14px 12px',
                       borderRadius: 12,
-                      background: i % 2 === 0 ? '#F8FAFC' : '#fff',
-                      border: '1px solid #E2E8F0',
+                      background: i % 2 === 0 ? '#f6f8f9' : '#fff',
+                      border: '1px solid #dfe6e9',
                       alignItems: 'center',
                     }}
+                    className="v2-page-grid"
                   >
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39' }}>
                       {sem.semester}
                     </div>
                     <div
                       style={{
                         fontSize: 16,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color:
                           sem.avgScore >= 70
-                            ? '#10B981'
+                            ? '#168257'
                             : sem.avgScore >= 40
-                              ? '#F59E0B'
+                              ? '#a86714'
                               : '#EF4444',
                         fontFamily: 'var(--font-display)',
                       }}
@@ -823,14 +825,14 @@ export default async function DeptReportPage() {
                     <div
                       style={{
                         fontSize: 16,
-                        fontWeight: 900,
-                        color: '#22D3EE',
+                        fontWeight: 700,
+                        color: '#178d80',
                         fontFamily: 'var(--font-display)',
                       }}
                     >
                       {sem.avgCGPA.toFixed(2)}
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#64748B' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#60717d' }}>
                       {sem.studentCount}
                     </div>
                   </div>
@@ -862,6 +864,7 @@ export default async function DeptReportPage() {
                     gap: 12,
                     padding: '8px 12px',
                   }}
+                  className="v2-page-grid"
                 >
                   {['#', 'Student', 'Opp. Score', 'Profile', 'CGPA'].map((h) => (
                     <div
@@ -869,7 +872,7 @@ export default async function DeptReportPage() {
                       style={{
                         fontSize: 11,
                         fontWeight: 700,
-                        color: '#94A3B8',
+                        color: '#60717d',
                         textTransform: 'uppercase',
                         letterSpacing: 0.8,
                       }}
@@ -887,32 +890,33 @@ export default async function DeptReportPage() {
                       gap: 12,
                       padding: '14px 12px',
                       borderRadius: 12,
-                      background: i % 2 === 0 ? '#F8FAFC' : '#fff',
-                      border: '1px solid #E2E8F0',
+                      background: i % 2 === 0 ? '#f6f8f9' : '#fff',
+                      border: '1px solid #dfe6e9',
                       alignItems: 'center',
                     }}
+                    className="v2-page-grid"
                   >
                     <div
                       style={{
                         width: 32,
                         height: 32,
                         borderRadius: 10,
-                        background: i < 3 ? 'linear-gradient(135deg, #F59E0B, #FBBF24)' : '#EFF6FF',
-                        color: i < 3 ? '#fff' : '#2563EB',
+                        background: i < 3 ? 'linear-gradient(135deg, #a86714, #FBBF24)' : '#edf7f3',
+                        color: i < 3 ? '#fff' : '#087f72',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: 13,
-                        fontWeight: 900,
+                        fontWeight: 700,
                       }}
                     >
                       {i + 1}
                     </div>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#1E293B' }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#243e4a' }}>
                         {student.name}
                       </div>
-                      <div style={{ fontSize: 12, color: '#64748B' }}>
+                      <div style={{ fontSize: 12, color: '#60717d' }}>
                         {student.department ?? '—'}
                         {student.yearOfStudy ? ` · Year ${student.yearOfStudy}` : ''}
                       </div>
@@ -920,12 +924,12 @@ export default async function DeptReportPage() {
                     <div
                       style={{
                         fontSize: 16,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color:
                           student.opportunityScore >= 70
-                            ? '#10B981'
+                            ? '#168257'
                             : student.opportunityScore >= 40
-                              ? '#F59E0B'
+                              ? '#a86714'
                               : '#EF4444',
                         fontFamily: 'var(--font-display)',
                       }}
@@ -935,14 +939,14 @@ export default async function DeptReportPage() {
                     <div
                       style={{
                         fontSize: 16,
-                        fontWeight: 900,
-                        color: '#2563EB',
+                        fontWeight: 700,
+                        color: '#087f72',
                         fontFamily: 'var(--font-display)',
                       }}
                     >
                       {student.profileCompleteness}%
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39' }}>
                       {typeof student.cgpa === 'number' ? student.cgpa.toFixed(2) : '—'}
                     </div>
                   </div>
@@ -978,8 +982,9 @@ export default async function DeptReportPage() {
                     border: '1px solid #FECACA',
                   }}
                 >
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#991B1B', marginBottom: 6 }}>
-                    🎯 High proportion of not-ready students ({readinessDistribution.notReady.pct}%)
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#991B1B', marginBottom: 6 }}>
+                    <ContextIcon name="target" /> High proportion of not-ready students (
+                    {readinessDistribution.notReady.pct}%)
                   </div>
                   <div style={{ fontSize: 13, color: '#B91C1C', lineHeight: 1.6 }}>
                     Consider scheduling targeted skill-building workshops for students scoring below
@@ -999,8 +1004,9 @@ export default async function DeptReportPage() {
                     border: '1px solid #FDE68A',
                   }}
                 >
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#92400E', marginBottom: 6 }}>
-                    📚 Critical skill gaps identified ({criticalGaps.length} skills)
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#92400E', marginBottom: 6 }}>
+                    <ContextIcon name="book" /> Critical skill gaps identified (
+                    {criticalGaps.length} skills)
                   </div>
                   <div
                     style={{ fontSize: 13, color: '#92400E', lineHeight: 1.6, marginBottom: 10 }}
@@ -1025,7 +1031,7 @@ export default async function DeptReportPage() {
                       textDecoration: 'none',
                     }}
                   >
-                    📅 Post a workshop to address these gaps →
+                    <ContextIcon name="calendar" /> Post a workshop to address these gaps →
                   </Link>
                 </div>
               )}
@@ -1040,8 +1046,9 @@ export default async function DeptReportPage() {
                     border: '1px solid #A7F3D0',
                   }}
                 >
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#065F46', marginBottom: 6 }}>
-                    ✅ Strong cohort readiness ({readinessDistribution.ready.pct}% ready)
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#065F46', marginBottom: 6 }}>
+                    <ContextIcon name="check" /> Strong cohort readiness (
+                    {readinessDistribution.ready.pct}% ready)
                   </div>
                   <div style={{ fontSize: 13, color: '#16A34A', lineHeight: 1.6 }}>
                     More than half the cohort meets the readiness threshold. Focus on pushing the
@@ -1061,8 +1068,9 @@ export default async function DeptReportPage() {
                     border: '1px solid #BAE6FD',
                   }}
                 >
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0369A1', marginBottom: 6 }}>
-                    💼 No hires recorded yet despite {data.stats.totalApplications} applications
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0369A1', marginBottom: 6 }}>
+                    <ContextIcon name="briefcase" /> No hires recorded yet despite{' '}
+                    {data.stats.totalApplications} applications
                   </div>
                   <div style={{ fontSize: 13, color: '#0369A1', lineHeight: 1.6 }}>
                     Students are applying but not converting. Consider running mock interview
@@ -1085,9 +1093,9 @@ export default async function DeptReportPage() {
                     }}
                   >
                     <div
-                      style={{ fontSize: 14, fontWeight: 800, color: '#14532D', marginBottom: 6 }}
+                      style={{ fontSize: 14, fontWeight: 700, color: '#14532D', marginBottom: 6 }}
                     >
-                      🌟 Department is performing well overall
+                      <ContextIcon name="sparkle" /> Department is performing well overall
                     </div>
                     <div style={{ fontSize: 13, color: '#16A34A', lineHeight: 1.6 }}>
                       No critical issues detected. Continue monitoring semester trends and maintain
@@ -1102,9 +1110,9 @@ export default async function DeptReportPage() {
         {/* ── Footer note ── */}
         <div
           style={{
-            background: '#F8FAFC',
-            border: '1px solid #E2E8F0',
-            borderRadius: 16,
+            background: '#f6f8f9',
+            border: '1px solid #dfe6e9',
+            borderRadius: 12,
             padding: '16px 20px',
             display: 'flex',
             alignItems: 'center',
@@ -1117,18 +1125,18 @@ export default async function DeptReportPage() {
               width: 34,
               height: 34,
               borderRadius: 10,
-              background: '#EFF6FF',
+              background: '#edf7f3',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#2563EB',
+              color: '#087f72',
               flexShrink: 0,
             }}
           >
             <FileText size={16} />
           </div>
-          <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.6 }}>
-            <strong style={{ color: '#0F172A' }}>Strategic Career Readiness Report</strong> ·
+          <div style={{ fontSize: 13, color: '#60717d', lineHeight: 1.6 }}>
+            <strong style={{ color: '#182c39' }}>Strategic Career Readiness Report</strong> ·
             Generated by Nextern on {today} · Data reflects live platform records at the time of
             generation. Use browser print (Ctrl+P) to save as PDF for institutional records.
           </div>

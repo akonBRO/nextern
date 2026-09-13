@@ -1,0 +1,23 @@
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .next-public :is(.opportunity-preview, .discovery-card) {
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+  .next-public :is(.opportunity-preview, .discovery-card):hover {
+    transform: translateY(-3px);
+  }
+  .next-public :is(.public-button, .public-text-link, .opportunity-preview-link) > svg {
+    transition: transform 180ms ease;
+  }
+  .next-public :is(.public-button, .public-text-link, .opportunity-preview-link):hover > svg {
+    transform: translate(2px, -1px);
+  }
+  .next-public .studio-tool {
+    transition: background 180ms ease;
+  }
+  .next-public .studio-tool:hover {
+    background: #dce7d535;
+  }
+}

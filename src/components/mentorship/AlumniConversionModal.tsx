@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import useDialog from '@/components/ui/useDialog';
+import './mentorship.css';
 import { useSession } from 'next-auth/react';
 import { GraduationCap, AlertTriangle, ShieldCheck, X } from 'lucide-react';
 
@@ -15,6 +17,7 @@ export default function AlumniConversionModal({ isOpen, onClose, onConverted }: 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const dialogRef = useDialog(isOpen, loading ? undefined : onClose);
   if (!isOpen) return null;
 
   async function handleConvert() {
@@ -47,6 +50,7 @@ export default function AlumniConversionModal({ isOpen, onClose, onConverted }: 
 
   return (
     <div
+      className="mentor-modal-backdrop"
       style={{
         position: 'fixed',
         inset: 0,
@@ -60,9 +64,15 @@ export default function AlumniConversionModal({ isOpen, onClose, onConverted }: 
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Become an alumni mentor"
+        tabIndex={-1}
+        className="mentor-modal-panel"
         style={{
           background: '#FFFFFF',
-          borderRadius: 24,
+          borderRadius: 12,
           width: '100%',
           maxWidth: 480,
           boxShadow: '0 24px 48px rgba(15,23,42,0.15)',
@@ -72,6 +82,7 @@ export default function AlumniConversionModal({ isOpen, onClose, onConverted }: 
       >
         <div style={{ position: 'relative', padding: 32 }}>
           <button
+            aria-label="Close dialog"
             onClick={onClose}
             disabled={loading}
             style={{
@@ -80,7 +91,7 @@ export default function AlumniConversionModal({ isOpen, onClose, onConverted }: 
               right: 24,
               background: 'transparent',
               border: 'none',
-              color: '#94A3B8',
+              color: '#6e7f89',
               cursor: 'pointer',
               padding: 4,
             }}
@@ -92,22 +103,22 @@ export default function AlumniConversionModal({ isOpen, onClose, onConverted }: 
             style={{
               width: 56,
               height: 56,
-              borderRadius: 16,
-              background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
+              borderRadius: 12,
+              background: '#eef7f5',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#2563EB',
+              color: '#087f72',
               marginBottom: 20,
             }}
           >
             <GraduationCap size={28} strokeWidth={2} />
           </div>
 
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: '#1E293B', margin: '0 0 8px 0' }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#182c39', margin: '0 0 8px 0' }}>
             Convert to Alumni Status
           </h2>
-          <p style={{ fontSize: 15, color: '#64748B', lineHeight: 1.6, margin: '0 0 24px 0' }}>
+          <p style={{ fontSize: 15, color: '#60717d', lineHeight: 1.6, margin: '0 0 24px 0' }}>
             Congratulations on your graduation! You can now convert your account to alumni status to
             become a mentor and guide fellow students.
           </p>
@@ -116,7 +127,7 @@ export default function AlumniConversionModal({ isOpen, onClose, onConverted }: 
             style={{
               background: '#FEF2F2',
               border: '1px solid #FECACA',
-              borderRadius: 16,
+              borderRadius: 12,
               padding: 16,
               display: 'flex',
               gap: 12,
@@ -146,7 +157,7 @@ export default function AlumniConversionModal({ isOpen, onClose, onConverted }: 
             ].map((feature, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <ShieldCheck size={16} color="#10B981" />
-                <span style={{ fontSize: 14, color: '#475569', fontWeight: 500 }}>{feature}</span>
+                <span style={{ fontSize: 14, color: '#435663', fontWeight: 500 }}>{feature}</span>
               </div>
             ))}
           </div>
@@ -165,9 +176,9 @@ export default function AlumniConversionModal({ isOpen, onClose, onConverted }: 
                 flex: 1,
                 padding: '12px 20px',
                 borderRadius: 12,
-                border: '1px solid #E2E8F0',
+                border: '1px solid #dfe6e9',
                 background: '#FFFFFF',
-                color: '#64748B',
+                color: '#60717d',
                 fontSize: 15,
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -183,13 +194,13 @@ export default function AlumniConversionModal({ isOpen, onClose, onConverted }: 
                 padding: '12px 20px',
                 borderRadius: 12,
                 border: 'none',
-                background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+                background: '#087f72',
                 color: '#FFFFFF',
                 fontSize: 15,
                 fontWeight: 700,
                 cursor: 'pointer',
                 opacity: loading ? 0.7 : 1,
-                boxShadow: '0 4px 12px rgba(37,99,235,0.2)',
+                boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
               }}
             >
               {loading ? 'Converting...' : 'Convert to Alumni'}

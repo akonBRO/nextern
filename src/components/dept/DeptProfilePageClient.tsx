@@ -1,9 +1,12 @@
 'use client';
+
+import BrandLoader from '@/components/ui/BrandLoader';
+import FormField from '@/components/ui/FormField';
 // src/app/dept/profile/page.tsx
 // Department Head profile — standalone page with teal accent
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
+
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   AlertCircle,
@@ -24,15 +27,15 @@ const C = {
   tealBg: '#F0FDFA',
   tealBorder: '#99F6E4',
   tealDark: '#0F766E',
-  indigo: '#1E293B',
-  bg: '#F1F5F9',
-  gray: '#64748B',
+  indigo: '#243e4a',
+  bg: '#f6f8f9',
+  gray: '#60717d',
   white: '#fff',
-  dark: '#0F172A',
-  border: '#E2E8F0',
-  text: '#0F172A',
+  dark: '#182c39',
+  border: '#dfe6e9',
+  text: '#182c39',
   muted: '#374151',
-  light: '#94A3B8',
+  light: '#60717d',
   danger: '#EF4444',
   dangerBg: '#FEF2F2',
   dangerBorder: '#FECACA',
@@ -67,7 +70,7 @@ function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }
     >
       <div style={{ color: C.teal }}>{icon}</div>
       <div
-        style={{ fontSize: 15, fontWeight: 800, color: C.text, fontFamily: 'var(--font-display)' }}
+        style={{ fontSize: 15, fontWeight: 700, color: C.text, fontFamily: 'var(--font-display)' }}
       >
         {label}
       </div>
@@ -76,24 +79,7 @@ function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label
-        style={{
-          display: 'block',
-          fontSize: 12,
-          fontWeight: 700,
-          color: C.muted,
-          marginBottom: 6,
-          textTransform: 'uppercase',
-          letterSpacing: 0.5,
-        }}
-      >
-        {label}
-      </label>
-      {children}
-    </div>
-  );
+  return <FormField label={label}>{children}</FormField>;
 }
 
 export default function DeptProfilePage() {
@@ -212,42 +198,22 @@ export default function DeptProfilePage() {
     }
   }
 
-  if (fetching)
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: C.bg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: 'var(--font-body)',
-          color: C.gray,
-        }}
-      >
-        Loading profile…
-      </div>
-    );
+  if (fetching) return <BrandLoader variant="page" label="Loading profile" />;
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
       {/* ── Header ── */}
       <div
         style={{
-          background: `linear-gradient(145deg, ${C.dark}, ${C.indigo})`,
+          background: 'var(--surface-muted)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
+        className="v2-light-panel"
       >
         <div
           className="mobile-page-hero-inner"
           style={{ maxWidth: 820, margin: '0 auto', padding: '20px 24px' }}
         >
-          <Link
-            href="/dept/dashboard"
-            style={{ color: C.gray, fontSize: 13, textDecoration: 'none', fontWeight: 500 }}
-          >
-            ← Back to Dashboard
-          </Link>
           <div
             className="mobile-page-stack"
             style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}
@@ -296,8 +262,8 @@ export default function DeptProfilePage() {
               <h1
                 style={{
                   fontSize: 22,
-                  fontWeight: 900,
-                  color: '#F8FAFC',
+                  fontWeight: 700,
+                  color: 'var(--deep)',
                   fontFamily: 'var(--font-display)',
                   margin: 0,
                 }}
@@ -364,9 +330,10 @@ export default function DeptProfilePage() {
 
         {/* ── Section 1: Personal Information ── */}
         <div
+          className="nx-surface"
           style={{
             background: C.white,
-            borderRadius: 18,
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
             padding: '24px 28px',
             boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
@@ -374,7 +341,7 @@ export default function DeptProfilePage() {
         >
           <SectionHeader icon={<User size={18} />} label="Personal Information" />
           <div
-            className="mobile-page-grid-2"
+            className="mobile-page-grid-2 v2-page-grid"
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
           >
             <Field label="Full Name">
@@ -431,9 +398,10 @@ export default function DeptProfilePage() {
 
         {/* ── Section 2: Academic Position ── */}
         <div
+          className="nx-surface"
           style={{
             background: C.white,
-            borderRadius: 18,
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
             padding: '24px 28px',
             boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
@@ -454,12 +422,12 @@ export default function DeptProfilePage() {
               fontWeight: 600,
             }}
           >
-            🎓 Your institution and department are used to match your account with the correct
-            cohort of students in the analytics dashboard.
+            Your institution and department are used to match your account with the correct cohort
+            of students in the analytics dashboard.
           </div>
 
           <div
-            className="mobile-page-grid-2"
+            className="mobile-page-grid-2 v2-page-grid"
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
           >
             <Field label="Institution / University">
@@ -522,10 +490,11 @@ export default function DeptProfilePage() {
         </div>
 
         <div
+          className="nx-surface"
           id="calendar"
           style={{
             background: C.white,
-            borderRadius: 18,
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
             padding: '24px 28px',
             boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
@@ -546,9 +515,10 @@ export default function DeptProfilePage() {
 
         {/* Notification Preferences */}
         <div
+          className="nx-surface"
           style={{
             background: C.white,
-            borderRadius: 18,
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
             padding: '24px 28px',
             boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
@@ -641,9 +611,10 @@ export default function DeptProfilePage() {
 
         {/* ── Save button ── */}
         <div
+          className="nx-surface"
           style={{
             background: C.white,
-            borderRadius: 18,
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
             padding: '24px 28px',
             boxShadow: '0 1px 6px rgba(0,0,0,0.04)',

@@ -25,6 +25,7 @@ export default async function DeptNotificationsPage() {
 
   return (
     <DashboardShell
+      embedded
       role="departmentHead"
       roleLabel="Department dashboard"
       homeHref="/dept/dashboard"

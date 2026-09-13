@@ -173,15 +173,15 @@ export default function VideoCallClient() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0F172A',
+          background: '#182c39',
           color: '#FFFFFF',
         }}
       >
         <div
           style={{
-            background: '#1E293B',
+            background: '#182c39',
             padding: 40,
-            borderRadius: 24,
+            borderRadius: 12,
             textAlign: 'center',
             maxWidth: 400,
             border: '1px solid #334155',
@@ -203,12 +203,12 @@ export default function VideoCallClient() {
             <PhoneOff size={32} />
           </div>
           <h2 style={{ margin: '0 0 12px 0', fontSize: 24 }}>Connection Error</h2>
-          <p style={{ color: '#94A3B8', margin: '0 0 24px 0', lineHeight: 1.5 }}>{error}</p>
+          <p style={{ color: '#6e7f89', margin: '0 0 24px 0', lineHeight: 1.5 }}>{error}</p>
           <button
             onClick={() => router.push(returnUrl)}
             style={{
               padding: '12px 24px',
-              background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+              background: 'linear-gradient(135deg, #087f72, #06665d)',
               color: '#FFF',
               borderRadius: 12,
               border: 'none',
@@ -232,14 +232,14 @@ export default function VideoCallClient() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0F172A',
+          background: '#182c39',
           color: '#FFFFFF',
           flexDirection: 'column',
           gap: 16,
         }}
       >
-        <Loader2 size={48} className="animate-spin" color="#3B82F6" />
-        <p style={{ fontSize: 18, fontWeight: 500, color: '#94A3B8' }}>
+        <Loader2 size={48} className="animate-spin" color="#087f72" />
+        <p style={{ fontSize: 18, fontWeight: 500, color: '#6e7f89' }}>
           Connecting to secure room...
         </p>
       </div>
@@ -300,9 +300,9 @@ export default function VideoCallClient() {
           style={{
             background: 'rgba(255,255,255,0.1)',
             padding: '6px 16px',
-            borderRadius: 20,
+            borderRadius: 12,
             fontSize: 14,
-            color: '#E2E8F0',
+            color: '#dfe6e9',
             backdropFilter: 'blur(8px)',
           }}
         >
@@ -332,11 +332,11 @@ export default function VideoCallClient() {
               width: '100%',
               maxWidth: remoteUsersArray.length > 0 ? '800px' : '600px',
               aspectRatio: '16/9',
-              background: '#0F172A',
-              borderRadius: 24,
+              background: '#182c39',
+              borderRadius: 12,
               overflow: 'hidden',
               boxShadow: '0 24px 48px -12px rgba(0,0,0,0.5)',
-              border: '1px solid #1E293B',
+              border: '1px solid #182c39',
             }}
           >
             {user.videoTrack ? (
@@ -349,7 +349,7 @@ export default function VideoCallClient() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   height: '100%',
-                  color: '#64748B',
+                  color: '#60717d',
                 }}
               >
                 <div
@@ -357,7 +357,7 @@ export default function VideoCallClient() {
                     width: 80,
                     height: 80,
                     borderRadius: '50%',
-                    background: '#1E293B',
+                    background: '#182c39',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -400,14 +400,14 @@ export default function VideoCallClient() {
             width: remoteUsersArray.length > 0 ? 280 : '100%',
             maxWidth: 600,
             aspectRatio: '16/9',
-            background: '#0F172A',
-            borderRadius: 20,
+            background: '#182c39',
+            borderRadius: 12,
             overflow: 'hidden',
             boxShadow:
               remoteUsersArray.length > 0
                 ? '0 12px 32px -8px rgba(0,0,0,0.8)'
                 : '0 24px 48px -12px rgba(0,0,0,0.5)',
-            border: '2px solid #3B82F6',
+            border: '2px solid #087f72',
             zIndex: 5,
             transition: 'all 0.3s ease',
           }}
@@ -421,7 +421,7 @@ export default function VideoCallClient() {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                background: '#0F172A',
+                background: '#182c39',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -429,8 +429,8 @@ export default function VideoCallClient() {
                 zIndex: 2,
               }}
             >
-              <VideoOff size={32} color="#64748B" style={{ marginBottom: 8 }} />
-              <span style={{ color: '#64748B', fontSize: 14, fontWeight: 500 }}>
+              <VideoOff size={32} color="#60717d" style={{ marginBottom: 8 }} />
+              <span style={{ color: '#60717d', fontSize: 14, fontWeight: 500 }}>
                 You (Video Off)
               </span>
             </div>
@@ -468,11 +468,11 @@ export default function VideoCallClient() {
           background: 'rgba(15, 23, 42, 0.8)',
           backdropFilter: 'blur(16px)',
           padding: '16px 32px',
-          borderRadius: 32,
+          borderRadius: 12,
           display: 'flex',
           gap: 20,
           border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+          boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
           zIndex: 10,
         }}
       >
@@ -483,7 +483,7 @@ export default function VideoCallClient() {
             height: 56,
             borderRadius: '50%',
             background: isMuted ? '#EF4444' : 'rgba(255,255,255,0.1)',
-            color: isMuted ? '#FFFFFF' : '#E2E8F0',
+            color: isMuted ? '#FFFFFF' : '#dfe6e9',
             border: 'none',
             cursor: 'pointer',
             display: 'flex',
@@ -509,7 +509,7 @@ export default function VideoCallClient() {
             height: 56,
             borderRadius: '50%',
             background: isVideoOff ? '#EF4444' : 'rgba(255,255,255,0.1)',
-            color: isVideoOff ? '#FFFFFF' : '#E2E8F0',
+            color: isVideoOff ? '#FFFFFF' : '#dfe6e9',
             border: 'none',
             cursor: 'pointer',
             display: 'flex',
@@ -535,7 +535,7 @@ export default function VideoCallClient() {
           style={{
             width: 72,
             height: 56,
-            borderRadius: 28,
+            borderRadius: 12,
             background: '#EF4444',
             color: '#fff',
             border: 'none',

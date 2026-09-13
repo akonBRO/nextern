@@ -5,6 +5,7 @@ import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Camera, Eye, ImagePlus, Trash2, X, ZoomIn, ZoomOut, Check } from 'lucide-react';
 import { useUploadThing } from '@/lib/uploadthing';
+import useDialog from '@/components/ui/useDialog';
 
 type UploaderType = 'profilePictureUploader' | 'companyLogoUploader';
 
@@ -31,7 +32,7 @@ export default function ProfilePictureUpload({
   name = '',
   size = 140,
   radius = '50%',
-  gradient = 'linear-gradient(135deg, #2563EB, #22D3EE)',
+  gradient = '#087f72',
   uploaderType = 'profilePictureUploader',
   label = 'Choose profile picture',
   imageLabel = 'profile picture',
@@ -52,6 +53,18 @@ export default function ProfilePictureUpload({
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const viewerRef = useDialog(viewerOpen, () => setViewerOpen(false));
+  const cropRef = useDialog(
+    cropOpen,
+    uploading
+      ? undefined
+      : () => {
+          setCropOpen(false);
+          setImageSrc(null);
+        }
+  );
+  const deleteRef = useDialog(deleteOpen, () => setDeleteOpen(false));
 
   const menuRef = useRef<HTMLDivElement>(null);
   const avatarRef = useRef<HTMLDivElement>(null);
@@ -109,8 +122,15 @@ export default function ProfilePictureUpload({
 
   // ── Open file → show crop ──────────────────────────────────────────────
   function openFile(file: File) {
-    if (!file.type.match(/^image\/(jpeg|png|webp)$/)) return;
-    if (file.size > MAX_MB * 1024 * 1024) return;
+    if (!file.type.match(/^image\/(jpeg|png|webp)$/)) {
+      setUploadError('Choose a JPG, PNG, or WebP image.');
+      return;
+    }
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setUploadError('Choose an image smaller than 2 MB.');
+      return;
+    }
+    setUploadError('');
     setImageSrc(URL.createObjectURL(file));
     setZoom(1);
     setOffset({ x: 0, y: 0 });
@@ -126,8 +146,14 @@ export default function ProfilePictureUpload({
   function onMouseMove(e: React.MouseEvent) {
     if (!dragging) return;
     setOffset({
-      x: dragStart.current.ox + (e.clientX - dragStart.current.mx),
-      y: dragStart.current.oy + (e.clientY - dragStart.current.my),
+      x:
+        dragStart.current.ox +
+        (e.clientX - dragStart.current.mx) *
+          (CROP_SIZE / (canvasRef.current?.getBoundingClientRect().width || CROP_SIZE)),
+      y:
+        dragStart.current.oy +
+        (e.clientY - dragStart.current.my) *
+          (CROP_SIZE / (canvasRef.current?.getBoundingClientRect().width || CROP_SIZE)),
     });
   }
   function onMouseUp() {
@@ -143,8 +169,14 @@ export default function ProfilePictureUpload({
     e.preventDefault(); // stop page scroll
     const t = e.touches[0];
     setOffset({
-      x: touchStart.current.ox + (t.clientX - touchStart.current.tx),
-      y: touchStart.current.oy + (t.clientY - touchStart.current.ty),
+      x:
+        touchStart.current.ox +
+        (t.clientX - touchStart.current.tx) *
+          (CROP_SIZE / (canvasRef.current?.getBoundingClientRect().width || CROP_SIZE)),
+      y:
+        touchStart.current.oy +
+        (t.clientY - touchStart.current.ty) *
+          (CROP_SIZE / (canvasRef.current?.getBoundingClientRect().width || CROP_SIZE)),
     });
   }
 
@@ -194,6 +226,8 @@ export default function ProfilePictureUpload({
         setCropOpen(false);
         setImageSrc(null);
       }
+    } catch {
+      setUploadError('Your image could not be saved. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -226,7 +260,7 @@ export default function ProfilePictureUpload({
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: Math.round(size * 0.38),
-            fontWeight: 900,
+            fontWeight: 750,
             color: '#fff',
             fontFamily: 'var(--font-display)',
           }}
@@ -247,15 +281,17 @@ export default function ProfilePictureUpload({
         {/* Camera badge */}
         <button
           type="button"
+          aria-label={`Change ${normalizedImageLabel}`}
+          aria-expanded={menuOpen}
           onClick={handleCameraClick}
           style={{
             position: 'absolute',
             bottom: 6,
             right: -8,
-            width: 24,
-            height: 24,
+            width: 36,
+            height: 36,
             borderRadius: '50%',
-            background: '#1E293B',
+            background: '#182c39',
             border: '2px solid rgba(255,255,255,0.20)',
             display: 'flex',
             alignItems: 'center',
@@ -267,15 +303,15 @@ export default function ProfilePictureUpload({
             transition: 'background 0.15s, transform 0.15s',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#2563EB';
+            e.currentTarget.style.background = '#087f72';
             e.currentTarget.style.transform = 'scale(1.1)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#1E293B';
+            e.currentTarget.style.background = '#182c39';
             e.currentTarget.style.transform = 'scale(1)';
           }}
         >
-          <Camera size={11} />
+          <Camera size={16} />
         </button>
 
         {/* Dropdown — opens above or below based on viewport space */}
@@ -286,18 +322,18 @@ export default function ProfilePictureUpload({
               ...dropdownPos,
               left: 0,
               zIndex: 200,
-              background: '#1E293B',
+              background: '#182c39',
               border: '1px solid rgba(255,255,255,0.10)',
-              borderRadius: 14,
+              borderRadius: 12,
               overflow: 'hidden',
-              boxShadow: '0 12px 40px rgba(0,0,0,0.55)',
+              boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
               minWidth: 228,
             }}
           >
             {currentImage && (
               <>
                 <MenuBtn
-                  icon={<Eye size={15} color="#94A3B8" />}
+                  icon={<Eye size={15} color="#6e7f89" />}
                   label={`See ${normalizedImageLabel}`}
                   onClick={() => {
                     setViewerOpen(true);
@@ -308,7 +344,7 @@ export default function ProfilePictureUpload({
               </>
             )}
             <MenuBtn
-              icon={<ImagePlus size={15} color="#94A3B8" />}
+              icon={<ImagePlus size={15} color="#6e7f89" />}
               label={label}
               onClick={() => {
                 fileInput.current?.click();
@@ -332,6 +368,20 @@ export default function ProfilePictureUpload({
           </div>
         )}
 
+        {uploadError && !cropOpen && (
+          <p
+            role="alert"
+            style={{
+              maxWidth: 240,
+              color: '#a33636',
+              fontSize: 12,
+              lineHeight: 1.5,
+              marginTop: 10,
+            }}
+          >
+            {uploadError}
+          </p>
+        )}
         {/* Hidden file input */}
         <input
           ref={fileInput}
@@ -348,8 +398,21 @@ export default function ProfilePictureUpload({
 
       {/* ── Full-screen viewer ─────────────────────────────────────── */}
       {viewerOpen && currentImage && (
-        <div onClick={() => setViewerOpen(false)} style={backdropStyle}>
-          <button type="button" onClick={() => setViewerOpen(false)} style={closeBtn}>
+        <div
+          ref={viewerRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Profile image preview"
+          tabIndex={-1}
+          onClick={() => setViewerOpen(false)}
+          style={backdropStyle}
+        >
+          <button
+            type="button"
+            aria-label="Close image preview"
+            onClick={() => setViewerOpen(false)}
+            style={closeBtn}
+          >
             <X size={18} />
           </button>
           <div
@@ -386,15 +449,21 @@ export default function ProfilePictureUpload({
           style={backdropStyle}
         >
           <div
+            ref={cropRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={label}
+            tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: '#0F172A',
-              border: '1px solid rgba(255,255,255,0.10)',
-              borderRadius: 22,
+              background: '#FFFFFF',
+              border: '1px solid #dfe6e9',
+              borderRadius: 12,
               width: '100%',
               maxWidth: 480,
-              overflow: 'hidden',
-              boxShadow: '0 40px 100px rgba(0,0,0,0.7)',
+              overflow: 'auto',
+              maxHeight: 'calc(100dvh - 32px)',
+              boxShadow: '0 24px 64px rgba(24,44,57,0.16)',
             }}
           >
             {/* Header */}
@@ -404,14 +473,14 @@ export default function ProfilePictureUpload({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '20px 24px',
-                borderBottom: '1px solid rgba(255,255,255,0.07)',
+                borderBottom: '1px solid #dfe6e9',
               }}
             >
               <span
                 style={{
                   fontSize: 16,
-                  fontWeight: 800,
-                  color: '#F8FAFC',
+                  fontWeight: 700,
+                  color: '#182c39',
                   fontFamily: 'var(--font-display)',
                 }}
               >
@@ -434,7 +503,7 @@ export default function ProfilePictureUpload({
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: '#94A3B8',
+                  color: '#6e7f89',
                 }}
               >
                 <X size={15} />
@@ -445,13 +514,13 @@ export default function ProfilePictureUpload({
             <div style={{ padding: '28px 28px 0', display: 'flex', justifyContent: 'center' }}>
               <div
                 style={{
-                  width: CROP_SIZE,
-                  height: CROP_SIZE,
+                  width: 'min(320px, calc(100vw - 104px))',
+                  aspectRatio: '1',
                   borderRadius: '50%',
                   overflow: 'hidden',
                   cursor: dragging ? 'grabbing' : 'grab',
                   border: '2.5px solid rgba(255,255,255,0.12)',
-                  background: '#1E293B',
+                  background: '#182c39',
                   userSelect: 'none',
                   touchAction: 'none', // prevent scroll while dragging on mobile
                 }}
@@ -471,8 +540,8 @@ export default function ProfilePictureUpload({
                   height={CROP_SIZE}
                   style={{
                     display: 'block',
-                    width: CROP_SIZE,
-                    height: CROP_SIZE,
+                    width: '100%',
+                    height: '100%',
                     borderRadius: '50%',
                   }}
                 />
@@ -483,7 +552,7 @@ export default function ProfilePictureUpload({
               style={{
                 textAlign: 'center',
                 fontSize: 12,
-                color: '#475569',
+                color: '#435663',
                 margin: '10px 0 0',
                 fontWeight: 500,
               }}
@@ -491,19 +560,25 @@ export default function ProfilePictureUpload({
               Drag to reposition
             </p>
 
+            {uploadError && (
+              <p role="alert" style={{ margin: '12px 24px', color: '#a33636', fontSize: 13 }}>
+                {uploadError}
+              </p>
+            )}
             {/* Zoom slider */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 28px' }}>
-              <ZoomOut size={16} color="#475569" style={{ flexShrink: 0 }} />
+              <ZoomOut size={16} color="#435663" style={{ flexShrink: 0 }} />
               <input
                 type="range"
+                aria-label="Image zoom"
                 min={0.5}
                 max={3}
                 step={0.01}
                 value={zoom}
                 onChange={(e) => setZoom(parseFloat(e.target.value))}
-                style={{ flex: 1, accentColor: '#2563EB', cursor: 'pointer' }}
+                style={{ flex: 1, accentColor: '#087f72', cursor: 'pointer' }}
               />
-              <ZoomIn size={16} color="#475569" style={{ flexShrink: 0 }} />
+              <ZoomIn size={16} color="#435663" style={{ flexShrink: 0 }} />
             </div>
 
             {/* Drop zone */}
@@ -523,18 +598,18 @@ export default function ProfilePictureUpload({
               style={{
                 margin: '0 24px 22px',
                 padding: '12px 16px',
-                background: dragOver ? 'rgba(37,99,235,0.09)' : 'rgba(255,255,255,0.04)',
+                background: dragOver ? 'rgba(8,127,114,0.09)' : 'rgba(255,255,255,0.04)',
                 borderRadius: 12,
-                border: `1.5px dashed ${dragOver ? '#2563EB' : 'rgba(255,255,255,0.10)'}`,
+                border: `1.5px dashed ${dragOver ? '#087f72' : 'rgba(255,255,255,0.10)'}`,
                 textAlign: 'center',
                 fontSize: 12,
-                color: dragOver ? '#93C5FD' : '#475569',
+                color: dragOver ? '#93C5FD' : '#435663',
                 cursor: 'pointer',
                 transition: 'all 0.15s',
                 fontWeight: 500,
               }}
             >
-              {dragOver ? '📂 Drop it here!' : 'JPG, PNG or WebP · max 2MB · click to change'}
+              {dragOver ? 'Drop your image here' : 'JPG, PNG or WebP · max 2MB · click to change'}
             </div>
 
             {/* Action buttons */}
@@ -550,9 +625,9 @@ export default function ProfilePictureUpload({
                   flex: 1,
                   padding: '12px 0',
                   background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.10)',
+                  border: '1px solid #dfe6e9',
                   borderRadius: 12,
-                  color: '#94A3B8',
+                  color: '#6e7f89',
                   fontSize: 14,
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -568,7 +643,7 @@ export default function ProfilePictureUpload({
                 style={{
                   flex: 1,
                   padding: '12px 0',
-                  background: uploading ? '#1D4ED8' : 'linear-gradient(135deg,#2563EB,#1D4ED8)',
+                  background: uploading ? '#06665d' : '#087f72',
                   border: 'none',
                   borderRadius: 12,
                   color: '#fff',
@@ -580,7 +655,7 @@ export default function ProfilePictureUpload({
                   justifyContent: 'center',
                   gap: 8,
                   fontFamily: 'var(--font-display)',
-                  boxShadow: uploading ? 'none' : '0 4px 16px rgba(37,99,235,0.4)',
+                  boxShadow: uploading ? 'none' : '0 4px 16px rgba(8,127,114,0.4)',
                 }}
               >
                 {uploading ? (
@@ -616,15 +691,20 @@ export default function ProfilePictureUpload({
           style={{ ...backdropStyle, background: 'rgba(15,23,42,0.60)' }}
         >
           <div
+            ref={deleteRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Delete ${normalizedImageLabel}`}
+            tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
             style={{
               background: '#fff',
-              borderRadius: 20,
+              borderRadius: 12,
               padding: '32px 28px',
               maxWidth: 380,
               width: '100%',
               boxShadow: '0 24px 60px rgba(15,23,42,0.18)',
-              border: '1px solid #E2E8F0',
+              border: '1px solid #dfe6e9',
               textAlign: 'center',
             }}
           >
@@ -632,7 +712,7 @@ export default function ProfilePictureUpload({
               style={{
                 width: 52,
                 height: 52,
-                borderRadius: 16,
+                borderRadius: 12,
                 background: '#FEF2F2',
                 border: '1px solid #FECACA',
                 display: 'flex',
@@ -648,14 +728,14 @@ export default function ProfilePictureUpload({
               style={{
                 margin: 0,
                 fontSize: 18,
-                fontWeight: 800,
-                color: '#0F172A',
+                fontWeight: 700,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
               }}
             >
               Delete {normalizedImageLabel}?
             </h3>
-            <p style={{ margin: '10px 0 26px', fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
+            <p style={{ margin: '10px 0 26px', fontSize: 13, color: '#60717d', lineHeight: 1.7 }}>
               This image will be removed and replaced with initials. This cannot be undone.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
@@ -665,9 +745,9 @@ export default function ProfilePictureUpload({
                   flex: 1,
                   padding: '12px 0',
                   background: '#fff',
-                  border: '1.5px solid #E2E8F0',
+                  border: '1.5px solid #dfe6e9',
                   borderRadius: 12,
-                  color: '#64748B',
+                  color: '#60717d',
                   fontSize: 14,
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -690,7 +770,7 @@ export default function ProfilePictureUpload({
                   fontSize: 14,
                   fontWeight: 700,
                   cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(239,68,68,0.3)',
+                  boxShadow: '0 2px 8px rgba(24,44,57,0.04)',
                 }}
               >
                 Delete
@@ -741,7 +821,7 @@ function MenuBtn({
           : 'transparent',
         border: 'none',
         cursor: 'pointer',
-        color: danger ? '#F87171' : '#E2E8F0',
+        color: danger ? '#F87171' : '#dfe6e9',
         fontSize: 13,
         fontWeight: 600,
         fontFamily: 'var(--font-body)',
@@ -759,8 +839,8 @@ const backdropStyle: React.CSSProperties = {
   position: 'fixed',
   inset: 0,
   zIndex: 9999,
-  background: 'rgba(0,0,0,0.90)',
-  backdropFilter: 'blur(10px)',
+  background: 'rgba(24,44,57,0.58)',
+  backdropFilter: 'blur(2px)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',

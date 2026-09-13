@@ -22,38 +22,17 @@ type StudentPageShellProps = {
   children: ReactNode;
 };
 
-const PAGE_LEVEL_SHELL_PREFIXES = [
-  '/student/dashboard',
-  '/student/jobs',
-  '/student/applications',
-  '/student/skills',
-  '/student/assessments',
-  '/student/interviews',
-  '/student/calendar',
-  '/student/freelance',
-  '/student/messages',
-  '/student/badges',
-  '/student/subscription',
-  '/student/premium',
-  '/student/mock-interview',
-];
-
-function hasPageLevelShell(pathname: string) {
-  return PAGE_LEVEL_SHELL_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-  );
-}
-
 export default function StudentPageShell({ user, children }: StudentPageShellProps) {
   const pathname = usePathname();
   const isMentor = user.role === 'alumni';
 
-  if (!pathname?.startsWith('/student') || hasPageLevelShell(pathname)) {
+  if (!pathname?.startsWith('/student')) {
     return <>{children}</>;
   }
 
   return (
     <DashboardShell
+      hideFooter={pathname?.endsWith('/messages')}
       role={isMentor ? 'alumni' : 'student'}
       roleLabel={isMentor ? 'Mentor dashboard' : 'Student dashboard'}
       homeHref={isMentor ? '/student/mentorship/dashboard' : '/student/dashboard'}

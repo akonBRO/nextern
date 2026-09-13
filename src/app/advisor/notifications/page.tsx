@@ -68,6 +68,7 @@ export default async function AdvisorNotificationsPage() {
 
   return (
     <DashboardShell
+      embedded
       role="advisor"
       roleLabel="Advisor dashboard"
       homeHref="/advisor/dashboard"

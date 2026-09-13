@@ -78,6 +78,7 @@ export default function EmployerClientShell({ children }: { children: ReactNode 
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer workspace"
       homeHref="/employer/dashboard"

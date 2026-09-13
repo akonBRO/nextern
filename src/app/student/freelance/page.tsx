@@ -41,6 +41,7 @@ export default async function StudentFreelancePage() {
 
   return (
     <DashboardShell
+      embedded
       role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"

@@ -1,4 +1,6 @@
 'use client';
+
+import BrandLoader from '@/components/ui/BrandLoader';
 // src/app/employer/notifications/page.tsx
 
 import { useEffect, useState, useCallback, type ReactNode } from 'react';
@@ -20,26 +22,26 @@ import {
 } from 'lucide-react';
 
 const C = {
-  blue: '#2563EB',
-  blueDark: '#1D4ED8',
+  blue: '#087f72',
+  blueDark: '#06665d',
   teal: '#0D9488',
-  violet: '#7C3AED',
+  violet: '#087f72',
   amber: '#D97706',
   sky: '#0EA5E9',
   emerald: '#059669',
   indigo: '#6366F1',
-  dark: '#0F172A',
-  indigo2: '#1E293B',
-  bg: '#F1F5F9',
+  dark: '#182c39',
+  indigo2: '#243e4a',
+  bg: '#f6f8f9',
   white: '#fff',
-  border: '#E2E8F0',
-  text: '#0F172A',
-  gray: '#64748B',
-  light: '#94A3B8',
+  border: '#dfe6e9',
+  text: '#182c39',
+  gray: '#60717d',
+  light: '#60717d',
   mid: '#334155',
   danger: '#EF4444',
-  blueBg: '#EFF6FF',
-  blueBorder: '#BFDBFE',
+  blueBg: '#edf7f3',
+  blueBorder: '#bdddd5',
   successBg: '#ECFDF5',
   successBorder: '#A7F3D0',
 };
@@ -76,8 +78,8 @@ const TYPE_CONFIG: Record<
   recommendation_request: {
     icon: <SendToBack size={15} />,
     color: C.violet,
-    bg: '#F5F3FF',
-    border: '#DDD6FE',
+    bg: '#edf7f3',
+    border: '#bdddd5',
     label: 'Recommendation',
   },
   deadline_reminder: {
@@ -90,8 +92,8 @@ const TYPE_CONFIG: Record<
   badge_earned: {
     icon: <Award size={15} />,
     color: C.violet,
-    bg: '#EDE9FE',
-    border: '#DDD6FE',
+    bg: '#e0f0eb',
+    border: '#bdddd5',
     label: 'Badge',
   },
   job_match: {
@@ -125,7 +127,7 @@ const TYPE_CONFIG: Record<
   message_received: {
     icon: <MessageSquare size={15} />,
     color: C.gray,
-    bg: '#F1F5F9',
+    bg: '#f6f8f9',
     border: C.border,
     label: 'Message',
   },
@@ -138,16 +140,16 @@ const TYPE_CONFIG: Record<
   },
   admin_message: {
     icon: <MessageSquare size={15} />,
-    color: '#1D4ED8',
-    bg: '#EFF6FF',
-    border: '#BFDBFE',
+    color: '#06665d',
+    bg: '#edf7f3',
+    border: '#bdddd5',
     label: 'Admin Message',
   },
   system_message: {
     icon: <AlertCircle size={15} />,
-    color: '#7C3AED',
-    bg: '#F5F3FF',
-    border: '#DDD6FE',
+    color: '#087f72',
+    bg: '#edf7f3',
+    border: '#bdddd5',
     label: 'System Message',
   },
 };
@@ -157,7 +159,7 @@ function typeConfig(type: string) {
     TYPE_CONFIG[type] ?? {
       icon: <AlertCircle size={15} />,
       color: C.gray,
-      bg: '#F1F5F9',
+      bg: '#f6f8f9',
       border: C.border,
       label: 'Notification',
     }
@@ -227,18 +229,15 @@ export default function EmployerNotificationsPage() {
       {/* ── Header ── */}
       <div
         style={{
-          background: `linear-gradient(145deg, ${C.dark}, ${C.indigo2})`,
+          background: 'var(--surface-muted)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
+        className="v2-light-panel"
       >
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '20px 24px' }}>
-          <Link
-            href="/employer/dashboard"
-            style={{ color: C.gray, fontSize: 13, textDecoration: 'none', fontWeight: 500 }}
-          >
-            ← Back to Dashboard
-          </Link>
-
+        <div
+          className="nx-page-width"
+          style={{ maxWidth: 900, margin: '0 auto', padding: '20px 24px' }}
+        >
           <div
             style={{
               display: 'flex',
@@ -255,12 +254,12 @@ export default function EmployerNotificationsPage() {
                   width: 46,
                   height: 46,
                   borderRadius: 14,
-                  background: 'linear-gradient(135deg, #2563EB, #0D9488)',
+                  background: 'var(--primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#fff',
-                  boxShadow: '0 8px 20px rgba(37,99,235,0.3)',
+                  boxShadow: 'var(--shadow-card)',
                 }}
               >
                 <Bell size={20} />
@@ -269,8 +268,8 @@ export default function EmployerNotificationsPage() {
                 <h1
                   style={{
                     fontSize: 22,
-                    fontWeight: 900,
-                    color: '#F8FAFC',
+                    fontWeight: 700,
+                    color: 'var(--deep)',
                     fontFamily: 'var(--font-display)',
                     margin: 0,
                   }}
@@ -307,7 +306,7 @@ export default function EmployerNotificationsPage() {
                       background: '#EF4444',
                     }}
                   />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#FCA5A5' }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--deep)' }}>
                     {unread} unread
                   </span>
                 </div>
@@ -318,12 +317,15 @@ export default function EmployerNotificationsPage() {
       </div>
 
       {/* ── Body ── */}
-      <div style={{ maxWidth: 900, margin: '28px auto', padding: '0 24px' }}>
+      <div
+        className="nx-page-width"
+        style={{ maxWidth: 900, margin: '28px auto', padding: '0 24px' }}
+      >
         {/* Filter bar */}
         <div
           style={{
             background: C.white,
-            borderRadius: 16,
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
             padding: '14px 18px',
             display: 'flex',
@@ -332,7 +334,7 @@ export default function EmployerNotificationsPage() {
             flexWrap: 'wrap',
             gap: 12,
             marginBottom: 16,
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
           {/* Type tabs */}
@@ -351,7 +353,7 @@ export default function EmployerNotificationsPage() {
                   fontWeight: 700,
                   border:
                     filter === tab.value ? `1.5px solid ${C.blue}` : `1.5px solid ${C.border}`,
-                  background: filter === tab.value ? C.blueBg : '#F8FAFC',
+                  background: filter === tab.value ? C.blueBg : '#f6f8f9',
                   color: filter === tab.value ? C.blue : C.gray,
                   cursor: 'pointer',
                   transition: 'all 0.15s',
@@ -373,7 +375,7 @@ export default function EmployerNotificationsPage() {
               padding: '7px 14px',
               borderRadius: 10,
               border: showUnreadOnly ? `1.5px solid ${C.blue}` : `1.5px solid ${C.border}`,
-              background: showUnreadOnly ? C.blueBg : '#F8FAFC',
+              background: showUnreadOnly ? C.blueBg : '#f6f8f9',
               color: showUnreadOnly ? C.blue : C.gray,
               fontSize: 12,
               fontWeight: 700,
@@ -390,35 +392,22 @@ export default function EmployerNotificationsPage() {
         <div
           style={{
             background: C.white,
-            borderRadius: 18,
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
             overflow: 'hidden',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
           {loading ? (
-            <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  border: `3px solid ${C.border}`,
-                  borderTopColor: C.blue,
-                  borderRadius: '50%',
-                  margin: '0 auto 16px',
-                  animation: 'spin 0.8s linear infinite',
-                }}
-              />
-              <div style={{ color: C.light, fontSize: 14 }}>Loading notifications…</div>
-            </div>
+            <BrandLoader variant="section" label="Loading notifications" />
           ) : notifications.length === 0 ? (
             <div style={{ padding: '64px 24px', textAlign: 'center' }}>
               <div
                 style={{
                   width: 64,
                   height: 64,
-                  borderRadius: 20,
-                  background: '#F1F5F9',
+                  borderRadius: 12,
+                  background: '#f6f8f9',
                   border: `1px solid ${C.border}`,
                   display: 'flex',
                   alignItems: 'center',
@@ -429,7 +418,7 @@ export default function EmployerNotificationsPage() {
               >
                 <Bell size={28} />
               </div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: C.dark, marginBottom: 6 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: C.dark, marginBottom: 6 }}>
                 No notifications
               </div>
               <div style={{ fontSize: 13, color: C.light, maxWidth: 380, margin: '0 auto' }}>
@@ -457,7 +446,7 @@ export default function EmployerNotificationsPage() {
                     cursor: notif.isRead ? 'default' : 'pointer',
                     transition: 'background 0.1s',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#F8FAFC')}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f6f8f9')}
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.background = notif.isRead ? C.white : '#F8FBFF')
                   }
@@ -607,17 +596,6 @@ export default function EmployerNotificationsPage() {
               {notifications.length} notification{notifications.length !== 1 ? 's' : ''} shown
               {showUnreadOnly ? ' (unread only)' : ''}
             </div>
-            <Link
-              href="/employer/dashboard"
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: C.blue,
-                textDecoration: 'none',
-              }}
-            >
-              ← Back to dashboard
-            </Link>
           </div>
         )}
       </div>

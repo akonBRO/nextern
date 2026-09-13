@@ -68,7 +68,7 @@ const fieldStyle = {
   borderRadius: 12,
   border: '1px solid #D9E2EC',
   background: '#FFFFFF',
-  color: '#0F172A',
+  color: '#182c39',
   fontSize: 13,
   outline: 'none',
 } as const;
@@ -326,7 +326,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
       {error ? (
         <div
           style={{
-            borderRadius: 16,
+            borderRadius: 12,
             padding: '12px 14px',
             background: '#FEF2F2',
             color: '#991B1B',
@@ -342,7 +342,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
       {notice ? (
         <div
           style={{
-            borderRadius: 16,
+            borderRadius: 12,
             padding: '12px 14px',
             background: '#ECFDF5',
             color: '#065F46',
@@ -358,9 +358,9 @@ export default function InterviewRoomClient({ role, interview }: Props) {
       {isRoomClosed ? (
         <div
           style={{
-            borderRadius: 16,
+            borderRadius: 12,
             padding: '12px 14px',
-            background: currentInterview.status === 'completed' ? '#F8FAFC' : '#FEF2F2',
+            background: currentInterview.status === 'completed' ? '#f6f8f9' : '#FEF2F2',
             color: currentInterview.status === 'completed' ? '#334155' : '#991B1B',
             border: `1px solid ${currentInterview.status === 'completed' ? '#CBD5E1' : '#FECACA'}`,
             fontSize: 13,
@@ -376,7 +376,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
         <div
           style={{
             background: '#FFFFFF',
-            borderRadius: 20,
+            borderRadius: 12,
             border: '1px solid #D9E2EC',
             boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
             overflow: 'hidden',
@@ -385,7 +385,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
           <div
             style={{
               padding: '14px 16px',
-              borderBottom: '1px solid #E2E8F0',
+              borderBottom: '1px solid #dfe6e9',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -393,7 +393,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
               flexWrap: 'wrap',
             }}
           >
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#182c39' }}>
               Agora interview room • {formatDateTime(currentInterview.scheduledAt)}
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -404,7 +404,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 8,
-                      background: currentInterview.status === 'completed' ? '#F8FAFC' : '#FEF2F2',
+                      background: currentInterview.status === 'completed' ? '#f6f8f9' : '#FEF2F2',
                       color: currentInterview.status === 'completed' ? '#334155' : '#991B1B',
                       border: `1px solid ${
                         currentInterview.status === 'completed' ? '#CBD5E1' : '#FECACA'
@@ -412,7 +412,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                       borderRadius: 12,
                       padding: '10px 14px',
                       fontSize: 12,
-                      fontWeight: 800,
+                      fontWeight: 700,
                     }}
                   >
                     <CheckCircle2 size={14} />
@@ -429,13 +429,13 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 8,
-                      background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+                      background: 'var(--primary)',
                       color: '#FFFFFF',
                       border: 'none',
                       borderRadius: 12,
                       padding: '10px 14px',
                       fontSize: 12,
-                      fontWeight: 800,
+                      fontWeight: 700,
                       cursor: joining ? 'not-allowed' : 'pointer',
                     }}
                   >
@@ -458,7 +458,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                       borderRadius: 12,
                       padding: '10px 14px',
                       fontSize: 12,
-                      fontWeight: 800,
+                      fontWeight: 700,
                       cursor: 'pointer',
                     }}
                   >
@@ -478,7 +478,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                       borderRadius: 12,
                       padding: '10px 14px',
                       fontSize: 12,
-                      fontWeight: 800,
+                      fontWeight: 700,
                       cursor: 'pointer',
                     }}
                   >
@@ -493,13 +493,13 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 8,
-                        background: '#EFF6FF',
-                        color: '#2563EB',
-                        border: '1px solid #BFDBFE',
+                        background: '#edf7f3',
+                        color: '#087f72',
+                        border: '1px solid #bdddd5',
                         borderRadius: 12,
                         padding: '10px 14px',
                         fontSize: 12,
-                        fontWeight: 800,
+                        fontWeight: 700,
                         cursor: 'pointer',
                       }}
                     >
@@ -520,7 +520,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                       borderRadius: 12,
                       padding: '10px 14px',
                       fontSize: 12,
-                      fontWeight: 800,
+                      fontWeight: 700,
                       cursor: 'pointer',
                     }}
                   >
@@ -536,9 +536,9 @@ export default function InterviewRoomClient({ role, interview }: Props) {
             <div className="interview-video-grid">
               <div
                 style={{
-                  borderRadius: 18,
-                  border: '1px solid #E2E8F0',
-                  background: '#0F172A',
+                  borderRadius: 12,
+                  border: '1px solid #dfe6e9',
+                  background: '#182c39',
                   minHeight: 280,
                   overflow: 'hidden',
                   position: 'relative',
@@ -555,7 +555,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                     borderRadius: 999,
                     padding: '6px 10px',
                     fontSize: 11,
-                    fontWeight: 800,
+                    fontWeight: 700,
                   }}
                 >
                   {role === 'employer' ? 'Hiring team' : 'You'}
@@ -566,13 +566,13 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                 {remoteUsers.length === 0 ? (
                   <div
                     style={{
-                      borderRadius: 18,
+                      borderRadius: 12,
                       border: '1px dashed #CBD5E1',
-                      background: '#F8FAFC',
+                      background: '#f6f8f9',
                       minHeight: 280,
                       display: 'grid',
                       placeItems: 'center',
-                      color: '#64748B',
+                      color: '#60717d',
                       padding: 24,
                       textAlign: 'center',
                       lineHeight: 1.7,
@@ -586,9 +586,9 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                       key={userId}
                       id={`remote-video-${userId}`}
                       style={{
-                        borderRadius: 18,
-                        border: '1px solid #E2E8F0',
-                        background: '#0F172A',
+                        borderRadius: 12,
+                        border: '1px solid #dfe6e9',
+                        background: '#182c39',
                         minHeight: 280,
                         overflow: 'hidden',
                       }}
@@ -604,7 +604,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
           <div
             style={{
               background: '#FFFFFF',
-              borderRadius: 20,
+              borderRadius: 12,
               border: '1px solid #D9E2EC',
               boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
               padding: 18,
@@ -612,8 +612,8 @@ export default function InterviewRoomClient({ role, interview }: Props) {
               gap: 12,
             }}
           >
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>Interview details</div>
-            <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#182c39' }}>Interview details</div>
+            <div style={{ fontSize: 13, color: '#60717d', lineHeight: 1.7 }}>
               {currentInterview.description || 'No extra description was added for this session.'}
             </div>
             <div style={{ display: 'grid', gap: 6, fontSize: 12, color: '#475569' }}>
@@ -624,11 +624,11 @@ export default function InterviewRoomClient({ role, interview }: Props) {
             </div>
             {(currentInterview.panelists ?? []).length > 0 ? (
               <div style={{ display: 'grid', gap: 6 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: '#334155' }}>Panelists</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#334155' }}>Panelists</div>
                 {(currentInterview.panelists ?? []).map((panelist) => (
                   <div
                     key={`${panelist.name}-${panelist.email}`}
-                    style={{ fontSize: 12, color: '#64748B' }}
+                    style={{ fontSize: 12, color: '#60717d' }}
                   >
                     {panelist.name}
                     {panelist.email ? ` • ${panelist.email}` : ''}
@@ -642,7 +642,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
             <div
               style={{
                 background: '#FFFFFF',
-                borderRadius: 20,
+                borderRadius: 12,
                 border: '1px solid #D9E2EC',
                 boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
                 padding: 18,
@@ -650,10 +650,10 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                 gap: 12,
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#182c39' }}>
                 Recording consent
               </div>
-              <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
+              <div style={{ fontSize: 13, color: '#60717d', lineHeight: 1.7 }}>
                 Employers can only attach a recording after you explicitly grant consent.
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -680,7 +680,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                     borderRadius: 12,
                     padding: '10px 14px',
                     fontSize: 12,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     cursor: 'pointer',
                   }}
                 >
@@ -710,7 +710,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                     borderRadius: 12,
                     padding: '10px 14px',
                     fontSize: 12,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     cursor: 'pointer',
                   }}
                 >
@@ -725,7 +725,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
               <div
                 style={{
                   background: '#FFFFFF',
-                  borderRadius: 20,
+                  borderRadius: 12,
                   border: '1px solid #D9E2EC',
                   boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
                   padding: 18,
@@ -733,7 +733,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                   gap: 12,
                 }}
               >
-                <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>Live notes</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#182c39' }}>Live notes</div>
                 <textarea
                   value={liveNotes}
                   onChange={(event) => setLiveNotes(event.target.value)}
@@ -757,13 +757,13 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 8,
-                    background: '#0F172A',
+                    background: '#182c39',
                     color: '#FFFFFF',
                     border: 'none',
                     borderRadius: 12,
                     padding: '10px 14px',
                     fontSize: 12,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     cursor: 'pointer',
                     width: 'fit-content',
                   }}
@@ -776,7 +776,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
               <div
                 style={{
                   background: '#FFFFFF',
-                  borderRadius: 20,
+                  borderRadius: 12,
                   border: '1px solid #D9E2EC',
                   boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
                   padding: 18,
@@ -784,7 +784,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                   gap: 12,
                 }}
               >
-                <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>Scorecard</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#182c39' }}>Scorecard</div>
                 <div className="scorecard-grid">
                   {[
                     { key: 'communication', label: 'Communication' },
@@ -863,13 +863,13 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 8,
-                    background: '#EFF6FF',
-                    color: '#2563EB',
-                    border: '1px solid #BFDBFE',
+                    background: '#edf7f3',
+                    color: '#087f72',
+                    border: '1px solid #bdddd5',
                     borderRadius: 12,
                     padding: '10px 14px',
                     fontSize: 12,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     cursor: 'pointer',
                     width: 'fit-content',
                   }}
@@ -882,7 +882,7 @@ export default function InterviewRoomClient({ role, interview }: Props) {
               <div
                 style={{
                   background: '#FFFFFF',
-                  borderRadius: 20,
+                  borderRadius: 12,
                   border: '1px solid #D9E2EC',
                   boxShadow: '0 12px 28px rgba(15,23,42,0.05)',
                   padding: 18,
@@ -890,10 +890,10 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                   gap: 12,
                 }}
               >
-                <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#182c39' }}>
                   Recording and closeout
                 </div>
-                <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.7 }}>
+                <div style={{ fontSize: 13, color: '#60717d', lineHeight: 1.7 }}>
                   Attach the final recording only after consent is granted. The recording is stored
                   against the interview record for the hiring team.
                 </div>
@@ -903,13 +903,13 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 8,
-                      background: '#F8FAFC',
+                      background: '#f6f8f9',
                       color: '#334155',
                       border: '1px solid #D9E2EC',
                       borderRadius: 12,
                       padding: '10px 14px',
                       fontSize: 12,
-                      fontWeight: 800,
+                      fontWeight: 700,
                       cursor:
                         currentInterview.consentStatus !== 'granted' || isUploading
                           ? 'not-allowed'
@@ -948,13 +948,13 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 8,
-                      background: '#0F172A',
+                      background: '#182c39',
                       color: '#FFFFFF',
                       border: 'none',
                       borderRadius: 12,
                       padding: '10px 14px',
                       fontSize: 12,
-                      fontWeight: 800,
+                      fontWeight: 700,
                       cursor:
                         currentInterview.status === 'completed' ||
                         currentInterview.status === 'cancelled'
@@ -988,9 +988,9 @@ export default function InterviewRoomClient({ role, interview }: Props) {
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 8,
-                      color: '#2563EB',
+                      color: '#087f72',
                       fontSize: 12,
-                      fontWeight: 800,
+                      fontWeight: 700,
                       textDecoration: 'none',
                     }}
                   >

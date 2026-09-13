@@ -125,6 +125,7 @@ export default async function StudentApplicationsPage() {
 
   return (
     <DashboardShell
+      embedded
       role="student"
       roleLabel="Student dashboard"
       homeHref="/student/dashboard"
@@ -149,7 +150,6 @@ export default async function StudentApplicationsPage() {
           actions={
             <>
               <ActionLink href="/student/jobs" label="Browse more jobs" />
-              <ActionLink href="/student/dashboard" label="Back to dashboard" tone="ghost" />
             </>
           }
           aside={
@@ -160,7 +160,10 @@ export default async function StudentApplicationsPage() {
                 border: '1px solid rgba(255,255,255,0.16)',
               }}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}
+                className="v2-page-grid"
+              >
                 {[
                   { label: 'Applications', value: stats.totalApps, color: '#FFFFFF' },
                   { label: 'Events', value: stats.totalEvents, color: '#BAE6FD' },
@@ -179,7 +182,7 @@ export default async function StudentApplicationsPage() {
                     <div
                       style={{
                         fontSize: 22,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: s.color,
                         fontFamily: 'var(--font-display)',
                         lineHeight: 1,
@@ -212,19 +215,19 @@ export default async function StudentApplicationsPage() {
               label="Events registered"
               value={formatCompactNumber(stats.totalEvents)}
               Icon={CalendarDays}
-              accent="#22D3EE"
+              accent="#178d80"
             />
             <StatCard
               label="Shortlisted"
               value={formatCompactNumber(stats.shortlisted)}
               Icon={CheckCircle2}
-              accent="#10B981"
+              accent="#168257"
             />
             <StatCard
               label="Hired"
               value={formatCompactNumber(stats.hired)}
               Icon={Trophy}
-              accent="#F59E0B"
+              accent="#a86714"
             />
           </div>
         </section>

@@ -70,11 +70,11 @@ export default function JobApplyButton({
     return (
       <div
         style={{
-          background: '#F8FAFC',
-          border: '1px solid #E2E8F0',
+          background: '#f6f8f9',
+          border: '1px solid #dfe6e9',
           borderRadius: 12,
           padding: '12px 20px',
-          color: '#94A3B8',
+          color: '#60717d',
           fontSize: 14,
           fontWeight: 600,
           textAlign: 'center',
@@ -93,7 +93,7 @@ export default function JobApplyButton({
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          background: isEvent ? '#7C3AED' : '#2563EB',
+          background: isEvent ? '#087f72' : '#087f72',
           color: '#fff',
           border: 'none',
           borderRadius: 12,
@@ -129,29 +129,30 @@ export default function JobApplyButton({
             padding: 16,
           }}
           onClick={(e) => e.target === e.currentTarget && setShowModal(false)}
+          className="v2-dialog-overlay"
         >
           <div
             style={{
               background: '#fff',
-              borderRadius: 20,
+              borderRadius: 12,
               padding: 32,
               width: '100%',
               maxWidth: 480,
-              boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <h2
               style={{
                 fontSize: 20,
-                fontWeight: 900,
-                color: '#0F172A',
+                fontWeight: 700,
+                color: '#182c39',
                 fontFamily: 'var(--font-display)',
                 marginBottom: 6,
               }}
             >
               {isEvent ? 'Register for Event' : 'Submit Application'}
             </h2>
-            <p style={{ color: '#64748B', fontSize: 14, marginBottom: 24 }}>
+            <p style={{ color: '#60717d', fontSize: 14, marginBottom: 24 }}>
               {isEvent
                 ? 'Confirm your registration. Event details will be sent to your email.'
                 : 'Your profile resume will be automatically attached.'}
@@ -183,7 +184,7 @@ export default function JobApplyButton({
                     marginBottom: 7,
                   }}
                 >
-                  Cover Letter <span style={{ color: '#94A3B8', fontWeight: 400 }}>(optional)</span>
+                  Cover Letter <span style={{ color: '#60717d', fontWeight: 400 }}>(optional)</span>
                 </label>
                 <textarea
                   value={coverLetter}
@@ -194,13 +195,13 @@ export default function JobApplyButton({
                     width: '100%',
                     boxSizing: 'border-box',
                     padding: '11px 14px',
-                    border: '1.5px solid #E2E8F0',
+                    border: '1.5px solid #dfe6e9',
                     borderRadius: 10,
                     fontSize: 14,
                     fontFamily: 'var(--font-body)',
                     outline: 'none',
                     resize: 'vertical',
-                    color: '#0F172A',
+                    color: '#182c39',
                   }}
                 />
               </div>
@@ -212,10 +213,10 @@ export default function JobApplyButton({
                 style={{
                   flex: 1,
                   padding: '12px',
-                  border: '1.5px solid #E2E8F0',
+                  border: '1.5px solid #dfe6e9',
                   borderRadius: 10,
                   background: '#fff',
-                  color: '#64748B',
+                  color: '#60717d',
                   cursor: 'pointer',
                   fontSize: 14,
                   fontWeight: 600,
@@ -233,7 +234,7 @@ export default function JobApplyButton({
                   justifyContent: 'center',
                   gap: 7,
                   padding: '12px',
-                  background: loading ? '#93C5FD' : isEvent ? '#7C3AED' : '#2563EB',
+                  background: loading ? '#93C5FD' : isEvent ? '#087f72' : '#087f72',
                   color: '#fff',
                   border: 'none',
                   borderRadius: 10,

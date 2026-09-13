@@ -88,6 +88,7 @@ export default async function EventRegistrantsPage({
 
   return (
     <DashboardShell
+      embedded
       role={isDeptHead ? 'departmentHead' : 'advisor'}
       roleLabel={isDeptHead ? 'Department dashboard' : 'Advisor dashboard'}
       homeHref={isDeptHead ? '/dept/dashboard' : '/advisor/dashboard'}
@@ -123,14 +124,17 @@ export default async function EventRegistrantsPage({
                 border: '1px solid rgba(255,255,255,0.16)',
               }}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}
+                className="v2-page-grid"
+              >
                 {[
-                  { label: 'Total', value: stats.total, color: '#F8FAFC' },
-                  { label: 'Confirmed', value: stats.confirmed, color: '#10B981' },
+                  { label: 'Total', value: stats.total, color: '#f6f8f9' },
+                  { label: 'Confirmed', value: stats.confirmed, color: '#168257' },
                   {
                     label: 'Status',
                     value: event.isActive ? 'Active' : 'Closed',
-                    color: event.isActive ? '#22D3EE' : '#F59E0B',
+                    color: event.isActive ? '#178d80' : '#a86714',
                   },
                   {
                     label: 'Days left',
@@ -143,7 +147,7 @@ export default async function EventRegistrantsPage({
                           )
                         )
                       : '—',
-                    color: '#F8FAFC',
+                    color: '#f6f8f9',
                   },
                 ].map((s) => (
                   <div
@@ -158,7 +162,7 @@ export default async function EventRegistrantsPage({
                     <div
                       style={{
                         fontSize: 20,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: s.color,
                         fontFamily: 'var(--font-display)',
                         lineHeight: 1,
@@ -180,6 +184,7 @@ export default async function EventRegistrantsPage({
         <section style={{ marginTop: 22 }}>
           <div
             style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}
+            className="v2-form-grid"
           >
             <StatCard
               label="Total registrants"
@@ -190,13 +195,13 @@ export default async function EventRegistrantsPage({
               label="Confirmed"
               value={formatCompactNumber(stats.confirmed)}
               Icon={CheckCircle2}
-              accent="#10B981"
+              accent="#168257"
             />
             <StatCard
               label="Event deadline"
               value={formatShortDate(event.applicationDeadline?.toISOString())}
               Icon={CalendarDays}
-              accent="#7C3AED"
+              accent="#087f72"
             />
           </div>
         </section>
@@ -234,10 +239,10 @@ export default async function EventRegistrantsPage({
                       key={reg._id.toString()}
                       style={{
                         background: '#fff',
-                        borderRadius: 16,
-                        border: '1px solid #E2E8F0',
+                        borderRadius: 12,
+                        border: '1px solid #dfe6e9',
                         padding: '16px 20px',
-                        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                        boxShadow: 'var(--shadow-card)',
                       }}
                     >
                       <div
@@ -254,7 +259,7 @@ export default async function EventRegistrantsPage({
                             width: 42,
                             height: 42,
                             borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #7C3AED, #6D28D9)',
+                            background: 'var(--primary)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -296,8 +301,8 @@ export default async function EventRegistrantsPage({
                             <h3
                               style={{
                                 fontSize: 15,
-                                fontWeight: 800,
-                                color: '#0F172A',
+                                fontWeight: 700,
+                                color: '#182c39',
                                 margin: 0,
                                 fontFamily: 'var(--font-display)',
                               }}
@@ -306,17 +311,17 @@ export default async function EventRegistrantsPage({
                             </h3>
                             <Tag label="Registered" tone="success" />
                           </div>
-                          <div style={{ color: '#64748B', fontSize: 13 }}>
+                          <div style={{ color: '#60717d', fontSize: 13 }}>
                             {student?.university}
                             {student?.department && ` · ${student.department}`}
                             {student?.yearOfStudy && ` · Year ${student.yearOfStudy}`}
                             {student?.cgpa && (
-                              <span style={{ color: '#10B981', fontWeight: 600 }}>
+                              <span style={{ color: '#168257', fontWeight: 600 }}>
                                 {' '}
                                 · CGPA {student.cgpa}
                               </span>
                             )}
-                            <span style={{ color: '#94A3B8', marginLeft: 8 }}>
+                            <span style={{ color: '#60717d', marginLeft: 8 }}>
                               Registered {formatShortDate(reg.appliedAt?.toISOString())}
                             </span>
                           </div>
@@ -328,7 +333,7 @@ export default async function EventRegistrantsPage({
                                 <span
                                   key={s}
                                   style={{
-                                    background: '#F1F5F9',
+                                    background: '#f6f8f9',
                                     color: '#475569',
                                     padding: '2px 8px',
                                     borderRadius: 999,
@@ -360,9 +365,9 @@ export default async function EventRegistrantsPage({
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: 6,
-                              background: '#EFF6FF',
-                              color: '#2563EB',
-                              border: '1px solid #BFDBFE',
+                              background: '#edf7f3',
+                              color: '#087f72',
+                              border: '1px solid #bdddd5',
                               padding: '8px 14px',
                               borderRadius: 10,
                               fontSize: 12,
@@ -401,9 +406,9 @@ export default async function EventRegistrantsPage({
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 6,
-                                background: '#F8FAFC',
-                                color: '#94A3B8',
-                                border: '1px solid #E2E8F0',
+                                background: '#f6f8f9',
+                                color: '#60717d',
+                                border: '1px solid #dfe6e9',
                                 padding: '8px 14px',
                                 borderRadius: 10,
                                 fontSize: 12,

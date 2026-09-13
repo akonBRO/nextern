@@ -236,6 +236,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
 
   return (
     <DashboardShell
+      embedded
       role="employer"
       roleLabel="Employer dashboard"
       homeHref="/employer/dashboard"
@@ -269,7 +270,10 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
                 border: '1px solid rgba(255,255,255,0.16)',
               }}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}
+                className="v2-page-grid"
+              >
                 {[
                   { label: 'Total', value: stats.total, color: '#FFFFFF' },
                   { label: 'Shortlisted', value: stats.shortlisted, color: '#BAE6FD' },
@@ -288,7 +292,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
                     <div
                       style={{
                         fontSize: 24,
-                        fontWeight: 900,
+                        fontWeight: 700,
                         color: s.color,
                         fontFamily: 'var(--font-display)',
                         lineHeight: 1,
@@ -320,19 +324,19 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ job
               label="Shortlisted"
               value={formatCompactNumber(stats.shortlisted)}
               Icon={CheckCircle2}
-              accent="#22D3EE"
+              accent="#178d80"
             />
             <StatCard
               label="Interviews scheduled"
               value={formatCompactNumber(stats.interviews)}
               Icon={Clock3}
-              accent="#F59E0B"
+              accent="#a86714"
             />
             <StatCard
               label="Hired"
               value={formatCompactNumber(stats.hired)}
               Icon={Trophy}
-              accent="#10B981"
+              accent="#168257"
             />
           </div>
         </section>

@@ -50,6 +50,7 @@ export default async function StudentSubscriptionPage() {
 
   return (
     <DashboardShell
+      embedded
       role="student"
       roleLabel="Student"
       homeHref="/student/dashboard"
@@ -67,6 +68,7 @@ export default async function StudentSubscriptionPage() {
     >
       <DashboardPage>
         <DashboardSection
+          headingLevel={1}
           title="Subscription & Billing"
           description="Manage your Nextern Premium subscription and view payment history."
         >

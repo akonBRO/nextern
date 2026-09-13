@@ -49,20 +49,20 @@ type NormalizedEvent = UpcomingCalendarEvent & { dateObject: Date; dayKey: strin
 
 const EVENT_STYLES = {
   interview: {
-    accent: '#6366F1',
-    soft: '#EEF2FF',
-    border: '#C7D2FE',
+    accent: '#087f72',
+    soft: '#eef7f5',
+    border: '#c8e3dc',
     text: '#3730A3',
     dot: '#818CF8',
     label: 'Interview',
-    pill: '#E0E7FF',
+    pill: '#d9eee9',
   },
   event_registration: {
     accent: '#0891B2',
     soft: '#ECFEFF',
     border: '#A5F3FC',
     text: '#0E7490',
-    dot: '#22D3EE',
+    dot: '#087f72',
     label: 'Event',
     pill: '#CFFAFE',
   },
@@ -338,6 +338,8 @@ export default function CalendarBoard({
                 <button
                   key={dayKey}
                   type="button"
+                  aria-label={`${format(day, 'EEEE, MMMM d, yyyy')}, ${dayEvents.length} events`}
+                  aria-pressed={isSelected}
                   onClick={() => {
                     setSelectedDate(day);
                     if (!isCurrentMonth) setVisibleMonth(startOfMonth(day));
@@ -381,6 +383,23 @@ export default function CalendarBoard({
             })}
           </div>
 
+          {!isCalendarPage && (
+            <div className="cb-mobile-selected" aria-live="polite">
+              <p className="cb-panel-title">{format(selectedDate, 'EEEE, MMMM d')}</p>
+              {selectedEvents.length ? (
+                selectedEvents.map((event) => (
+                  <div key={event.id} className="cb-mobile-event">
+                    <strong>{event.title}</strong>
+                    <span>
+                      {event.companyName} ? {formatEventTime(event)}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="cb-panel-sub">No events on this day.</p>
+              )}
+            </div>
+          )}
           {/* Summary panels (page mode only) */}
           {isCalendarPage && (
             <div className="cb-summary">
@@ -429,7 +448,18 @@ export default function CalendarBoard({
                             </span>
                             <span className="cb-event-time">{formatEventTime(event)}</span>
                           </div>
-                          <p className="cb-event-title">{event.title}</p>
+                          <p className="cb-event-title">
+                            {allowEventLinks ? (
+                              <Link
+                                href={resolveEventHref(event)}
+                                style={{ color: 'inherit', textDecoration: 'none' }}
+                              >
+                                {event.title}
+                              </Link>
+                            ) : (
+                              event.title
+                            )}
+                          </p>
                           <p className="cb-event-company">{event.companyName}</p>
                           <div className="cb-event-dates">
                             <div className="cb-event-date-row">
@@ -609,11 +639,11 @@ export default function CalendarBoard({
       <style>{`
         /* ── Root ── */
         .cb-root {
-          border-radius: 20px;
+          border-radius: 12px;
           overflow: hidden;
-          border: 1px solid #E5E7EB;
+          border: 1px solid #dfe6e9;
           background: #FFFFFF;
-          font-family: 'DM Sans', 'Inter', sans-serif;
+          font-family: var(--font-body), sans-serif;
         }
 
         /* ── Header ── */
@@ -655,9 +685,9 @@ export default function CalendarBoard({
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
-          color: #4F46E5;
-          border: 1px solid #C7D2FE;
+          background: #eef7f5;
+          color: #087f72;
+          border: 1px solid #c8e3dc;
           flex-shrink: 0;
         }
         .cb-icon-wrap--lg {
@@ -670,14 +700,14 @@ export default function CalendarBoard({
         .cb-title {
           margin: 0;
           font-weight: 700;
-          color: #111827;
+          color: #182c39;
           letter-spacing: -0.025em;
           line-height: 1.2;
         }
         .cb-subtitle {
           margin: 3px 0 0;
           font-size: 12px;
-          color: #6B7280;
+          color: #60717d;
           line-height: 1.5;
         }
 
@@ -693,7 +723,7 @@ export default function CalendarBoard({
           display: inline-flex;
           align-items: center;
           gap: 5px;
-          border-radius: 999px;
+          border-radius: 6px;
           padding: 4px 10px;
           font-size: 11.5px;
           font-weight: 600;
@@ -711,7 +741,7 @@ export default function CalendarBoard({
         }
         .cb-badge--neutral {
           background: #F9FAFB;
-          border-color: #E5E7EB;
+          border-color: #dfe6e9;
           color: #374151;
         }
 
@@ -728,14 +758,14 @@ export default function CalendarBoard({
           transition: background 0.15s, box-shadow 0.15s;
         }
         .cb-btn--connect {
-          background: #EEF2FF;
-          border: 1px solid #C7D2FE;
-          color: #4338CA;
+          background: #eef7f5;
+          border: 1px solid #c8e3dc;
+          color: #06665d;
         }
-        .cb-btn--connect:hover { background: #E0E7FF; }
+        .cb-btn--connect:hover { background: #d9eee9; }
         .cb-btn--outline {
           background: #FFFFFF;
-          border: 1px solid #E5E7EB;
+          border: 1px solid #dfe6e9;
           color: #374151;
         }
         .cb-btn--outline:hover { background: #F9FAFB; }
@@ -745,14 +775,14 @@ export default function CalendarBoard({
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 999px;
-          border: 1px solid #E5E7EB;
+          border-radius: 6px;
+          border: 1px solid #dfe6e9;
           background: #FFFFFF;
-          color: #4F46E5;
+          color: #087f72;
           cursor: pointer;
           transition: background 0.15s;
         }
-        .cb-toggle:hover { background: #EEF2FF; }
+        .cb-toggle:hover { background: #eef7f5; }
 
         /* ── Body ── */
         .cb-body {
@@ -775,13 +805,13 @@ export default function CalendarBoard({
           margin: 0;
           font-size: 22px;
           font-weight: 800;
-          color: #111827;
+          color: #182c39;
           letter-spacing: -0.04em;
         }
         .cb-month-sub {
           margin: 3px 0 0;
           font-size: 12.5px;
-          color: #9CA3AF;
+          color: #6e7f89;
         }
         .cb-nav-controls {
           display: flex;
@@ -791,7 +821,7 @@ export default function CalendarBoard({
         .cb-today-btn {
           padding: 8px 14px;
           border-radius: 10px;
-          border: 1px solid #E5E7EB;
+          border: 1px solid #dfe6e9;
           background: #FFFFFF;
           color: #374151;
           font-size: 12px;
@@ -804,7 +834,7 @@ export default function CalendarBoard({
           display: flex;
           align-items: center;
           gap: 4px;
-          border: 1px solid #E5E7EB;
+          border: 1px solid #dfe6e9;
           border-radius: 12px;
           padding: 3px;
           background: #FFFFFF;
@@ -821,9 +851,9 @@ export default function CalendarBoard({
           transition: background 0.15s;
         }
         .cb-arrow--prev { background: #F3F4F6; color: #374151; }
-        .cb-arrow--prev:hover { background: #E5E7EB; }
-        .cb-arrow--next { background: #4F46E5; color: #FFFFFF; }
-        .cb-arrow--next:hover { background: #4338CA; }
+        .cb-arrow--prev:hover { background: #dfe6e9; }
+        .cb-arrow--next { background: #087f72; color: #FFFFFF; }
+        .cb-arrow--next:hover { background: #06665d; }
 
         /* ── Weekday row ── */
         .cb-weekdays {
@@ -836,7 +866,7 @@ export default function CalendarBoard({
           padding: 6px 4px;
           font-size: 11px;
           font-weight: 700;
-          color: #9CA3AF;
+          color: #6e7f89;
           text-transform: uppercase;
           letter-spacing: 0.07em;
           text-align: center;
@@ -861,13 +891,13 @@ export default function CalendarBoard({
           transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
         }
         .cb-day:hover {
-          border-color: #C7D2FE;
+          border-color: #c8e3dc;
           transform: translateY(-1px);
           box-shadow: 0 6px 18px rgba(79, 70, 229, 0.08);
         }
         .cb-day--selected {
           border-color: #818CF8 !important;
-          background: #F5F3FF !important;
+          background: #eef7f5 !important;
           box-shadow: 0 8px 24px rgba(79, 70, 229, 0.12) !important;
         }
         .cb-day--other {
@@ -893,16 +923,16 @@ export default function CalendarBoard({
           color: #374151;
         }
         .cb-day-num--today {
-          background: #4F46E5;
+          background: #087f72;
           color: #FFFFFF;
           border-radius: 8px;
         }
         .cb-day-count {
           font-size: 10px;
           font-weight: 700;
-          color: #6366F1;
-          background: #EEF2FF;
-          border-radius: 999px;
+          color: #087f72;
+          background: #eef7f5;
+          border-radius: 6px;
           padding: 2px 6px;
         }
 
@@ -946,7 +976,7 @@ export default function CalendarBoard({
         .cb-day-more {
           font-size: 10px;
           font-weight: 700;
-          color: #9CA3AF;
+          color: #6e7f89;
           padding-left: 2px;
         }
 
@@ -982,23 +1012,23 @@ export default function CalendarBoard({
           margin: 0;
           font-size: 17px;
           font-weight: 700;
-          color: #111827;
+          color: #182c39;
           letter-spacing: -0.025em;
         }
         .cb-panel-sub {
           margin: 3px 0 0;
           font-size: 12px;
-          color: #9CA3AF;
+          color: #6e7f89;
         }
         .cb-month-badge {
           display: inline-flex;
           align-items: center;
           gap: 5px;
           padding: 5px 10px;
-          border-radius: 999px;
-          border: 1px solid #E5E7EB;
+          border-radius: 6px;
+          border: 1px solid #dfe6e9;
           background: #F9FAFB;
-          color: #6B7280;
+          color: #60717d;
           font-size: 11.5px;
           font-weight: 600;
         }
@@ -1034,7 +1064,7 @@ export default function CalendarBoard({
           align-items: center;
           gap: 5px;
           padding: 3px 9px;
-          border-radius: 999px;
+          border-radius: 6px;
           font-size: 11px;
           font-weight: 700;
           text-transform: uppercase;
@@ -1042,19 +1072,19 @@ export default function CalendarBoard({
         }
         .cb-event-time {
           font-size: 11.5px;
-          color: #9CA3AF;
+          color: #6e7f89;
           font-weight: 500;
         }
         .cb-event-title {
           margin: 0;
           font-size: 15px;
           font-weight: 700;
-          color: #111827;
+          color: #182c39;
         }
         .cb-event-company {
           margin: 4px 0 0;
           font-size: 12.5px;
-          color: #6B7280;
+          color: #60717d;
         }
         .cb-event-dates {
           display: grid;
@@ -1073,12 +1103,12 @@ export default function CalendarBoard({
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.05em;
-          color: #64748B;
+          color: #60717d;
         }
         .cb-event-date-value {
           font-size: 12px;
           font-weight: 700;
-          color: #0F172A;
+          color: #182c39;
         }
         .cb-event-meta {
           display: flex;
@@ -1090,13 +1120,13 @@ export default function CalendarBoard({
         .cb-event-meta-pill {
           display: inline-flex;
           align-items: center;
-          border-radius: 999px;
+          border-radius: 6px;
           border: 1px solid rgba(148, 163, 184, 0.35);
           background: rgba(255,255,255,0.66);
           padding: 4px 9px;
           font-size: 11px;
           font-weight: 700;
-          color: #475569;
+          color: #435663;
         }
         .cb-event-meta-pill--synced {
           border-color: #A7F3D0;
@@ -1121,24 +1151,24 @@ export default function CalendarBoard({
           margin: 8px 0 0;
           font-size: 17px;
           font-weight: 800;
-          color: #111827;
+          color: #182c39;
           letter-spacing: -0.025em;
           line-height: 1.3;
         }
         .cb-next-company {
           margin: 5px 0 0;
           font-size: 13px;
-          color: #6B7280;
+          color: #60717d;
         }
         .cb-next-date {
           margin: 10px 0 0;
           font-size: 12px;
-          color: #9CA3AF;
+          color: #6e7f89;
         }
         .cb-next-subdate {
           margin: 8px 0 0;
           font-size: 12px;
-          color: #64748B;
+          color: #60717d;
           font-weight: 600;
         }
         .cb-next-meta {
@@ -1150,11 +1180,11 @@ export default function CalendarBoard({
         .cb-next-meta-pill {
           display: inline-flex;
           align-items: center;
-          border-radius: 999px;
+          border-radius: 6px;
           padding: 4px 10px;
           background: rgba(255,255,255,0.7);
           border: 1px solid rgba(148, 163, 184, 0.25);
-          color: #475569;
+          color: #435663;
           font-size: 11px;
           font-weight: 700;
         }
@@ -1176,21 +1206,21 @@ export default function CalendarBoard({
           gap: 12px;
           align-items: center;
           border-radius: 14px;
-          border: 1px solid #E5E7EB;
+          border: 1px solid #dfe6e9;
           background: #FFFFFF;
           padding: 12px;
         }
         .cb-agenda-date {
           width: 48px;
           border-radius: 12px;
-          background: #F8FAFC;
-          border: 1px solid #E2E8F0;
+          background: #f6f8f9;
+          border: 1px solid #dfe6e9;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           padding: 8px 0;
-          color: #0F172A;
+          color: #182c39;
         }
         .cb-agenda-date-day {
           font-size: 17px;
@@ -1202,7 +1232,7 @@ export default function CalendarBoard({
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;
-          color: #64748B;
+          color: #60717d;
           margin-top: 4px;
         }
         .cb-agenda-body {
@@ -1213,7 +1243,7 @@ export default function CalendarBoard({
         .cb-agenda-title {
           font-size: 13px;
           font-weight: 700;
-          color: #0F172A;
+          color: #182c39;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -1223,13 +1253,13 @@ export default function CalendarBoard({
           gap: 8px;
           flex-wrap: wrap;
           font-size: 11.5px;
-          color: #64748B;
+          color: #60717d;
         }
         .cb-agenda-status {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 999px;
+          border-radius: 6px;
           border: 1px solid;
           padding: 5px 9px;
           font-size: 10.5px;
@@ -1263,30 +1293,48 @@ export default function CalendarBoard({
         /* ── Empty state ── */
         .cb-empty-state {
           border-radius: 12px;
-          border: 1px dashed #E5E7EB;
+          border: 1px dashed #dfe6e9;
           background: #F9FAFB;
           padding: 16px;
-          color: #9CA3AF;
+          color: #6e7f89;
           font-size: 13px;
           line-height: 1.65;
         }
 
         /* ── Responsive ── */
+        .cb-root { min-width: 0; }
+        .cb-mobile-selected { display: none; }
+        .cb-header-left { min-width: 0; }
+        .cb-grid, .cb-weekdays { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+        .cb-day { min-width: 0; }
+        .cb-root :is(button, a):focus-visible { outline: 3px solid #b3dcd3; outline-offset: -2px; }
+        .cb-root :is(.cb-toggle, .cb-arrow, .cb-today-btn, .cb-btn) { min-height: 40px; }
+        .cb-toggle, .cb-arrow { min-width: 40px; }
         @media (max-width: 860px) {
-          .cb-grid {
-            overflow-x: auto;
-            grid-template-columns: repeat(7, minmax(108px, 1fr));
-          }
+          .cb-summary { grid-template-columns: minmax(0, 1fr) !important; }
+          .cb-event-chip { padding: 3px; }
+          .cb-day { padding: 6px; }
+          .cb-day-count { font-size: 9px; padding: 2px 4px; }
         }
         @media (max-width: 640px) {
-          .cb-day {
-            min-height: 104px !important;
-            padding: 8px !important;
-          }
-          .cb-event-chip-label {
-            font-size: 10px;
-          }
-          .cb-body { padding: 14px; }
+          .cb-body, .cb-body--page { padding: 12px; }
+          .cb-header { padding: 16px; }
+          .cb-header-left { gap: 10px; }
+          .cb-month-label { font-size: 20px; }
+          .cb-grid, .cb-weekdays { gap: 3px; }
+          .cb-day { min-height: 65px !important; padding: 5px 2px !important; }
+          .cb-day-top { flex-direction: column; align-items: center; gap: 3px; }
+          .cb-day-num { font-size: 12px; }
+          .cb-day-events { display: none; }
+          .cb-day-count { min-width: 14px; height: 14px; border-radius: 4px; font-size: 9px; }
+          .cb-weekday { font-size: 9px; letter-spacing: 0; padding: 4px 0; }
+          .cb-mobile-selected { display: grid; gap: 8px; margin-top: 18px; border-top: 1px solid #dfe6e9; padding-top: 16px; }
+          .cb-mobile-event { display: grid; gap: 4px; padding: 10px 0; font-size: 12px; }
+          .cb-mobile-event strong { font-weight: 600; color: #182c39; }
+          .cb-mobile-event span { color: #60717d; }
+          .cb-agenda-item { grid-template-columns: auto minmax(0, 1fr); gap: 10px; }
+          .cb-agenda-status { grid-column: 2; justify-self: start; }
+          .cb-panel { padding: 14px; }
         }
       `}</style>
     </div>
